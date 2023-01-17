@@ -11,12 +11,19 @@ project "DebugUtils"
     includedirs
     {
         IncludeDir["DebugUtils"],
+
+        IncludeDir["spdlog"],
     }
 
     files
     {
         (EngDir.."DebugUtils/**.h"),
         (EngDir.."DebugUtils/**.cpp")
+    }
+
+    links
+    {
+        "spdlog"
     }
 
     filter "system:windows"

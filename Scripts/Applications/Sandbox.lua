@@ -9,6 +9,7 @@ project "Sandbox"
     includedirs
     {
         IncludeDir["Platform"],
+        IncludeDir["DebugUtils"],
     }
 
     files
@@ -19,7 +20,8 @@ project "Sandbox"
 
     links
     {
-        "Platform"
+        "Platform",
+        "DebugUtils",
     }
 
     filter "system:windows"
