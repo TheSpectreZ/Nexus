@@ -352,3 +352,6 @@ MigrationBackup/
 *.vcxproj
 *.sln
 *.filters
+
+/Binaries
+/Intermediates
