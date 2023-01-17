@@ -1,33 +1,22 @@
-project "Platform"
+project "Debug"
     kind "SharedLib"
     language "C++"
-    location (EngDir.."Platform")
+    location (EngDir.."Debug")
 
-    defines "NEXUS_PLATFORM_DLL"
+    defines "NEXUS_DEBUG_DLL"
 
     targetdir(BinDir)
     objdir(IntDir)
 
     includedirs
     {
-        IncludeDir["Platform"],
-
         IncludeDir["Debug"],
-
-        IncludeDir["glfw"],
     }
 
     files
     {
-        (EngDir.."Platform/**.h"),
-        (EngDir.."Platform/**.cpp")
-    }
-
-    links
-    {
-        "Debug",
-
-        "glfw"
+        (EngDir.."Debug/**.h"),
+        (EngDir.."Debug/**.cpp")
     }
 
     filter "system:windows"

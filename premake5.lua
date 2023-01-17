@@ -10,10 +10,12 @@ workspace "Nexus-Engine"
 
     group "Dependencies"
         include "Scripts/Dependencies/glfw.lua"
+        include "Scripts/Dependencies/spdlog.lua"
     group ""
 
     group "Engine"
         include "Scripts/Engine/Platform.lua"
+        include "Scripts/Engine/Debug.lua"
     group ""
 
     group "Applications"

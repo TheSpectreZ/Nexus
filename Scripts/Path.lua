@@ -10,5 +10,7 @@ vcxDir = "%{wks.location}/Intermediates/%{prj.name}"
 IncludeDir = {}
 
 IncludeDir["glfw"] = (DepDir.."glfw/include")
+IncludeDir["spdlog"] = (DepDir.."spdlog/include")
 
 IncludeDir["Platform"] = (EngDir.."Platform/include")
+IncludeDir["Debug"] = (EngDir.."Debug/include")
