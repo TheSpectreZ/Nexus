@@ -1,7 +1,7 @@
-project "Debug"
+project "DebugUtils"
     kind "SharedLib"
     language "C++"
-    location (EngDir.."Debug")
+    location (EngDir.."DebugUtils")
 
     defines "NEXUS_DEBUG_DLL"
 
@@ -10,13 +10,13 @@ project "Debug"
 
     includedirs
     {
-        IncludeDir["Debug"],
+        IncludeDir["DebugUtils"],
     }
 
     files
     {
-        (EngDir.."Debug/**.h"),
-        (EngDir.."Debug/**.cpp")
+        (EngDir.."DebugUtils/**.h"),
+        (EngDir.."DebugUtils/**.cpp")
     }
 
     filter "system:windows"

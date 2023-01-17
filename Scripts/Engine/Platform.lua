@@ -12,7 +12,7 @@ project "Platform"
     {
         IncludeDir["Platform"],
 
-        IncludeDir["Debug"],
+        IncludeDir["DebugUtils"],
 
         IncludeDir["glfw"],
     }
@@ -25,7 +25,7 @@ project "Platform"
 
     links
     {
-        "Debug",
+        "DebugUtils",
 
         "glfw"
     }
