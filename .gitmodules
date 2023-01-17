@@ -1,3 +1,6 @@
 [submodule "Source/Dependencies/glfw"]
 	path = Source/Dependencies/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "Source/Dependencies/spdlog"]
+	path = Source/Dependencies/spdlog
+	url = https://github.com/gabime/spdlog.git
