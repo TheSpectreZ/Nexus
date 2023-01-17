@@ -1,7 +1,9 @@
-project "Sandbox"
-    kind "ConsoleApp"
+project "Platform"
+    kind "SharedLib"
     language "C++"
-    location (AppDir.."Sandbox")
+    location (EngDir.."Platform")
+
+    defines "NEXUS_PLATFORM_DLL"
 
     targetdir(BinDir)
     objdir(IntDir)
@@ -9,17 +11,19 @@ project "Sandbox"
     includedirs
     {
         IncludeDir["Platform"],
+
+        IncludeDir["glfw"],
     }
 
     files
     {
-        (AppDir.."Sandbox/**.h"),
-        (AppDir.."Sandbox/**.cpp")
+        (EngDir.."Platform/**.h"),
+        (EngDir.."Platform/**.cpp")
     }
 
     links
     {
-        "Platform"
+        "glfw"
     }
 
     filter "system:windows"

@@ -9,9 +9,11 @@ workspace "Nexus-Engine"
     }
 
     group "Dependencies"
+        include "Scripts/Dependencies/glfw.lua"
     group ""
 
     group "Engine"
+        include "Scripts/Engine/Platform.lua"
     group ""
 
     group "Applications"
