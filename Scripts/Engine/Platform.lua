@@ -15,6 +15,7 @@ project "Platform"
         IncludeDir["DebugUtils"],
 
         IncludeDir["glfw"],
+        IncludeDir["spdlog"],
     }
 
     files

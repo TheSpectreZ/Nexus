@@ -10,6 +10,8 @@ project "Sandbox"
     {
         IncludeDir["Platform"],
         IncludeDir["DebugUtils"],
+
+        IncludeDir["spdlog"],
     }
 
     files
