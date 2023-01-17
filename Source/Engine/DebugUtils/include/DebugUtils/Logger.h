@@ -1,11 +1,7 @@
 #pragma once
 #include "Build.h"
+#include "spdlog/spdlog.h"
 #include <memory>
-
-namespace spdlog
-{
-	class logger;
-}
 
 namespace Nexus
 {
@@ -26,9 +22,9 @@ namespace Nexus
 #define NEXUS_LOG_INIT ::Nexus::DebugUtils::Logger::Init();
 #define NEXUS_LOG_SHUT ::Nexus::DebugUtils::Logger::Shut();
 
-#define NEXUS_LOG_TRACE(...) ::Logger::_logger->trace(__VA_ARGS__);
-#define NEXUS_LOG_WARN(...) ::Logger::_logger->warn(__VA_ARGS__);
-#define NEXUS_LOG_ERROR(...) ::Logger::_logger->error(__VA_ARGS__);
+#define NEXUS_LOG_TRACE(...) ::Nexus::DebugUtils::Logger::_logger->trace(__VA_ARGS__);
+#define NEXUS_LOG_WARN(...) ::Nexus::DebugUtils::Logger::_logger->warn(__VA_ARGS__);
+#define NEXUS_LOG_ERROR(...) ::Nexus::DebugUtils::Logger::_logger->error(__VA_ARGS__);
 
 #else
 
