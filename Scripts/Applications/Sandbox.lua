@@ -10,8 +10,10 @@ project "Sandbox"
     {
         IncludeDir["Platform"],
         IncludeDir["DebugUtils"],
+        IncludeDir["Graphics"],
 
         IncludeDir["spdlog"],
+        IncludeDir["vulkanSDK"],
     }
 
     files
@@ -24,6 +26,7 @@ project "Sandbox"
     {
         "Platform",
         "DebugUtils",
+        "Graphics",
     }
 
     filter "system:windows"
