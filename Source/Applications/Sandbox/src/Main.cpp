@@ -2,6 +2,8 @@
 #include "Platform/Input.h"
 #include "DebugUtils/Logger.h"
 
+#include "Graphics/Graphics.h"
+
 int main()
 {
 	NEXUS_LOG_INIT
@@ -14,14 +16,20 @@ int main()
 	
 	Nexus::Platform::Input::SetContextWindow(&appWindow);
 
+	Nexus::Graphics::Engine::Initialize();
+
 	while (Nexus::Platform::Manager::IsOpen(&appWindow))
 	{
 		Nexus::Platform::Manager::PollEvents();
+
+		Nexus::Graphics::Engine::Render();
 
 		if (Nexus::Platform::Input::IsKeyPressed(Key::Escape))
 			Nexus::Platform::Manager::Close(&appWindow);
 
 	}
+
+	Nexus::Graphics::Engine::Shutdown();
 
 	Nexus::Platform::Manager::Destroy_Window(&appWindow);
 	Nexus::Platform::Shutdown();
