@@ -1,7 +1,6 @@
 #pragma once
 #include "Build.h"
-
-typedef struct GLFWwindow GLFWwindow;
+#include "Platform/Window.h"
 
 namespace Nexus
 {
@@ -9,7 +8,7 @@ namespace Nexus
 	{
 		struct NEXUS_GRAPHICS_API EngineSpecification
 		{
-			GLFWwindow* windowHandle;
+			Platform::Window targetWindow;
 		};
 	}
 }

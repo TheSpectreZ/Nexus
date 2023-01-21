@@ -169,7 +169,7 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 
 	// Surface
 	{
-		_VKR = glfwCreateWindowSurface(s_Instance->m_Instance, specs.windowHandle, nullptr, &s_Instance->m_Surface);
+		_VKR = glfwCreateWindowSurface(s_Instance->m_Instance, specs.targetWindow.handle, nullptr, &s_Instance->m_Surface);
 		CHECK_HANDLE(s_Instance->m_Surface, VkSurfaceKHR);
 		NEXUS_LOG_TRACE("Vulkan SurfaceKHR Created");
 	}
