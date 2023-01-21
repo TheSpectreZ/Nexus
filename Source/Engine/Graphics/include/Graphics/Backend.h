@@ -2,6 +2,9 @@
 #include "vulkan/vulkan.h"
 #include "EngineSpecification.h"
 
+#include <vector>
+#include <optional>
+
 namespace Nexus
 {
 	namespace Graphics
@@ -23,8 +26,12 @@ namespace Nexus
 		public:
 			static VkDevice GetDevice() { return s_Instance->m_Device; }
 			static VkSurfaceKHR GetSurface() { return s_Instance->m_Surface; }
+			static VkPhysicalDevice GetPhysicalDevice() { return s_Instance->m_PhysicalDevice; }
 			static VkQueue GetGraphicsQueue() { return s_Instance->m_GraphicsQueue; }
 			static VkQueue GetPresentQueue() { return s_Instance->m_PresentQueue; }
 		};
+
+		typedef std::vector<std::optional<uint32_t>> QueueIndexFamilies;
+		QueueIndexFamilies GetQueueIndexFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);
 	}
 }

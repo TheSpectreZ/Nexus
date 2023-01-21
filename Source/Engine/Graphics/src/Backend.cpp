@@ -3,10 +3,9 @@
 
 #include "GLFW/glfw3.h"
 
-#include <vector>
-#include <set>
 #include <algorithm>
 #include <iostream>
+
 
 static bool CheckLayersAvailability(std::vector<const char*> Layers)
 {
@@ -54,8 +53,7 @@ static bool CheckExtensionAvailability(std::vector<const char*> extensions,VkPhy
 	return true;
 }
 
-using QueueIndexFamilies = std::vector<std::optional<uint32_t>>;
-static QueueIndexFamilies GetQueueIndexFamilies(VkPhysicalDevice device,VkSurfaceKHR surface)
+Nexus::Graphics::QueueIndexFamilies Nexus::Graphics::GetQueueIndexFamilies(VkPhysicalDevice device,VkSurfaceKHR surface)
 {
 	uint32_t count;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
