@@ -1,9 +1,9 @@
 #include "Graphics/Graphics.h"
 #include "Graphics/Backend.h"
 
-void Nexus::Graphics::Engine::Initialize()
+void Nexus::Graphics::Engine::Initialize(const EngineSpecification& specs)
 {
-	Backend::Get().Init();
+	Backend::Init(specs);
 }
 
 void Nexus::Graphics::Engine::Render()
@@ -12,5 +12,5 @@ void Nexus::Graphics::Engine::Render()
 
 void Nexus::Graphics::Engine::Shutdown()
 {
-	Backend::Get().Shut();
+	Backend::Shut();
 }

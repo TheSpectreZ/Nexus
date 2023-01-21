@@ -1,5 +1,5 @@
 #pragma once
-#include "Build.h"
+#include "EngineSpecification.h"
 
 namespace Nexus
 {
@@ -8,7 +8,7 @@ namespace Nexus
 		class NEXUS_GRAPHICS_API Engine
 		{
 		public:
-			static void Initialize();
+			static void Initialize(const EngineSpecification& specs);
 			static void Render();
 			static void Shutdown();
 		};

@@ -16,7 +16,8 @@ int main()
 	
 	Nexus::Platform::Input::SetContextWindow(&appWindow);
 
-	Nexus::Graphics::Engine::Initialize();
+	Nexus::Graphics::EngineSpecification Specifications{ appWindow.handle };
+	Nexus::Graphics::Engine::Initialize(Specifications);
 
 	while (Nexus::Platform::Manager::IsOpen(&appWindow))
 	{
