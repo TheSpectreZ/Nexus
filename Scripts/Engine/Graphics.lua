@@ -11,7 +11,7 @@ project "Graphics"
 	includedirs
 	{
 		IncludeDir["Graphics"],
-	
+		IncludeDir["Platform"],
 		IncludeDir["DebugUtils"],
 
 		IncludeDir["glfw"],
@@ -28,6 +28,7 @@ project "Graphics"
 	links 
 	{
 		"DebugUtils",
+		"Platform",
 
 		"glfw",
 		"vulkan-1.lib",
