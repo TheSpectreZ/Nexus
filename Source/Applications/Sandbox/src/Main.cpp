@@ -2,7 +2,7 @@
 #include "Platform/Input.h"
 #include "DebugUtils/Logger.h"
 
-#include "Graphics/Graphics.h"
+#include "Graphics/Engine.h"
 
 int main()
 {
