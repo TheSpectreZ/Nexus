@@ -8,7 +8,7 @@ namespace Nexus
 	{
 		struct NEXUS_GRAPHICS_API EngineSpecification
 		{
-			Platform::Window targetWindow;
+			Platform::Window* targetWindow;
 		};
 	}
 }
