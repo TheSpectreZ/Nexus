@@ -167,7 +167,7 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 
 	// Surface
 	{
-		_VKR = glfwCreateWindowSurface(s_Instance->m_Instance, specs.targetWindow.handle, nullptr, &s_Instance->m_Surface);
+		_VKR = glfwCreateWindowSurface(s_Instance->m_Instance, specs.targetWindow->handle, nullptr, &s_Instance->m_Surface);
 		CHECK_HANDLE(s_Instance->m_Surface, VkSurfaceKHR);
 		NEXUS_LOG_TRACE("Vulkan SurfaceKHR Created");
 	}
@@ -331,4 +331,9 @@ void Nexus::Graphics::Backend::Shut()
 	NEXUS_LOG_WARN("Vulkan Backend Shut");
 
 	delete s_Instance;
+}
+
+void Nexus::Graphics::Backend::WaitForDevice()
+{
+	vkDeviceWaitIdle(s_Instance->m_Device);
 }

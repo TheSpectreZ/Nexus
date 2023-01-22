@@ -15,6 +15,8 @@ namespace Nexus
 		public:
 			static void Init(const EngineSpecification& specs);
 			static void Shut();
+
+			static void WaitForDevice();
 		private:
 			VkInstance m_Instance;
 			VkSurfaceKHR m_Surface;
