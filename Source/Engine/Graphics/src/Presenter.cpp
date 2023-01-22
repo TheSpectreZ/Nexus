@@ -4,20 +4,166 @@
 
 Nexus::Graphics::Presenter* Nexus::Graphics::Presenter::s_Instance = nullptr;
 
+uint32_t Nexus::Graphics::Presenter::s_CurrentFrame = 0;
+uint32_t Nexus::Graphics::Presenter::s_FramesInFlight = 0;
+uint32_t Nexus::Graphics::Presenter::s_ImageIndex = 0;
+
+Nexus::Graphics::EngineSpecification Nexus::Graphics::Presenter::s_Specs;
+std::function<void(uint32_t, uint32_t)> Nexus::Graphics::Presenter::s_RebootCallback = nullptr;
+
 void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 {
 	s_Instance = new Presenter();
+	s_Specs = specs;
 
+	s_Instance->Create();
+
+	// Fences and Semaphores
+	{
+		s_Instance->m_Fences.resize(s_FramesInFlight);
+		s_Instance->m_Semaphores.first.resize(s_FramesInFlight);
+		s_Instance->m_Semaphores.second.resize(s_FramesInFlight);
+
+		VkFenceCreateInfo fInfo{};
+		fInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fInfo.pNext = nullptr;
+		fInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+		VkSemaphoreCreateInfo sInfo{};
+		sInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		sInfo.pNext = nullptr;
+		sInfo.flags = 0;
+
+		for (uint32_t i = 0; i < s_FramesInFlight; i++)
+		{ 
+			vkCreateFence(Backend::GetDevice(), &fInfo, nullptr, &s_Instance->m_Fences[i]);
+			vkCreateSemaphore(Backend::GetDevice(), &sInfo, nullptr, &s_Instance->m_Semaphores.first[i]);
+			vkCreateSemaphore(Backend::GetDevice(), &sInfo, nullptr, &s_Instance->m_Semaphores.second[i]);
+		}
+
+	}
+
+	// Command Buffers and Pool
+	{
+		QueueIndexFamilies Fam = Graphics::GetQueueIndexFamilies(Backend::GetPhysicalDevice(), Backend::GetSurface());
+
+		VkCommandPoolCreateInfo pInfo{};
+		pInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		pInfo.pNext = nullptr;
+		pInfo.flags = 0;
+		pInfo.queueFamilyIndex = Fam.front().value();
+
+		vkCreateCommandPool(Backend::GetDevice(), &pInfo, nullptr, &s_Instance->m_CommandPool);
+
+		VkCommandBufferAllocateInfo aInfo{};
+		aInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		aInfo.pNext = nullptr;
+		aInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		aInfo.commandPool = s_Instance->m_CommandPool;
+		aInfo.commandBufferCount = s_FramesInFlight;
+
+		s_Instance->m_CommandBuffers.resize(s_FramesInFlight);
+		vkAllocateCommandBuffers(Backend::GetDevice(), &aInfo, s_Instance->m_CommandBuffers.data());
+	}
+}
+
+void Nexus::Graphics::Presenter::Shut()
+{
+	s_Instance->Destroy();
+	
+	for (uint32_t i = 0; i < s_FramesInFlight; i++)
+	{
+		vkDestroyFence(Backend::GetDevice(), s_Instance->m_Fences[i], nullptr);
+		vkDestroySemaphore(Backend::GetDevice(), s_Instance->m_Semaphores.first[i], nullptr);
+		vkDestroySemaphore(Backend::GetDevice(), s_Instance->m_Semaphores.second[i], nullptr);
+	}
+
+	vkDestroyCommandPool(Backend::GetDevice(), s_Instance->m_CommandPool, nullptr);
+
+	NEXUS_LOG_WARN("Vulkan Presenter Shut");
+	delete s_Instance;
+}
+
+void Nexus::Graphics::Presenter::StartFrame()
+{
+	vkWaitForFences(Backend::GetDevice(), 1, &s_Instance->m_Fences[s_CurrentFrame], VK_TRUE, UINT64_MAX);
+	_VKR = vkAcquireNextImageKHR(Backend::GetDevice(), s_Instance->m_Swapchain, UINT64_MAX, s_Instance->m_Semaphores.first[s_CurrentFrame], VK_NULL_HANDLE, &s_ImageIndex);
+
+	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR)
+	{
+		s_Instance->Destroy();
+		s_Instance->Create();
+
+		if(s_RebootCallback)
+			s_RebootCallback(s_Specs.targetWindow->width, s_Specs.targetWindow->height);
+	}
+
+	vkResetFences(Backend::GetDevice(), 1, &s_Instance->m_Fences[s_CurrentFrame]);
+
+	VkCommandBufferBeginInfo Info{};
+	Info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	Info.pInheritanceInfo = nullptr;
+	Info.pNext = nullptr;
+	Info.flags = 0;
+
+	vkBeginCommandBuffer(s_Instance->m_CommandBuffers[s_CurrentFrame],&Info);
+}
+
+void Nexus::Graphics::Presenter::EndFrame()
+{
+	vkEndCommandBuffer(s_Instance->m_CommandBuffers[s_CurrentFrame]);
+
+	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+	
+	VkSubmitInfo sInfo{};
+	sInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	sInfo.pNext = nullptr;
+	sInfo.pCommandBuffers = &s_Instance->m_CommandBuffers[s_CurrentFrame];
+	sInfo.commandBufferCount = 1;
+	sInfo.waitSemaphoreCount = 1;
+	sInfo.pWaitSemaphores = &s_Instance->m_Semaphores.first[s_CurrentFrame];
+	sInfo.pWaitDstStageMask = waitStages;
+	sInfo.signalSemaphoreCount = 1;
+	sInfo.pSignalSemaphores = &s_Instance->m_Semaphores.second[s_CurrentFrame];
+
+	vkQueueSubmit(Backend::GetGraphicsQueue(), 1, &sInfo, s_Instance->m_Fences[s_CurrentFrame]);
+
+	VkPresentInfoKHR presentInfo{};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pNext = nullptr;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &s_Instance->m_Swapchain;
+	presentInfo.pImageIndices = &s_ImageIndex;
+	presentInfo.pWaitSemaphores = &s_Instance->m_Semaphores.second[s_CurrentFrame];
+	presentInfo.waitSemaphoreCount = 1;
+
+	_VKR = vkQueuePresentKHR(Backend::GetPresentQueue(), &presentInfo);
+
+	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR || _VKR == VK_SUBOPTIMAL_KHR)
+	{
+		s_Instance->Destroy();
+		s_Instance->Create();
+
+		if (s_RebootCallback)
+			s_RebootCallback(s_Specs.targetWindow->width, s_Specs.targetWindow->height);
+	}
+	else if (_VKR != VK_SUCCESS)
+	{
+		NEXUS_ASSERT("Failed To Present Swapchain", "Swapchain Error");
+	}
+
+}
+
+void Nexus::Graphics::Presenter::Create()
+{
 	// Swapchain
 	{
 		VkSwapchainCreateInfoKHR Info{};
 		Info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		Info.pNext = nullptr;
 		Info.surface = Backend::GetSurface();
-		
-		QueueIndexFamilies Fam = Graphics::GetQueueIndexFamilies(Backend::GetPhysicalDevice(), Backend::GetSurface());
-	
-		if (auto Fam = GetQueueIndexFamilies(Backend::GetPhysicalDevice(), Backend::GetSurface()); 
+
+		if (auto Fam = GetQueueIndexFamilies(Backend::GetPhysicalDevice(), Backend::GetSurface());
 			Fam.front() != Fam.back())
 		{
 			uint32_t Indices[] = { Fam.front().value(),Fam.back().value() };
@@ -36,12 +182,12 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 		{
 			VkSurfaceCapabilitiesKHR cap;
 			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &cap);
-		
+
 			uint32_t size = 0;
 			vkGetPhysicalDeviceSurfaceFormatsKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &size, nullptr);
 			std::vector<VkSurfaceFormatKHR> availableFormats(size);
 			vkGetPhysicalDeviceSurfaceFormatsKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &size, availableFormats.data());
-			
+
 			size = 0;
 			vkGetPhysicalDeviceSurfacePresentModesKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &size, nullptr);
 			std::vector<VkPresentModeKHR> availableModes(size);
@@ -74,7 +220,7 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 			}
 			else
 			{
-				extent = { (uint32_t)specs.targetWindow.width,(uint32_t)specs.targetWindow.height };
+				extent = { (uint32_t)s_Specs.targetWindow->width,(uint32_t)s_Specs.targetWindow->height };
 
 				extent.width = std::clamp(extent.width, cap.currentExtent.width, cap.maxImageExtent.width);
 				extent.height = std::clamp(extent.height, cap.currentExtent.height, cap.maxImageExtent.height);
@@ -100,35 +246,32 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 		Info.clipped = VK_TRUE;
 		Info.oldSwapchain = VK_NULL_HANDLE;
 
-		_VKR = vkCreateSwapchainKHR(Backend::GetDevice(), &Info, nullptr, &s_Instance->m_Swapchain);
-		CHECK_HANDLE(s_Instance->m_Swapchain, VkSwapchainKHR);
+		_VKR = vkCreateSwapchainKHR(Backend::GetDevice(), &Info, nullptr, &m_Swapchain);
+		CHECK_HANDLE(m_Swapchain, VkSwapchainKHR);
 		NEXUS_LOG_WARN("Vulkan Swapchain Created");
 
-		s_Instance->m_SwapchainExtent = Info.imageExtent;
-		s_Instance->m_SwapchainImageFormat = Info.imageFormat;
+		m_SwapchainExtent = Info.imageExtent;
+		m_SwapchainImageFormat = Info.imageFormat;
+		s_FramesInFlight = Info.minImageCount;
 	}
 
 	// Swapchain Images
-	{
+	{	
 		uint32_t count;
-		vkGetSwapchainImagesKHR(Backend::GetDevice(), s_Instance->m_Swapchain, &count, nullptr);
-		s_Instance->m_Images.clear();
-		s_Instance->m_Images.resize(count);
-		vkGetSwapchainImagesKHR(Backend::GetDevice(), s_Instance->m_Swapchain, &count, s_Instance->m_Images.data());
-		
-		for (auto& i : s_Instance->m_Images)
-		{
-			CHECK_HANDLE(i, VkImage);
-		}
+		vkGetSwapchainImagesKHR(Backend::GetDevice(), m_Swapchain, &count, nullptr);
+		m_Images.clear();
+		m_Images.resize(count);
+		vkGetSwapchainImagesKHR(Backend::GetDevice(), m_Swapchain, &count, m_Images.data());
+
 		NEXUS_LOG_TRACE("Vulkan Swapchain Images[{0}] Acquired", count);
 	}
 
 	// Swapchain Image Views
 	{
-		uint32_t count = s_Instance->m_Images.size();
+		uint32_t count = m_Images.size();
 
-		s_Instance->m_ImageViews.clear();
-		s_Instance->m_ImageViews.resize(count);
+		m_ImageViews.clear();
+		m_ImageViews.resize(count);
 
 		for (uint32_t i = 0; i < count; i++)
 		{
@@ -140,8 +283,8 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 			Info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
 			Info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
 			Info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-			Info.format = s_Instance->m_SwapchainImageFormat;
-			Info.image = s_Instance->m_Images[i];
+			Info.format = m_SwapchainImageFormat;
+			Info.image = m_Images[i];
 			Info.viewType = VK_IMAGE_VIEW_TYPE_2D;
 			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			Info.subresourceRange.baseArrayLayer = 0;
@@ -149,23 +292,20 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 			Info.subresourceRange.layerCount = 1;
 			Info.subresourceRange.levelCount = 1;
 
-			_VKR = vkCreateImageView(Backend::GetDevice(), &Info, nullptr, &s_Instance->m_ImageViews[i]);
-			CHECK_HANDLE(s_Instance->m_ImageViews[i], VkImageView);
+			_VKR = vkCreateImageView(Backend::GetDevice(), &Info, nullptr, &m_ImageViews[i]);
+			CHECK_HANDLE(m_ImageViews[i], VkImageView);
 		}
 		NEXUS_LOG_TRACE("Vulkan Swapchain Image Views[{0}] Created", count);
 	}
+
 }
 
-void Nexus::Graphics::Presenter::Shut()
+void Nexus::Graphics::Presenter::Destroy()
 {
-	for (auto& view : s_Instance->m_ImageViews)
+	for (auto& view : m_ImageViews)
 	{
 		vkDestroyImageView(Backend::GetDevice(), view, nullptr);
 	}
 
-	vkDestroySwapchainKHR(Backend::GetDevice(), s_Instance->m_Swapchain, nullptr);
-
-	NEXUS_LOG_WARN("Vulkan Presenter Shut");
-
-	delete s_Instance;
+	vkDestroySwapchainKHR(Backend::GetDevice(), m_Swapchain, nullptr);
 }
