@@ -18,3 +18,10 @@ bool Nexus::Platform::Input::IsMouseButtonPressed(uint16_t button)
 {
 	return glfwGetMouseButton(m_window, button) == GLFW_PRESS;
 }
+
+std::pair<float, float> Nexus::Platform::Input::GetMouseCursorPosition()
+{
+	double x, y;
+	glfwGetCursorPos(m_window, &x, &y);
+	return { (float)x,(float)y };
+}
