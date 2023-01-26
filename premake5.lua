@@ -23,6 +23,5 @@ workspace "Nexus-Engine"
     group ""
 
     group "Projects"
-        include "Scripts/Projects/Sandbox.lua"
         include "Scripts/Projects/Minecraft.lua"
     group ""
