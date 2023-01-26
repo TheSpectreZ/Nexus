@@ -5,6 +5,8 @@
 #include "Platform/Input.h"
 #include "Platform/Manager.h"
 
+#include "DebugUtils/Logger.h"
+
 struct Vertex
 {
 	glm::vec3 position;
@@ -26,12 +28,80 @@ void Minecraft::OnAttach()
 
 	auto extent = Presenter::GetImageExtent();
 	Controller.AttachCamera(&cam);
+	Controller.SetPosition({ 0.f,0.f,2.f });
 	Controller.SetProjection(extent.width, extent.height, 45.f, 0.1f, 100.f);
+
+	// Uniforms
+	{
+		ubuffer.Create(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Camera));
+		umemory.Allocate(ubuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		umemory.Map();
+
+		Descriptor::BindWithBuffer(descriptorSet, ubuffer.Get(), sizeof(Camera), 0, 0);
+	}
+
+	// Meshs
+	{
+	
+		std::vector<Vertex> quadV =
+		{
+			{ { 0.5f, 0.5f, 0.5f } , { 1.f ,1.f, 1.f } }, // 0
+			{ { 0.5f,-0.5f, 0.5f } , { 0.f ,0.f, 1.f } }, // 1
+			{ {-0.5f,-0.5f, 0.5f } , { 0.f ,1.f, 0.f } }, // 2
+			{ {-0.5f, 0.5f, 0.5f } , { 1.f ,0.f, 0.f } }, // 3
+			
+			{ { 0.5f, 0.5f,-0.5f } , { 1.f ,1.f, 1.f } }, // 4
+			{ { 0.5f,-0.5f,-0.5f } , { 0.f ,0.f, 1.f } }, // 5
+			{ {-0.5f,-0.5f,-0.5f } , { 0.f ,1.f, 0.f } }, // 6
+			{ {-0.5f, 0.5f,-0.5f } , { 1.f ,0.f, 0.f } }, // 7
+
+		};
+
+		std::vector<uint32_t> quadi = 
+		{ 
+			0,1,2, 2,3,0 ,
+			7,6,5, 5,4,7 ,
+
+			4,0,3, 3,7,4 ,
+			1,5,6, 6,2,1 ,
+
+			4,5,1, 1,0,4 ,
+			3,2,6, 6,7,3
+		};
+
+		vbuffer.Create(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, quadV.size() * sizeof(Vertex));
+		vMemory.Allocate(vbuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+		
+		vMemory.Map();
+		vMemory.Update(quadV.data());
+		vMemory.UnMap();
+
+		ibuffer.Create(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, quadi.size() * sizeof(uint32_t));
+		iMemory.Allocate(ibuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+		iMemory.Map();
+		iMemory.Update(quadi.data());
+		iMemory.UnMap();
+	}
+
+	// Screen
+	{
+		viewport.x = 0.f;
+		viewport.y = 0.f;
+		viewport.maxDepth = 1.f;
+		viewport.minDepth = 0.f;
+		viewport.height = Presenter::GetImageExtent().height;
+		viewport.width = Presenter::GetImageExtent().width;
+		
+		scissor.extent = Presenter::GetImageExtent();
+		scissor.offset = { 0,0 };
+	}
 }
 
 void Minecraft::OnUpdate()
 {
 	UpdateCamera();
+	umemory.Update(&cam);
 }
 
 void Minecraft::OnRender()
@@ -40,11 +110,38 @@ void Minecraft::OnRender()
 
 	Presenter::BeginRenderpass(cmdBuffer, renderpass, Framebuffers[Presenter::GetFrameIndex()], clearValue);
 	
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.Get());
+	
+	Descriptor::Bind(cmdBuffer, pipelineLayout.Get(), 0, descriptorSet);
+
+	vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
+	vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
+
+	VkBuffer buff[] = { vbuffer.Get() };
+	VkDeviceSize off[] = {0};
+
+	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, buff, off);
+
+	vkCmdBindIndexBuffer(cmdBuffer, ibuffer.Get(),0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(cmdBuffer, 36, 1, 0, 0, 0);
+
 	Presenter::EndRenderpass(cmdBuffer);
 }
 
 void Minecraft::OnDetach()
 {
+	vbuffer.Destroy();
+	ibuffer.Destroy();
+
+	vMemory.Free();
+	iMemory.Free();
+
+	ubuffer.Destroy();
+
+	umemory.UnMap();
+	umemory.Free();
+
 	pipeline.Destroy();
 	pipelineLayout.Destroy();
 
@@ -77,6 +174,20 @@ void Minecraft::OnCallback()
 
 	auto extent = Presenter::GetImageExtent();
 	Controller.SetProjection(extent.width, extent.height, 45.f, 0.1f, 100.f);
+	Controller.Rotate(-90.f, 0.f);
+
+	// Screen
+	{
+		viewport.x = 0.f;
+		viewport.y = 0.f;
+		viewport.maxDepth = 1.f;
+		viewport.minDepth = 0.f;
+		viewport.height = extent.height;
+		viewport.width = extent.width;
+
+		scissor.extent = extent;
+		scissor.offset = { 0,0 };
+	}
 }
 
 void Minecraft::CreateAttachments()
@@ -286,7 +397,7 @@ void Minecraft::CreatePipelines()
 		Info.basePipelineIndex = 0;
 		Info.layout = &pipelineLayout;
 		
-		Info.cullMode = VK_CULL_MODE_BACK_BIT;
+		Info.cullMode = VK_CULL_MODE_NONE;
 		Info.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		Info.polygonMode = VK_POLYGON_MODE_FILL;
 		Info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -298,14 +409,14 @@ void Minecraft::CreatePipelines()
 		Info.dynamicStates = {
 			VK_DYNAMIC_STATE_VIEWPORT,
 			VK_DYNAMIC_STATE_SCISSOR,
-			VK_DYNAMIC_STATE_CULL_MODE,
-			VK_DYNAMIC_STATE_FRONT_FACE,
+			//VK_DYNAMIC_STATE_CULL_MODE,
+			//VK_DYNAMIC_STATE_FRONT_FACE,
 		};
 
 		Info.viewportCount = 1;
-		Info.pViewports = nullptr;
+		Info.pViewports = &viewport;
 		Info.scissorCount = 1;
-		Info.pScissors = nullptr;
+		Info.pScissors = &scissor;
 
 		Info.vertexBindings = { {0,sizeof(Vertex),VK_VERTEX_INPUT_RATE_VERTEX} };
 
@@ -327,28 +438,29 @@ void Minecraft::CreatePipelines()
 
 void Minecraft::UpdateCamera()
 {
-	float dt = Platform::Manager::GetDeltaTime();
+	float dt = Platform::Manager::GetDeltaTime() * 5.f;
 
 	if (Platform::Input::IsKeyPressed(Key::W))
 		Controller.MoveForward(dt);
 
 	if (Platform::Input::IsKeyPressed(Key::S))
 		Controller.MoveBackward(dt);
-	
+
 	if (Platform::Input::IsKeyPressed(Key::A))
 		Controller.MoveLeft(dt);
-	
+
 	if (Platform::Input::IsKeyPressed(Key::D))
 		Controller.MoveRight(dt);
-	
+
 	if (Platform::Input::IsKeyPressed(Key::Q))
 		Controller.MoveDown(dt);
-	
+
 	if (Platform::Input::IsKeyPressed(Key::E))
 		Controller.MoveUp(dt);
 
 	static bool first = true;
-	static float lastX, lastY, xOff, yOff, yaw, pitch;
+	static float lastX, lastY, xOff, yOff, yaw = -90.f, pitch;
+
 
 	auto [x, y] = Platform::Input::GetMouseCursorPosition();
 
@@ -363,19 +475,25 @@ void Minecraft::UpdateCamera()
 	yOff = y - lastY;
 
 	lastX = x;
-	lastY = y;	
+	lastY = y;
 
-	xOff *= 0.5f;
-	yOff *= 0.5f;
+	if (Platform::Input::IsMouseButtonPressed(Mouse::Right))
+	{
+		xOff *= 0.5f;
+		yOff *= 0.5f;
 
-	yaw += xOff;
-	pitch += yOff;
+		yaw += xOff;
+		pitch += yOff;
 
-	if (pitch > 89.f)
-		pitch = 89.f;
-	if (pitch < -89.f)
-		pitch = -89.f;
+		if (pitch > 89.f)
+			pitch = 89.f;
+		if (pitch < -89.f)
+			pitch = -89.f;
 
-	Controller.Rotate(yaw, pitch);
+
+		Controller.Rotate(yaw, pitch);
+	}
+
+	Controller.SetView();
 }
  

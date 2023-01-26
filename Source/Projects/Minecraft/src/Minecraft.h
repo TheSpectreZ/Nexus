@@ -5,6 +5,7 @@
 #include "Graphics/Renderpass.h"
 #include "Graphics/Pipeline.h"
 #include "Graphics/Descriptor.h"
+#include "Graphics/Resource.h"
 
 #include "Graphics/Camera.h"
 
@@ -50,5 +51,17 @@ private:
 	// Camera
 	Nexus::Graphics::Camera cam;
 	Nexus::Graphics::CameraController Controller;
+
+	// Uniform
+	Nexus::Graphics::Buffer ubuffer;
+	Nexus::Graphics::Memory umemory;
+
+	// Mesh
+	Nexus::Graphics::Buffer vbuffer, ibuffer;
+	Nexus::Graphics::Memory vMemory, iMemory;
+
+	// Screen
+	VkViewport viewport;
+	VkRect2D scissor;
 };
 
