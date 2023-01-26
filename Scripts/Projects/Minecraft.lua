@@ -28,7 +28,13 @@ project "Minecraft"
         "Core",
         "Graphics",
         "DebugUtils",
-        "Platform"
+        "Platform",
+        "vulkan-1.lib"
+    }
+
+    libdirs
+    {
+        LibDir["vulkanSDK"]
     }
 
     filter "system:windows"
