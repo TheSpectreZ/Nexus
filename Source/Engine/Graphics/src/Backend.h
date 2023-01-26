@@ -1,6 +1,6 @@
 #pragma once
 #include "vulkan/vulkan.h"
-#include "EngineSpecification.h"
+#include "Graphics/EngineSpecification.h"
 
 #include <vector>
 #include <optional>
@@ -25,13 +25,19 @@ namespace Nexus
 			VkDebugUtilsMessengerEXT m_DebugMessenger;
 
 			VkQueue m_GraphicsQueue,m_PresentQueue;
+			VkSampleCountFlagBits m_Msaa;
 		public:
 			static VkDevice GetDevice() { return s_Instance->m_Device; }
 			static VkSurfaceKHR GetSurface() { return s_Instance->m_Surface; }
 			static VkPhysicalDevice GetPhysicalDevice() { return s_Instance->m_PhysicalDevice; }
 			static VkQueue GetGraphicsQueue() { return s_Instance->m_GraphicsQueue; }
 			static VkQueue GetPresentQueue() { return s_Instance->m_PresentQueue; }
+			static VkSampleCountFlagBits GetMaxSampleCount() { return s_Instance->m_Msaa; }
 		};
+
+		uint32_t FindMemoryType(VkPhysicalDevice dev, uint32_t filter, VkMemoryPropertyFlags property);
+
+		VkFormat FindSupportedFormat(VkPhysicalDevice dev, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 
 		typedef std::vector<std::optional<uint32_t>> QueueIndexFamilies;
 		QueueIndexFamilies GetQueueIndexFamilies(VkPhysicalDevice device, VkSurfaceKHR surface);

@@ -1,15 +1,12 @@
 #include "Graphics/Presenter.h"
 #include "vkAssert.h"
-#include "Graphics/Backend.h"
+#include "GLFW/glfw3.h"
+#include "Backend.h"
 
 Nexus::Graphics::Presenter* Nexus::Graphics::Presenter::s_Instance = nullptr;
 
-uint32_t Nexus::Graphics::Presenter::s_CurrentFrame = 0;
-uint32_t Nexus::Graphics::Presenter::s_FramesInFlight = 0;
-uint32_t Nexus::Graphics::Presenter::s_ImageIndex = 0;
-
 Nexus::Graphics::EngineSpecification Nexus::Graphics::Presenter::s_Specs;
-std::function<void(uint32_t, uint32_t)> Nexus::Graphics::Presenter::s_RebootCallback = nullptr;
+std::function<void()> Nexus::Graphics::Presenter::s_RebootCallback = nullptr;
 
 void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 {
@@ -20,9 +17,9 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 
 	// Fences and Semaphores
 	{
-		s_Instance->m_Fences.resize(s_FramesInFlight);
-		s_Instance->m_Semaphores.first.resize(s_FramesInFlight);
-		s_Instance->m_Semaphores.second.resize(s_FramesInFlight);
+		s_Instance->m_Fences.resize(s_Instance->s_FramesInFlight);
+		s_Instance->m_Semaphores.first.resize(s_Instance->s_FramesInFlight);
+		s_Instance->m_Semaphores.second.resize(s_Instance->s_FramesInFlight);
 
 		VkFenceCreateInfo fInfo{};
 		fInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -34,7 +31,7 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 		sInfo.pNext = nullptr;
 		sInfo.flags = 0;
 
-		for (uint32_t i = 0; i < s_FramesInFlight; i++)
+		for (uint32_t i = 0; i < s_Instance->s_FramesInFlight; i++)
 		{ 
 			vkCreateFence(Backend::GetDevice(), &fInfo, nullptr, &s_Instance->m_Fences[i]);
 			vkCreateSemaphore(Backend::GetDevice(), &sInfo, nullptr, &s_Instance->m_Semaphores.first[i]);
@@ -50,7 +47,7 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 		VkCommandPoolCreateInfo pInfo{};
 		pInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		pInfo.pNext = nullptr;
-		pInfo.flags = 0;
+		pInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		pInfo.queueFamilyIndex = Fam.front().value();
 
 		vkCreateCommandPool(Backend::GetDevice(), &pInfo, nullptr, &s_Instance->m_CommandPool);
@@ -60,9 +57,9 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 		aInfo.pNext = nullptr;
 		aInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		aInfo.commandPool = s_Instance->m_CommandPool;
-		aInfo.commandBufferCount = s_FramesInFlight;
+		aInfo.commandBufferCount = s_Instance->s_FramesInFlight;
 
-		s_Instance->m_CommandBuffers.resize(s_FramesInFlight);
+		s_Instance->m_CommandBuffers.resize(s_Instance->s_FramesInFlight);
 		vkAllocateCommandBuffers(Backend::GetDevice(), &aInfo, s_Instance->m_CommandBuffers.data());
 	}
 }
@@ -71,7 +68,7 @@ void Nexus::Graphics::Presenter::Shut()
 {
 	s_Instance->Destroy();
 	
-	for (uint32_t i = 0; i < s_FramesInFlight; i++)
+	for (uint32_t i = 0; i < s_Instance->s_FramesInFlight; i++)
 	{
 		vkDestroyFence(Backend::GetDevice(), s_Instance->m_Fences[i], nullptr);
 		vkDestroySemaphore(Backend::GetDevice(), s_Instance->m_Semaphores.first[i], nullptr);
@@ -86,19 +83,15 @@ void Nexus::Graphics::Presenter::Shut()
 
 void Nexus::Graphics::Presenter::StartFrame()
 {
-	vkWaitForFences(Backend::GetDevice(), 1, &s_Instance->m_Fences[s_CurrentFrame], VK_TRUE, UINT64_MAX);
-	_VKR = vkAcquireNextImageKHR(Backend::GetDevice(), s_Instance->m_Swapchain, UINT64_MAX, s_Instance->m_Semaphores.first[s_CurrentFrame], VK_NULL_HANDLE, &s_ImageIndex);
+	vkWaitForFences(Backend::GetDevice(), 1, &s_Instance->m_Fences[s_Instance->s_CurrentFrame], VK_TRUE, UINT64_MAX);
+	_VKR = vkAcquireNextImageKHR(Backend::GetDevice(), s_Instance->m_Swapchain, UINT64_MAX, s_Instance->m_Semaphores.first[s_Instance->s_CurrentFrame], VK_NULL_HANDLE, &s_Instance->s_ImageIndex);
 
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		s_Instance->Destroy();
-		s_Instance->Create();
-
-		if(s_RebootCallback)
-			s_RebootCallback(s_Specs.targetWindow->width, s_Specs.targetWindow->height);
+		s_Instance->ReBuild();
 	}
 
-	vkResetFences(Backend::GetDevice(), 1, &s_Instance->m_Fences[s_CurrentFrame]);
+	vkResetFences(Backend::GetDevice(), 1, &s_Instance->m_Fences[s_Instance->s_CurrentFrame]);
 
 	VkCommandBufferBeginInfo Info{};
 	Info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -106,52 +99,79 @@ void Nexus::Graphics::Presenter::StartFrame()
 	Info.pNext = nullptr;
 	Info.flags = 0;
 
-	vkBeginCommandBuffer(s_Instance->m_CommandBuffers[s_CurrentFrame],&Info);
+	vkBeginCommandBuffer(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame],&Info);
 }
 
 void Nexus::Graphics::Presenter::EndFrame()
 {
-	vkEndCommandBuffer(s_Instance->m_CommandBuffers[s_CurrentFrame]);
+	vkEndCommandBuffer(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame]);
 
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	
 	VkSubmitInfo sInfo{};
 	sInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	sInfo.pNext = nullptr;
-	sInfo.pCommandBuffers = &s_Instance->m_CommandBuffers[s_CurrentFrame];
+	sInfo.pCommandBuffers = &s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame];
 	sInfo.commandBufferCount = 1;
 	sInfo.waitSemaphoreCount = 1;
-	sInfo.pWaitSemaphores = &s_Instance->m_Semaphores.first[s_CurrentFrame];
+	sInfo.pWaitSemaphores = &s_Instance->m_Semaphores.first[s_Instance->s_CurrentFrame];
 	sInfo.pWaitDstStageMask = waitStages;
 	sInfo.signalSemaphoreCount = 1;
-	sInfo.pSignalSemaphores = &s_Instance->m_Semaphores.second[s_CurrentFrame];
+	sInfo.pSignalSemaphores = &s_Instance->m_Semaphores.second[s_Instance->s_CurrentFrame];
 
-	vkQueueSubmit(Backend::GetGraphicsQueue(), 1, &sInfo, s_Instance->m_Fences[s_CurrentFrame]);
+	vkQueueSubmit(Backend::GetGraphicsQueue(), 1, &sInfo, s_Instance->m_Fences[s_Instance->s_CurrentFrame]);
 
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.swapchainCount = 1;
 	presentInfo.pSwapchains = &s_Instance->m_Swapchain;
-	presentInfo.pImageIndices = &s_ImageIndex;
-	presentInfo.pWaitSemaphores = &s_Instance->m_Semaphores.second[s_CurrentFrame];
+	presentInfo.pImageIndices = &s_Instance->s_ImageIndex;
+	presentInfo.pWaitSemaphores = &s_Instance->m_Semaphores.second[s_Instance->s_CurrentFrame];
 	presentInfo.waitSemaphoreCount = 1;
 
 	_VKR = vkQueuePresentKHR(Backend::GetPresentQueue(), &presentInfo);
 
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR || _VKR == VK_SUBOPTIMAL_KHR)
 	{
-		s_Instance->Destroy();
-		s_Instance->Create();
-
-		if (s_RebootCallback)
-			s_RebootCallback(s_Specs.targetWindow->width, s_Specs.targetWindow->height);
+		s_Instance->ReBuild();
 	}
 	else if (_VKR != VK_SUCCESS)
 	{
 		NEXUS_ASSERT("Failed To Present Swapchain", "Swapchain Error");
 	}
 
+	s_Instance->s_CurrentFrame = (s_Instance->s_CurrentFrame + 1) % s_Instance->s_FramesInFlight;
+}
+
+void Nexus::Graphics::Presenter::BeginRenderpass(VkCommandBuffer cmdbuffer,const Renderpass& pass, const Framebuffer& buffer,std::vector<VkClearValue> values)
+{
+	VkRenderPassBeginInfo Info{};
+	Info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	Info.pNext = nullptr;
+	Info.renderPass = pass.Get();
+	Info.framebuffer = buffer.Get();
+	Info.renderArea.offset = { 0,0 };
+	Info.renderArea.extent = s_Instance->m_SwapchainExtent;
+	Info.clearValueCount = values.size();
+	Info.pClearValues = values.data();
+
+	vkCmdBeginRenderPass(cmdbuffer, &Info, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Nexus::Graphics::Presenter::EndRenderpass(VkCommandBuffer buffer)
+{
+	vkCmdEndRenderPass(buffer);
+}
+
+void Nexus::Graphics::Presenter::WaitForDevice()
+{
+	Backend::WaitForDevice();
+}
+
+VkSampleCountFlagBits Nexus::Graphics::Presenter::GetImageMaxSamples()
+{
+	return Backend::GetMaxSampleCount();
 }
 
 void Nexus::Graphics::Presenter::Create()
@@ -308,4 +328,26 @@ void Nexus::Graphics::Presenter::Destroy()
 	}
 
 	vkDestroySwapchainKHR(Backend::GetDevice(), m_Swapchain, nullptr);
+}
+
+void Nexus::Graphics::Presenter::ReBuild()
+{
+	Backend::WaitForDevice();
+
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(s_Specs.targetWindow->handle, &width, &height);
+	while (width == 0 || height == 0) {
+		glfwGetFramebufferSize(s_Specs.targetWindow->handle, &width, &height);
+		glfwWaitEvents();
+	}
+
+	NEXUS_LOG_ERROR("Presenter Recreation Started");
+
+	s_Instance->Destroy();
+	s_Instance->Create();
+
+	if (s_RebootCallback)
+		s_RebootCallback();
+
+	NEXUS_LOG_ERROR("Presenter Recreation Completed");
 }

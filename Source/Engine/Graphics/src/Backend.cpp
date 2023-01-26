@@ -1,4 +1,4 @@
-#include "Graphics/Backend.h"
+#include "Backend.h"
 #include "vkAssert.h"
 
 #include "GLFW/glfw3.h"
@@ -53,6 +53,40 @@ static bool CheckExtensionAvailability(std::vector<const char*> extensions,VkPhy
 	return true;
 }
 
+uint32_t Nexus::Graphics::FindMemoryType(VkPhysicalDevice dev, uint32_t filter, VkMemoryPropertyFlags property)
+{
+	VkPhysicalDeviceMemoryProperties props{};
+	vkGetPhysicalDeviceMemoryProperties(dev, &props);
+
+	for (uint32_t i = 0; i < props.memoryTypeCount; i++)
+	{
+		if ((filter & (1 << i)) && (props.memoryTypes[i].propertyFlags & property) == property)
+			return i;
+	}
+
+	NEXUS_ASSERT("Failed To Find Suitable Memory Type", "Vulkan Error");
+
+	return 0;
+}
+
+VkFormat Nexus::Graphics::FindSupportedFormat(VkPhysicalDevice dev, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+{
+	for (VkFormat format : candidates)
+	{
+		VkFormatProperties Props;
+		vkGetPhysicalDeviceFormatProperties(dev, format, &Props);;
+
+		if (tiling == VK_IMAGE_TILING_LINEAR && (Props.linearTilingFeatures & features) == features)
+			return format;
+		else if (tiling == VK_IMAGE_TILING_OPTIMAL && (Props.optimalTilingFeatures & features) == features)
+			return format;
+	}
+
+	NEXUS_ASSERT("No Supported Format", "Vulkan Error");
+
+	return VkFormat();
+}
+
 Nexus::Graphics::QueueIndexFamilies Nexus::Graphics::GetQueueIndexFamilies(VkPhysicalDevice device,VkSurfaceKHR surface)
 {
 	uint32_t count;
@@ -97,8 +131,8 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 
 	std::vector<const char*> DeviceExtensions;
 	DeviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-
-#ifndef NEXUS_DEBUG
+	
+#ifdef NEXUS_DEBUG
 	debugEnabled = true;
 	InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
 
@@ -253,8 +287,25 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 
 		VkPhysicalDeviceProperties props;
 		vkGetPhysicalDeviceProperties(s_Instance->m_PhysicalDevice, &props);
-
 		CHECK_HANDLE(s_Instance->m_PhysicalDevice, VkPhysicalDevice);
+
+		// MSAA
+		{
+			VkPhysicalDeviceProperties Props;
+			vkGetPhysicalDeviceProperties(s_Instance->m_PhysicalDevice, &Props);
+
+			VkSampleCountFlags counts = Props.limits.framebufferColorSampleCounts & Props.limits.framebufferDepthSampleCounts;
+
+			if (counts & VK_SAMPLE_COUNT_64_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_64_BIT; }
+			if (counts & VK_SAMPLE_COUNT_32_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_32_BIT; }
+			if (counts & VK_SAMPLE_COUNT_16_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_16_BIT; }
+			if (counts & VK_SAMPLE_COUNT_8_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_8_BIT; }
+			if (counts & VK_SAMPLE_COUNT_4_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_4_BIT; }
+			if (counts & VK_SAMPLE_COUNT_2_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_2_BIT; }
+			else { s_Instance->m_Msaa = VK_SAMPLE_COUNT_1_BIT; }
+
+		}
+
 		NEXUS_LOG_WARN("Physical Device Acquired: {0}", props.deviceName);
 	}
 
