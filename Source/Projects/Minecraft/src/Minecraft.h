@@ -6,6 +6,8 @@
 #include "Graphics/Pipeline.h"
 #include "Graphics/Descriptor.h"
 
+#include "Graphics/Camera.h"
+
 class Minecraft : public Nexus::Layer
 {
 public:
@@ -20,6 +22,8 @@ private:
 	void CreateRenderpasses();
 	void CreatePipelines();
 	void CreateDescriptors();
+
+	void UpdateCamera();
 private:
 	// Attachments
 	std::vector<Nexus::Graphics::FramebufferAttachment> ColorAttachments;
@@ -42,5 +46,9 @@ private:
 
 	// Clear Value
 	std::vector<VkClearValue> clearValue;
+
+	// Camera
+	Nexus::Graphics::Camera cam;
+	Nexus::Graphics::CameraController Controller;
 };
 

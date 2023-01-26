@@ -2,12 +2,16 @@
 #include "Graphics/Presenter.h"
 #include "glm/glm.hpp"
 
+#include "Platform/Input.h"
+#include "Platform/Manager.h"
+
 struct Vertex
 {
 	glm::vec3 position;
 	glm::vec3 color;
 };
 
+using namespace Nexus;
 using namespace Nexus::Graphics;
 
 void Minecraft::OnAttach()
@@ -19,10 +23,15 @@ void Minecraft::OnAttach()
 	CreatePipelines();
 
 	clearValue = { { {0.5f,0.33f,0.62f,1.f} }, {{1.f,0.f} } };
+
+	auto extent = Presenter::GetImageExtent();
+	Controller.AttachCamera(&cam);
+	Controller.SetProjection(extent.width, extent.height, 45.f, 0.1f, 100.f);
 }
 
 void Minecraft::OnUpdate()
 {
+	UpdateCamera();
 }
 
 void Minecraft::OnRender()
@@ -65,6 +74,9 @@ void Minecraft::OnCallback()
 
 	CreateAttachments();
 	CreateFramebuffers();
+
+	auto extent = Presenter::GetImageExtent();
+	Controller.SetProjection(extent.width, extent.height, 45.f, 0.1f, 100.f);
 }
 
 void Minecraft::CreateAttachments()
@@ -312,3 +324,58 @@ void Minecraft::CreatePipelines()
 		pipeline.Create(Info);
 	}
 }
+
+void Minecraft::UpdateCamera()
+{
+	float dt = Platform::Manager::GetDeltaTime();
+
+	if (Platform::Input::IsKeyPressed(Key::W))
+		Controller.MoveForward(dt);
+
+	if (Platform::Input::IsKeyPressed(Key::S))
+		Controller.MoveBackward(dt);
+	
+	if (Platform::Input::IsKeyPressed(Key::A))
+		Controller.MoveLeft(dt);
+	
+	if (Platform::Input::IsKeyPressed(Key::D))
+		Controller.MoveRight(dt);
+	
+	if (Platform::Input::IsKeyPressed(Key::Q))
+		Controller.MoveDown(dt);
+	
+	if (Platform::Input::IsKeyPressed(Key::E))
+		Controller.MoveUp(dt);
+
+	static bool first = true;
+	static float lastX, lastY, xOff, yOff, yaw, pitch;
+
+	auto [x, y] = Platform::Input::GetMouseCursorPosition();
+
+	if (first)
+	{
+		lastX = x;
+		lastY = y;
+		first = false;
+	}
+
+	xOff = x - lastX;
+	yOff = y - lastY;
+
+	lastX = x;
+	lastY = y;	
+
+	xOff *= 0.5f;
+	yOff *= 0.5f;
+
+	yaw += xOff;
+	pitch += yOff;
+
+	if (pitch > 89.f)
+		pitch = 89.f;
+	if (pitch < -89.f)
+		pitch = -89.f;
+
+	Controller.Rotate(yaw, pitch);
+}
+ 
