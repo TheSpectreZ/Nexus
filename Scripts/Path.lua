@@ -1,4 +1,4 @@
-AppDir = "%{wks.location}/Source/Applications/"
+AppDir = "%{wks.location}/Source/Projects/"
 EngDir = "%{wks.location}/Source/Engine/"
 DepDir = "%{wks.location}/Source/Dependencies/"
 
