@@ -4,6 +4,8 @@
 #include "DebugUtils/Assert.h"
 #include "DebugUtils/Logger.h"
 
+float Nexus::Platform::Manager::deltaTime = 0.f;
+
 void Nexus::Platform::Initialize()
 {
 	int s = glfwInit();
@@ -45,7 +47,7 @@ void Nexus::Platform::Manager::PollEvents()
 {
 	static float ct, lt;
 
-	ct = glfwGetTime();
+	ct = (float)glfwGetTime();
 	deltaTime = ct - lt;
 	lt = ct;
 
