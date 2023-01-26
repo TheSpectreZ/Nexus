@@ -15,6 +15,7 @@ void Minecraft::OnAttach()
 	CreateAttachments();
 	CreateRenderpasses();
 	CreateFramebuffers();
+	CreateDescriptors();
 	CreatePipelines();
 
 	clearValue = { { {0.5f,0.33f,0.62f,1.f} }, {{1.f,0.f} } };
@@ -36,6 +37,10 @@ void Minecraft::OnRender()
 void Minecraft::OnDetach()
 {
 	pipeline.Destroy();
+	pipelineLayout.Destroy();
+
+	descriptorLayout.Destroy();
+	descriptorPool.Destroy();
 
 	for (auto& f : Framebuffers)
 		f.Destroy();
@@ -189,11 +194,38 @@ void Minecraft::CreateRenderpasses()
 	}
 }
 
+void Minecraft::CreateDescriptors()
+{
+	// Pool
+	{
+		std::vector<VkDescriptorPoolSize> sizes = { 
+			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1} 
+		};
+
+		descriptorPool.Create(&sizes, 1);
+	}
+
+	// Layout
+	{
+		std::vector<VkDescriptorSetLayoutBinding> layouts =
+		{
+			{0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT ,nullptr}
+		};
+
+		descriptorLayout.Create(&layouts);
+	}
+
+	// Sets
+	{
+		descriptorSet = Descriptor::AllocateSet(&descriptorLayout, &descriptorPool);
+	}
+}
+
 void Minecraft::CreatePipelines()
 {
 	// Pipeline layout
 	{
-		
+		pipelineLayout.Create(&descriptorLayout.Get(), 1, nullptr, 0);
 	}
 
 	// Pipeline
@@ -240,6 +272,7 @@ void Minecraft::CreatePipelines()
 
 		Info.basePipeline = VK_NULL_HANDLE;
 		Info.basePipelineIndex = 0;
+		Info.layout = &pipelineLayout;
 		
 		Info.cullMode = VK_CULL_MODE_BACK_BIT;
 		Info.frontFace = VK_FRONT_FACE_CLOCKWISE;

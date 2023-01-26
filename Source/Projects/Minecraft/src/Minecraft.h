@@ -4,6 +4,7 @@
 #include "Graphics/Framebuffer.h"
 #include "Graphics/Renderpass.h"
 #include "Graphics/Pipeline.h"
+#include "Graphics/Descriptor.h"
 
 class Minecraft : public Nexus::Layer
 {
@@ -18,6 +19,7 @@ private:
 	void CreateFramebuffers();
 	void CreateRenderpasses();
 	void CreatePipelines();
+	void CreateDescriptors();
 private:
 	// Attachments
 	std::vector<Nexus::Graphics::FramebufferAttachment> ColorAttachments;
@@ -28,6 +30,11 @@ private:
 
 	// Renderpass
 	Nexus::Graphics::Renderpass renderpass;
+	
+	// Descriptors
+	Nexus::Graphics::DescriptorPool descriptorPool;
+	Nexus::Graphics::DescriptorLayout descriptorLayout;
+	Nexus::Graphics::DescriptorSet descriptorSet;
 
 	// Pipelines 
 	Nexus::Graphics::PipelineLayout pipelineLayout;
