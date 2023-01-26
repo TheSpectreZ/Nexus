@@ -10,6 +10,7 @@ namespace Nexus
 		struct NEXUS_PLATFORM_API Window
 		{
 			int width, height;
+			const char* title;
 			GLFWwindow* handle;
 		};
 	}

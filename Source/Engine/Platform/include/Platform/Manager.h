@@ -11,7 +11,7 @@ namespace Nexus
 		class NEXUS_PLATFORM_API Manager
 		{
 		public:
-			static void Create_Window(Window* window,const char* title);
+			static void Create_Window(Window* window);
 			static void Destroy_Window(Window* window);
 			
 			static void Close(Window* window);
