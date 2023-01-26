@@ -1,33 +1,34 @@
-project "Platform"
-    kind "SharedLib"
+project "Minecraft"
+    kind "ConsoleApp"
     language "C++"
-    location (EngDir.."Platform")
-
-    defines "NEXUS_PLATFORM_DLL"
+    location (AppDir.."Minecraft")
 
     targetdir(BinDir)
     objdir(IntDir)
 
     includedirs
     {
+        IncludeDir["Core"],
+        IncludeDir["Graphics"],
+        IncludeDir["DebugUtils"],
         IncludeDir["Platform"],
 
-        IncludeDir["DebugUtils"],
-
-        IncludeDir["glfw"],
         IncludeDir["spdlog"],
+        IncludeDir["vulkanSDK"],
     }
 
     files
     {
-        (EngDir.."Platform/**.h"),
-        (EngDir.."Platform/**.cpp")
+        (AppDir.."Minecraft/**.h"),
+        (AppDir.."Minecraft/**.cpp")
     }
 
     links
     {
+        "Core",
+        "Graphics",
         "DebugUtils",
-        "glfw"
+        "Platform"
     }
 
     filter "system:windows"

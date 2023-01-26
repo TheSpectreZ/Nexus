@@ -16,6 +16,7 @@ IncludeDir["vulkanSDK"] = "$(VULKAN_SDK)/Include"
 IncludeDir["Platform"] = (EngDir.."Platform/include")
 IncludeDir["DebugUtils"] = (EngDir.."DebugUtils/include")
 IncludeDir["Graphics"] = (EngDir.."Graphics/include")
+IncludeDir["Core"] = (EngDir.."Core/include")
 
 LibDir = {}
 

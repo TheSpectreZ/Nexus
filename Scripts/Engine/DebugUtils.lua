@@ -30,6 +30,7 @@ project "DebugUtils"
         defines "NEXUS_SYSTEM_WINDOWS"
         cppdialect "C++20"
         systemversion "latest"
+        disablewarnings { "4251" }
 
     filter "configurations:Debug"
         defines "NEXUS_DEBUG"

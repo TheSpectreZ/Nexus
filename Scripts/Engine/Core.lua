@@ -1,33 +1,36 @@
-project "Platform"
+project "Core"
     kind "SharedLib"
     language "C++"
-    location (EngDir.."Platform")
+    location (EngDir.."Core")
 
-    defines "NEXUS_PLATFORM_DLL"
+    defines "NEXUS_CORE_DLL"
 
     targetdir(BinDir)
     objdir(IntDir)
 
     includedirs
     {
-        IncludeDir["Platform"],
+        IncludeDir["Core"],
 
         IncludeDir["DebugUtils"],
+        IncludeDir["Graphics"],
+        IncludeDir["Platform"],
 
-        IncludeDir["glfw"],
         IncludeDir["spdlog"],
+        IncludeDir["vulkanSDK"],
     }
 
     files
     {
-        (EngDir.."Platform/**.h"),
-        (EngDir.."Platform/**.cpp")
+        (EngDir.."Core/**.h"),
+        (EngDir.."Core/**.cpp")
     }
 
     links
     {
         "DebugUtils",
-        "glfw"
+        "Platform",
+        "Graphics"
     }
 
     filter "system:windows"
