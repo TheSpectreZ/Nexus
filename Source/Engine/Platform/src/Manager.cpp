@@ -43,5 +43,11 @@ bool Nexus::Platform::Manager::IsOpen(Window* window)
 
 void Nexus::Platform::Manager::PollEvents()
 {
+	static float ct, lt;
+
+	ct = glfwGetTime();
+	deltaTime = ct - lt;
+	lt = ct;
+
 	glfwPollEvents();
 }

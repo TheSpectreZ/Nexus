@@ -18,6 +18,10 @@ namespace Nexus
 			static bool IsOpen(Window* window);
 
 			static void PollEvents();
+		
+			static float GetDeltaTime() { return deltaTime; }
+		private:
+			static float deltaTime;
 		};
 	}
 }
