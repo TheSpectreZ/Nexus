@@ -39,6 +39,33 @@ VkDescriptorSet Nexus::Graphics::Descriptor::AllocateSet(DescriptorLayout* layou
 	return set;
 }
 
+void Nexus::Graphics::Descriptor::BindWithBuffer(VkDescriptorSet set, VkBuffer buffer,VkDeviceSize size,uint32_t binding,uint32_t arrayElm)
+{
+	VkDescriptorBufferInfo b{};
+	b.buffer = buffer;
+	b.offset = 0;
+	b.range = size;
+
+	VkWriteDescriptorSet Info{};
+	Info.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	Info.pNext = nullptr;
+	Info.descriptorCount = 1;
+	Info.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	Info.dstBinding = binding;
+	Info.dstSet = set;
+	Info.dstArrayElement = arrayElm;
+	Info.pBufferInfo = &b;
+	Info.pImageInfo = nullptr;
+	Info.pTexelBufferView = nullptr;
+
+	vkUpdateDescriptorSets(Backend::GetDevice(), 1, &Info, 0, nullptr);
+}
+
+void Nexus::Graphics::Descriptor::Bind(VkCommandBuffer cmdbuffer,VkPipelineLayout layout, uint32_t setIndex,VkDescriptorSet set)
+{
+	vkCmdBindDescriptorSets(cmdbuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, setIndex, 1, &set, 0, nullptr);
+}
+
 void Nexus::Graphics::DescriptorLayout::Create(std::vector<VkDescriptorSetLayoutBinding>* bindings)
 {
 	VkDescriptorSetLayoutCreateInfo Info{};

@@ -13,7 +13,7 @@ namespace Nexus
 
 		class NEXUS_GRAPHICS_API CameraController
 		{
-			glm::vec3 front = { 0.f,0.f,-1.f };
+			glm::vec3 front = { 0.f,0.f,1.f };
 			glm::vec3 up = { 0.f,1.f,0.f };
 		public:
 			void AttachCamera(Camera* cam) { camera = cam; }
@@ -30,7 +30,7 @@ namespace Nexus
 			void MoveUp(float dt);
 			void MoveDown(float dt);
 
-			void Update();
+			void SetView();
 		private:
 			Camera* camera;
 

@@ -59,6 +59,9 @@ namespace Nexus
 		public:
 			void Create(const PipelineCreateInfo& Info);
 			void Destroy();
+
+			VkPipeline& Get() { return m_handle; }
+			VkPipeline Get() const { return m_handle; }
 		private:
 			VkPipeline m_handle;
 		};
