@@ -6,18 +6,18 @@
 #include <fstream>
 #include <sstream>
 
-void Nexus::Graphics::PipelineLayout::Create(std::vector<VkDescriptorSetLayout> layout, std::vector<VkPushConstantRange> ranges)
+void Nexus::Graphics::PipelineLayout::Create(VkDescriptorSetLayout* layout, uint32_t layoutCount, VkPushConstantRange* ranges, uint32_t rangeCount)
 {
 	VkPipelineLayoutCreateInfo Info{};
 	Info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 	Info.pNext = nullptr;
 	Info.flags = 0;
 
-	Info.setLayoutCount = (uint32_t)layout.size();
-	Info.pSetLayouts = layout.data();
+	Info.setLayoutCount = layoutCount;
+	Info.pSetLayouts = layout;
 
-	Info.pushConstantRangeCount = (uint32_t)ranges.size();
-	Info.pPushConstantRanges = ranges.data();
+	Info.pushConstantRangeCount = rangeCount;
+	Info.pPushConstantRanges = ranges;
 
 	vkCreatePipelineLayout(Backend::GetDevice(), &Info, nullptr, &m_handle);
 }
@@ -156,6 +156,7 @@ void Nexus::Graphics::GraphicsPipeline::Create(const PipelineCreateInfo& Info)
 	info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 	info.pNext = nullptr;
 	info.flags = 0;
+	info.layout = Info.layout->Get();
 
 	info.basePipelineHandle = Info.basePipeline;
 	info.basePipelineIndex = Info.basePipelineIndex;
