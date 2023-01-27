@@ -4,3 +4,6 @@
 [submodule "Source/Dependencies/spdlog"]
 	path = Source/Dependencies/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "Source/Dependencies/VulkanMemoryAllocator"]
+	path = Source/Dependencies/VulkanMemoryAllocator
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
