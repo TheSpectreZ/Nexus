@@ -29,14 +29,12 @@ void Minecraft::OnAttach()
 	auto extent = Presenter::GetImageExtent();
 	Controller.AttachCamera(&cam);
 	Controller.SetPosition({ 0.f,0.f,2.f });
-	Controller.SetProjection(extent.width, extent.height, 45.f, 0.1f, 100.f);
+	Controller.SetProjection((float)extent.width, (float)extent.height, 45.f, 0.1f, 100.f);
+	Controller.Rotate(-90.f, 0.f);
 
 	// Uniforms
 	{
-		ubuffer.Create(VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, sizeof(Camera));
-		umemory.Allocate(ubuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-		umemory.Map();
-
+		ubuffer.Create(sizeof(Camera));
 		Descriptor::BindWithBuffer(descriptorSet, ubuffer.Get(), sizeof(Camera), 0, 0);
 	}
 
@@ -69,19 +67,8 @@ void Minecraft::OnAttach()
 			3,2,6, 6,7,3
 		};
 
-		vbuffer.Create(VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, quadV.size() * sizeof(Vertex));
-		vMemory.Allocate(vbuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-		
-		vMemory.Map();
-		vMemory.Update(quadV.data());
-		vMemory.UnMap();
-
-		ibuffer.Create(VK_BUFFER_USAGE_INDEX_BUFFER_BIT, quadi.size() * sizeof(uint32_t));
-		iMemory.Allocate(ibuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-		iMemory.Map();
-		iMemory.Update(quadi.data());
-		iMemory.UnMap();
+		vbuffer.Create((uint32_t)quadV.size() , sizeof(Vertex), quadV.data());
+		ibuffer.Create((uint32_t)quadi.size() , sizeof(uint32_t), quadi.data());
 	}
 
 	// Screen
@@ -90,8 +77,8 @@ void Minecraft::OnAttach()
 		viewport.y = 0.f;
 		viewport.maxDepth = 1.f;
 		viewport.minDepth = 0.f;
-		viewport.height = Presenter::GetImageExtent().height;
-		viewport.width = Presenter::GetImageExtent().width;
+		viewport.height = (float)Presenter::GetImageExtent().height;
+		viewport.width = (float)Presenter::GetImageExtent().width;
 		
 		scissor.extent = Presenter::GetImageExtent();
 		scissor.offset = { 0,0 };
@@ -101,7 +88,7 @@ void Minecraft::OnAttach()
 void Minecraft::OnUpdate()
 {
 	UpdateCamera();
-	umemory.Update(&cam);
+	ubuffer.Update(&cam);
 }
 
 void Minecraft::OnRender()
@@ -110,21 +97,17 @@ void Minecraft::OnRender()
 
 	Presenter::BeginRenderpass(cmdBuffer, renderpass, Framebuffers[Presenter::GetFrameIndex()], clearValue);
 	
-	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.Get());
-	
 	Descriptor::Bind(cmdBuffer, pipelineLayout.Get(), 0, descriptorSet);
+	
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.Get());
 
 	vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
-	VkBuffer buff[] = { vbuffer.Get() };
-	VkDeviceSize off[] = {0};
-
-	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, buff, off);
-
-	vkCmdBindIndexBuffer(cmdBuffer, ibuffer.Get(),0, VK_INDEX_TYPE_UINT32);
-
-	vkCmdDrawIndexed(cmdBuffer, 36, 1, 0, 0, 0);
+	vbuffer.Bind(cmdBuffer);
+	ibuffer.Bind(cmdBuffer);
+	
+	vkCmdDrawIndexed(cmdBuffer, ibuffer.GetIndexCount(), 1, 0, 0, 0);
 
 	Presenter::EndRenderpass(cmdBuffer);
 }
@@ -134,13 +117,7 @@ void Minecraft::OnDetach()
 	vbuffer.Destroy();
 	ibuffer.Destroy();
 
-	vMemory.Free();
-	iMemory.Free();
-
 	ubuffer.Destroy();
-
-	umemory.UnMap();
-	umemory.Free();
 
 	pipeline.Destroy();
 	pipelineLayout.Destroy();
@@ -173,7 +150,7 @@ void Minecraft::OnCallback()
 	CreateFramebuffers();
 
 	auto extent = Presenter::GetImageExtent();
-	Controller.SetProjection(extent.width, extent.height, 45.f, 0.1f, 100.f);
+	Controller.SetProjection((float)extent.width, (float)extent.height, 45.f, 0.1f, 100.f);
 	Controller.Rotate(-90.f, 0.f);
 
 	// Screen
@@ -182,8 +159,8 @@ void Minecraft::OnCallback()
 		viewport.y = 0.f;
 		viewport.maxDepth = 1.f;
 		viewport.minDepth = 0.f;
-		viewport.height = extent.height;
-		viewport.width = extent.width;
+		viewport.height = (float)extent.height;
+		viewport.width = (float)extent.width;
 
 		scissor.extent = extent;
 		scissor.offset = { 0,0 };
@@ -460,7 +437,6 @@ void Minecraft::UpdateCamera()
 
 	static bool first = true;
 	static float lastX, lastY, xOff, yOff, yaw = -90.f, pitch;
-
 
 	auto [x, y] = Platform::Input::GetMouseCursorPosition();
 

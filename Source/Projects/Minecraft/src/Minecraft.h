@@ -53,12 +53,11 @@ private:
 	Nexus::Graphics::CameraController Controller;
 
 	// Uniform
-	Nexus::Graphics::Buffer ubuffer;
-	Nexus::Graphics::Memory umemory;
+	Nexus::Graphics::UniformBuffer ubuffer;
 
 	// Mesh
-	Nexus::Graphics::Buffer vbuffer, ibuffer;
-	Nexus::Graphics::Memory vMemory, iMemory;
+	Nexus::Graphics::VertexBuffer vbuffer;
+	Nexus::Graphics::IndexBuffer ibuffer;
 
 	// Screen
 	VkViewport viewport;
