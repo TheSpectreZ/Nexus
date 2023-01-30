@@ -1,3 +1,5 @@
+#define VMA_IMPLEMENTATION
+
 #include "Backend.h"
 #include "vkAssert.h"
 
@@ -131,7 +133,7 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 
 	std::vector<const char*> DeviceExtensions;
 	DeviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-	
+
 #ifdef NEXUS_DEBUG
 	debugEnabled = true;
 	InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
@@ -222,12 +224,12 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 			{
 				return Rate == other.Rate;
 			}
-			
+
 			bool operator<(DeviceRate& other)
 			{
 				return Rate < other.Rate;
 			}
-			
+
 			bool operator>(DeviceRate& other)
 			{
 				return Rate > other.Rate;
@@ -251,8 +253,8 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 
 			if (!CheckExtensionAvailability(DeviceExtensions, devices[i]))
 				continue;
-			
-			const auto& QueueFamilies = GetQueueIndexFamilies(devices[i],s_Instance->m_Surface);
+
+			const auto& QueueFamilies = GetQueueIndexFamilies(devices[i], s_Instance->m_Surface);
 
 			bool found = true;
 			for (auto& fam : QueueFamilies)
@@ -276,8 +278,8 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		}
 
 		std::sort(Ratings.begin(), Ratings.end());
-		
-		if(!Ratings.back().Rate)
+
+		if (!Ratings.back().Rate)
 		{
 			NEXUS_ASSERT(1, "No Suitable Physical Device Found");
 		}
@@ -309,8 +311,9 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		NEXUS_LOG_WARN("Physical Device Acquired: {0}", props.deviceName);
 	}
 
-	// Logical Device
+	// Logical Device 
 	{
+
 		QueueIndexFamilies families = GetQueueIndexFamilies(s_Instance->m_PhysicalDevice, s_Instance->m_Surface);
 
 		std::vector<VkDeviceQueueCreateInfo> queueInfo;
@@ -332,7 +335,7 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		Info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 		Info.pNext = nullptr;
 		Info.flags = 0;
-		
+
 		VkPhysicalDeviceFeatures Features{};
 		Features.samplerAnisotropy = VK_TRUE;
 		Features.sampleRateShading = VK_TRUE;
@@ -361,11 +364,42 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		CHECK_HANDLE(s_Instance->m_PresentQueue, VkQueue);
 		NEXUS_LOG_TRACE("Present Queue Acquired");
 	}
+
+	// Vulkan Memory Allocator
+	{
+		VmaAllocatorCreateInfo Info{};
+		Info.instance = s_Instance->m_Instance;
+		Info.physicalDevice = s_Instance->m_PhysicalDevice;
+		Info.device = s_Instance->m_Device;
+		vkEnumerateInstanceVersion(&Info.vulkanApiVersion);
+
+		_VKR = vmaCreateAllocator(&Info, &s_Instance->m_VmaAllocator);
+		CHECK_LOG_VKR
+		NEXUS_LOG_DEBUG("vmaAllocator Created")
+	}
+
+	// Command Pool
+	{
+		QueueIndexFamilies fam = GetQueueIndexFamilies(s_Instance->m_PhysicalDevice, s_Instance->m_Surface);
+		
+		VkCommandPoolCreateInfo Info{};
+		Info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		Info.pNext = nullptr;
+		Info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		Info.queueFamilyIndex = fam[0].value();
+
+		vkCreateCommandPool(s_Instance->m_Device, &Info, nullptr, &s_Instance->m_CmdPool);
+	}
+
 }
 
 void Nexus::Graphics::Backend::Shut()
 {
 	vkDeviceWaitIdle(s_Instance->m_Device);
+	
+	vmaDestroyAllocator(s_Instance->m_VmaAllocator);
+
+	vkDestroyCommandPool(s_Instance->m_Device, s_Instance->m_CmdPool, nullptr);
 
 	vkDestroyDevice(s_Instance->m_Device, nullptr);
 	vkDestroySurfaceKHR(s_Instance->m_Instance, s_Instance->m_Surface, nullptr);
@@ -387,4 +421,41 @@ void Nexus::Graphics::Backend::Shut()
 void Nexus::Graphics::Backend::WaitForDevice()
 {
 	vkDeviceWaitIdle(s_Instance->m_Device);
+}
+
+VkCommandBuffer Nexus::Graphics::Backend::BeginSingleTimeCommands()
+{
+	VkCommandBufferAllocateInfo Info{};
+	Info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	Info.pNext = nullptr;
+	Info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	Info.commandPool = s_Instance->m_CmdPool;
+	Info.commandBufferCount = 1;
+
+	VkCommandBuffer buffer;
+	vkAllocateCommandBuffers(s_Instance->m_Device, &Info, &buffer);
+
+	VkCommandBufferBeginInfo begin{};
+	begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begin.pNext = nullptr;
+	begin.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	begin.pInheritanceInfo = nullptr;
+
+	vkBeginCommandBuffer(buffer, &begin);
+	
+	return buffer;
+}
+
+void Nexus::Graphics::Backend::EndSingleTimeCommands(VkCommandBuffer buffer)
+{
+	vkEndCommandBuffer(buffer);
+
+	VkSubmitInfo Info{};
+	Info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	Info.pNext = nullptr;
+	Info.commandBufferCount = 1;
+	Info.pCommandBuffers = &buffer;
+
+	vkQueueSubmit(s_Instance->m_GraphicsQueue, 1, &Info, VK_NULL_HANDLE);
+	vkQueueWaitIdle(s_Instance->m_GraphicsQueue);
 }

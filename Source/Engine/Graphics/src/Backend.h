@@ -1,5 +1,6 @@
 #pragma once
 #include "vulkan/vulkan.h"
+#include "vk_mem_alloc.h"
 #include "Graphics/EngineSpecification.h"
 
 #include <vector>
@@ -23,10 +24,17 @@ namespace Nexus
 			VkPhysicalDevice m_PhysicalDevice;
 			VkDevice m_Device;
 			VkDebugUtilsMessengerEXT m_DebugMessenger;
+			VmaAllocator m_VmaAllocator;
 
 			VkQueue m_GraphicsQueue,m_PresentQueue;
 			VkSampleCountFlagBits m_Msaa;
+
+			VkCommandPool m_CmdPool;
 		public:
+			static VkCommandBuffer BeginSingleTimeCommands();
+			static void EndSingleTimeCommands(VkCommandBuffer buffer);
+
+			static VmaAllocator GetAllocator() { return s_Instance->m_VmaAllocator; }
 			static VkDevice GetDevice() { return s_Instance->m_Device; }
 			static VkSurfaceKHR GetSurface() { return s_Instance->m_Surface; }
 			static VkPhysicalDevice GetPhysicalDevice() { return s_Instance->m_PhysicalDevice; }
