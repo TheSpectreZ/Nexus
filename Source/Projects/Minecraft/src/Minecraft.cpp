@@ -1,6 +1,7 @@
 #include "Minecraft.h"
 #include "Graphics/Presenter.h"
 #include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 #include "Platform/Input.h"
 #include "Platform/Manager.h"
@@ -10,7 +11,6 @@
 struct Vertex
 {
 	glm::vec3 position;
-	glm::vec3 color;
 };
 
 using namespace Nexus;
@@ -34,24 +34,26 @@ void Minecraft::OnAttach()
 
 	// Uniforms
 	{
-		ubuffer.Create(sizeof(Camera));
-		Descriptor::BindWithBuffer(descriptorSet, ubuffer.Get(), sizeof(Camera), 0, 0);
+		worldbuffer.Create(sizeof(Camera));
+		Descriptor::BindWithBuffer(descriptorSet, worldbuffer.Get(), sizeof(Camera), 0, 0);
+
+		instancebuffer.Create(sizeof(InstanceData));
+		Descriptor::BindWithBuffer(descriptorSet, instancebuffer.Get(), sizeof(InstanceData), 1, 0);
 	}
 
 	// Meshs
 	{
-	
 		std::vector<Vertex> quadV =
 		{
-			{ { 0.5f, 0.5f, 0.5f } , { 1.f ,1.f, 1.f } }, // 0
-			{ { 0.5f,-0.5f, 0.5f } , { 0.f ,0.f, 1.f } }, // 1
-			{ {-0.5f,-0.5f, 0.5f } , { 0.f ,1.f, 0.f } }, // 2
-			{ {-0.5f, 0.5f, 0.5f } , { 1.f ,0.f, 0.f } }, // 3
-			
-			{ { 0.5f, 0.5f,-0.5f } , { 1.f ,1.f, 1.f } }, // 4
-			{ { 0.5f,-0.5f,-0.5f } , { 0.f ,0.f, 1.f } }, // 5
-			{ {-0.5f,-0.5f,-0.5f } , { 0.f ,1.f, 0.f } }, // 6
-			{ {-0.5f, 0.5f,-0.5f } , { 1.f ,0.f, 0.f } }, // 7
+			{ { 0.5f, 0.5f, 0.5f } }, // 0
+			{ { 0.5f,-0.5f, 0.5f } }, // 1
+			{ {-0.5f,-0.5f, 0.5f } }, // 2
+			{ {-0.5f, 0.5f, 0.5f } }, // 3
+
+			{ { 0.5f, 0.5f,-0.5f } }, // 4
+			{ { 0.5f,-0.5f,-0.5f } }, // 5
+			{ {-0.5f,-0.5f,-0.5f } }, // 6
+			{ {-0.5f, 0.5f,-0.5f } }, // 7
 
 		};
 
@@ -71,6 +73,11 @@ void Minecraft::OnAttach()
 		ibuffer.Create((uint32_t)quadi.size() , sizeof(uint32_t), quadi.data());
 	}
 
+	// Instance
+	{
+		instancedata.transform = glm::mat4(1.f);
+	}
+
 	// Screen
 	{
 		viewport.x = 0.f;
@@ -88,7 +95,27 @@ void Minecraft::OnAttach()
 void Minecraft::OnUpdate()
 {
 	UpdateCamera();
-	ubuffer.Update(&cam);
+	worldbuffer.Update(&cam);
+
+	// Instance
+	{
+		if (Platform::Input::IsKeyPressed(Key::T))
+		{
+			float r = (1.f + rand() % 90) / 100;
+			float g = (1.f + rand() % 90) / 100;
+			float b = (1.f + rand() % 90) / 100;
+
+			instancedata.color = glm::vec4(r,g,b, 1.f);
+		}
+
+		if (Platform::Input::IsKeyPressed(Key::I))
+			instancedata.transform = glm::scale(glm::mat4(1.f), glm::vec3(0.5f, 0.5f, 0.5f));
+		if (Platform::Input::IsKeyPressed(Key::O))
+			instancedata.transform = glm::scale(glm::mat4(1.f), glm::vec3(1.2f, 1.2f, 1.2f));
+
+	}
+
+	instancebuffer.Update(&instancedata);
 }
 
 void Minecraft::OnRender()
@@ -117,7 +144,8 @@ void Minecraft::OnDetach()
 	vbuffer.Destroy();
 	ibuffer.Destroy();
 
-	ubuffer.Destroy();
+	worldbuffer.Destroy();
+	instancebuffer.Destroy();
 
 	pipeline.Destroy();
 	pipelineLayout.Destroy();
@@ -299,17 +327,18 @@ void Minecraft::CreateDescriptors()
 	// Pool
 	{
 		std::vector<VkDescriptorPoolSize> sizes = { 
-			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1} 
+			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,2} 
 		};
 
-		descriptorPool.Create(&sizes, 1);
+		descriptorPool.Create(&sizes, 2);
 	}
 
 	// Layout
 	{
 		std::vector<VkDescriptorSetLayoutBinding> layouts =
 		{
-			{0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT ,nullptr}
+			{0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT ,nullptr},
+			{1,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT ,nullptr},
 		};
 
 		descriptorLayout.Create(&layouts);
@@ -386,21 +415,18 @@ void Minecraft::CreatePipelines()
 		Info.dynamicStates = {
 			VK_DYNAMIC_STATE_VIEWPORT,
 			VK_DYNAMIC_STATE_SCISSOR,
-			//VK_DYNAMIC_STATE_CULL_MODE,
-			//VK_DYNAMIC_STATE_FRONT_FACE,
 		};
 
 		Info.viewportCount = 1;
-		Info.pViewports = &viewport;
+		Info.pViewports = nullptr;
 		Info.scissorCount = 1;
-		Info.pScissors = &scissor;
+		Info.pScissors = nullptr;
 
 		Info.vertexBindings = { {0,sizeof(Vertex),VK_VERTEX_INPUT_RATE_VERTEX} };
 
 		Info.vertexAttributes =
 		{
 			{0,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::position) },
-			{1,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::color) },
 		};
 
 		Info.ShaderPaths =
@@ -472,4 +498,3 @@ void Minecraft::UpdateCamera()
 
 	Controller.SetView();
 }
- 

@@ -52,8 +52,18 @@ private:
 	Nexus::Graphics::Camera cam;
 	Nexus::Graphics::CameraController Controller;
 
+	struct InstanceData
+	{
+		glm::mat4 transform;
+		glm::vec4 color;
+	};
+
+	// Instance
+	InstanceData instancedata;
+
 	// Uniform
-	Nexus::Graphics::UniformBuffer ubuffer;
+	Nexus::Graphics::UniformBuffer worldbuffer;
+	Nexus::Graphics::UniformBuffer instancebuffer;
 
 	// Mesh
 	Nexus::Graphics::VertexBuffer vbuffer;
