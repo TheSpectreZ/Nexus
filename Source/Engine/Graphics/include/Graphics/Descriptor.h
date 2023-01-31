@@ -36,7 +36,10 @@ namespace Nexus
 		{
 		public:
 			static VkDescriptorSet AllocateSet(DescriptorLayout* layout,DescriptorPool* pool);
+
 			static void BindWithBuffer(VkDescriptorSet set,VkBuffer buffer,VkDeviceSize size,uint32_t binding,uint32_t arrayElm);
+			static void BindWithCombinedImageSampler(VkDescriptorSet set, VkSampler sampler, VkImageView view,uint32_t binding,uint32_t arrayElm);
+			
 			static void Bind(VkCommandBuffer cmdbuffer, VkPipelineLayout layout,uint32_t setIndex,VkDescriptorSet set);
 		};
 	}

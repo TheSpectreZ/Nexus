@@ -61,6 +61,28 @@ void Nexus::Graphics::Descriptor::BindWithBuffer(VkDescriptorSet set, VkBuffer b
 	vkUpdateDescriptorSets(Backend::GetDevice(), 1, &Info, 0, nullptr);
 }
 
+void Nexus::Graphics::Descriptor::BindWithCombinedImageSampler(VkDescriptorSet set, VkSampler sampler, VkImageView view,uint32_t binding, uint32_t arrayElm)
+{
+	VkDescriptorImageInfo i{};
+	i.sampler = sampler;
+	i.imageView = view;
+	i.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkWriteDescriptorSet Info{};
+	Info.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	Info.pNext = nullptr;
+	Info.descriptorCount = 1;
+	Info.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	Info.dstBinding = binding;
+	Info.dstSet = set;
+	Info.dstArrayElement = arrayElm;
+	Info.pBufferInfo = nullptr;
+	Info.pImageInfo = &i;
+	Info.pTexelBufferView = nullptr;
+
+	vkUpdateDescriptorSets(Backend::GetDevice(), 1, &Info, 0, nullptr);
+}
+
 void Nexus::Graphics::Descriptor::Bind(VkCommandBuffer cmdbuffer,VkPipelineLayout layout, uint32_t setIndex,VkDescriptorSet set)
 {
 	vkCmdBindDescriptorSets(cmdbuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, setIndex, 1, &set, 0, nullptr);

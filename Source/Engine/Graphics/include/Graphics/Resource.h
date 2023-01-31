@@ -8,6 +8,17 @@ namespace Nexus
 {
 	namespace Graphics
 	{
+		class NEXUS_GRAPHICS_API Sampler
+		{
+		public:
+			void Create(VkFilter Mag, VkFilter Min);
+			void Destroy();
+			
+			VkSampler Get() { return m_sampler; }
+		private:
+			VkSampler m_sampler;
+		};
+
 		class NEXUS_GRAPHICS_API VertexBuffer
 		{
 		public:
@@ -48,6 +59,19 @@ namespace Nexus
 			VkBuffer m_buffer;
 			VmaAllocation m_allocation;
 			uint32_t m_Info;
+		};
+
+		class NEXUS_GRAPHICS_API Texture2D
+		{
+		public:
+			void Create(void* pixelData,VkSampleCountFlagBits samples,VkExtent2D extent,VkFormat format);
+			void Destroy();
+
+			VkImageView Get() { return m_view; }
+		private:
+			VkImage m_Image;
+			VkImageView m_view;
+			VmaAllocation m_allocation;
 		};
 
 	}
