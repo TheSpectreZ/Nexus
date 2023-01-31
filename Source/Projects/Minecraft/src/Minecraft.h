@@ -69,6 +69,12 @@ private:
 	Nexus::Graphics::VertexBuffer vbuffer;
 	Nexus::Graphics::IndexBuffer ibuffer;
 
+	// Samplers
+	Nexus::Graphics::Sampler sampler;
+
+	// Textures
+	Nexus::Graphics::Texture2D texture;
+
 	// Screen
 	VkViewport viewport;
 	VkRect2D scissor;

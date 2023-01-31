@@ -11,6 +11,9 @@
 struct Vertex
 {
 	glm::vec3 position;
+	glm::vec3 color;
+	glm::vec3 normal;
+	glm::vec2 texcoords;
 };
 
 using namespace Nexus;
@@ -45,28 +48,47 @@ void Minecraft::OnAttach()
 	{
 		std::vector<Vertex> quadV =
 		{
-			{ { 0.5f, 0.5f, 0.5f } }, // 0
-			{ { 0.5f,-0.5f, 0.5f } }, // 1
-			{ {-0.5f,-0.5f, 0.5f } }, // 2
-			{ {-0.5f, 0.5f, 0.5f } }, // 3
+ 			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {1.f,0.f} }, // 0x 0
+			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {0.f,1.f} }, // 0y 1
+			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {0.f,0.f} }, // 0z 2
 
-			{ { 0.5f, 0.5f,-0.5f } }, // 4
-			{ { 0.5f,-0.5f,-0.5f } }, // 5
-			{ {-0.5f,-0.5f,-0.5f } }, // 6
-			{ {-0.5f, 0.5f,-0.5f } }, // 7
+			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {0.f,0.f} }, // 1x 3
+			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {1.f,1.f} }, // 1y 4
+			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {1.f,0.f} }, // 1z 5
+						
+			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {0.f,1.f} }, // 2x 6
+			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {1.f,0.f} }, // 2y 7
+			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {1.f,1.f} }, // 2z 8
+			 
+			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {1.f,1.f} }, // 3x 9
+			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {0.f,0.f} }, // 3y 10
+			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {0.f,1.f} }, // 3z 11
+			 
+			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {0.f,0.f} }, // 4x 12
+			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {0.f,0.f} }, // 4y 13
+			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {1.f,0.f} }, // 4z 14
 
+			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {1.f,0.f} }, // 5x 15
+			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {1.f,0.f} }, // 5y 16
+			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {0.f,0.f} }, // 5z 17
+
+			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {1.f,1.f} }, // 6x 18
+			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {1.f,1.f} }, // 6y 19
+			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {0.f,1.f} }, // 6z 20
+
+			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {0.f,1.f} }, // 7x 21
+			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {0.f,1.f} }, // 7y 22
+			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {1.f,1.f} }, // 7z 23
 		};
 
 		std::vector<uint32_t> quadi = 
 		{ 
-			0,1,2, 2,3,0 ,
-			7,6,5, 5,4,7 ,
-
-			4,0,3, 3,7,4 ,
-			1,5,6, 6,2,1 ,
-
-			4,5,1, 1,0,4 ,
-			3,2,6, 6,7,3
+			0,12,21 , 21,9,0  ,
+			2,11,8  , 8,5,2   ,
+			15,3,6  , 6,18,15 ,
+			14,17,20, 20,23,14,
+			1,4,16  , 16,13,1 ,
+			7,10,22 , 22,19,7
 		};
 
 		vbuffer.Create((uint32_t)quadV.size() , sizeof(Vertex), quadV.data());
@@ -90,30 +112,20 @@ void Minecraft::OnAttach()
 		scissor.extent = Presenter::GetImageExtent();
 		scissor.offset = { 0,0 };
 	}
+
+	sampler.Create(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
+
+	// Textures
+	{
+		texture.Create("res/textures/image.jpg");
+		Descriptor::BindWithCombinedImageSampler(descriptorSet, sampler.Get(), texture.Get(), 2, 0);
+	}
 }
 
 void Minecraft::OnUpdate()
 {
 	UpdateCamera();
 	worldbuffer.Update(&cam);
-
-	// Instance
-	{
-		if (Platform::Input::IsKeyPressed(Key::T))
-		{
-			float r = (1.f + rand() % 90) / 100;
-			float g = (1.f + rand() % 90) / 100;
-			float b = (1.f + rand() % 90) / 100;
-
-			instancedata.color = glm::vec4(r,g,b, 1.f);
-		}
-
-		if (Platform::Input::IsKeyPressed(Key::I))
-			instancedata.transform = glm::scale(glm::mat4(1.f), glm::vec3(0.5f, 0.5f, 0.5f));
-		if (Platform::Input::IsKeyPressed(Key::O))
-			instancedata.transform = glm::scale(glm::mat4(1.f), glm::vec3(1.2f, 1.2f, 1.2f));
-
-	}
 
 	instancebuffer.Update(&instancedata);
 }
@@ -141,6 +153,10 @@ void Minecraft::OnRender()
 
 void Minecraft::OnDetach()
 {
+	sampler.Destroy();
+
+	texture.Destroy();
+
 	vbuffer.Destroy();
 	ibuffer.Destroy();
 
@@ -327,10 +343,11 @@ void Minecraft::CreateDescriptors()
 	// Pool
 	{
 		std::vector<VkDescriptorPoolSize> sizes = { 
-			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,2} 
+			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,2},
+			{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,2}
 		};
 
-		descriptorPool.Create(&sizes, 2);
+		descriptorPool.Create(&sizes, 1);
 	}
 
 	// Layout
@@ -339,6 +356,7 @@ void Minecraft::CreateDescriptors()
 		{
 			{0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT ,nullptr},
 			{1,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT ,nullptr},
+			{2,VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,1,VK_SHADER_STAGE_FRAGMENT_BIT,nullptr}
 		};
 
 		descriptorLayout.Create(&layouts);
@@ -427,6 +445,9 @@ void Minecraft::CreatePipelines()
 		Info.vertexAttributes =
 		{
 			{0,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::position) },
+			{1,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::color) },
+			{2,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::normal) },
+			{3,0,VK_FORMAT_R32G32_SFLOAT,offsetof(Vertex,Vertex::texcoords) },
 		};
 
 		Info.ShaderPaths =
