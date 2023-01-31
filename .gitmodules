@@ -7,3 +7,6 @@
 [submodule "Source/Dependencies/VulkanMemoryAllocator"]
 	path = Source/Dependencies/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+[submodule "Source/Dependencies/stb"]
+	path = Source/Dependencies/stb
+	url = https://github.com/nothings/stb.git
