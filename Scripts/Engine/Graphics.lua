@@ -17,7 +17,8 @@ project "Graphics"
 		IncludeDir["glfw"],
 		IncludeDir["spdlog"],
 		IncludeDir["vulkanSDK"],
-		IncludeDir['vulkanMemoryAllocator']
+		IncludeDir['vulkanMemoryAllocator'],
+		IncludeDir["stb"]
 	}
 
 	files

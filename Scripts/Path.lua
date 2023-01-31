@@ -13,6 +13,7 @@ IncludeDir["glfw"] = (DepDir.."glfw/include")
 IncludeDir["spdlog"] = (DepDir.."spdlog/include")
 IncludeDir["vulkanSDK"] = "$(VULKAN_SDK)/Include"
 IncludeDir["vulkanMemoryAllocator"] = (DepDir.."VulkanMemoryAllocator/include")
+IncludeDir["stb"] = (DepDir.."stb")
 
 IncludeDir["Platform"] = (EngDir.."Platform/include")
 IncludeDir["DebugUtils"] = (EngDir.."DebugUtils/include")
