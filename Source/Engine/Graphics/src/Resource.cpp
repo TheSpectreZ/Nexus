@@ -1,6 +1,11 @@
 #include "Backend.h"
-#include "Graphics/Resource.h"
 #include "vkAssert.h"
+
+#include "Graphics/Resource.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <unordered_map>
 
 void Copy(VkCommandBuffer cmd, VkBuffer src, VkBuffer dst, VkDeviceSize size)
@@ -223,6 +228,14 @@ void Nexus::Graphics::UniformBuffer::Update(void* data)
 	memcpy(m_Data, data, m_size);
 }
 
+void Nexus::Graphics::Texture2D::Create(const std::string& filepath)
+{
+	int w, h, c;
+	unsigned char* pixels = stbi_load(filepath.c_str(), &w, &h, &c, 4);
+
+	Create(pixels, VK_SAMPLE_COUNT_1_BIT, { (uint32_t)w,(uint32_t)h }, VK_FORMAT_R8G8B8A8_SRGB);
+}
+
 void Nexus::Graphics::Texture2D::Create(void* pixelData,VkSampleCountFlagBits samples, VkExtent2D extent,VkFormat format)
 {
 	VkDeviceSize size = (VkDeviceSize)extent.width * extent.height * 4;
@@ -259,7 +272,7 @@ void Nexus::Graphics::Texture2D::Create(void* pixelData,VkSampleCountFlagBits sa
 	Info.samples = samples;
 	Info.flags = 0;
 	Info.tiling = VK_IMAGE_TILING_OPTIMAL;
-	Info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	Info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
 	Info.format = format;
 	Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 

@@ -64,6 +64,7 @@ namespace Nexus
 		class NEXUS_GRAPHICS_API Texture2D
 		{
 		public:
+			void Create(const std::string& filepath);
 			void Create(void* pixelData,VkSampleCountFlagBits samples,VkExtent2D extent,VkFormat format);
 			void Destroy();
 
