@@ -228,10 +228,10 @@ void Nexus::Graphics::UniformBuffer::Update(void* data)
 	memcpy(m_Data, data, m_size);
 }
 
-void Nexus::Graphics::Texture2D::Create(const std::string& filepath)
+void Nexus::Graphics::Texture2D::Create(const char* filepath)
 {
 	int w, h, c;
-	unsigned char* pixels = stbi_load(filepath.c_str(), &w, &h, &c, 4);
+	unsigned char* pixels = stbi_load(filepath, &w, &h, &c, 4);
 
 	Create(pixels, VK_SAMPLE_COUNT_1_BIT, { (uint32_t)w,(uint32_t)h }, VK_FORMAT_R8G8B8A8_SRGB);
 }

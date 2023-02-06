@@ -100,16 +100,19 @@ Nexus::Graphics::QueueIndexFamilies Nexus::Graphics::GetQueueIndexFamilies(VkPhy
 	qIndices.emplace_back();
 	qIndices.emplace_back();
 
-	for (uint32_t i = 0; i < (uint32_t)properties.size(); i++)
+	int i = 0;
+	for (const auto& prop : properties)
 	{
 		if (properties[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			qIndices[0] = i;
-
-		VkBool32 present;
+		
+		VkBool32 present = VK_FALSE;
 		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &present);
 
 		if (present)
 			qIndices[1] = i;
+		
+		i++;
 	}
 
 	return qIndices;
@@ -134,14 +137,14 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 	std::vector<const char*> DeviceExtensions;
 	DeviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-#ifdef NEXUS_DEBUG
+//#ifdef NEXUS_DEBUG
 	debugEnabled = true;
 	InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
 
 	debugEnabled = CheckLayersAvailability(InstanceLayers);
 	if (!debugEnabled)
 		InstanceLayers.pop_back();
-#endif // NEXUS_DEBUG
+//#endif // NEXUS_DEBUG
 
 	// Instance
 	{
