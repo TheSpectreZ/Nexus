@@ -8,13 +8,6 @@
 
 #include "DebugUtils/Logger.h"
 
-struct Vertex
-{
-	glm::vec3 position;
-	glm::vec3 color;
-	glm::vec3 normal;
-	glm::vec2 texcoords;
-};
 
 using namespace Nexus;
 using namespace Nexus::Graphics;
@@ -44,57 +37,6 @@ void Minecraft::OnAttach()
 		Descriptor::BindWithBuffer(descriptorSet, instancebuffer.Get(), sizeof(InstanceData), 1, 0);
 	}
 
-	// Meshs
-	{
-		std::vector<Vertex> quadV =
-		{
- 			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {1.f,0.f} }, // 0x 0
-			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {0.f,1.f} }, // 0y 1
-			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {0.f,0.f} }, // 0z 2
-
-			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {0.f,0.f} }, // 1x 3
-			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {1.f,1.f} }, // 1y 4
-			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {1.f,0.f} }, // 1z 5
-						
-			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {0.f,1.f} }, // 2x 6
-			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {1.f,0.f} }, // 2y 7
-			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {1.f,1.f} }, // 2z 8
-			 
-			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {1.f,1.f} }, // 3x 9
-			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {0.f,0.f} }, // 3y 10
-			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {0.f,1.f} }, // 3z 11
-			 
-			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {0.f,0.f} }, // 4x 12
-			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {0.f,0.f} }, // 4y 13
-			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {1.f,0.f} }, // 4z 14
-
-			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {1.f,0.f} }, // 5x 15
-			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {1.f,0.f} }, // 5y 16
-			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {0.f,0.f} }, // 5z 17
-
-			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {1.f,1.f} }, // 6x 18
-			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {1.f,1.f} }, // 6y 19
-			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {0.f,1.f} }, // 6z 20
-
-			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {0.f,1.f} }, // 7x 21
-			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {0.f,1.f} }, // 7y 22
-			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {1.f,1.f} }, // 7z 23
-		};
-
-		std::vector<uint32_t> quadi = 
-		{ 
-			0,12,21 , 21,9,0  ,
-			2,11,8  , 8,5,2   ,
-			15,3,6  , 6,18,15 ,
-			14,17,20, 20,23,14,
-			1,4,16  , 16,13,1 ,
-			7,10,22 , 22,19,7
-		};
-
-		vbuffer.Create((uint32_t)quadV.size() , sizeof(Vertex), quadV.data());
-		ibuffer.Create((uint32_t)quadi.size() , sizeof(uint32_t), quadi.data());
-	}
-
 	// Instance
 	{
 		instancedata.transform = glm::mat4(1.f);
@@ -113,14 +55,10 @@ void Minecraft::OnAttach()
 		scissor.offset = { 0,0 };
 	}
 
-	sampler.Create(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
-
-	// Textures
-	{
-		texture.Create("res/textures/image.jpg");
-		Descriptor::BindWithCombinedImageSampler(descriptorSet, sampler.Get(), texture.Get(), 2, 0);
-	}
+	m_world.Create();
 }
+
+int pipeline = 0;
 
 void Minecraft::OnUpdate()
 {
@@ -128,6 +66,12 @@ void Minecraft::OnUpdate()
 	worldbuffer.Update(&cam);
 
 	instancebuffer.Update(&instancedata);
+
+	if (Platform::Input::IsKeyPressed(Key::P))
+		pipeline = 0;
+	if (Platform::Input::IsKeyPressed(Key::O))
+		pipeline = 1;
+
 }
 
 void Minecraft::OnRender()
@@ -138,32 +82,31 @@ void Minecraft::OnRender()
 	
 	Descriptor::Bind(cmdBuffer, pipelineLayout.Get(), 0, descriptorSet);
 	
-	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.Get());
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[pipeline].Get());
 
 	vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
-	vbuffer.Bind(cmdBuffer);
-	ibuffer.Bind(cmdBuffer);
-	
-	vkCmdDrawIndexed(cmdBuffer, ibuffer.GetIndexCount(), 1, 0, 0, 0);
+	//vbuffer.Bind(cmdBuffer);
+	//ibuffer.Bind(cmdBuffer);
+	//
+	//vkCmdDrawIndexed(cmdBuffer, ibuffer.GetIndexCount(), 1, 0, 0, 0);
+
+	m_world.Render(cmdBuffer);
 
 	Presenter::EndRenderpass(cmdBuffer);
 }
 
 void Minecraft::OnDetach()
 {
-	sampler.Destroy();
-
-	texture.Destroy();
-
-	vbuffer.Destroy();
-	ibuffer.Destroy();
+	m_world.Destroy();
 
 	worldbuffer.Destroy();
 	instancebuffer.Destroy();
 
-	pipeline.Destroy();
+	pipelines[0].Destroy();
+	pipelines[1].Destroy();
+
 	pipelineLayout.Destroy();
 
 	descriptorLayout.Destroy();
@@ -344,7 +287,6 @@ void Minecraft::CreateDescriptors()
 	{
 		std::vector<VkDescriptorPoolSize> sizes = { 
 			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,2},
-			{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,2}
 		};
 
 		descriptorPool.Create(&sizes, 1);
@@ -355,8 +297,7 @@ void Minecraft::CreateDescriptors()
 		std::vector<VkDescriptorSetLayoutBinding> layouts =
 		{
 			{0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT ,nullptr},
-			{1,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT ,nullptr},
-			{2,VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,1,VK_SHADER_STAGE_FRAGMENT_BIT,nullptr}
+			{1,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT ,nullptr},
 		};
 
 		descriptorLayout.Create(&layouts);
@@ -423,7 +364,6 @@ void Minecraft::CreatePipelines()
 		
 		Info.cullMode = VK_CULL_MODE_NONE;
 		Info.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		Info.polygonMode = VK_POLYGON_MODE_FILL;
 		Info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		Info.samples = Presenter::GetImageMaxSamples();
 
@@ -446,8 +386,6 @@ void Minecraft::CreatePipelines()
 		{
 			{0,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::position) },
 			{1,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::color) },
-			{2,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::normal) },
-			{3,0,VK_FORMAT_R32G32_SFLOAT,offsetof(Vertex,Vertex::texcoords) },
 		};
 
 		Info.ShaderPaths =
@@ -456,7 +394,11 @@ void Minecraft::CreatePipelines()
 			{"res/shaders/Frag.shader",VK_SHADER_STAGE_FRAGMENT_BIT},
 		};
 
-		pipeline.Create(Info);
+		Info.polygonMode = VK_POLYGON_MODE_FILL;
+		pipelines[0].Create(Info);
+
+		Info.polygonMode = VK_POLYGON_MODE_LINE;
+		pipelines[1].Create(Info);
 	}
 }
 

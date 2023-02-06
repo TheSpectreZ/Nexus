@@ -9,6 +9,10 @@
 
 #include "Graphics/Camera.h"
 
+#include "Game/World.h"
+
+#include <unordered_map>
+
 class Minecraft : public Nexus::Layer
 {
 public:
@@ -43,7 +47,8 @@ private:
 
 	// Pipelines 
 	Nexus::Graphics::PipelineLayout pipelineLayout;
-	Nexus::Graphics::GraphicsPipeline pipeline;
+	
+	std::unordered_map<uint32_t, Nexus::Graphics::GraphicsPipeline> pipelines;
 
 	// Clear Value
 	std::vector<VkClearValue> clearValue;
@@ -65,18 +70,11 @@ private:
 	Nexus::Graphics::UniformBuffer worldbuffer;
 	Nexus::Graphics::UniformBuffer instancebuffer;
 
-	// Mesh
-	Nexus::Graphics::VertexBuffer vbuffer;
-	Nexus::Graphics::IndexBuffer ibuffer;
-
-	// Samplers
-	Nexus::Graphics::Sampler sampler;
-
-	// Textures
-	Nexus::Graphics::Texture2D texture;
-
 	// Screen
 	VkViewport viewport;
 	VkRect2D scissor;
+
+	// World
+	World m_world;
 };
 
