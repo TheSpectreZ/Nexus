@@ -1,7 +1,10 @@
 #include "World.h"
 #include <vector>
-
+#include "Graphics/Presenter.h"
 #include "DebugUtils/Logger.h"
+
+#include "Noise.h"
+#include <iostream>
 
 std::tuple<Vertex, Vertex, Vertex, Vertex> GetVertex(Voxel::Face face, glm::vec3 color, glm::vec3 pos)
 {
@@ -10,40 +13,40 @@ std::tuple<Vertex, Vertex, Vertex, Vertex> GetVertex(Voxel::Face face, glm::vec3
 	switch (face)
 	{
 	case Voxel::FACE_Top:
-		v1 = { { 0.5f, 0.5f,-0.5f} , color };
-		v2 = { { 0.5f, 0.5f, 0.5f} , color };
-		v3 = { {-0.5f, 0.5f, 0.5f} , color };
-		v4 = { {-0.5f, 0.5f,-0.5f} , color };
+		v1 = { { 0.5f, 0.5f,-0.5f} , {color,0.9f} };
+		v2 = { { 0.5f, 0.5f, 0.5f} , {color,0.9f} };
+		v3 = { {-0.5f, 0.5f, 0.5f} , {color,0.9f} };
+		v4 = { {-0.5f, 0.5f,-0.5f} , {color,0.9f} };
 		break;
 	case Voxel::FACE_Down:
-		v1 = { { 0.5f,-0.5f, 0.5f} , color };
-		v2 = { { 0.5f,-0.5f,-0.5f} , color };
-		v3 = { {-0.5f,-0.5f,-0.5f} , color };
-		v4 = { {-0.5f,-0.5f, 0.5f} , color };
+		v1 = { { 0.5f,-0.5f, 0.5f} , {color,0.4f} };
+		v2 = { { 0.5f,-0.5f,-0.5f} , {color,0.4f} };
+		v3 = { {-0.5f,-0.5f,-0.5f} , {color,0.4f} };
+		v4 = { {-0.5f,-0.5f, 0.5f} , {color,0.4f} };
 		break;
 	case Voxel::FACE_Right:
-		v1 = { { 0.5f, 0.5f,-0.5f} , color };
-		v2 = { { 0.5f,-0.5f,-0.5f} , color };
-		v3 = { { 0.5f,-0.5f, 0.5f} , color };
-		v4 = { { 0.5f, 0.5f, 0.5f} , color };
+		v1 = { { 0.5f, 0.5f,-0.5f} , {color,0.7f} };
+		v2 = { { 0.5f,-0.5f,-0.5f} , {color,0.7f} };
+		v3 = { { 0.5f,-0.5f, 0.5f} , {color,0.7f} };
+		v4 = { { 0.5f, 0.5f, 0.5f} , {color,0.7f} };
 		break;
 	case Voxel::FACE_Left:
-		v1 = { {-0.5f, 0.5f, 0.5f} , color };
-		v2 = { {-0.5f,-0.5f, 0.5f} , color };
-		v3 = { {-0.5f,-0.5f,-0.5f} , color };
-		v4 = { {-0.5f, 0.5f,-0.5f} , color };
+		v1 = { {-0.5f, 0.5f, 0.5f} , {color,0.3f} };
+		v2 = { {-0.5f,-0.5f, 0.5f} , {color,0.3f} };
+		v3 = { {-0.5f,-0.5f,-0.5f} , {color,0.3f} };
+		v4 = { {-0.5f, 0.5f,-0.5f} , {color,0.3f} };
 		break;
 	case Voxel::FACE_Front:
-		v1 = { { 0.5f, 0.5f, 0.5f} , color };
-		v2 = { { 0.5f,-0.5f, 0.5f} , color };
-		v3 = { {-0.5f,-0.5f, 0.5f} , color };
-		v4 = { {-0.5f, 0.5f, 0.5f} , color };
+		v1 = { { 0.5f, 0.5f, 0.5f} , {color,0.8f} };
+		v2 = { { 0.5f,-0.5f, 0.5f} , {color,0.8f} };
+		v3 = { {-0.5f,-0.5f, 0.5f} , {color,0.8f} };
+		v4 = { {-0.5f, 0.5f, 0.5f} , {color,0.8f} };
 		break;
 	case Voxel::FACE_Back:
-		v1 = { {-0.5f, 0.5f,-0.5f} , color };
-		v2 = { {-0.5f,-0.5f,-0.5f} , color };
-		v3 = { { 0.5f,-0.5f,-0.5f} , color };
-		v4 = { { 0.5f, 0.5f,-0.5f} , color };
+		v1 = { {-0.5f, 0.5f,-0.5f} , {color,0.4f} };
+		v2 = { {-0.5f,-0.5f,-0.5f} , {color,0.4f} };
+		v3 = { { 0.5f,-0.5f,-0.5f} , {color,0.4f} };
+		v4 = { { 0.5f, 0.5f,-0.5f} , {color,0.4f} };
 		break;
 	default:
 		break;
@@ -57,83 +60,140 @@ std::tuple<Vertex, Vertex, Vertex, Vertex> GetVertex(Voxel::Face face, glm::vec3
 	return { v1,v2,v3,v4 };
 }
 
+float Chunk::threshold = 0.f;
+
 void Chunk::Create()
 {
-	// Voxel
+	GenerateVoxels();
+	GenerateMesh();
+}
+
+void Chunk::Destroy()
+{
+	m_vb.Destroy();
+	m_ib.Destroy();
+}
+
+void Chunk::Update()
+{
+	Destroy();
+	Create();
+}
+
+void Chunk::Render(VkCommandBuffer cmd)
+{
+	m_vb.Bind(cmd);
+	m_ib.Bind(cmd);
+
+	vkCmdDrawIndexed(cmd, m_ib.GetIndexCount(), 1, 0, 0, 0);
+}
+
+void Chunk::GenerateVoxels()
+{
+	srand(time(0));
+
+	const siv::PerlinNoise::seed_type seed = rand();
+	const siv::PerlinNoise perlin{ seed };
+
+	double maxN = std::numeric_limits<double>::min(), 
+		minN = std::numeric_limits<double>::max();
+
+	for (uint32_t y = 0; y < chunkSize; y++)
 	{
-		for (uint32_t y = 0; y < chunkSize; y++)
+		for (uint32_t z = 0; z < chunkSize; z++)
 		{
-			for (uint32_t z = 0; z < chunkSize; z++)
+			for (uint32_t x = 0; x < chunkSize; x++)
 			{
-				for (uint32_t x = 0; x < chunkSize; x++)
+				double noise = perlin.noise3D(x / scale, y / scale, z / scale);
+
+				if (noise > maxN)
+					maxN = noise;
+
+				if (noise < minN)
+					minN = noise;
+
+				m_voxels[y][z][x].color = glm::normalize(glm::vec3(x, y, z) * glm::vec3(rand()));
+
+				if (noise > threshold)
+					m_voxels[y][z][x].IsAir = true;
+				else
+					m_voxels[y][z][x].IsAir = false;
+			}
+		}
+	}
+
+}
+
+void Chunk::GenerateMesh()
+{
+	std::vector<Vertex> vertices;
+
+	std::vector<std::tuple<Vertex, Vertex, Vertex, Vertex>> verts;
+
+	for (uint32_t y = 0; y < chunkSize; y++)
+	{
+		for (uint32_t z = 0; z < chunkSize; z++)
+		{
+			for (uint32_t x = 0; x < chunkSize; x++)
+			{
+				verts.clear();
+
+				if (!m_voxels[y][z][x].IsAir)
 				{
-					m_voxels[y][z][x].color = glm::normalize(glm::vec3(x, y, z));
+					if (x == 0)
+						verts.emplace_back(GetVertex(Voxel::FACE_Left, m_voxels[y][z][x].color, { x,y,z }));
+					else if (x == chunkSize - 1)
+						verts.emplace_back(GetVertex(Voxel::FACE_Right, m_voxels[y][z][x].color, { x,y,z }));
 
 					if (y == 0)
-					{
-						m_voxels[y][z][x].faces[(uint32_t)Voxel::FACE_Down] = true;
-					}
+						verts.emplace_back(GetVertex(Voxel::FACE_Down, m_voxels[y][z][x].color, { x,y,z }));
 					else if (y == chunkSize - 1)
-					{
-						m_voxels[y][z][x].faces[(uint32_t)Voxel::FACE_Top] = true;
-					}
-
-					if (x == 0)
-					{
-						m_voxels[y][z][x].faces[(uint32_t)Voxel::FACE_Left] = true;
-					}
-					else if (x == chunkSize - 1)
-					{
-						m_voxels[y][z][x].faces[(uint32_t)Voxel::FACE_Right] = true;
-					}
+						verts.emplace_back(GetVertex(Voxel::FACE_Top, m_voxels[y][z][x].color, { x,y,z }));
 
 					if (z == 0)
-					{
-						m_voxels[y][z][x].faces[(uint32_t)Voxel::FACE_Back] = true;
-					}
+						verts.emplace_back(GetVertex(Voxel::FACE_Back, m_voxels[y][z][x].color, { x,y,z }));
 					else if (z == chunkSize - 1)
-					{
-						m_voxels[y][z][x].faces[(uint32_t)Voxel::FACE_Front] = true;
-					}
-
+						verts.emplace_back(GetVertex(Voxel::FACE_Front, m_voxels[y][z][x].color, { x,y,z }));
 				}
-			}
-		}
-	}
-
-	uint32_t indexCount = 0;
-
-	// Vertex
-	{
-		std::vector<Vertex> vertices;
-
-		for (uint32_t y = 0; y < chunkSize; y++)
-		{
-			for (uint32_t z = 0; z < chunkSize; z++)
-			{
-				for (uint32_t x = 0; x < chunkSize; x++)
+				else
 				{
-					for(uint32_t face = 0;face < 6;face++)
-					{
-						if (m_voxels[y][z][x].faces[face])
-						{
-							auto [v1, v2, v3, v4] = GetVertex((Voxel::Face)face, m_voxels[y][z][x].color,glm::vec3(x,y,z));
-							
-							vertices.push_back(v1);
-							vertices.push_back(v2);
-							vertices.push_back(v3);
-							vertices.push_back(v4);
-						}
-					}
+					if (y > 0 && !m_voxels[y - 1][z][x].IsAir)
+						verts.emplace_back(GetVertex(Voxel::FACE_Top, m_voxels[y - 1][z][x].color, { x,y - 1,z }));
+
+					if (y < chunkSize - 1 && !m_voxels[y + 1][z][x].IsAir)
+						verts.emplace_back(GetVertex(Voxel::FACE_Down, m_voxels[y + 1][z][x].color, { x,y + 1,z }));
+
+					if (x > 0 && !m_voxels[y][z][x - 1].IsAir)
+						verts.emplace_back(GetVertex(Voxel::FACE_Right, m_voxels[y][z][x - 1].color, { x - 1,y,z }));
+
+					if (x < chunkSize - 1 && !m_voxels[y][z][x + 1].IsAir)
+						verts.emplace_back(GetVertex(Voxel::FACE_Left, m_voxels[y][z][x + 1].color, { x + 1,y,z }));
+
+					if (z > 0 && !m_voxels[y][z - 1][x].IsAir)
+						verts.emplace_back(GetVertex(Voxel::FACE_Front, m_voxels[y][z - 1][x].color, { x,y,z - 1 }));
+
+					if (z < chunkSize - 1 && !m_voxels[y][z + 1][x].IsAir)
+						verts.emplace_back(GetVertex(Voxel::FACE_Back, m_voxels[y][z + 1][x].color, { x,y,z + 1 }));
 				}
+
+				for (auto& v : verts)
+				{
+					auto& [a, b, c, d] = v;
+
+					vertices.emplace_back(a);
+					vertices.emplace_back(b);
+					vertices.emplace_back(c);
+					vertices.emplace_back(d);
+				}
+
 			}
 		}
-		
-		m_vb.Create(vertices.size(), sizeof(Vertex), vertices.data());
-
-		indexCount = (vertices.size() / 4) * 6;
-		vertices.clear();
 	}
+	
+	m_vb.Create(vertices.size(),sizeof(Vertex),vertices.data());
+	
+	uint32_t indexCount = ((uint32_t)vertices.size() / 4) * 6;
+	vertices.clear();
 
 	// Index
 	{
@@ -156,24 +216,11 @@ void Chunk::Create()
 
 		delete[] indices;
 	}
-}
 
-void Chunk::Destroy()
-{
-	m_vb.Destroy();
-	m_ib.Destroy();
-}
-
-void Chunk::Render(VkCommandBuffer cmd)
-{
-	m_ib.Bind(cmd);
-	m_vb.Bind(cmd);
-
-	vkCmdDrawIndexed(cmd, m_ib.GetIndexCount(), 1, 0, 0, 0);
 }
 
 void World::Create()
-{
+{	
 	chunk.Create();
 }
 
@@ -185,4 +232,11 @@ void World::Destroy()
 void World::Render(VkCommandBuffer cmd)
 {
 	chunk.Render(cmd);
+}
+
+void World::Update()
+{
+	Nexus::Graphics::Presenter::WaitForDevice();
+
+	chunk.Update();
 }

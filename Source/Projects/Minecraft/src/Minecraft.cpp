@@ -60,6 +60,8 @@ void Minecraft::OnAttach()
 
 int pipeline = 0;
 
+bool regenerate = true;
+
 void Minecraft::OnUpdate()
 {
 	UpdateCamera();
@@ -67,11 +69,21 @@ void Minecraft::OnUpdate()
 
 	instancebuffer.Update(&instancedata);
 
-	if (Platform::Input::IsKeyPressed(Key::P))
+	using namespace Platform;
+
+	if (Input::IsKeyPressed(Key::P))
 		pipeline = 0;
-	if (Platform::Input::IsKeyPressed(Key::O))
+	if (Input::IsKeyPressed(Key::O))
 		pipeline = 1;
 
+	if (Input::IsKeyPressed(Key::M) && Input::IsKeyPressed(Key::I) && regenerate)
+	{
+		m_world.Update();
+		regenerate = false;
+	}
+	
+	if (Input::IsKeyPressed(Key::R))
+		regenerate = true;
 }
 
 void Minecraft::OnRender()
@@ -385,7 +397,7 @@ void Minecraft::CreatePipelines()
 		Info.vertexAttributes =
 		{
 			{0,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::position) },
-			{1,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::color) },
+			{1,0,VK_FORMAT_R32G32B32A32_SFLOAT,offsetof(Vertex,Vertex::color) },
 		};
 
 		Info.ShaderPaths =
