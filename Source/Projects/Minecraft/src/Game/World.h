@@ -18,7 +18,8 @@ struct Vertex
 
 enum class Block
 {
-	AIR, GRASS, STONE, SAND , BEDROCK, DIRT , SNOW , IRON_ORE
+	NONE,AIR, GRASS, STONE, SAND , BEDROCK, DIRT , SNOW , IRON_ORE , 
+	OAK_TRUNK,OAK_LEAF
 };
 
 struct Voxel
@@ -36,7 +37,7 @@ struct Voxel
 	glm::vec3 color;
 	std::unordered_map<uint32_t, bool> faces;
 
-	Block Type;
+	Block Type = Block::NONE;
 };
 
 class Chunk
@@ -54,6 +55,8 @@ public:
 private:
 	void GenerateVoxels(uint32_t seed);
 	void GenerateMesh();
+
+	void GenerateTree(glm::vec3 basePos, uint32_t** HeightMap);
 
 	inline static const float scale = 10.f;
 

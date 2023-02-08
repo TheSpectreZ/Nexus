@@ -49,6 +49,23 @@ glm::vec2 GetBlockIndex(Block Type, Voxel::Face face)
 	case Block::IRON_ORE:
 		coord = { 1,2 };
 		break;
+	case Block::OAK_TRUNK:
+		switch (face)
+		{
+		case Voxel::FACE_Top:
+			coord = { 5,1 };
+			break;
+		case Voxel::FACE_Down:
+			coord = { 5,1 };
+			break;
+		default:
+			coord = { 4,1 };
+			break;
+		}
+		break;
+	case Block::OAK_LEAF:
+		coord = { 1,8 };
+		break;
 	default:
 		break;
 	}
@@ -189,6 +206,8 @@ void Chunk::GenerateVoxels(uint32_t seed)
 		}
 	}
 
+	std::vector<glm::vec3> TreeGenerationBlocks;
+
 	for (uint32_t y = 0; y < chunkheight; y++)
 	{
 		for (uint32_t z = 0; z < chunkSize; z++)
@@ -204,7 +223,13 @@ void Chunk::GenerateVoxels(uint32_t seed)
 				else if (y == heightMap[z][x])
 				{
 					if (y > chunkheight * 0.65)
+					{
 						m_voxels[y][z][x].Type = Block::GRASS;
+
+						uint32_t treeGen = rand() % 1000;
+						if (treeGen < 10)
+							TreeGenerationBlocks.push_back({ x,y,z });
+					}
 					else
 						m_voxels[y][z][x].Type = Block::SAND;
 				}
@@ -220,6 +245,11 @@ void Chunk::GenerateVoxels(uint32_t seed)
 				}
 			}
 		}
+	}
+
+	for (auto& t : TreeGenerationBlocks)
+	{		
+		GenerateTree(t, heightMap);
 	}
 
 	for (uint32_t i = 0; i < chunkSize; i++)
@@ -323,6 +353,41 @@ void Chunk::GenerateMesh()
 		delete[] indices;
 	}
 
+}
+
+void Chunk::GenerateTree(glm::vec3 basePos , uint32_t** HeightMap)
+{
+	uint32_t z = basePos.z, y = basePos.y, x = basePos.x;
+
+	if (y >= chunkheight - 9)
+		return;
+
+	uint32_t height = 3 + rand() % 3;
+
+	for (uint32_t i = 1; i <= height; i++)
+	{
+		m_voxels[y + i][z][x].Type = Block::OAK_TRUNK;
+	}
+	
+	uint32_t hOff = 0;
+	for (int32_t k = -3; k < 0; k++)
+	{
+		hOff++;
+
+		for (int32_t i = k; i <= -k; i++)
+		{
+			for (int32_t j = k; j <= -k; j++)
+			{
+				if ((z + i) >= 0 && (z + i) < chunkSize && (x + j) >= 0 && (x + j) < chunkSize && (y + height + hOff) >= 0 && (y + height + hOff) < chunkheight)
+				{
+					if (i == 0 && j == 0 && k < -1)
+						m_voxels[y + height + hOff][z][x].Type = Block::OAK_TRUNK;
+
+					m_voxels[y + height + hOff][z + i][x + j].Type = Block::OAK_LEAF;
+				}
+			}
+		}
+	}
 }
 
 void World::Create()
