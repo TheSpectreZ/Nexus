@@ -69,7 +69,9 @@ namespace Nexus
 			void Destroy();
 
 			VkImageView Get() { return m_view; }
+			VkExtent2D GetExtent() { return m_extent; }
 		private:
+			VkExtent2D m_extent;
 			VkImage m_Image;
 			VkImageView m_view;
 			VmaAllocation m_allocation;

@@ -238,6 +238,7 @@ void Nexus::Graphics::Texture2D::Create(const char* filepath)
 
 void Nexus::Graphics::Texture2D::Create(void* pixelData,VkSampleCountFlagBits samples, VkExtent2D extent,VkFormat format)
 {
+	m_extent = extent;
 	VkDeviceSize size = (VkDeviceSize)extent.width * extent.height * 4;
 
 	// Staging
