@@ -53,14 +53,9 @@ private:
 	// Clear Value
 	std::vector<VkClearValue> clearValue;
 
-	// Camera
-	Nexus::Graphics::Camera cam;
-	Nexus::Graphics::CameraController Controller;
-
 	struct InstanceData
 	{
-		glm::mat4 transform;
-		glm::vec4 color;
+		glm::vec3 cameraPos; float null;
 	};
 
 	// Instance
@@ -69,6 +64,11 @@ private:
 	// Uniform
 	Nexus::Graphics::UniformBuffer worldbuffer;
 	Nexus::Graphics::UniformBuffer instancebuffer;
+
+	// Texture
+	Nexus::Graphics::Texture2D texture;
+	// Sampler
+	Nexus::Graphics::Sampler sampler;
 
 	// Screen
 	VkViewport viewport;

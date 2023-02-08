@@ -2,82 +2,163 @@
 #include <vector>
 #include "Graphics/Presenter.h"
 #include "DebugUtils/Logger.h"
+#include "Platform/Input.h"
 
 #include "Noise.h"
+
 #include <iostream>
+#include <execution>
 
-std::tuple<Vertex, Vertex, Vertex, Vertex> GetVertex(Voxel::Face face, glm::vec3 color, glm::vec3 pos)
+std::vector<int> World::Iters = { -7,-6,-5,-4,-3,-2,-1,0,1,2,3,4,5,6,7 };
+
+glm::vec2 GetBlockIndex(Block Type, Voxel::Face face)
 {
-	Vertex v1, v2, v3, v4;
+	glm::vec2 coord{};
 
-	switch (face)
+	switch (Type)
 	{
-	case Voxel::FACE_Top:
-		v1 = { { 0.5f, 0.5f,-0.5f} , {color,0.9f} };
-		v2 = { { 0.5f, 0.5f, 0.5f} , {color,0.9f} };
-		v3 = { {-0.5f, 0.5f, 0.5f} , {color,0.9f} };
-		v4 = { {-0.5f, 0.5f,-0.5f} , {color,0.9f} };
+	case Block::GRASS:
+		switch (face)
+		{
+		case Voxel::FACE_Top:
+			coord = { 0,0 };
+			break;
+		case Voxel::FACE_Down:
+			coord = { 2,0 };
+			break;
+		default:
+			coord = { 3,0 };
+			break;
+		}
 		break;
-	case Voxel::FACE_Down:
-		v1 = { { 0.5f,-0.5f, 0.5f} , {color,0.4f} };
-		v2 = { { 0.5f,-0.5f,-0.5f} , {color,0.4f} };
-		v3 = { {-0.5f,-0.5f,-0.5f} , {color,0.4f} };
-		v4 = { {-0.5f,-0.5f, 0.5f} , {color,0.4f} };
+	case Block::STONE:
+		coord = { 1,0 };
 		break;
-	case Voxel::FACE_Right:
-		v1 = { { 0.5f, 0.5f,-0.5f} , {color,0.7f} };
-		v2 = { { 0.5f,-0.5f,-0.5f} , {color,0.7f} };
-		v3 = { { 0.5f,-0.5f, 0.5f} , {color,0.7f} };
-		v4 = { { 0.5f, 0.5f, 0.5f} , {color,0.7f} };
+	case Block::BEDROCK:
+		coord = { 1,1 };
 		break;
-	case Voxel::FACE_Left:
-		v1 = { {-0.5f, 0.5f, 0.5f} , {color,0.3f} };
-		v2 = { {-0.5f,-0.5f, 0.5f} , {color,0.3f} };
-		v3 = { {-0.5f,-0.5f,-0.5f} , {color,0.3f} };
-		v4 = { {-0.5f, 0.5f,-0.5f} , {color,0.3f} };
+	case Block::DIRT:
+		coord = { 2,0 };
 		break;
-	case Voxel::FACE_Front:
-		v1 = { { 0.5f, 0.5f, 0.5f} , {color,0.8f} };
-		v2 = { { 0.5f,-0.5f, 0.5f} , {color,0.8f} };
-		v3 = { {-0.5f,-0.5f, 0.5f} , {color,0.8f} };
-		v4 = { {-0.5f, 0.5f, 0.5f} , {color,0.8f} };
+	case Block::SAND:
+		coord = { 2,1 };
 		break;
-	case Voxel::FACE_Back:
-		v1 = { {-0.5f, 0.5f,-0.5f} , {color,0.4f} };
-		v2 = { {-0.5f,-0.5f,-0.5f} , {color,0.4f} };
-		v3 = { { 0.5f,-0.5f,-0.5f} , {color,0.4f} };
-		v4 = { { 0.5f, 0.5f,-0.5f} , {color,0.4f} };
+	case Block::SNOW:
+		coord = { 2,4 };
+		break;
+	case Block::IRON_ORE:
+		coord = { 1,2 };
 		break;
 	default:
 		break;
 	}
 
-	v1.position += pos;
-	v2.position += pos;
-	v3.position += pos;
-	v4.position += pos;
+	return coord;
+}
+
+std::tuple<Vertex, Vertex, Vertex, Vertex> GetVertex(Voxel::Face face, Block Type, glm::vec3 pos)
+{
+	Vertex v1, v2, v3, v4;
+
+	static glm::vec2 ImageSize = { 256,256 };
+	static glm::vec2 spriteSize = { 16,16 };
+	glm::vec2 Index = GetBlockIndex(Type, face);
+	
+	std::array<glm::vec2, 4> coords =
+	{
+		glm::vec2((Index.x + 1) * spriteSize.x / ImageSize.x,  Index.y		* spriteSize.y / ImageSize.y),
+		glm::vec2((Index.x + 1) * spriteSize.x / ImageSize.x, (Index.y + 1) * spriteSize.y / ImageSize.y),
+		glm::vec2( Index.x		* spriteSize.x / ImageSize.x, (Index.y + 1) * spriteSize.y / ImageSize.y),
+		glm::vec2( Index.x		* spriteSize.x / ImageSize.x,  Index.y		* spriteSize.y / ImageSize.y),
+	};
+
+	switch (face)
+	{
+	case Voxel::FACE_Top:	
+		v1 = { { 0.5f, 0.5f,-0.5f} , {coords[0],0.9f}  };
+		v2 = { { 0.5f, 0.5f, 0.5f} , {coords[1],0.9f}  };
+		v3 = { {-0.5f, 0.5f, 0.5f} , {coords[2],0.9f}  };
+		v4 = { {-0.5f, 0.5f,-0.5f} , {coords[3],0.9f}  };
+		break;
+	case Voxel::FACE_Down:
+		v1 = { { 0.5f,-0.5f, 0.5f} , {coords[0],0.4f} };
+		v2 = { { 0.5f,-0.5f,-0.5f} , {coords[1],0.4f} };
+		v3 = { {-0.5f,-0.5f,-0.5f} , {coords[2],0.4f} };
+		v4 = { {-0.5f,-0.5f, 0.5f} , {coords[3],0.4f} };
+		break;
+	case Voxel::FACE_Right:
+		v1 = { { 0.5f, 0.5f,-0.5f} , {coords[0],0.7f} };
+		v2 = { { 0.5f,-0.5f,-0.5f} , {coords[1],0.7f} };
+		v3 = { { 0.5f,-0.5f, 0.5f} , {coords[2],0.7f} };
+		v4 = { { 0.5f, 0.5f, 0.5f} , {coords[3],0.7f} };
+		break;
+	case Voxel::FACE_Left:
+		v1 = { {-0.5f, 0.5f, 0.5f} , {coords[0],0.3f}  };
+		v2 = { {-0.5f,-0.5f, 0.5f} , {coords[1],0.3f}  };
+		v3 = { {-0.5f,-0.5f,-0.5f} , {coords[2],0.3f}  };
+		v4 = { {-0.5f, 0.5f,-0.5f} , {coords[3],0.3f}  };
+		break;
+	case Voxel::FACE_Front:
+		v1 = { { 0.5f, 0.5f, 0.5f} , {coords[0],0.8f} };
+		v2 = { { 0.5f,-0.5f, 0.5f} , {coords[1],0.8f} };
+		v3 = { {-0.5f,-0.5f, 0.5f} , {coords[2],0.8f} };
+		v4 = { {-0.5f, 0.5f, 0.5f} , {coords[3],0.8f} };
+		break;
+	case Voxel::FACE_Back:
+		v1 = { {-0.5f, 0.5f,-0.5f} , {coords[0],0.4f} };
+		v2 = { {-0.5f,-0.5f,-0.5f} , {coords[1],0.4f} };
+		v3 = { { 0.5f,-0.5f,-0.5f} , {coords[2],0.4f} };
+		v4 = { { 0.5f, 0.5f,-0.5f} , {coords[3],0.4f} };
+		break;
+	default:
+		break;
+	}
+
+	float halfDist = Chunk::chunkSize / 2.f;
+
+	v1.position = v1.position + pos - glm::vec3(halfDist, 0.f, halfDist);
+	v2.position = v2.position + pos - glm::vec3(halfDist, 0.f, halfDist);
+	v3.position = v3.position + pos - glm::vec3(halfDist, 0.f, halfDist);
+	v4.position = v4.position + pos - glm::vec3(halfDist, 0.f, halfDist);
 
 	return { v1,v2,v3,v4 };
 }
 
-float Chunk::threshold = 0.f;
-
-void Chunk::Create()
+void Chunk::Create(glm::vec2 coordinate,uint32_t seed)
 {
-	GenerateVoxels();
+	m_coordinate = coordinate;
+
+	m_voxels = new Voxel**[chunkheight];
+
+	for (uint32_t i = 0; i < chunkheight; i++)
+	{
+		m_voxels[i] = new Voxel * [chunkSize];
+		for (uint32_t j = 0; j < chunkSize; j++)
+		{
+			m_voxels[i][j] = new Voxel[chunkSize];
+		}
+	}
+
+	GenerateVoxels(seed);
 	GenerateMesh();
+
+	for (uint32_t i = 0; i < chunkheight; i++)
+	{
+		for (uint32_t j = 0; j < chunkSize; j++)
+		{
+			delete[] m_voxels[i][j];
+		}
+		delete[] m_voxels[i];
+	}
+	delete[] m_voxels;
+
+	Created = true;
 }
 
 void Chunk::Destroy()
 {
 	m_vb.Destroy();
 	m_ib.Destroy();
-}
-
-void Chunk::Update()
-{
-	Destroy();
-	Create();
 }
 
 void Chunk::Render(VkCommandBuffer cmd)
@@ -88,40 +169,63 @@ void Chunk::Render(VkCommandBuffer cmd)
 	vkCmdDrawIndexed(cmd, m_ib.GetIndexCount(), 1, 0, 0, 0);
 }
 
-void Chunk::GenerateVoxels()
+void Chunk::GenerateVoxels(uint32_t seed)
 {
-	srand(time(0));
-
-	const siv::PerlinNoise::seed_type seed = rand();
 	const siv::PerlinNoise perlin{ seed };
 
-	double maxN = std::numeric_limits<double>::min(), 
-		minN = std::numeric_limits<double>::max();
+	uint32_t** heightMap = new uint32_t * [chunkSize];
 
-	for (uint32_t y = 0; y < chunkSize; y++)
+	for (uint32_t i = 0; i < chunkSize; i++)
+		heightMap[i] = new uint32_t[chunkSize];
+
+	float halfDist = Chunk::chunkSize / 2.f;
+	float NoiseScale = 14.f;
+
+	for (uint32_t z = 0; z < chunkSize; z++)
+	{
+		for (uint32_t x = 0; x < chunkSize; x++)
+		{
+			heightMap[z][x] = chunkheight * 0.5 + (uint32_t)(perlin.normalizedOctave2D_01((x + m_coordinate.x + 0.01f) / NoiseScale, (z + m_coordinate.y + 0.01f) / NoiseScale, 4,0.2f) * (chunkheight * 0.5));
+		}
+	}
+
+	for (uint32_t y = 0; y < chunkheight; y++)
 	{
 		for (uint32_t z = 0; z < chunkSize; z++)
 		{
 			for (uint32_t x = 0; x < chunkSize; x++)
 			{
-				double noise = perlin.noise3D(x / scale, y / scale, z / scale);
+				m_voxels[y][z][x].color = glm::normalize(glm::vec3(x, y, z));
 
-				if (noise > maxN)
-					maxN = noise;
-
-				if (noise < minN)
-					minN = noise;
-
-				m_voxels[y][z][x].color = glm::normalize(glm::vec3(x, y, z) * glm::vec3(rand()));
-
-				if (noise > threshold)
-					m_voxels[y][z][x].IsAir = true;
-				else
-					m_voxels[y][z][x].IsAir = false;
+				if (y == 0)
+					m_voxels[y][z][x].Type = Block::BEDROCK;
+				else if (y > heightMap[z][x])
+					m_voxels[y][z][x].Type = Block::AIR;
+				else if (y == heightMap[z][x])
+				{
+					if (y > chunkheight * 0.65)
+						m_voxels[y][z][x].Type = Block::GRASS;
+					else
+						m_voxels[y][z][x].Type = Block::SAND;
+				}
+				else if (y > heightMap[z][x] - 4 && y < heightMap[z][x])
+					m_voxels[y][z][x].Type = Block::DIRT;
+				else 
+				{
+					double noise = perlin.normalizedOctave3D_01((x + m_coordinate.x + 0.01f) / NoiseScale, (y + 0.01f)/NoiseScale, (z + m_coordinate.y + 0.01f) / NoiseScale, 1);
+					if (noise > 0.6)
+						m_voxels[y][z][x].Type = Block::STONE;
+					else
+						m_voxels[y][z][x].Type = Block::AIR;
+				}
 			}
 		}
 	}
 
+	for (uint32_t i = 0; i < chunkSize; i++)
+		delete[] heightMap[i];
+
+	delete[] heightMap;
 }
 
 void Chunk::GenerateMesh()
@@ -130,7 +234,7 @@ void Chunk::GenerateMesh()
 
 	std::vector<std::tuple<Vertex, Vertex, Vertex, Vertex>> verts;
 
-	for (uint32_t y = 0; y < chunkSize; y++)
+	for (uint32_t y = 0; y < chunkheight; y++)
 	{
 		for (uint32_t z = 0; z < chunkSize; z++)
 		{
@@ -138,42 +242,44 @@ void Chunk::GenerateMesh()
 			{
 				verts.clear();
 
-				if (!m_voxels[y][z][x].IsAir)
+				if (m_voxels[y][z][x].Type != Block::AIR)
 				{
+					glm::vec3 c = glm::vec3(x + m_coordinate.x, y, z + m_coordinate.y);
+
 					if (x == 0)
-						verts.emplace_back(GetVertex(Voxel::FACE_Left, m_voxels[y][z][x].color, { x,y,z }));
+						verts.emplace_back(GetVertex(Voxel::FACE_Left,m_voxels[y][z][x].Type, c));
 					else if (x == chunkSize - 1)
-						verts.emplace_back(GetVertex(Voxel::FACE_Right, m_voxels[y][z][x].color, { x,y,z }));
+						verts.emplace_back(GetVertex(Voxel::FACE_Right, m_voxels[y][z][x].Type, c));
 
 					if (y == 0)
-						verts.emplace_back(GetVertex(Voxel::FACE_Down, m_voxels[y][z][x].color, { x,y,z }));
-					else if (y == chunkSize - 1)
-						verts.emplace_back(GetVertex(Voxel::FACE_Top, m_voxels[y][z][x].color, { x,y,z }));
+						verts.emplace_back(GetVertex(Voxel::FACE_Down, m_voxels[y][z][x].Type, c));
+					else if (y == chunkheight - 1)
+						verts.emplace_back(GetVertex(Voxel::FACE_Top, m_voxels[y][z][x].Type, c));
 
 					if (z == 0)
-						verts.emplace_back(GetVertex(Voxel::FACE_Back, m_voxels[y][z][x].color, { x,y,z }));
+						verts.emplace_back(GetVertex(Voxel::FACE_Back, m_voxels[y][z][x].Type, c));
 					else if (z == chunkSize - 1)
-						verts.emplace_back(GetVertex(Voxel::FACE_Front, m_voxels[y][z][x].color, { x,y,z }));
+						verts.emplace_back(GetVertex(Voxel::FACE_Front, m_voxels[y][z][x].Type, c));
 				}
 				else
 				{
-					if (y > 0 && !m_voxels[y - 1][z][x].IsAir)
-						verts.emplace_back(GetVertex(Voxel::FACE_Top, m_voxels[y - 1][z][x].color, { x,y - 1,z }));
+					if (y > 0 && m_voxels[y - 1][z][x].Type != Block::AIR)
+						verts.emplace_back(GetVertex(Voxel::FACE_Top, m_voxels[y-1][z][x].Type, glm::vec3(x + m_coordinate.x, y-1, z + m_coordinate.y)));
 
-					if (y < chunkSize - 1 && !m_voxels[y + 1][z][x].IsAir)
-						verts.emplace_back(GetVertex(Voxel::FACE_Down, m_voxels[y + 1][z][x].color, { x,y + 1,z }));
+					if (y < chunkheight - 1 && m_voxels[y + 1][z][x].Type != Block::AIR)
+						verts.emplace_back(GetVertex(Voxel::FACE_Down, m_voxels[y+1][z][x].Type, glm::vec3(x + m_coordinate.x, y+1, z + m_coordinate.y) ));
 
-					if (x > 0 && !m_voxels[y][z][x - 1].IsAir)
-						verts.emplace_back(GetVertex(Voxel::FACE_Right, m_voxels[y][z][x - 1].color, { x - 1,y,z }));
+					if (x > 0 && m_voxels[y][z][x - 1].Type != Block::AIR)
+						verts.emplace_back(GetVertex(Voxel::FACE_Right, m_voxels[y][z][x-1].Type, glm::vec3(x-1 + m_coordinate.x, y, z + m_coordinate.y) ));
 
-					if (x < chunkSize - 1 && !m_voxels[y][z][x + 1].IsAir)
-						verts.emplace_back(GetVertex(Voxel::FACE_Left, m_voxels[y][z][x + 1].color, { x + 1,y,z }));
+					if (x < chunkSize - 1 && m_voxels[y][z][x + 1].Type != Block::AIR)
+						verts.emplace_back(GetVertex(Voxel::FACE_Left, m_voxels[y][z][x+1].Type, glm::vec3(x+1 + m_coordinate.x, y, z + m_coordinate.y) ));
 
-					if (z > 0 && !m_voxels[y][z - 1][x].IsAir)
-						verts.emplace_back(GetVertex(Voxel::FACE_Front, m_voxels[y][z - 1][x].color, { x,y,z - 1 }));
+					if (z > 0 && m_voxels[y][z - 1][x].Type != Block::AIR)
+						verts.emplace_back(GetVertex(Voxel::FACE_Front, m_voxels[y][z-1][x].Type, glm::vec3(x + m_coordinate.x, y, z-1 + m_coordinate.y) ));
 
-					if (z < chunkSize - 1 && !m_voxels[y][z + 1][x].IsAir)
-						verts.emplace_back(GetVertex(Voxel::FACE_Back, m_voxels[y][z + 1][x].color, { x,y,z + 1 }));
+					if (z < chunkSize - 1 && m_voxels[y][z + 1][x].Type != Block::AIR)
+						verts.emplace_back(GetVertex(Voxel::FACE_Back, m_voxels[y][z+1][x].Type, glm::vec3(x + m_coordinate.x, y, z+1 + m_coordinate.y) ));
 				}
 
 				for (auto& v : verts)
@@ -221,22 +327,60 @@ void Chunk::GenerateMesh()
 
 void World::Create()
 {	
-	chunk.Create();
+	srand(time(0));
+
+	m_worldSeed = rand();
+
+	m_Player.Create();
+	UpdateActiveChunks();
 }
 
 void World::Destroy()
 {
-	chunk.Destroy();
+	for (auto& chunk : m_chunks)
+		chunk.second.Destroy();
 }
 
 void World::Render(VkCommandBuffer cmd)
-{
-	chunk.Render(cmd);
+{	
+	for (auto& chunk : m_ActiveChunks)
+		chunk->Render(cmd);
 }
+
+bool regenerate = true;
 
 void World::Update()
 {
-	Nexus::Graphics::Presenter::WaitForDevice();
+	m_Player.Update();
 
-	chunk.Update();
+	auto playerChunk = glm::ivec2(m_Player.GetPosition().x, m_Player.GetPosition().z) / ChunkSize;
+
+	if (playerChunk != m_CurrentChunk)
+	{
+		NEXUS_LOG_WARN("{0},{1} : {2},{3}", playerChunk.x, playerChunk.y, m_CurrentChunk.x, m_CurrentChunk.y);
+
+		m_CurrentChunk = playerChunk;
+		UpdateActiveChunks();
+	}
+}
+
+void World::UpdateActiveChunks()
+{
+	m_ActiveChunks.clear();
+
+	std::for_each(Iters.begin(), Iters.end(), [this](int i)
+		{
+			std::for_each(Iters.begin(), Iters.end(), [this, i](int j)
+				{
+					glm::vec2 coord = { m_CurrentChunk.x - i, m_CurrentChunk.y - j };
+
+					if (!m_chunks.contains(coord))
+					{
+						m_chunks[coord] = Chunk();
+						m_chunks[coord].Create(coord * glm::vec2(ChunkSize),m_worldSeed);
+					}
+
+					m_ActiveChunks.push_back(&m_chunks[coord]);
+				});
+		});
 }
