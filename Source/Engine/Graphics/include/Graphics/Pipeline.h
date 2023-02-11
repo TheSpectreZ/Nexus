@@ -60,6 +60,8 @@ namespace Nexus
 			void Create(const PipelineCreateInfo& Info);
 			void Destroy();
 
+			void Bind(VkCommandBuffer cmd);
+
 			VkPipeline& Get() { return m_handle; }
 			VkPipeline Get() const { return m_handle; }
 		private:

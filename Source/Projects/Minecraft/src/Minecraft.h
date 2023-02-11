@@ -9,6 +9,10 @@
 
 #include "Graphics/Camera.h"
 
+#include "Game/World.h"
+
+#include <unordered_map>
+
 class Minecraft : public Nexus::Layer
 {
 public:
@@ -43,19 +47,15 @@ private:
 
 	// Pipelines 
 	Nexus::Graphics::PipelineLayout pipelineLayout;
-	Nexus::Graphics::GraphicsPipeline pipeline;
+	
+	std::unordered_map<uint32_t, Nexus::Graphics::GraphicsPipeline> pipelines;
 
 	// Clear Value
 	std::vector<VkClearValue> clearValue;
 
-	// Camera
-	Nexus::Graphics::Camera cam;
-	Nexus::Graphics::CameraController Controller;
-
 	struct InstanceData
 	{
-		glm::mat4 transform;
-		glm::vec4 color;
+		glm::vec3 cameraPos; float null;
 	};
 
 	// Instance
@@ -65,18 +65,16 @@ private:
 	Nexus::Graphics::UniformBuffer worldbuffer;
 	Nexus::Graphics::UniformBuffer instancebuffer;
 
-	// Mesh
-	Nexus::Graphics::VertexBuffer vbuffer;
-	Nexus::Graphics::IndexBuffer ibuffer;
-
-	// Samplers
-	Nexus::Graphics::Sampler sampler;
-
-	// Textures
+	// Texture
 	Nexus::Graphics::Texture2D texture;
+	// Sampler
+	Nexus::Graphics::Sampler sampler;
 
 	// Screen
 	VkViewport viewport;
 	VkRect2D scissor;
+
+	// World
+	World m_world;
 };
 

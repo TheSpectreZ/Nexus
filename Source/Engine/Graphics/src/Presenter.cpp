@@ -153,7 +153,7 @@ void Nexus::Graphics::Presenter::BeginRenderpass(VkCommandBuffer cmdbuffer,const
 	Info.framebuffer = buffer.Get();
 	Info.renderArea.offset = { 0,0 };
 	Info.renderArea.extent = s_Instance->m_SwapchainExtent;
-	Info.clearValueCount = values.size();
+	Info.clearValueCount = (uint32_t)values.size();
 	Info.pClearValues = values.data();
 
 	vkCmdBeginRenderPass(cmdbuffer, &Info, VK_SUBPASS_CONTENTS_INLINE);
@@ -162,6 +162,12 @@ void Nexus::Graphics::Presenter::BeginRenderpass(VkCommandBuffer cmdbuffer,const
 void Nexus::Graphics::Presenter::EndRenderpass(VkCommandBuffer buffer)
 {
 	vkCmdEndRenderPass(buffer);
+}
+
+void Nexus::Graphics::Presenter::SetViewportAndScissor(VkViewport* pViewport, uint32_t viewportCount, VkRect2D* pScissor, uint32_t scissorCount)
+{
+	vkCmdSetViewport(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame], 0, viewportCount, pViewport);
+	vkCmdSetScissor(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame], 0, scissorCount, pScissor);
 }
 
 void Nexus::Graphics::Presenter::WaitForDevice()
@@ -183,10 +189,10 @@ void Nexus::Graphics::Presenter::Create()
 		Info.pNext = nullptr;
 		Info.surface = Backend::GetSurface();
 
-		if (auto Fam = GetQueueIndexFamilies(Backend::GetPhysicalDevice(), Backend::GetSurface());
-			Fam.front() != Fam.back())
+		QueueIndexFamilies Fam = GetQueueIndexFamilies(Backend::GetPhysicalDevice(), Backend::GetSurface());
+		if (Fam.front().value() != Fam.back().value())
 		{
-			uint32_t Indices[] = { Fam.front().value(),Fam.back().value() };
+			uint32_t Indices[] = {Fam.front().value(),Fam.back().value()};
 			Info.queueFamilyIndexCount = 2;
 			Info.pQueueFamilyIndices = Indices;
 			Info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -197,6 +203,7 @@ void Nexus::Graphics::Presenter::Create()
 			Info.queueFamilyIndexCount = 0;
 			Info.pQueueFamilyIndices = nullptr;
 		}
+
 
 		// format, colorspace, mode, capabilities, minImage
 		{
@@ -265,6 +272,7 @@ void Nexus::Graphics::Presenter::Create()
 		Info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		Info.clipped = VK_TRUE;
 		Info.oldSwapchain = VK_NULL_HANDLE;
+		Info.flags = 0;
 
 		_VKR = vkCreateSwapchainKHR(Backend::GetDevice(), &Info, nullptr, &m_Swapchain);
 		CHECK_HANDLE(m_Swapchain, VkSwapchainKHR);
@@ -288,7 +296,7 @@ void Nexus::Graphics::Presenter::Create()
 
 	// Swapchain Image Views
 	{
-		uint32_t count = m_Images.size();
+		uint32_t count = (uint32_t)m_Images.size();
 
 		m_ImageViews.clear();
 		m_ImageViews.resize(count);

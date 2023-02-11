@@ -21,8 +21,11 @@ static bool CheckLayersAvailability(std::vector<const char*> Layers)
 		bool found = false;
 		for (auto& al : AvailableLayers)
 		{
-			if (strcmp(layer,al.layerName))
+			if (strcmp(layer,al.layerName) == 0)
+			{
 				found = true;
+				break;
+			}
 		}
 
 		if (!found)
@@ -44,8 +47,11 @@ static bool CheckExtensionAvailability(std::vector<const char*> extensions,VkPhy
 		bool found = false;
 		for (auto& e : availableExtensions)
 		{
-			if (strcmp(ext, e.extensionName))
+			if (strcmp(ext, e.extensionName) == 0)
+			{
 				found = true;
+				break;
+			}
 		}
 
 		if (!found)
@@ -120,7 +126,7 @@ Nexus::Graphics::QueueIndexFamilies Nexus::Graphics::GetQueueIndexFamilies(VkPhy
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallBack(VkDebugUtilsMessageSeverityFlagBitsEXT sev, VkDebugUtilsMessageTypeFlagsEXT type, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-	std::cerr << "[Validation Layer]: " << pCallbackData->pMessage << std::endl;
+	std::cerr << "[Validation Layer]: " << pCallbackData->pMessage << std::endl << std::endl;
 	return VK_FALSE;	
 }
 
@@ -137,14 +143,14 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 	std::vector<const char*> DeviceExtensions;
 	DeviceExtensions.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
 
-//#ifdef NEXUS_DEBUG
+#ifdef NEXUS_DEBUG
 	debugEnabled = true;
 	InstanceLayers.push_back("VK_LAYER_KHRONOS_validation");
 
 	debugEnabled = CheckLayersAvailability(InstanceLayers);
 	if (!debugEnabled)
 		InstanceLayers.pop_back();
-//#endif // NEXUS_DEBUG
+#endif // NEXUS_DEBUG
 
 	// Instance
 	{

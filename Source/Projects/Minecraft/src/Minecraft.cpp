@@ -8,13 +8,6 @@
 
 #include "DebugUtils/Logger.h"
 
-struct Vertex
-{
-	glm::vec3 position;
-	glm::vec3 color;
-	glm::vec3 normal;
-	glm::vec2 texcoords;
-};
 
 using namespace Nexus;
 using namespace Nexus::Graphics;
@@ -29,12 +22,7 @@ void Minecraft::OnAttach()
 
 	clearValue = { { {0.5f,0.33f,0.62f,1.f} }, {{1.f,0.f} } };
 
-	auto extent = Presenter::GetImageExtent();
-	Controller.AttachCamera(&cam);
-	Controller.SetPosition({ 0.f,0.f,2.f });
-	Controller.SetProjection((float)extent.width, (float)extent.height, 45.f, 0.1f, 100.f);
-	Controller.Rotate(-90.f, 0.f);
-
+	
 	// Uniforms
 	{
 		worldbuffer.Create(sizeof(Camera));
@@ -42,62 +30,6 @@ void Minecraft::OnAttach()
 
 		instancebuffer.Create(sizeof(InstanceData));
 		Descriptor::BindWithBuffer(descriptorSet, instancebuffer.Get(), sizeof(InstanceData), 1, 0);
-	}
-
-	// Meshs
-	{
-		std::vector<Vertex> quadV =
-		{
- 			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {1.f,0.f} }, // 0x 0
-			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {0.f,1.f} }, // 0y 1
-			{ { 0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {0.f,0.f} }, // 0z 2
-
-			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {0.f,0.f} }, // 1x 3
-			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {1.f,1.f} }, // 1y 4
-			{ { 0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {1.f,0.f} }, // 1z 5
-						
-			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {0.f,1.f} }, // 2x 6
-			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {1.f,0.f} }, // 2y 7
-			{ {-0.5f,-0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {1.f,1.f} }, // 2z 8
-			 
-			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {1.f,1.f} }, // 3x 9
-			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {0.f,0.f} }, // 3y 10
-			{ {-0.5f, 0.5f, 0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f, 1.f} , {0.f,1.f} }, // 3z 11
-			 
-			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {0.f,0.f} }, // 4x 12
-			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {0.f,0.f} }, // 4y 13
-			{ { 0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {1.f,0.f} }, // 4z 14
-
-			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {1.f,0.f} }, // 5x 15
-			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 1.f, 0.f} , {1.f,0.f} }, // 5y 16
-			{ { 0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {0.f,0.f} }, // 5z 17
-
-			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , {-1.f, 0.f, 0.f} , {1.f,1.f} }, // 6x 18
-			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {1.f,1.f} }, // 6y 19
-			{ {-0.5f,-0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {0.f,1.f} }, // 6z 20
-
-			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 1.f, 0.f, 0.f} , {0.f,1.f} }, // 7x 21
-			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f,-1.f, 0.f} , {0.f,1.f} }, // 7y 22
-			{ {-0.5f, 0.5f,-0.5f } , {1.f,0.f,0.f} , { 0.f, 0.f,-1.f} , {1.f,1.f} }, // 7z 23
-		};
-
-		std::vector<uint32_t> quadi = 
-		{ 
-			0,12,21 , 21,9,0  ,
-			2,11,8  , 8,5,2   ,
-			15,3,6  , 6,18,15 ,
-			14,17,20, 20,23,14,
-			1,4,16  , 16,13,1 ,
-			7,10,22 , 22,19,7
-		};
-
-		vbuffer.Create((uint32_t)quadV.size() , sizeof(Vertex), quadV.data());
-		ibuffer.Create((uint32_t)quadi.size() , sizeof(uint32_t), quadi.data());
-	}
-
-	// Instance
-	{
-		instancedata.transform = glm::mat4(1.f);
 	}
 
 	// Screen
@@ -113,21 +45,35 @@ void Minecraft::OnAttach()
 		scissor.offset = { 0,0 };
 	}
 
-	sampler.Create(VK_FILTER_LINEAR, VK_FILTER_LINEAR);
+	m_world.Create();
 
-	// Textures
-	{
-		texture.Create("res/textures/image.jpg");
-		Descriptor::BindWithCombinedImageSampler(descriptorSet, sampler.Get(), texture.Get(), 2, 0);
-	}
+	texture.Create("res/textures/Blocks.jpg");
+
+	NEXUS_LOG_DEBUG("{0}x{1}", texture.GetExtent().width, texture.GetExtent().height);
+
+	sampler.Create(VK_FILTER_NEAREST, VK_FILTER_LINEAR);
+
+	Descriptor::BindWithCombinedImageSampler(descriptorSet, sampler.Get(), texture.Get(), 2, 0);
 }
+
+int pipeline = 0;
 
 void Minecraft::OnUpdate()
 {
 	UpdateCamera();
-	worldbuffer.Update(&cam);
+	worldbuffer.Update(&m_world.GetPlayer().GetRawCameraData());
 
+	instancedata.cameraPos = m_world.GetPlayer().GetPosition();
 	instancebuffer.Update(&instancedata);
+
+	using namespace Platform;
+
+	if (Input::IsKeyPressed(Key::P))
+		pipeline = 0;
+	if (Input::IsKeyPressed(Key::O))
+		pipeline = 1;
+
+	m_world.Update();
 }
 
 void Minecraft::OnRender()
@@ -138,32 +84,29 @@ void Minecraft::OnRender()
 	
 	Descriptor::Bind(cmdBuffer, pipelineLayout.Get(), 0, descriptorSet);
 	
-	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline.Get());
+	vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines[pipeline].Get());
 
 	vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
 	vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
-	vbuffer.Bind(cmdBuffer);
-	ibuffer.Bind(cmdBuffer);
-	
-	vkCmdDrawIndexed(cmdBuffer, ibuffer.GetIndexCount(), 1, 0, 0, 0);
+	m_world.Render(cmdBuffer);
 
 	Presenter::EndRenderpass(cmdBuffer);
 }
 
 void Minecraft::OnDetach()
 {
+	texture.Destroy();
 	sampler.Destroy();
 
-	texture.Destroy();
-
-	vbuffer.Destroy();
-	ibuffer.Destroy();
+	m_world.Destroy();
 
 	worldbuffer.Destroy();
 	instancebuffer.Destroy();
 
-	pipeline.Destroy();
+	pipelines[0].Destroy();
+	pipelines[1].Destroy();
+
 	pipelineLayout.Destroy();
 
 	descriptorLayout.Destroy();
@@ -193,12 +136,11 @@ void Minecraft::OnCallback()
 	CreateAttachments();
 	CreateFramebuffers();
 
-	auto extent = Presenter::GetImageExtent();
-	Controller.SetProjection((float)extent.width, (float)extent.height, 45.f, 0.1f, 100.f);
-	Controller.Rotate(-90.f, 0.f);
+	m_world.GetPlayer().OnCallback();
 
 	// Screen
 	{
+		auto extent = Presenter::GetImageExtent();
 		viewport.x = 0.f;
 		viewport.y = 0.f;
 		viewport.maxDepth = 1.f;
@@ -277,6 +219,7 @@ void Minecraft::CreateRenderpasses()
 			color.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			color.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			color.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+			color.flags = 0;
 		}
 
 		// Depth Attachment
@@ -290,6 +233,7 @@ void Minecraft::CreateRenderpasses()
 			depth.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			depth.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			depth.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			depth.flags = 0;
 		}
 
 		// Resolve Attachment
@@ -303,10 +247,12 @@ void Minecraft::CreateRenderpasses()
 			resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 			resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 			resolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+			resolve.flags = 0;
 		}
 
 		auto& Dependency = Info.dependecies.emplace_back();
 		{
+			Dependency.dependencyFlags = 0;
 			Dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 			Dependency.dstSubpass = 0;
 			Dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
@@ -315,25 +261,30 @@ void Minecraft::CreateRenderpasses()
 			Dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 		}
 
+		VkAttachmentReference cRef{}, dRef{}, rRef{};
+		cRef.attachment = 0;
+		cRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		dRef.attachment = 1;
+		dRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		rRef.attachment = 2;
+		rRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
 		auto& SubpassDescription = Info.subpasses.emplace_back();
 		{
-			VkAttachmentReference cRef{}, dRef{}, rRef{};
-			cRef.attachment = 0;
-			cRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-			dRef.attachment = 1;
-			dRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-			rRef.attachment = 2;
-			rRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
 			SubpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 			SubpassDescription.colorAttachmentCount = 1;
 			SubpassDescription.pColorAttachments = &cRef;
 			SubpassDescription.pDepthStencilAttachment = &dRef;
 			SubpassDescription.pResolveAttachments = &rRef;
+			
+			SubpassDescription.inputAttachmentCount = 0;
+			SubpassDescription.pInputAttachments = nullptr;
+			SubpassDescription.preserveAttachmentCount = 0;
+			SubpassDescription.pPreserveAttachments = nullptr;
+			SubpassDescription.flags = 0;
 		}
-
 		renderpass.Create(Info);
 	}
 }
@@ -344,7 +295,6 @@ void Minecraft::CreateDescriptors()
 	{
 		std::vector<VkDescriptorPoolSize> sizes = { 
 			{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,2},
-			{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,2}
 		};
 
 		descriptorPool.Create(&sizes, 1);
@@ -355,8 +305,8 @@ void Minecraft::CreateDescriptors()
 		std::vector<VkDescriptorSetLayoutBinding> layouts =
 		{
 			{0,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT ,nullptr},
-			{1,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT ,nullptr},
-			{2,VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,1,VK_SHADER_STAGE_FRAGMENT_BIT,nullptr}
+			{1,VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,1,VK_SHADER_STAGE_FRAGMENT_BIT ,nullptr},
+			{2,VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,1,VK_SHADER_STAGE_FRAGMENT_BIT ,nullptr},
 		};
 
 		descriptorLayout.Create(&layouts);
@@ -423,7 +373,6 @@ void Minecraft::CreatePipelines()
 		
 		Info.cullMode = VK_CULL_MODE_NONE;
 		Info.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		Info.polygonMode = VK_POLYGON_MODE_FILL;
 		Info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		Info.samples = Presenter::GetImageMaxSamples();
 
@@ -445,9 +394,7 @@ void Minecraft::CreatePipelines()
 		Info.vertexAttributes =
 		{
 			{0,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::position) },
-			{1,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::color) },
-			{2,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::normal) },
-			{3,0,VK_FORMAT_R32G32_SFLOAT,offsetof(Vertex,Vertex::texcoords) },
+			{1,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,Vertex::TextureInfo) },
 		};
 
 		Info.ShaderPaths =
@@ -456,66 +403,15 @@ void Minecraft::CreatePipelines()
 			{"res/shaders/Frag.shader",VK_SHADER_STAGE_FRAGMENT_BIT},
 		};
 
-		pipeline.Create(Info);
+		Info.polygonMode = VK_POLYGON_MODE_FILL;
+		pipelines[0].Create(Info);
+
+		Info.polygonMode = VK_POLYGON_MODE_LINE;
+		pipelines[1].Create(Info);
 	}
 }
 
 void Minecraft::UpdateCamera()
 {
-	float dt = Platform::Manager::GetDeltaTime() * 5.f;
-
-	if (Platform::Input::IsKeyPressed(Key::W))
-		Controller.MoveForward(dt);
-
-	if (Platform::Input::IsKeyPressed(Key::S))
-		Controller.MoveBackward(dt);
-
-	if (Platform::Input::IsKeyPressed(Key::A))
-		Controller.MoveLeft(dt);
-
-	if (Platform::Input::IsKeyPressed(Key::D))
-		Controller.MoveRight(dt);
-
-	if (Platform::Input::IsKeyPressed(Key::Q))
-		Controller.MoveDown(dt);
-
-	if (Platform::Input::IsKeyPressed(Key::E))
-		Controller.MoveUp(dt);
-
-	static bool first = true;
-	static float lastX, lastY, xOff, yOff, yaw = -90.f, pitch;
-
-	auto [x, y] = Platform::Input::GetMouseCursorPosition();
-
-	if (first)
-	{
-		lastX = x;
-		lastY = y;
-		first = false;
-	}
-
-	xOff = x - lastX;
-	yOff = y - lastY;
-
-	lastX = x;
-	lastY = y;
-
-	if (Platform::Input::IsMouseButtonPressed(Mouse::Right))
-	{
-		xOff *= 0.5f;
-		yOff *= 0.5f;
-
-		yaw += xOff;
-		pitch += yOff;
-
-		if (pitch > 89.f)
-			pitch = 89.f;
-		if (pitch < -89.f)
-			pitch = -89.f;
-
-
-		Controller.Rotate(yaw, pitch);
-	}
-
-	Controller.SetView();
+	
 }
