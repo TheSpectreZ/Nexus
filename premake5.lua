@@ -8,11 +8,12 @@ workspace "Nexus-Engine"
         "Debug","Release","Dist"
     }
 
-    startproject "Minecraft"
+    startproject "Launcher"
 
     group "Dependencies"
         include "Scripts/Dependencies/glfw.lua"
         include "Scripts/Dependencies/spdlog.lua"
+        include "Scripts/Dependencies/imgui.lua"
     group ""
 
     group "Engine"
@@ -22,6 +23,6 @@ workspace "Nexus-Engine"
         include "Scripts/Engine/Application.lua"
     group ""
 
-    group "Projects"
-        
+    group "Programs"
+        include "Scripts/Programs/Launcher.lua"
     group ""

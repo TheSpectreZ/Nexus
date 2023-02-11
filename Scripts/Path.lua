@@ -1,4 +1,4 @@
-PrjDir = "%{wks.location}/Source/Projects/"
+PrmDir = "%{wks.location}/Source/Programs/"
 EngDir = "%{wks.location}/Source/Engine/"
 DepDir = "%{wks.location}/Source/Dependencies/"
 
@@ -14,6 +14,7 @@ IncludeDir["spdlog"] = (DepDir.."spdlog/include")
 IncludeDir["vulkanSDK"] = "$(VULKAN_SDK)/Include"
 IncludeDir["vulkanMemoryAllocator"] = (DepDir.."VulkanMemoryAllocator/include")
 IncludeDir["stb"] = (DepDir.."stb")
+IncludeDir["imgui"] = (DepDir.."imgui")
 
 IncludeDir["Platform"] = (EngDir.."Platform/include")
 IncludeDir["DebugUtils"] = (EngDir.."DebugUtils/include")

@@ -33,12 +33,8 @@ void Nexus::Application::Run()
 		for (auto& l : m_layerstack)
 			l->OnUpdate();
 
-		Graphics::Presenter::StartFrame();
-
 		for (auto& l : m_layerstack)
 			l->OnRender();
-
-		Graphics::Presenter::EndFrame();
 	}
 
 	Graphics::Presenter::WaitForDevice();
