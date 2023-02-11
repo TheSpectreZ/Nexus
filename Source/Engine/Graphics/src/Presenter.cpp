@@ -153,7 +153,7 @@ void Nexus::Graphics::Presenter::BeginRenderpass(VkCommandBuffer cmdbuffer,const
 	Info.framebuffer = buffer.Get();
 	Info.renderArea.offset = { 0,0 };
 	Info.renderArea.extent = s_Instance->m_SwapchainExtent;
-	Info.clearValueCount = values.size();
+	Info.clearValueCount = (uint32_t)values.size();
 	Info.pClearValues = values.data();
 
 	vkCmdBeginRenderPass(cmdbuffer, &Info, VK_SUBPASS_CONTENTS_INLINE);
@@ -162,6 +162,12 @@ void Nexus::Graphics::Presenter::BeginRenderpass(VkCommandBuffer cmdbuffer,const
 void Nexus::Graphics::Presenter::EndRenderpass(VkCommandBuffer buffer)
 {
 	vkCmdEndRenderPass(buffer);
+}
+
+void Nexus::Graphics::Presenter::SetViewportAndScissor(VkViewport* pViewport, uint32_t viewportCount, VkRect2D* pScissor, uint32_t scissorCount)
+{
+	vkCmdSetViewport(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame], 0, viewportCount, pViewport);
+	vkCmdSetScissor(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame], 0, scissorCount, pScissor);
 }
 
 void Nexus::Graphics::Presenter::WaitForDevice()
@@ -290,7 +296,7 @@ void Nexus::Graphics::Presenter::Create()
 
 	// Swapchain Image Views
 	{
-		uint32_t count = m_Images.size();
+		uint32_t count = (uint32_t)m_Images.size();
 
 		m_ImageViews.clear();
 		m_ImageViews.resize(count);

@@ -8,10 +8,16 @@ namespace Nexus
 {
 	namespace Graphics
 	{
+		class NEXUS_GRAPHICS_API RenderCommand
+		{
+		public:
+			static void DrawIndexed(VkCommandBuffer cmd,uint32_t IndexCount);
+		};
+
 		class NEXUS_GRAPHICS_API Sampler
 		{
 		public:
-			void Create(VkFilter Mag, VkFilter Min);
+			void Create(VkFilter Mag, VkFilter Min, VkSamplerAddressMode x, VkSamplerAddressMode y, VkSamplerAddressMode z);
 			void Destroy();
 			
 			VkSampler Get() { return m_sampler; }
@@ -77,5 +83,17 @@ namespace Nexus
 			VmaAllocation m_allocation;
 		};
 
+		class NEXUS_GRAPHICS_API CubeMapTexture
+		{
+		public:
+			void Create(std::array<const char*, 6> filepaths);
+			void Destroy();
+
+			VkImageView Get() { return m_View; }
+		private:
+			VkImage m_Image;
+			VmaAllocation m_Allocation;
+			VkImageView m_View;
+		};
 	}
 }

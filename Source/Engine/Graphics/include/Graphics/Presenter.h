@@ -28,6 +28,8 @@ namespace Nexus
 			static void BeginRenderpass(VkCommandBuffer cmdbuffer, const Renderpass& pass, const Framebuffer& buffer, std::vector<VkClearValue> values);
 			static void EndRenderpass(VkCommandBuffer buffer);
 
+			static void SetViewportAndScissor(VkViewport* pViewport, uint32_t viewportCount, VkRect2D* pScissor, uint32_t scissorCount);
+
 			static void WaitForDevice();
 
 			static VkImageView GetImageView(uint32_t i) { return s_Instance->m_ImageViews[i]; }

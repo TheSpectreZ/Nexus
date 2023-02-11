@@ -187,3 +187,7 @@ void Nexus::Graphics::GraphicsPipeline::Destroy()
 	vkDestroyPipeline(Backend::GetDevice(), m_handle, nullptr);
 }
 
+void Nexus::Graphics::GraphicsPipeline::Bind(VkCommandBuffer cmd)
+{
+	vkCmdBindPipeline(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, m_handle);
+}
