@@ -8,7 +8,7 @@ workspace "Nexus-Engine"
         "Debug","Release","Dist"
     }
 
-    startproject "Launcher"
+    startproject "Sandbox"
 
     group "Dependencies"
         include "Scripts/Dependencies/glfw.lua"
@@ -24,5 +24,5 @@ workspace "Nexus-Engine"
     group ""
 
     group "Programs"
-        include "Scripts/Programs/Launcher.lua"
+        include "Scripts/Programs/Sandbox.lua"
     group ""

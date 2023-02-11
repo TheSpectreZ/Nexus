@@ -1,6 +1,6 @@
-project "Launcher"
+project "Sandbox"
     language "C++"
-    location (PrmDir.."Launcher")
+    location (PrmDir.."Sandbox")
 
     targetdir(BinDir)
     objdir(IntDir)
@@ -13,8 +13,8 @@ project "Launcher"
 
     files
     {
-        (PrmDir.."Launcher/**.h"),
-        (PrmDir.."Launcher/**.cpp")
+        (PrmDir.."Sandbox/**.h"),
+        (PrmDir.."Sandbox/**.cpp")
     }
 
     links
