@@ -10,3 +10,6 @@
 [submodule "Source/Dependencies/stb"]
 	path = Source/Dependencies/stb
 	url = https://github.com/nothings/stb.git
+[submodule "Source/Dependencies/imgui"]
+	path = Source/Dependencies/imgui
+	url = https://github.com/ocornut/imgui.git
