@@ -2,7 +2,7 @@
 
 #ifdef NEXUS_SYSTEM_WINDOWS
 
-#ifdef NEXUS_CORE_DLL
+#ifdef NEXUS_APPLICATION_DLL
 
 #define NEXUS_CORE_API __declspec(dllexport)
 

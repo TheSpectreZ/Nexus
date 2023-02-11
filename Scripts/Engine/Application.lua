@@ -1,16 +1,16 @@
-project "Core"
+project "Application"
     kind "SharedLib"
     language "C++"
-    location (EngDir.."Core")
+    location (EngDir.."Application")
 
-    defines "NEXUS_CORE_DLL"
+    defines "NEXUS_APPLICATION_DLL"
 
     targetdir(BinDir)
     objdir(IntDir)
 
     includedirs
     {
-        IncludeDir["Core"],
+        IncludeDir["Application"],
 
         IncludeDir["DebugUtils"],
         IncludeDir["Graphics"],
@@ -22,8 +22,8 @@ project "Core"
 
     files
     {
-        (EngDir.."Core/**.h"),
-        (EngDir.."Core/**.cpp")
+        (EngDir.."Application/**.h"),
+        (EngDir.."Application/**.cpp")
     }
 
     links

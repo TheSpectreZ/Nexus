@@ -1,4 +1,4 @@
-AppDir = "%{wks.location}/Source/Projects/"
+PrjDir = "%{wks.location}/Source/Projects/"
 EngDir = "%{wks.location}/Source/Engine/"
 DepDir = "%{wks.location}/Source/Dependencies/"
 
@@ -18,7 +18,7 @@ IncludeDir["stb"] = (DepDir.."stb")
 IncludeDir["Platform"] = (EngDir.."Platform/include")
 IncludeDir["DebugUtils"] = (EngDir.."DebugUtils/include")
 IncludeDir["Graphics"] = (EngDir.."Graphics/include")
-IncludeDir["Core"] = (EngDir.."Core/include")
+IncludeDir["Application"] = (EngDir.."Application/include")
 
 LibDir = {}
 

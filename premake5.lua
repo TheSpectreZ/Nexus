@@ -19,7 +19,7 @@ workspace "Nexus-Engine"
         include "Scripts/Engine/Platform.lua"
         include "Scripts/Engine/DebugUtils.lua"
         include "Scripts/Engine/Graphics.lua"
-        include "Scripts/Engine/Core.lua"
+        include "Scripts/Engine/Application.lua"
     group ""
 
     group "Projects"

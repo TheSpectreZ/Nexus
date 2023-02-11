@@ -1,4 +1,4 @@
-#include "Core/Application.h"
+#include "Application/Application.h"
 #include "DebugUtils/Logger.h"
 
 #include "Platform/Manager.h"
