@@ -15,7 +15,7 @@ void Nexus::Application::Run()
 	NEXUS_LOG_TRACE("Nexus Logger Initialized")
 
 	Platform::Initialize();
-	Platform::Manager::Create_Window(&p_Window);
+	Platform::Manager::Create_Window(p_Window);
 	Platform::Input::SetContextWindow(&p_Window);
 
 	Graphics::EngineSpecification Specs{ &p_Window };
@@ -26,7 +26,7 @@ void Nexus::Application::Run()
 	for (auto& l : m_layerstack)
 		l->OnAttach();
 
-	while (Platform::Manager::IsOpen(&p_Window))
+	while (Platform::Manager::IsOpen(p_Window))
 	{
 		Platform::Manager::PollEvents();
 
@@ -46,7 +46,7 @@ void Nexus::Application::Run()
 
 	Graphics::Engine::Shutdown();
 
-	Platform::Manager::Destroy_Window(&p_Window);
+	Platform::Manager::Destroy_Window(p_Window);
 	Platform::Shutdown();
 
 	NEXUS_LOG_SHUT

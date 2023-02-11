@@ -3,9 +3,9 @@
 
 GLFWwindow* Nexus::Platform::Input::m_window = nullptr;
 
-void Nexus::Platform::Input::SetContextWindow(Window* window)
+void Nexus::Platform::Input::SetContextWindow(const Window& window)
 {
-	m_window = window->handle;
+	m_window = window.handle;
 }
 
 bool Nexus::Platform::Input::IsKeyPressed(uint16_t key)

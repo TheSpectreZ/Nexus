@@ -11,11 +11,11 @@ namespace Nexus
 		class NEXUS_PLATFORM_API Manager
 		{
 		public:
-			static void Create_Window(Window* window);
-			static void Destroy_Window(Window* window);
+			static void Create_Window(Window& window);
+			static void Destroy_Window(const Window& window);
 			
-			static void Close(Window* window);
-			static bool IsOpen(Window* window);
+			static void Close(const Window& window);
+			static bool IsOpen(const Window& window);
 
 			static void PollEvents();
 		

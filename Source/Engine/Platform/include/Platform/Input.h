@@ -11,7 +11,7 @@ namespace Nexus
 		{
 			static GLFWwindow* m_window;
 		public:
-			static void SetContextWindow(Window* window);
+			static void SetContextWindow(const Window& window);
 
 			static bool IsKeyPressed(uint16_t key);
 			static bool IsMouseButtonPressed(uint16_t button);
