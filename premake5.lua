@@ -23,5 +23,5 @@ workspace "Nexus-Engine"
     group ""
 
     group "Projects"
-        include "Scripts/Projects/Minecraft.lua"
+        
     group ""
