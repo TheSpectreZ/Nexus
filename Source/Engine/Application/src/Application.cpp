@@ -21,7 +21,7 @@ void Nexus::Application::Run()
 	Graphics::EngineSpecification Specs{ &p_Window };
 	Graphics::Engine::Initialize(Specs);
 
-	Graphics::Presenter::s_RebootCallback = NX_BIND_EVENT_FN(Application::PresenterCallback);
+	Graphics::Presenter::WindowResizeCallbackFnc = NX_BIND_EVENT_FN(Application::OnWindowResize);
 
 	for (auto& l : m_layerstack)
 		l->OnAttach();
@@ -42,7 +42,6 @@ void Nexus::Application::Run()
 	for (auto& l : m_layerstack)
 	{
 		l->OnDetach();
-		delete l;
 	}
 
 	Graphics::Engine::Shutdown();
@@ -53,26 +52,8 @@ void Nexus::Application::Run()
 	NEXUS_LOG_SHUT
 }
 
-void Nexus::Application::PushLayer(Layer* layer)
-{
-	m_layerstack.emplace_back(layer);
-}
-
-void Nexus::Application::PopLayer(Layer* layer)
-{
-	auto it = std::find(m_layerstack.begin(), m_layerstack.end(), layer);
-	
-	if (it != m_layerstack.end())
-	{
-		layer->OnDetach();
-		delete layer;
-
-		m_layerstack.erase(it);
-	}
-}
-
-void Nexus::Application::PresenterCallback()
+void Nexus::Application::OnWindowResize(uint32_t width,uint32_t height)
 {
 	for (auto& l : m_layerstack)
-		l->OnCallback();
+		l->OnWindowResize(width, height);
 }

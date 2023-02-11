@@ -43,7 +43,7 @@ namespace Nexus
 			static VkSampleCountFlagBits GetImageMaxSamples();
 			static uint32_t GetMaxImageCount() { return s_Instance->s_FramesInFlight; }
 				 
-			static std::function<void()> s_RebootCallback;
+			static std::function<void(uint32_t, uint32_t)> WindowResizeCallbackFnc;
 		private:
 			void Create();
 			void Destroy(); 
