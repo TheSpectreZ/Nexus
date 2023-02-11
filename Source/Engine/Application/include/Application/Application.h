@@ -12,6 +12,7 @@ namespace Nexus
 	class NEXUS_CORE_API Application
 	{
 	public:
+		Application();
 		void Run();
 
 		template<typename T>

@@ -9,6 +9,14 @@
 
 #include <algorithm>
 
+Nexus::Application::Application()
+{
+	p_Window.title = "Nexus Application";
+	p_Window.handle = nullptr;
+	p_Window.width = 1080;
+	p_Window.height = 720;
+}
+
 void Nexus::Application::Run()
 {
 	NEXUS_LOG_INIT;
@@ -16,7 +24,7 @@ void Nexus::Application::Run()
 
 	Platform::Initialize();
 	Platform::Manager::Create_Window(p_Window);
-	Platform::Input::SetContextWindow(&p_Window);
+	Platform::Input::SetContextWindow(p_Window);
 
 	Graphics::EngineSpecification Specs{ &p_Window };
 	Graphics::Engine::Initialize(Specs);

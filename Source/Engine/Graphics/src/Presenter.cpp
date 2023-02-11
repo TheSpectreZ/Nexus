@@ -6,7 +6,7 @@
 Nexus::Graphics::Presenter* Nexus::Graphics::Presenter::s_Instance = nullptr;
 
 Nexus::Graphics::EngineSpecification Nexus::Graphics::Presenter::s_Specs;
-std::function<void()> Nexus::Graphics::Presenter::s_RebootCallback = nullptr;
+std::function<void(uint32_t,uint32_t)> Nexus::Graphics::Presenter::WindowResizeCallbackFnc = nullptr;
 
 void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 {
@@ -354,8 +354,8 @@ void Nexus::Graphics::Presenter::ReBuild()
 	s_Instance->Destroy();
 	s_Instance->Create();
 
-	if (s_RebootCallback)
-		s_RebootCallback();
+	if (WindowResizeCallbackFnc)
+		WindowResizeCallbackFnc(m_SwapchainExtent.width,m_SwapchainExtent.height);
 
 	NEXUS_LOG_ERROR("Presenter Recreation Completed");
 }

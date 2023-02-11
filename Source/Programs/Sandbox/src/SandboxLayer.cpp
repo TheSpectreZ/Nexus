@@ -16,6 +16,6 @@ void SandboxLayer::OnDetach()
 {
 }
 
-void SandboxLayer::OnCallback()
+void SandboxLayer::OnWindowResize(uint32_t width, uint32_t height)
 {
 }

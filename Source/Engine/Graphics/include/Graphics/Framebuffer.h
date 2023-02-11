@@ -40,8 +40,8 @@ namespace Nexus
 		struct NEXUS_GRAPHICS_API FramebufferCreateInfo
 		{
 			std::vector<VkImageView> Attachments;
-			Renderpass* Renderpass;
-			VkExtent2D extent;
+			Renderpass* Renderpass = nullptr;
+			VkExtent2D extent = { 0,0 };
 		};
 
 		class NEXUS_GRAPHICS_API Framebuffer
