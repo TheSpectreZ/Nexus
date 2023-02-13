@@ -1,7 +1,9 @@
-#include "Backend.h"
-#include "vkAssert.h"
-
 #include "Graphics/Resource.h"
+#include "Graphics/Engine.h"
+#include "Backend.h"
+
+#include "vkAssert.h"
+#include "vma/vk_mem_alloc.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -109,7 +111,7 @@ void Nexus::Graphics::VertexBuffer::Create(uint32_t count, VkDeviceSize stride,v
 		info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
 		VmaAllocationInfo ainfo{};
-		vmaCreateBuffer(Backend::GetAllocator(), &Info, &info, &stagingBuffer, &stagingAllocation, &ainfo);
+		vmaCreateBuffer(Engine::Get().GetAllocator(), &Info, &info, &stagingBuffer, &stagingAllocation, &ainfo);
 
 		memcpy(ainfo.pMappedData, data, stride * count);
 	}
@@ -124,20 +126,20 @@ void Nexus::Graphics::VertexBuffer::Create(uint32_t count, VkDeviceSize stride,v
 	VmaAllocationCreateInfo info{};
 	info.usage = VMA_MEMORY_USAGE_AUTO;
 
-	_VKR = vmaCreateBuffer(Backend::GetAllocator(), &Info, &info, &m_buffer, &m_allocation, nullptr);
+	_VKR = vmaCreateBuffer(Engine::Get().GetAllocator(), &Info, &info, &m_buffer, &m_allocation, nullptr);
 	CHECK_HANDLE(m_buffer, VkBuffer)
 	NEXUS_LOG_TRACE("Vertex Buffer Created: {0}", count * stride)
 
-	auto cmdbuffer = Backend::BeginSingleTimeCommands();
+	auto cmdbuffer = Backend::Get().Get().BeginSingleTimeCommands();
 	Copy(cmdbuffer, stagingBuffer, m_buffer, stride * count);
-	Backend::EndSingleTimeCommands(cmdbuffer);
+	Backend::Get().EndSingleTimeCommands(cmdbuffer);
 
-	vmaDestroyBuffer(Backend::GetAllocator(), stagingBuffer, stagingAllocation);
+	vmaDestroyBuffer(Engine::Get().GetAllocator(), stagingBuffer, stagingAllocation);
 }
 
 void Nexus::Graphics::VertexBuffer::Destroy()
 {
-	vmaDestroyBuffer(Backend::GetAllocator(), m_buffer, m_allocation);
+	vmaDestroyBuffer(Engine::Get().GetAllocator(), m_buffer, m_allocation);
 }
 
 void Nexus::Graphics::VertexBuffer::Bind(VkCommandBuffer buffer)
@@ -166,7 +168,7 @@ void Nexus::Graphics::IndexBuffer::Create(uint32_t count,VkDeviceSize stride,voi
 		info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
 		VmaAllocationInfo ainfo{};
-		vmaCreateBuffer(Backend::GetAllocator(), &Info, &info, &stagingBuffer, &stagingAllocation, &ainfo);
+		vmaCreateBuffer(Engine::Get().GetAllocator(), &Info, &info, &stagingBuffer, &stagingAllocation, &ainfo);
 
 		memcpy(ainfo.pMappedData, data, stride * count);
 	}
@@ -181,20 +183,20 @@ void Nexus::Graphics::IndexBuffer::Create(uint32_t count,VkDeviceSize stride,voi
 	VmaAllocationCreateInfo info{};
 	info.usage = VMA_MEMORY_USAGE_AUTO;
 
-	_VKR = vmaCreateBuffer(Backend::GetAllocator(), &Info, &info, &m_buffer, &m_allocation, nullptr);
+	_VKR = vmaCreateBuffer(Engine::Get().GetAllocator(), &Info, &info, &m_buffer, &m_allocation, nullptr);
 	CHECK_HANDLE(m_buffer, VkBuffer)
 	NEXUS_LOG_TRACE("Index Buffer Created: {0} , {1}", m_indices, m_indices * stride)
 
-	auto cmdbuffer = Backend::BeginSingleTimeCommands();
+	auto cmdbuffer = Backend::Get().Get().BeginSingleTimeCommands();
 	Copy(cmdbuffer, stagingBuffer, m_buffer, stride * count);
-	Backend::EndSingleTimeCommands(cmdbuffer);
+	Backend::Get().Get().EndSingleTimeCommands(cmdbuffer);
 
-	vmaDestroyBuffer(Backend::GetAllocator(), stagingBuffer, stagingAllocation);
+	vmaDestroyBuffer(Engine::Get().GetAllocator(), stagingBuffer, stagingAllocation);
 }
 
 void Nexus::Graphics::IndexBuffer::Destroy()
 {
-	vmaDestroyBuffer(Backend::GetAllocator(), m_buffer, m_allocation);
+	vmaDestroyBuffer(Engine::Get().GetAllocator(), m_buffer, m_allocation);
 }
 
 void Nexus::Graphics::IndexBuffer::Bind(VkCommandBuffer buffer)
@@ -217,17 +219,17 @@ void Nexus::Graphics::UniformBuffer::Create(VkDeviceSize size)
 	info.usage = VMA_MEMORY_USAGE_AUTO;
 	info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-	_VKR = vmaCreateBuffer(Backend::GetAllocator(), &Info, &info, &m_buffer,&m_allocation, nullptr);
+	_VKR = vmaCreateBuffer(Engine::Get().GetAllocator(), &Info, &info, &m_buffer,&m_allocation, nullptr);
 	CHECK_HANDLE(m_buffer,VkBuffer)
 	NEXUS_LOG_TRACE("Uniform Buffer Created: {0}",size);
 
-	vmaMapMemory(Backend::GetAllocator(), m_allocation, &m_Data);
+	vmaMapMemory(Engine::Get().GetAllocator(), m_allocation, &m_Data);
 }
 
 void Nexus::Graphics::UniformBuffer::Destroy()
 {
-	vmaUnmapMemory(Backend::GetAllocator(), m_allocation);
-	vmaDestroyBuffer(Backend::GetAllocator(), m_buffer, m_allocation);
+	vmaUnmapMemory(Engine::Get().GetAllocator(), m_allocation);
+	vmaDestroyBuffer(Engine::Get().GetAllocator(), m_buffer, m_allocation);
 }
 
 void Nexus::Graphics::UniformBuffer::Update(void* data)
@@ -266,7 +268,7 @@ void Nexus::Graphics::Texture2D::Create(void* pixelData,VkSampleCountFlagBits sa
 		info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 		
 		VmaAllocationInfo ainfo{};
-		vmaCreateBuffer(Backend::GetAllocator(), &Info, &info, &stagingBuffer, &stagingAllocation, &ainfo);
+		vmaCreateBuffer(Engine::Get().GetAllocator(), &Info, &info, &stagingBuffer, &stagingAllocation, &ainfo);
 
 		memcpy(ainfo.pMappedData, pixelData, size);
 	}
@@ -290,15 +292,15 @@ void Nexus::Graphics::Texture2D::Create(void* pixelData,VkSampleCountFlagBits sa
 	info.usage = VMA_MEMORY_USAGE_AUTO;
 
 	VmaAllocationInfo ainfo{};
-	_VKR = vmaCreateImage(Backend::GetAllocator(), &Info, &info, &m_Image, &m_allocation, &ainfo);
+	_VKR = vmaCreateImage(Engine::Get().GetAllocator(), &Info, &info, &m_Image, &m_allocation, &ainfo);
 	CHECK_HANDLE(m_Image,VkImage)
 	NEXUS_LOG_TRACE("Texture2D Created: {0}x{1}",extent.width,extent.height)
 
-	VkCommandBuffer cmd = Backend::BeginSingleTimeCommands();
+	VkCommandBuffer cmd = Backend::Get().Get().BeginSingleTimeCommands();
 	Copy(cmd, stagingBuffer, m_Image, extent, 1);
-	Backend::EndSingleTimeCommands(cmd);
+	Backend::Get().Get().EndSingleTimeCommands(cmd);
 
-	vmaDestroyBuffer(Backend::GetAllocator(), stagingBuffer, stagingAllocation);
+	vmaDestroyBuffer(Engine::Get().GetAllocator(), stagingBuffer, stagingAllocation);
 
 	// Image View
 	{
@@ -315,15 +317,15 @@ void Nexus::Graphics::Texture2D::Create(void* pixelData,VkSampleCountFlagBits sa
 		i.subresourceRange.baseArrayLayer = 0;
 		i.subresourceRange.layerCount = 1;
 
-		_VKR = vkCreateImageView(Backend::GetDevice(), &i, nullptr, &m_view);
+		_VKR = vkCreateImageView(Engine::Get().GetDevice(), &i, nullptr, &m_view);
 		CHECK_LOG_VKR
 	}
 }
 
 void Nexus::Graphics::Texture2D::Destroy()
 {
-	vmaDestroyImage(Backend::GetAllocator(), m_Image, m_allocation);
-	vkDestroyImageView(Backend::GetDevice(), m_view, nullptr);
+	vmaDestroyImage(Engine::Get().GetAllocator(), m_Image, m_allocation);
+	vkDestroyImageView(Engine::Get().GetDevice(), m_view, nullptr);
 }
 
 void Nexus::Graphics::Sampler::Create(VkFilter Mag, VkFilter Min, VkSamplerAddressMode u, VkSamplerAddressMode v, VkSamplerAddressMode w)
@@ -340,7 +342,7 @@ void Nexus::Graphics::Sampler::Create(VkFilter Mag, VkFilter Min, VkSamplerAddre
 	Info.anisotropyEnable = VK_TRUE;
 
 	VkPhysicalDeviceProperties Props;
-	vkGetPhysicalDeviceProperties(Backend::GetPhysicalDevice(), & Props);
+	vkGetPhysicalDeviceProperties(Engine::Get().GetGpuHandle(), &Props);
 
 	Info.maxAnisotropy = Props.limits.maxSamplerAnisotropy;
 	Info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
@@ -352,12 +354,12 @@ void Nexus::Graphics::Sampler::Create(VkFilter Mag, VkFilter Min, VkSamplerAddre
 	Info.minLod = 0.f;
 	Info.maxLod = 1;
 
-	vkCreateSampler(Backend::GetDevice(), &Info, nullptr, &m_sampler);
+	vkCreateSampler(Engine::Get().GetDevice(), &Info, nullptr, &m_sampler);
 }
 
 void Nexus::Graphics::Sampler::Destroy()
 {
-	vkDestroySampler(Backend::GetDevice(), m_sampler, nullptr);
+	vkDestroySampler(Engine::Get().GetDevice(), m_sampler, nullptr);
 }
 
 void Nexus::Graphics::CubeMapTexture::Create(std::array<const char*, 6> filepath)
@@ -387,16 +389,16 @@ void Nexus::Graphics::CubeMapTexture::Create(std::array<const char*, 6> filepath
 		info.usage = VMA_MEMORY_USAGE_AUTO;
 		info.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
-		vmaCreateBuffer(Backend::GetAllocator(), &Info, &info, &stagingBuffer, &stagingAllocation, nullptr);
+		vmaCreateBuffer(Engine::Get().GetAllocator(), &Info, &info, &stagingBuffer, &stagingAllocation, nullptr);
 
 		void* data;
-		vmaMapMemory(Backend::GetAllocator(), stagingAllocation, &data);
+		vmaMapMemory(Engine::Get().GetAllocator(), stagingAllocation, &data);
 		for (uint32_t i = 0; i < 6; i++)
 		{
 			memcpy(data, pixels[i], ImageSize);
 			data = (void*)((uint8_t*)data + ImageSize);
 		} 
-		vmaUnmapMemory(Backend::GetAllocator(), stagingAllocation);
+		vmaUnmapMemory(Engine::Get().GetAllocator(), stagingAllocation);
 		
 	}
 
@@ -425,16 +427,16 @@ void Nexus::Graphics::CubeMapTexture::Create(std::array<const char*, 6> filepath
 		VmaAllocationCreateInfo a{};
 		a.usage = VMA_MEMORY_USAGE_AUTO;
 
-		vmaCreateImage(Backend::GetAllocator(), &Info, &a, &m_Image, &m_Allocation, nullptr);
+		vmaCreateImage(Engine::Get().GetAllocator(), &Info, &a, &m_Image, &m_Allocation, nullptr);
 		CHECK_HANDLE(m_Image, VkImage)
 		NEXUS_LOG_TRACE("CubeMap Texture Created: {0}x{1}x6", w, h)
 	}
 
-	VkCommandBuffer cmd = Backend::BeginSingleTimeCommands();
+	VkCommandBuffer cmd = Backend::Get().BeginSingleTimeCommands();
 	Copy(cmd, stagingBuffer, m_Image, VkExtent2D(w, h), 6);
-	Backend::EndSingleTimeCommands(cmd);
+	Backend::Get().EndSingleTimeCommands(cmd);
 
-	vmaDestroyBuffer(Backend::GetAllocator(), stagingBuffer, stagingAllocation);
+	vmaDestroyBuffer(Engine::Get().GetAllocator(), stagingBuffer, stagingAllocation);
 
 	// Views
 	{
@@ -450,18 +452,30 @@ void Nexus::Graphics::CubeMapTexture::Create(std::array<const char*, 6> filepath
 		Info.subresourceRange.baseArrayLayer = 0;
 		Info.subresourceRange.layerCount = 6;
 
-		vkCreateImageView(Backend::GetDevice(), &Info, nullptr, &m_View);
+		vkCreateImageView(Engine::Get().GetDevice(), &Info, nullptr, &m_View);
 		CHECK_HANDLE(m_View, VkImageView)
 	}
 }
 
 void Nexus::Graphics::CubeMapTexture::Destroy()
 {
-	vmaDestroyImage(Backend::GetAllocator(), m_Image, m_Allocation);
-	vkDestroyImageView(Backend::GetDevice(), m_View, nullptr);
+	vmaDestroyImage(Engine::Get().GetAllocator(), m_Image, m_Allocation);
+	vkDestroyImageView(Engine::Get().GetDevice(), m_View, nullptr);
 }
 
 void Nexus::Graphics::RenderCommand::DrawIndexed(VkCommandBuffer cmd, uint32_t IndexCount)
 {
 	vkCmdDrawIndexed(cmd, IndexCount, 1, 0, 0, 0);
+}
+
+void Nexus::Graphics::ScreenSizeContainer::Create(float width, float height)
+{
+	m_Viewport = { 0,0,width,height,0.f,1.f };
+	m_scissor = { 0,0,(uint32_t)width,(uint32_t)height };
+}
+
+void Nexus::Graphics::ScreenSizeContainer::Bind(VkCommandBuffer cmd)
+{
+	vkCmdSetViewport(cmd, 0, 1, &m_Viewport);
+	vkCmdSetScissor(cmd, 0, 1, &m_scissor);
 }

@@ -1,5 +1,5 @@
 #include "Graphics/Framebuffer.h"
-
+#include "Graphics/Engine.h"
 #include "Backend.h"
 #include "vkAssert.h"
 
@@ -22,19 +22,19 @@ void Nexus::Graphics::FramebufferAttachment::Create(const FramebufferAttachmentC
 	i.usage = Info.usage;
 	i.tiling = VK_IMAGE_TILING_OPTIMAL;
 
-	_VKR = vkCreateImage(Backend::GetDevice(), &i, nullptr, &m_image);
+	_VKR = vkCreateImage(Engine::Get().GetDevice(), &i, nullptr, &m_image);
 	CHECK_HANDLE(m_image, VkImage)
 
 	VkMemoryRequirements req;
-	vkGetImageMemoryRequirements(Backend::GetDevice(), m_image, &req);
+	vkGetImageMemoryRequirements(Engine::Get().GetDevice(), m_image, &req);
 
 	VkMemoryAllocateInfo info{};
 	info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 	info.allocationSize = req.size;
-	info.memoryTypeIndex = FindMemoryType(Backend::GetPhysicalDevice(), req.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	info.memoryTypeIndex = FindMemoryType(Engine::Get().GetGpuHandle(), req.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-	vkAllocateMemory(Backend::GetDevice(), &info, nullptr, &m_memory);
-	vkBindImageMemory(Backend::GetDevice(), m_image, m_memory, 0);
+	vkAllocateMemory(Engine::Get().GetDevice(), &info, nullptr, &m_memory);
+	vkBindImageMemory(Engine::Get().GetDevice(), m_image, m_memory, 0);
 
 	VkImageViewCreateInfo v{};
 	v.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -49,7 +49,7 @@ void Nexus::Graphics::FramebufferAttachment::Create(const FramebufferAttachmentC
 	v.subresourceRange.layerCount = 1;
 	v.subresourceRange.levelCount = 1;
 
-	_VKR = vkCreateImageView(Backend::GetDevice(), &v, nullptr, &m_view);
+	_VKR = vkCreateImageView(Engine::Get().GetDevice(), &v, nullptr, &m_view);
 	CHECK_HANDLE(m_view, VkImageView)
 
 	NEXUS_LOG_TRACE("Framebuffer Attachment Created");
@@ -57,9 +57,9 @@ void Nexus::Graphics::FramebufferAttachment::Create(const FramebufferAttachmentC
 
 void Nexus::Graphics::FramebufferAttachment::Destroy()
 {
-	vkDestroyImage(Backend::GetDevice(), m_image, nullptr);
-	vkDestroyImageView(Backend::GetDevice(), m_view, nullptr);
-	vkFreeMemory(Backend::GetDevice(), m_memory, nullptr);
+	vkDestroyImage(Engine::Get().GetDevice(), m_image, nullptr);
+	vkDestroyImageView(Engine::Get().GetDevice(), m_view, nullptr);
+	vkFreeMemory(Engine::Get().GetDevice(), m_memory, nullptr);
 
 	NEXUS_LOG_TRACE("Framebuffer Attachment Destroyed");
 }
@@ -75,20 +75,20 @@ void Nexus::Graphics::Framebuffer::Create(const FramebufferCreateInfo& Info)
 	info.layers = 1;
 	info.attachmentCount = (uint32_t)Info.Attachments.size();
 	info.pAttachments = Info.Attachments.data();
-	info.renderPass = Info.Renderpass->Get();
+	info.renderPass = Info.Renderpass;
 
-	_VKR = vkCreateFramebuffer(Backend::GetDevice(), &info, nullptr, &m_handle);
+	_VKR = vkCreateFramebuffer(Engine::Get().GetDevice(), &info, nullptr, &m_handle);
 	CHECK_HANDLE(m_handle, VkFramebuffer)
 	NEXUS_LOG_TRACE("Framebuffer Created");
 }
 
 void Nexus::Graphics::Framebuffer::Destroy()
 {
-	vkDestroyFramebuffer(Backend::GetDevice(), m_handle, nullptr);
+	vkDestroyFramebuffer(Engine::Get().GetDevice(), m_handle, nullptr);
 	NEXUS_LOG_TRACE("Framebuffer Destroyed");
 }
 
 VkFormat Nexus::Graphics::GetSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
-	return FindSupportedFormat(Backend::GetPhysicalDevice(), candidates, tiling, features);
+	return FindSupportedFormat(Engine::Get().GetGpuHandle(), candidates, tiling, features);
 }

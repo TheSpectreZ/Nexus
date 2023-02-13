@@ -1,25 +1,23 @@
-#include "Graphics/Presenter.h"
+#include "Presenter.h"
 #include "vkAssert.h"
 #include "GLFW/glfw3.h"
 #include "Backend.h"
 
-Nexus::Graphics::Presenter* Nexus::Graphics::Presenter::s_Instance = nullptr;
-
-Nexus::Graphics::EngineSpecification Nexus::Graphics::Presenter::s_Specs;
-std::function<void(uint32_t,uint32_t)> Nexus::Graphics::Presenter::WindowResizeCallbackFnc = nullptr;
+uint32_t Nexus::Graphics::Presenter::s_CurrentFrame = 0;
+uint32_t Nexus::Graphics::Presenter::s_FramesInFlight = 0;
+uint32_t Nexus::Graphics::Presenter::s_ImageIndex = 0;
 
 void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 {
-	s_Instance = new Presenter();
-	s_Specs = specs;
+	m_window = specs.targetWindow;
 
-	s_Instance->Create();
+	Create();
 
 	// Fences and Semaphores
 	{
-		s_Instance->m_Fences.resize(s_Instance->s_FramesInFlight);
-		s_Instance->m_Semaphores.first.resize(s_Instance->s_FramesInFlight);
-		s_Instance->m_Semaphores.second.resize(s_Instance->s_FramesInFlight);
+		m_Fences.resize(s_FramesInFlight);
+		m_Semaphores.first.resize(s_FramesInFlight);
+		m_Semaphores.second.resize(s_FramesInFlight);
 
 		VkFenceCreateInfo fInfo{};
 		fInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -31,18 +29,18 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 		sInfo.pNext = nullptr;
 		sInfo.flags = 0;
 
-		for (uint32_t i = 0; i < s_Instance->s_FramesInFlight; i++)
+		for (uint32_t i = 0; i < s_FramesInFlight; i++)
 		{ 
-			vkCreateFence(Backend::GetDevice(), &fInfo, nullptr, &s_Instance->m_Fences[i]);
-			vkCreateSemaphore(Backend::GetDevice(), &sInfo, nullptr, &s_Instance->m_Semaphores.first[i]);
-			vkCreateSemaphore(Backend::GetDevice(), &sInfo, nullptr, &s_Instance->m_Semaphores.second[i]);
+			vkCreateFence(Backend::Get().m_Device, &fInfo, nullptr, &m_Fences[i]);
+			vkCreateSemaphore(Backend::Get().m_Device, &sInfo, nullptr, &m_Semaphores.first[i]);
+			vkCreateSemaphore(Backend::Get().m_Device, &sInfo, nullptr, &m_Semaphores.second[i]);
 		}
 
 	}
 
 	// Command Buffers and Pool
 	{
-		QueueIndexFamilies Fam = Graphics::GetQueueIndexFamilies(Backend::GetPhysicalDevice(), Backend::GetSurface());
+		QueueIndexFamilies Fam = Graphics::GetQueueIndexFamilies(Backend::Get().m_PhysicalDevice, Backend::Get().m_Surface);
 
 		VkCommandPoolCreateInfo pInfo{};
 		pInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -50,48 +48,47 @@ void Nexus::Graphics::Presenter::Init(const EngineSpecification& specs)
 		pInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		pInfo.queueFamilyIndex = Fam.front().value();
 
-		vkCreateCommandPool(Backend::GetDevice(), &pInfo, nullptr, &s_Instance->m_CommandPool);
+		vkCreateCommandPool(Backend::Get().m_Device, &pInfo, nullptr, &m_CommandPool);
 
 		VkCommandBufferAllocateInfo aInfo{};
 		aInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		aInfo.pNext = nullptr;
 		aInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		aInfo.commandPool = s_Instance->m_CommandPool;
-		aInfo.commandBufferCount = s_Instance->s_FramesInFlight;
+		aInfo.commandPool = m_CommandPool;
+		aInfo.commandBufferCount = s_FramesInFlight;
 
-		s_Instance->m_CommandBuffers.resize(s_Instance->s_FramesInFlight);
-		vkAllocateCommandBuffers(Backend::GetDevice(), &aInfo, s_Instance->m_CommandBuffers.data());
+		m_CommandBuffers.resize(s_FramesInFlight);
+		vkAllocateCommandBuffers(Backend::Get().m_Device, &aInfo, m_CommandBuffers.data());
 	}
 }
 
 void Nexus::Graphics::Presenter::Shut()
 {
-	s_Instance->Destroy();
+	Destroy();
 	
-	for (uint32_t i = 0; i < s_Instance->s_FramesInFlight; i++)
+	for (uint32_t i = 0; i < s_FramesInFlight; i++)
 	{
-		vkDestroyFence(Backend::GetDevice(), s_Instance->m_Fences[i], nullptr);
-		vkDestroySemaphore(Backend::GetDevice(), s_Instance->m_Semaphores.first[i], nullptr);
-		vkDestroySemaphore(Backend::GetDevice(), s_Instance->m_Semaphores.second[i], nullptr);
+		vkDestroyFence(Backend::Get().m_Device, m_Fences[i], nullptr);
+		vkDestroySemaphore(Backend::Get().m_Device, m_Semaphores.first[i], nullptr);
+		vkDestroySemaphore(Backend::Get().m_Device, m_Semaphores.second[i], nullptr);
 	}
 
-	vkDestroyCommandPool(Backend::GetDevice(), s_Instance->m_CommandPool, nullptr);
+	vkDestroyCommandPool(Backend::Get().m_Device, m_CommandPool, nullptr);
 
 	NEXUS_LOG_WARN("Vulkan Presenter Shut");
-	delete s_Instance;
 }
 
 void Nexus::Graphics::Presenter::StartFrame()
 {
-	vkWaitForFences(Backend::GetDevice(), 1, &s_Instance->m_Fences[s_Instance->s_CurrentFrame], VK_TRUE, UINT64_MAX);
-	_VKR = vkAcquireNextImageKHR(Backend::GetDevice(), s_Instance->m_Swapchain, UINT64_MAX, s_Instance->m_Semaphores.first[s_Instance->s_CurrentFrame], VK_NULL_HANDLE, &s_Instance->s_ImageIndex);
+	vkWaitForFences(Backend::Get().m_Device, 1, &m_Fences[s_CurrentFrame], VK_TRUE, UINT64_MAX);
+	_VKR = vkAcquireNextImageKHR(Backend::Get().m_Device, m_Swapchain, UINT64_MAX, m_Semaphores.first[s_CurrentFrame], VK_NULL_HANDLE, &s_ImageIndex);
 
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR)
 	{
-		s_Instance->ReBuild();
+		ReBuild();
 	}
 
-	vkResetFences(Backend::GetDevice(), 1, &s_Instance->m_Fences[s_Instance->s_CurrentFrame]);
+	vkResetFences(Backend::Get().m_Device, 1, &m_Fences[s_CurrentFrame]);
 
 	VkCommandBufferBeginInfo Info{};
 	Info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -99,85 +96,49 @@ void Nexus::Graphics::Presenter::StartFrame()
 	Info.pNext = nullptr;
 	Info.flags = 0;
 
-	vkBeginCommandBuffer(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame],&Info);
+	vkBeginCommandBuffer(m_CommandBuffers[s_CurrentFrame],&Info);
 }
 
 void Nexus::Graphics::Presenter::EndFrame()
 {
-	vkEndCommandBuffer(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame]);
+	vkEndCommandBuffer(m_CommandBuffers[s_CurrentFrame]);
 
 	VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 	
 	VkSubmitInfo sInfo{};
 	sInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	sInfo.pNext = nullptr;
-	sInfo.pCommandBuffers = &s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame];
+	sInfo.pCommandBuffers = &m_CommandBuffers[s_CurrentFrame];
 	sInfo.commandBufferCount = 1;
 	sInfo.waitSemaphoreCount = 1;
-	sInfo.pWaitSemaphores = &s_Instance->m_Semaphores.first[s_Instance->s_CurrentFrame];
+	sInfo.pWaitSemaphores = &m_Semaphores.first[s_CurrentFrame];
 	sInfo.pWaitDstStageMask = waitStages;
 	sInfo.signalSemaphoreCount = 1;
-	sInfo.pSignalSemaphores = &s_Instance->m_Semaphores.second[s_Instance->s_CurrentFrame];
+	sInfo.pSignalSemaphores = &m_Semaphores.second[s_CurrentFrame];
 
-	vkQueueSubmit(Backend::GetGraphicsQueue(), 1, &sInfo, s_Instance->m_Fences[s_Instance->s_CurrentFrame]);
+	vkQueueSubmit(Backend::Get().m_GraphicsQueue, 1, &sInfo, m_Fences[s_CurrentFrame]);
 
 	VkPresentInfoKHR presentInfo{};
 	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 	presentInfo.pNext = nullptr;
 	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &s_Instance->m_Swapchain;
-	presentInfo.pImageIndices = &s_Instance->s_ImageIndex;
-	presentInfo.pWaitSemaphores = &s_Instance->m_Semaphores.second[s_Instance->s_CurrentFrame];
+	presentInfo.pSwapchains = &m_Swapchain;
+	presentInfo.pImageIndices = &s_ImageIndex;
+	presentInfo.pWaitSemaphores = &m_Semaphores.second[s_CurrentFrame];
 	presentInfo.waitSemaphoreCount = 1;
 
-	_VKR = vkQueuePresentKHR(Backend::GetPresentQueue(), &presentInfo);
+	_VKR = vkQueuePresentKHR(Backend::Get().m_PresentQueue, &presentInfo);
 
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR || _VKR == VK_SUBOPTIMAL_KHR)
 	{
-		s_Instance->ReBuild();
+		ReBuild();
 	}
 	else if (_VKR != VK_SUCCESS)
 	{
 		NEXUS_ASSERT("Failed To Present Swapchain", "Swapchain Error");
 	}
 
-	s_Instance->s_CurrentFrame = (s_Instance->s_CurrentFrame + 1) % s_Instance->s_FramesInFlight;
-}
-
-void Nexus::Graphics::Presenter::BeginRenderpass(VkCommandBuffer cmdbuffer,const Renderpass& pass, const Framebuffer& buffer,std::vector<VkClearValue> values)
-{
-	VkRenderPassBeginInfo Info{};
-	Info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	Info.pNext = nullptr;
-	Info.renderPass = pass.Get();
-	Info.framebuffer = buffer.Get();
-	Info.renderArea.offset = { 0,0 };
-	Info.renderArea.extent = s_Instance->m_SwapchainExtent;
-	Info.clearValueCount = (uint32_t)values.size();
-	Info.pClearValues = values.data();
-
-	vkCmdBeginRenderPass(cmdbuffer, &Info, VK_SUBPASS_CONTENTS_INLINE);
-}
-
-void Nexus::Graphics::Presenter::EndRenderpass(VkCommandBuffer buffer)
-{
-	vkCmdEndRenderPass(buffer);
-}
-
-void Nexus::Graphics::Presenter::SetViewportAndScissor(VkViewport* pViewport, uint32_t viewportCount, VkRect2D* pScissor, uint32_t scissorCount)
-{
-	vkCmdSetViewport(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame], 0, viewportCount, pViewport);
-	vkCmdSetScissor(s_Instance->m_CommandBuffers[s_Instance->s_CurrentFrame], 0, scissorCount, pScissor);
-}
-
-void Nexus::Graphics::Presenter::WaitForDevice()
-{
-	Backend::WaitForDevice();
-}
-
-VkSampleCountFlagBits Nexus::Graphics::Presenter::GetImageMaxSamples()
-{
-	return Backend::GetMaxSampleCount();
+	s_CurrentFrame = (s_CurrentFrame + 1) % s_FramesInFlight;
 }
 
 void Nexus::Graphics::Presenter::Create()
@@ -187,9 +148,9 @@ void Nexus::Graphics::Presenter::Create()
 		VkSwapchainCreateInfoKHR Info{};
 		Info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		Info.pNext = nullptr;
-		Info.surface = Backend::GetSurface();
+		Info.surface = Backend::Get().m_Surface;
 
-		QueueIndexFamilies Fam = GetQueueIndexFamilies(Backend::GetPhysicalDevice(), Backend::GetSurface());
+		QueueIndexFamilies Fam = GetQueueIndexFamilies(Backend::Get().m_PhysicalDevice, Backend::Get().m_Surface);
 		if (Fam.front().value() != Fam.back().value())
 		{
 			uint32_t Indices[] = {Fam.front().value(),Fam.back().value()};
@@ -208,17 +169,17 @@ void Nexus::Graphics::Presenter::Create()
 		// format, colorspace, mode, capabilities, minImage
 		{
 			VkSurfaceCapabilitiesKHR cap;
-			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &cap);
+			vkGetPhysicalDeviceSurfaceCapabilitiesKHR(Backend::Get().m_PhysicalDevice, Backend::Get().m_Surface, &cap);
 
 			uint32_t size = 0;
-			vkGetPhysicalDeviceSurfaceFormatsKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &size, nullptr);
+			vkGetPhysicalDeviceSurfaceFormatsKHR(Backend::Get().m_PhysicalDevice, Backend::Get().m_Surface, &size, nullptr);
 			std::vector<VkSurfaceFormatKHR> availableFormats(size);
-			vkGetPhysicalDeviceSurfaceFormatsKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &size, availableFormats.data());
+			vkGetPhysicalDeviceSurfaceFormatsKHR(Backend::Get().m_PhysicalDevice, Backend::Get().m_Surface, &size, availableFormats.data());
 
 			size = 0;
-			vkGetPhysicalDeviceSurfacePresentModesKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &size, nullptr);
+			vkGetPhysicalDeviceSurfacePresentModesKHR(Backend::Get().m_PhysicalDevice, Backend::Get().m_Surface, &size, nullptr);
 			std::vector<VkPresentModeKHR> availableModes(size);
-			vkGetPhysicalDeviceSurfacePresentModesKHR(Backend::GetPhysicalDevice(), Backend::GetSurface(), &size, availableModes.data());
+			vkGetPhysicalDeviceSurfacePresentModesKHR(Backend::Get().m_PhysicalDevice, Backend::Get().m_Surface, &size, availableModes.data());
 
 			VkSurfaceFormatKHR format = availableFormats[0];
 			for (auto& form : availableFormats)
@@ -247,7 +208,7 @@ void Nexus::Graphics::Presenter::Create()
 			}
 			else
 			{
-				extent = { (uint32_t)s_Specs.targetWindow->width,(uint32_t)s_Specs.targetWindow->height };
+				extent = { (uint32_t)m_window->width,(uint32_t)m_window->height };
 
 				extent.width = std::clamp(extent.width, cap.currentExtent.width, cap.maxImageExtent.width);
 				extent.height = std::clamp(extent.height, cap.currentExtent.height, cap.maxImageExtent.height);
@@ -274,7 +235,7 @@ void Nexus::Graphics::Presenter::Create()
 		Info.oldSwapchain = VK_NULL_HANDLE;
 		Info.flags = 0;
 
-		_VKR = vkCreateSwapchainKHR(Backend::GetDevice(), &Info, nullptr, &m_Swapchain);
+		_VKR = vkCreateSwapchainKHR(Backend::Get().m_Device, &Info, nullptr, &m_Swapchain);
 		CHECK_HANDLE(m_Swapchain, VkSwapchainKHR);
 		NEXUS_LOG_WARN("Vulkan Swapchain Created");
 
@@ -286,10 +247,10 @@ void Nexus::Graphics::Presenter::Create()
 	// Swapchain Images
 	{	
 		uint32_t count;
-		vkGetSwapchainImagesKHR(Backend::GetDevice(), m_Swapchain, &count, nullptr);
+		vkGetSwapchainImagesKHR(Backend::Get().m_Device, m_Swapchain, &count, nullptr);
 		m_Images.clear();
 		m_Images.resize(count);
-		vkGetSwapchainImagesKHR(Backend::GetDevice(), m_Swapchain, &count, m_Images.data());
+		vkGetSwapchainImagesKHR(Backend::Get().m_Device, m_Swapchain, &count, m_Images.data());
 
 		NEXUS_LOG_TRACE("Vulkan Swapchain Images[{0}] Acquired", count);
 	}
@@ -320,7 +281,7 @@ void Nexus::Graphics::Presenter::Create()
 			Info.subresourceRange.layerCount = 1;
 			Info.subresourceRange.levelCount = 1;
 
-			_VKR = vkCreateImageView(Backend::GetDevice(), &Info, nullptr, &m_ImageViews[i]);
+			_VKR = vkCreateImageView(Backend::Get().m_Device, &Info, nullptr, &m_ImageViews[i]);
 			CHECK_HANDLE(m_ImageViews[i], VkImageView);
 		}
 		NEXUS_LOG_TRACE("Vulkan Swapchain Image Views[{0}] Created", count);
@@ -332,27 +293,27 @@ void Nexus::Graphics::Presenter::Destroy()
 {
 	for (auto& view : m_ImageViews)
 	{
-		vkDestroyImageView(Backend::GetDevice(), view, nullptr);
+		vkDestroyImageView(Backend::Get().m_Device, view, nullptr);
 	}
 
-	vkDestroySwapchainKHR(Backend::GetDevice(), m_Swapchain, nullptr);
+	vkDestroySwapchainKHR(Backend::Get().m_Device, m_Swapchain, nullptr);
 }
 
 void Nexus::Graphics::Presenter::ReBuild()
 {
-	Backend::WaitForDevice();
+	vkDeviceWaitIdle(Backend::Get().m_Device);
 
 	int width = 0, height = 0;
-	glfwGetFramebufferSize(s_Specs.targetWindow->handle, &width, &height);
+	glfwGetFramebufferSize(m_window->handle, &width, &height);
 	while (width == 0 || height == 0) {
-		glfwGetFramebufferSize(s_Specs.targetWindow->handle, &width, &height);
+		glfwGetFramebufferSize(m_window->handle, &width, &height);
 		glfwWaitEvents();
 	}
 
 	NEXUS_LOG_ERROR("Presenter Recreation Started");
 
-	s_Instance->Destroy();
-	s_Instance->Create();
+	Destroy();
+	Create();
 
 	if (WindowResizeCallbackFnc)
 		WindowResizeCallbackFnc(m_SwapchainExtent.width,m_SwapchainExtent.height);

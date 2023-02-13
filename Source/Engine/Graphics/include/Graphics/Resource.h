@@ -1,6 +1,7 @@
 #pragma once
 #include "Build.h"
 #include "vulkan/vulkan.h"
+#include <array>
 
 VK_DEFINE_HANDLE(VmaAllocation)
 
@@ -94,6 +95,22 @@ namespace Nexus
 			VkImage m_Image;
 			VmaAllocation m_Allocation;
 			VkImageView m_View;
+		};
+
+		class NEXUS_GRAPHICS_API ScreenSizeContainer
+		{
+		public:
+			void Create(float width, float height);
+			void Bind(VkCommandBuffer cmd);
+
+			VkViewport& GetViewport() { return m_Viewport; }
+			const VkViewport GetViewport() const { return m_Viewport; }
+
+			VkRect2D& GetScissor() { return m_scissor; }
+			const VkRect2D GetScissor() const { return m_scissor; }
+		private:
+			VkViewport m_Viewport;
+			VkRect2D m_scissor;
 		};
 	}
 }

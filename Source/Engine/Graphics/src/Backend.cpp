@@ -132,12 +132,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallBack(VkDebugUtilsMessageSeverityF
 
 static bool debugEnabled = false;
 
-Nexus::Graphics::Backend* Nexus::Graphics::Backend::s_Instance = nullptr;
-
 void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 {
-	s_Instance = new Backend();
-
 	std::vector<const char*> InstanceLayers;
 
 	std::vector<const char*> DeviceExtensions;
@@ -183,8 +179,8 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		info.enabledLayerCount = static_cast<uint32_t>(InstanceLayers.size());
 		info.ppEnabledLayerNames = InstanceLayers.data();
 
-		_VKR = vkCreateInstance(&info, nullptr, &s_Instance->m_Instance);
-		CHECK_HANDLE(s_Instance->m_Instance, VkInstance);
+		_VKR = vkCreateInstance(&info, nullptr, &m_Instance);
+		CHECK_HANDLE(m_Instance, VkInstance);
 		NEXUS_LOG_WARN("Vulkan Instance Created");
 	}
 
@@ -198,12 +194,12 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		Info.pfnUserCallback = DebugCallBack;
 		Info.pUserData = nullptr;
 
-		auto fnc = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(s_Instance->s_Instance->m_Instance, "vkCreateDebugUtilsMessengerEXT");
+		auto fnc = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_Instance, "vkCreateDebugUtilsMessengerEXT");
 
 		if (fnc != nullptr)
 		{
-			fnc(s_Instance->m_Instance, &Info, nullptr, &s_Instance->m_DebugMessenger);
-			CHECK_HANDLE(s_Instance->m_DebugMessenger, VkDebugUtilsMessengerEXT);
+			fnc(m_Instance, &Info, nullptr, &m_DebugMessenger);
+			CHECK_HANDLE(m_DebugMessenger, VkDebugUtilsMessengerEXT)
 			NEXUS_LOG_TRACE("Debug Messenger Created");
 		}
 		else
@@ -212,17 +208,17 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 
 	// Surface
 	{
-		_VKR = glfwCreateWindowSurface(s_Instance->m_Instance, specs.targetWindow->handle, nullptr, &s_Instance->m_Surface);
-		CHECK_HANDLE(s_Instance->m_Surface, VkSurfaceKHR);
+		_VKR = glfwCreateWindowSurface(m_Instance, specs.targetWindow->handle, nullptr, &m_Surface);
+		CHECK_HANDLE(m_Surface, VkSurfaceKHR);
 		NEXUS_LOG_TRACE("Vulkan SurfaceKHR Created");
 	}
 
 	// Physical Device
 	{
 		uint32_t count = 0;
-		vkEnumeratePhysicalDevices(s_Instance->m_Instance, &count, nullptr);
+		vkEnumeratePhysicalDevices(m_Instance, &count, nullptr);
 		std::vector<VkPhysicalDevice> devices(count);
-		vkEnumeratePhysicalDevices(s_Instance->m_Instance, &count, devices.data());
+		vkEnumeratePhysicalDevices(m_Instance, &count, devices.data());
 
 		struct DeviceRate
 		{
@@ -263,7 +259,7 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 			if (!CheckExtensionAvailability(DeviceExtensions, devices[i]))
 				continue;
 
-			const auto& QueueFamilies = GetQueueIndexFamilies(devices[i], s_Instance->m_Surface);
+			const auto& QueueFamilies = GetQueueIndexFamilies(devices[i], m_Surface);
 
 			bool found = true;
 			for (auto& fam : QueueFamilies)
@@ -294,26 +290,26 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		}
 
 		uint32_t index = Ratings.back().Id;
-		s_Instance->m_PhysicalDevice = devices[index];
+		m_PhysicalDevice = devices[index];
 
 		VkPhysicalDeviceProperties props;
-		vkGetPhysicalDeviceProperties(s_Instance->m_PhysicalDevice, &props);
-		CHECK_HANDLE(s_Instance->m_PhysicalDevice, VkPhysicalDevice);
+		vkGetPhysicalDeviceProperties(m_PhysicalDevice, &props);
+		CHECK_HANDLE(m_PhysicalDevice, VkPhysicalDevice);
 
 		// MSAA
 		{
 			VkPhysicalDeviceProperties Props;
-			vkGetPhysicalDeviceProperties(s_Instance->m_PhysicalDevice, &Props);
+			vkGetPhysicalDeviceProperties(m_PhysicalDevice, &Props);
 
 			VkSampleCountFlags counts = Props.limits.framebufferColorSampleCounts & Props.limits.framebufferDepthSampleCounts;
 
-			if (counts & VK_SAMPLE_COUNT_64_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_64_BIT; }
-			if (counts & VK_SAMPLE_COUNT_32_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_32_BIT; }
-			if (counts & VK_SAMPLE_COUNT_16_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_16_BIT; }
-			if (counts & VK_SAMPLE_COUNT_8_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_8_BIT; }
-			if (counts & VK_SAMPLE_COUNT_4_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_4_BIT; }
-			if (counts & VK_SAMPLE_COUNT_2_BIT) { s_Instance->m_Msaa = VK_SAMPLE_COUNT_2_BIT; }
-			else { s_Instance->m_Msaa = VK_SAMPLE_COUNT_1_BIT; }
+			if (counts & VK_SAMPLE_COUNT_64_BIT) { m_Msaa = VK_SAMPLE_COUNT_64_BIT; }
+			if (counts & VK_SAMPLE_COUNT_32_BIT) { m_Msaa = VK_SAMPLE_COUNT_32_BIT; }
+			if (counts & VK_SAMPLE_COUNT_16_BIT) { m_Msaa = VK_SAMPLE_COUNT_16_BIT; }
+			if (counts & VK_SAMPLE_COUNT_8_BIT) { m_Msaa = VK_SAMPLE_COUNT_8_BIT; }
+			if (counts & VK_SAMPLE_COUNT_4_BIT) { m_Msaa = VK_SAMPLE_COUNT_4_BIT; }
+			if (counts & VK_SAMPLE_COUNT_2_BIT) { m_Msaa = VK_SAMPLE_COUNT_2_BIT; }
+			else { m_Msaa = VK_SAMPLE_COUNT_1_BIT; }
 
 		}
 
@@ -323,7 +319,7 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 	// Logical Device 
 	{
 
-		QueueIndexFamilies families = GetQueueIndexFamilies(s_Instance->m_PhysicalDevice, s_Instance->m_Surface);
+		QueueIndexFamilies families = GetQueueIndexFamilies(m_PhysicalDevice, m_Surface);
 
 		std::vector<VkDeviceQueueCreateInfo> queueInfo;
 
@@ -361,35 +357,35 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		Info.enabledLayerCount = static_cast<uint32_t>(InstanceLayers.size());
 		Info.ppEnabledLayerNames = InstanceLayers.data();
 
-		_VKR = vkCreateDevice(s_Instance->m_PhysicalDevice, &Info, nullptr, &s_Instance->m_Device);
-		CHECK_HANDLE(s_Instance->m_Device, VkDevice);
+		_VKR = vkCreateDevice(m_PhysicalDevice, &Info, nullptr, &m_Device);
+		CHECK_HANDLE(m_Device, VkDevice);
 		NEXUS_LOG_WARN("Logical Device Created");
 
-		vkGetDeviceQueue(s_Instance->m_Device, families.front().value(), 0, &s_Instance->m_GraphicsQueue);
-		CHECK_HANDLE(s_Instance->m_GraphicsQueue, VkQueue);
+		vkGetDeviceQueue(m_Device, families.front().value(), 0, &m_GraphicsQueue);
+		CHECK_HANDLE(m_GraphicsQueue, VkQueue);
 		NEXUS_LOG_TRACE("Graphics Queue Acquired");
 
-		vkGetDeviceQueue(s_Instance->m_Device, families.back().value(), 0, &s_Instance->m_PresentQueue);
-		CHECK_HANDLE(s_Instance->m_PresentQueue, VkQueue);
+		vkGetDeviceQueue(m_Device, families.back().value(), 0, &m_PresentQueue);
+		CHECK_HANDLE(m_PresentQueue, VkQueue);
 		NEXUS_LOG_TRACE("Present Queue Acquired");
 	}
 
 	// Vulkan Memory Allocator
 	{
 		VmaAllocatorCreateInfo Info{};
-		Info.instance = s_Instance->m_Instance;
-		Info.physicalDevice = s_Instance->m_PhysicalDevice;
-		Info.device = s_Instance->m_Device;
+		Info.instance = m_Instance;
+		Info.physicalDevice = m_PhysicalDevice;
+		Info.device = m_Device;
 		vkEnumerateInstanceVersion(&Info.vulkanApiVersion);
 
-		_VKR = vmaCreateAllocator(&Info, &s_Instance->m_VmaAllocator);
+		_VKR = vmaCreateAllocator(&Info, &m_VmaAllocator);
 		CHECK_LOG_VKR
 		NEXUS_LOG_DEBUG("vmaAllocator Created")
 	}
 
 	// Command Pool
 	{
-		QueueIndexFamilies fam = GetQueueIndexFamilies(s_Instance->m_PhysicalDevice, s_Instance->m_Surface);
+		QueueIndexFamilies fam = GetQueueIndexFamilies(m_PhysicalDevice, m_Surface);
 		
 		VkCommandPoolCreateInfo Info{};
 		Info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -397,39 +393,32 @@ void Nexus::Graphics::Backend::Init(const EngineSpecification& specs)
 		Info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		Info.queueFamilyIndex = fam[0].value();
 
-		vkCreateCommandPool(s_Instance->m_Device, &Info, nullptr, &s_Instance->m_CmdPool);
+		vkCreateCommandPool(m_Device, &Info, nullptr, &m_CmdPool);
 	}
 
 }
 
 void Nexus::Graphics::Backend::Shut()
 {
-	vkDeviceWaitIdle(s_Instance->m_Device);
+	vkDeviceWaitIdle(m_Device);
 	
-	vmaDestroyAllocator(s_Instance->m_VmaAllocator);
+	vmaDestroyAllocator(m_VmaAllocator);
 
-	vkDestroyCommandPool(s_Instance->m_Device, s_Instance->m_CmdPool, nullptr);
+	vkDestroyCommandPool(m_Device, m_CmdPool, nullptr);
 
-	vkDestroyDevice(s_Instance->m_Device, nullptr);
-	vkDestroySurfaceKHR(s_Instance->m_Instance, s_Instance->m_Surface, nullptr);
+	vkDestroyDevice(m_Device, nullptr);
+	vkDestroySurfaceKHR(m_Instance, m_Surface, nullptr);
 
 	if (debugEnabled)
 	{
-		auto fnc = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(s_Instance->m_Instance, "vkDestroyDebugUtilsMessengerEXT");
+		auto fnc = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(m_Instance, "vkDestroyDebugUtilsMessengerEXT");
 		if (fnc != NULL)
-			fnc(s_Instance->m_Instance, s_Instance->m_DebugMessenger, nullptr);
+			fnc(m_Instance, m_DebugMessenger, nullptr);
 	}
 
-	vkDestroyInstance(s_Instance->m_Instance, nullptr);
+	vkDestroyInstance(m_Instance, nullptr);
 
 	NEXUS_LOG_WARN("Vulkan Backend Shut");
-
-	delete s_Instance;
-}
-
-void Nexus::Graphics::Backend::WaitForDevice()
-{
-	vkDeviceWaitIdle(s_Instance->m_Device);
 }
 
 VkCommandBuffer Nexus::Graphics::Backend::BeginSingleTimeCommands()
@@ -438,11 +427,11 @@ VkCommandBuffer Nexus::Graphics::Backend::BeginSingleTimeCommands()
 	Info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 	Info.pNext = nullptr;
 	Info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-	Info.commandPool = s_Instance->m_CmdPool;
+	Info.commandPool = m_CmdPool;
 	Info.commandBufferCount = 1;
 
 	VkCommandBuffer buffer;
-	vkAllocateCommandBuffers(s_Instance->m_Device, &Info, &buffer);
+	vkAllocateCommandBuffers(m_Device, &Info, &buffer);
 
 	VkCommandBufferBeginInfo begin{};
 	begin.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -465,6 +454,6 @@ void Nexus::Graphics::Backend::EndSingleTimeCommands(VkCommandBuffer buffer)
 	Info.commandBufferCount = 1;
 	Info.pCommandBuffers = &buffer;
 
-	vkQueueSubmit(s_Instance->m_GraphicsQueue, 1, &Info, VK_NULL_HANDLE);
-	vkQueueWaitIdle(s_Instance->m_GraphicsQueue);
+	vkQueueSubmit(m_GraphicsQueue, 1, &Info, VK_NULL_HANDLE);
+	vkQueueWaitIdle(m_GraphicsQueue);
 }

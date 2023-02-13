@@ -1,5 +1,5 @@
 #include "Graphics/Pipeline.h"
-#include "Backend.h"
+#include "Graphics/Engine.h"
 #include "vkAssert.h"
 
 #include "shaderc/shaderc.hpp"
@@ -19,12 +19,12 @@ void Nexus::Graphics::PipelineLayout::Create(VkDescriptorSetLayout* layout, uint
 	Info.pushConstantRangeCount = rangeCount;
 	Info.pPushConstantRanges = ranges;
 
-	vkCreatePipelineLayout(Backend::GetDevice(), &Info, nullptr, &m_handle);
+	vkCreatePipelineLayout(Engine::Get().GetDevice(), &Info, nullptr, &m_handle);
 }
 
 void Nexus::Graphics::PipelineLayout::Destroy()
 {
-	vkDestroyPipelineLayout(Backend::GetDevice(), m_handle, nullptr);
+	vkDestroyPipelineLayout(Engine::Get().GetDevice(), m_handle, nullptr);
 }
 
 static shaderc_shader_kind GetShaderCType(VkShaderStageFlagBits type)
@@ -135,7 +135,7 @@ void Nexus::Graphics::GraphicsPipeline::Create(const PipelineCreateInfo& Info)
 		Info.codeSize = static_cast<uint32_t>(SpirV.size()) * static_cast<size_t>(sizeof(4));
 		Info.pCode = SpirV.data();
 
-		vkCreateShaderModule(Backend::GetDevice(), &Info, nullptr, &shaders.emplace_back());
+		vkCreateShaderModule(Engine::Get().GetDevice(), &Info, nullptr, &shaders.emplace_back());
 
 		NEXUS_LOG_INFO("Shader Module Created: {0}", p.first);
 	}
@@ -174,17 +174,17 @@ void Nexus::Graphics::GraphicsPipeline::Create(const PipelineCreateInfo& Info)
 	info.pMultisampleState = &multisampling;
 	info.pRasterizationState = &RasterInfo;
 
-	_VKR = vkCreateGraphicsPipelines(Backend::GetDevice(), VK_NULL_HANDLE, 1, &info, nullptr, &m_handle);
+	_VKR = vkCreateGraphicsPipelines(Engine::Get().GetDevice(), VK_NULL_HANDLE, 1, &info, nullptr, &m_handle);
 	CHECK_HANDLE(m_handle, VkPipeline)
 	NEXUS_LOG_WARN("Pipeline Created")
 
 	for (auto& s : shaders)
-		vkDestroyShaderModule(Backend::GetDevice(), s, nullptr);
+		vkDestroyShaderModule(Engine::Get().GetDevice(), s, nullptr);
 }
 
 void Nexus::Graphics::GraphicsPipeline::Destroy()
 {
-	vkDestroyPipeline(Backend::GetDevice(), m_handle, nullptr);
+	vkDestroyPipeline(Engine::Get().GetDevice(), m_handle, nullptr);
 }
 
 void Nexus::Graphics::GraphicsPipeline::Bind(VkCommandBuffer cmd)

@@ -12,12 +12,17 @@ namespace Nexus
 	{
 		class Backend
 		{
-			static Backend* s_Instance;
+			friend class Engine;
+			friend class Presenter;
 		public:
-			static void Init(const EngineSpecification& specs);
-			static void Shut();
+			inline static Backend& Get()
+			{
+				static Backend instance;
+				return instance;
+			}
 
-			static void WaitForDevice();
+			void Init(const EngineSpecification& specs);
+			void Shut();
 		private:
 			VkInstance m_Instance;
 			VkSurfaceKHR m_Surface;
@@ -31,16 +36,8 @@ namespace Nexus
 
 			VkCommandPool m_CmdPool;
 		public:
-			static VkCommandBuffer BeginSingleTimeCommands();
-			static void EndSingleTimeCommands(VkCommandBuffer buffer);
-
-			static VmaAllocator GetAllocator() { return s_Instance->m_VmaAllocator; }
-			static VkDevice GetDevice() { return s_Instance->m_Device; }
-			static VkSurfaceKHR GetSurface() { return s_Instance->m_Surface; }
-			static VkPhysicalDevice GetPhysicalDevice() { return s_Instance->m_PhysicalDevice; }
-			static VkQueue GetGraphicsQueue() { return s_Instance->m_GraphicsQueue; }
-			static VkQueue GetPresentQueue() { return s_Instance->m_PresentQueue; }
-			static VkSampleCountFlagBits GetMaxSampleCount() { return s_Instance->m_Msaa; }
+			VkCommandBuffer BeginSingleTimeCommands();
+			void EndSingleTimeCommands(VkCommandBuffer buffer);
 		};
 
 		uint32_t FindMemoryType(VkPhysicalDevice dev, uint32_t filter, VkMemoryPropertyFlags property);

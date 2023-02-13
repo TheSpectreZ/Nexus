@@ -2,8 +2,6 @@
 #include "Build.h"
 #include "vulkan/vulkan.h"
 
-#include "Renderpass.h"
-
 #include <vector>
 
 namespace Nexus
@@ -40,7 +38,7 @@ namespace Nexus
 		struct NEXUS_GRAPHICS_API FramebufferCreateInfo
 		{
 			std::vector<VkImageView> Attachments;
-			Renderpass* Renderpass = nullptr;
+			VkRenderPass Renderpass = nullptr;
 			VkExtent2D extent = { 0,0 };
 		};
 

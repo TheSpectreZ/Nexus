@@ -1,5 +1,5 @@
 #include "Graphics/Descriptor.h"
-#include "Backend.h"
+#include "Graphics/Engine.h"
 #include "vkAssert.h"
 
 void Nexus::Graphics::DescriptorPool::Create(std::vector<VkDescriptorPoolSize>* PoolSizes, uint32_t MaxSet)
@@ -11,14 +11,14 @@ void Nexus::Graphics::DescriptorPool::Create(std::vector<VkDescriptorPoolSize>* 
 	Info.pPoolSizes = PoolSizes->data();
 	Info.poolSizeCount = (uint32_t)PoolSizes->size();
 
-	_VKR = vkCreateDescriptorPool(Backend::GetDevice(), &Info, nullptr, &m_handle);
+	_VKR = vkCreateDescriptorPool(Engine::Get().GetDevice(), &Info, nullptr, &m_handle);
 	CHECK_HANDLE(m_handle,VkDescriptorPool)
 	NEXUS_LOG_INFO("Descriptor Pool Created")
 }
 
 void Nexus::Graphics::DescriptorPool::Destroy()
 {
-	vkDestroyDescriptorPool(Backend::GetDevice(), m_handle, nullptr);
+	vkDestroyDescriptorPool(Engine::Get().GetDevice(), m_handle, nullptr);
 }
 
 VkDescriptorSet Nexus::Graphics::Descriptor::AllocateSet(DescriptorLayout* layout, DescriptorPool* pool)
@@ -32,7 +32,7 @@ VkDescriptorSet Nexus::Graphics::Descriptor::AllocateSet(DescriptorLayout* layou
 	Info.pSetLayouts = &layout->Get();
 	Info.descriptorSetCount = 1;
 
-	_VKR = vkAllocateDescriptorSets(Backend::GetDevice(), &Info, &set);
+	_VKR = vkAllocateDescriptorSets(Engine::Get().GetDevice(), &Info, &set);
 	CHECK_HANDLE(set, VkDescriptorSet)
 	NEXUS_LOG_INFO("Descriptor Set Allocated")
 
@@ -58,7 +58,7 @@ void Nexus::Graphics::Descriptor::BindWithBuffer(VkDescriptorSet set, VkBuffer b
 	Info.pImageInfo = nullptr;
 	Info.pTexelBufferView = nullptr;
 
-	vkUpdateDescriptorSets(Backend::GetDevice(), 1, &Info, 0, nullptr);
+	vkUpdateDescriptorSets(Engine::Get().GetDevice(), 1, &Info, 0, nullptr);
 }
 
 void Nexus::Graphics::Descriptor::BindWithCombinedImageSampler(VkDescriptorSet set, VkSampler sampler, VkImageView view,uint32_t binding, uint32_t arrayElm)
@@ -80,7 +80,7 @@ void Nexus::Graphics::Descriptor::BindWithCombinedImageSampler(VkDescriptorSet s
 	Info.pImageInfo = &i;
 	Info.pTexelBufferView = nullptr;
 
-	vkUpdateDescriptorSets(Backend::GetDevice(), 1, &Info, 0, nullptr);
+	vkUpdateDescriptorSets(Engine::Get().GetDevice(), 1, &Info, 0, nullptr);
 }
 
 void Nexus::Graphics::Descriptor::Bind(VkCommandBuffer cmdbuffer,VkPipelineLayout layout, uint32_t setIndex,VkDescriptorSet set)
@@ -97,12 +97,12 @@ void Nexus::Graphics::DescriptorLayout::Create(std::vector<VkDescriptorSetLayout
 	Info.pBindings = bindings->data();
 	Info.bindingCount = (uint32_t)bindings->size();
 
-	_VKR = vkCreateDescriptorSetLayout(Backend::GetDevice(), &Info, nullptr, &m_handle);
+	_VKR = vkCreateDescriptorSetLayout(Engine::Get().GetDevice(), &Info, nullptr, &m_handle);
 	CHECK_HANDLE(m_handle, VkDescriptorSetLayout)
 	NEXUS_LOG_INFO("Descriptor Set Layout Created")
 }
 
 void Nexus::Graphics::DescriptorLayout::Destroy()
 {
-	vkDestroyDescriptorSetLayout(Backend::GetDevice(), m_handle, nullptr);
+	vkDestroyDescriptorSetLayout(Engine::Get().GetDevice(), m_handle, nullptr);
 }

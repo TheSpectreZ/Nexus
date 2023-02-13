@@ -5,7 +5,6 @@
 #include "Platform/Input.h"
 
 #include "Graphics/Engine.h"
-#include "Graphics/Presenter.h"
 
 #include <algorithm>
 
@@ -27,10 +26,9 @@ void Nexus::Application::Run()
 	Platform::Input::SetContextWindow(p_Window);
 
 	Graphics::EngineSpecification Specs{ &p_Window };
-	Graphics::Engine::Initialize(Specs);
-
-	Graphics::Presenter::WindowResizeCallbackFnc = NX_BIND_EVENT_FN(Application::OnWindowResize);
-
+	
+	Graphics::Engine::Get().Initialize(Specs, NX_BIND_EVENT_FN(Application::OnWindowResize));
+	
 	for (auto& l : m_layerstack)
 		l->OnAttach();
 
@@ -45,14 +43,14 @@ void Nexus::Application::Run()
 			l->OnRender();
 	}
 
-	Graphics::Presenter::WaitForDevice();
+	Graphics::Engine::Get().WaitForDevice();
 
 	for (auto& l : m_layerstack)
 	{
 		l->OnDetach();
 	}
 
-	Graphics::Engine::Shutdown();
+	Graphics::Engine::Get().Shutdown();
 
 	Platform::Manager::Destroy_Window(p_Window);
 	Platform::Shutdown();
