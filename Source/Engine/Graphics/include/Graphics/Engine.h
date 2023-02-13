@@ -40,7 +40,7 @@ namespace Nexus
 			VmaAllocator GetAllocator();
 			VkSampleCountFlagBits GetMaxSampleCount();
 			VkCommandBuffer GetCurrentRenderCommandBuffer();
-			VkImageView GetSwapChainImageView();
+			VkImageView GetSwapChainImageView(uint32_t i);
 			VkExtent2D GetSwapchainImageExtent();
 			VkFormat GetSwapchainImageFormat();
 			uint32_t GetMaxSwapchainImageCount();

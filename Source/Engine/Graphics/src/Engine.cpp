@@ -55,7 +55,7 @@ VkSampleCountFlagBits Nexus::Graphics::Engine::GetMaxSampleCount()	{ return  Bac
 
 VkCommandBuffer Nexus::Graphics::Engine::GetCurrentRenderCommandBuffer() { return Presenter::Get().m_CommandBuffers[Presenter::s_CurrentFrame]; }
 
-VkImageView Nexus::Graphics::Engine::GetSwapChainImageView() { return Presenter::Get().m_ImageViews[Presenter::s_CurrentFrame]; }
+VkImageView Nexus::Graphics::Engine::GetSwapChainImageView(uint32_t i) { return Presenter::Get().m_ImageViews[i]; }
 
 VkExtent2D Nexus::Graphics::Engine::GetSwapchainImageExtent() { return Presenter::Get().m_SwapchainExtent; }
 
