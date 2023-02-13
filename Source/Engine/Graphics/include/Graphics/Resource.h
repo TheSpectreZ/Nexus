@@ -2,6 +2,7 @@
 #include "Build.h"
 #include "vulkan/vulkan.h"
 #include <array>
+#include <vector>s
 
 VK_DEFINE_HANDLE(VmaAllocation)
 
@@ -12,7 +13,7 @@ namespace Nexus
 		class NEXUS_GRAPHICS_API RenderCommand
 		{
 		public:
-			static void DrawIndexed(VkCommandBuffer cmd,uint32_t IndexCount);
+			static void DrawIndexed(VkCommandBuffer cmd, uint32_t IndexCount);
 		};
 
 		class NEXUS_GRAPHICS_API Sampler
@@ -20,7 +21,7 @@ namespace Nexus
 		public:
 			void Create(VkFilter Mag, VkFilter Min, VkSamplerAddressMode x, VkSamplerAddressMode y, VkSamplerAddressMode z);
 			void Destroy();
-			
+
 			VkSampler Get() { return m_sampler; }
 		private:
 			VkSampler m_sampler;
@@ -29,7 +30,7 @@ namespace Nexus
 		class NEXUS_GRAPHICS_API VertexBuffer
 		{
 		public:
-			void Create(uint32_t count,VkDeviceSize stride,void* data);
+			void Create(uint32_t count, VkDeviceSize stride, void* data);
 			void Destroy();
 			void Bind(VkCommandBuffer cmd);
 		private:
@@ -40,7 +41,7 @@ namespace Nexus
 		class NEXUS_GRAPHICS_API IndexBuffer
 		{
 		public:
-			void Create(uint32_t count,VkDeviceSize stride,void* data);
+			void Create(uint32_t count, VkDeviceSize stride, void* data);
 			void Destroy();
 			void Bind(VkCommandBuffer cmd);
 
@@ -72,7 +73,7 @@ namespace Nexus
 		{
 		public:
 			void Create(const char* filepath);
-			void Create(void* pixelData,VkSampleCountFlagBits samples,VkExtent2D extent,VkFormat format);
+			void Create(void* pixelData, VkSampleCountFlagBits samples, VkExtent2D extent, VkFormat format);
 			void Destroy();
 
 			VkImageView Get() { return m_view; }
@@ -112,5 +113,35 @@ namespace Nexus
 			VkViewport m_Viewport;
 			VkRect2D m_scissor;
 		};
+
+		class NEXUS_GRAPHICS_API MeshFilter
+		{
+			friend class Mesh;
+		public:
+			template<typename T>
+			void SetVertices(T* data, uint32_t count)
+			{
+				m_vb.Create(count, sizeof(T), data);
+			}
+			void SetIndices(uint32_t* data, uint32_t count);
+
+			void Destroy();
+		private:
+			VertexBuffer m_vb;
+			IndexBuffer m_ib;
+		};
+
+		class NEXUS_GRAPHICS_API Mesh
+		{
+		public:
+			void PushMeshFilter(MeshFilter* meshFilter);
+			void PopMeshFilter(MeshFilter* meshFilter);
+
+			void Create(std::initializer_list<MeshFilter*> filters);
+			void Render(VkCommandBuffer cmd);
+		private:
+			std::vector<MeshFilter*> m_filters;
+		};
+
 	}
 }

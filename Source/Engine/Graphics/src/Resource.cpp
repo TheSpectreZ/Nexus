@@ -9,6 +9,7 @@
 #include "stb_image.h"
 
 #include <unordered_map>
+#include <algorithm>
 
 void Copy(VkCommandBuffer cmd, VkBuffer src, VkBuffer dst, VkDeviceSize size)
 {
@@ -478,4 +479,52 @@ void Nexus::Graphics::ScreenSizeContainer::Bind(VkCommandBuffer cmd)
 {
 	vkCmdSetViewport(cmd, 0, 1, &m_Viewport);
 	vkCmdSetScissor(cmd, 0, 1, &m_scissor);
+}
+
+void Nexus::Graphics::MeshFilter::SetIndices(uint32_t* data, uint32_t count)
+{
+	m_ib.Create(count, sizeof(uint32_t), data);
+}
+
+void Nexus::Graphics::MeshFilter::Destroy()
+{
+	m_vb.Destroy();
+	m_ib.Destroy();
+}
+
+void Nexus::Graphics::Mesh::PushMeshFilter(MeshFilter* meshFilter)
+{
+	m_filters.push_back(meshFilter);
+}
+
+void Nexus::Graphics::Mesh::PopMeshFilter(MeshFilter* meshFilter)
+{
+	auto it = std::find(m_filters.begin(), m_filters.end(), meshFilter);
+
+	if (it != m_filters.end())
+	{
+		m_filters.erase(it);
+	}
+}
+
+void Nexus::Graphics::Mesh::Create(std::initializer_list<MeshFilter*> filters)
+{
+	m_filters.resize(filters.size());
+
+	uint32_t i = 0;
+	for (auto& f : filters)
+	{
+		m_filters[i] = f;
+	}
+}
+
+void Nexus::Graphics::Mesh::Render(VkCommandBuffer cmd)
+{
+	for(auto& f : m_filters)
+	{
+		f->m_ib.Bind(cmd);
+		f->m_vb.Bind(cmd);
+
+		RenderCommand::DrawIndexed(cmd, f->m_ib.GetIndexCount());
+	}
 }
