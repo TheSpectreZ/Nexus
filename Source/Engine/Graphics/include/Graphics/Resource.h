@@ -2,7 +2,7 @@
 #include "Build.h"
 #include "vulkan/vulkan.h"
 #include <array>
-#include <vector>s
+#include <vector>
 
 VK_DEFINE_HANDLE(VmaAllocation)
 
@@ -137,8 +137,9 @@ namespace Nexus
 			void PushMeshFilter(MeshFilter* meshFilter);
 			void PopMeshFilter(MeshFilter* meshFilter);
 
-			void Create(std::initializer_list<MeshFilter*> filters);
+			void Create(std::vector<MeshFilter*> filters);
 			void Render(VkCommandBuffer cmd);
+			void Destroy();
 		private:
 			std::vector<MeshFilter*> m_filters;
 		};

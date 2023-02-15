@@ -507,15 +507,9 @@ void Nexus::Graphics::Mesh::PopMeshFilter(MeshFilter* meshFilter)
 	}
 }
 
-void Nexus::Graphics::Mesh::Create(std::initializer_list<MeshFilter*> filters)
+void Nexus::Graphics::Mesh::Create(std::vector<MeshFilter*> filters)
 {
-	m_filters.resize(filters.size());
-
-	uint32_t i = 0;
-	for (auto& f : filters)
-	{
-		m_filters[i] = f;
-	}
+	m_filters = filters;
 }
 
 void Nexus::Graphics::Mesh::Render(VkCommandBuffer cmd)
@@ -527,4 +521,9 @@ void Nexus::Graphics::Mesh::Render(VkCommandBuffer cmd)
 
 		RenderCommand::DrawIndexed(cmd, f->m_ib.GetIndexCount());
 	}
+}
+
+void Nexus::Graphics::Mesh::Destroy()
+{
+	m_filters.clear();
 }
