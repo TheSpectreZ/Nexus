@@ -23,7 +23,3 @@ workspace "Nexus-Engine"
         include "Scripts/Engine/UserInterface.lua"
         include "Scripts/Engine/Application.lua"
     group ""
-
-    group "Programs"
-        include "Scripts/Programs/Sandbox.lua"
-    group ""
