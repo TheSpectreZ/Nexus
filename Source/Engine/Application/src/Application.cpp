@@ -9,6 +9,8 @@
 #include "UserInterface/UserInterface.h"
 #include "UserInterface/Manager.h"
 
+#include "Audio/Engine.h"
+
 #include <algorithm>
 
 Nexus::Application::Application()
@@ -31,6 +33,8 @@ void Nexus::Application::Run()
 	Graphics::EngineSpecification Specs{ &p_Window };
 	Graphics::Engine::Get().Initialize(Specs, NX_BIND_EVENT_FN(Application::OnWindowResize));
 	
+	Audio::Engine::Get().Initialize();
+
 	UserInterface::Initialize();
 	UserInterface::Manager::Get()->InitWithVulkan(&p_Window);
 
@@ -61,13 +65,15 @@ void Nexus::Application::Run()
 
 	Graphics::Engine::Get().WaitForDevice();
 
-	UserInterface::Manager::Get()->ShutWithVulkan();
-	UserInterface::Shutdown();
-
 	for (auto& l : m_layerstack)
 	{
 		l->OnDetach();
 	}
+
+	UserInterface::Manager::Get()->ShutWithVulkan();
+	UserInterface::Shutdown();
+
+	Audio::Engine::Get().Shutdown();
 
 	Graphics::Engine::Get().Shutdown();
 
