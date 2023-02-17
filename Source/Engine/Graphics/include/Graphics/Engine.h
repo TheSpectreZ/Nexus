@@ -29,6 +29,9 @@ namespace Nexus
 			VkCommandBuffer StartFrame();
 			void EndFrame();
 
+			VkCommandBuffer BeginSingleTimeCommandRecording();
+			void EndSingleTimeCommandRecording(VkCommandBuffer cmd);
+
 			// Getters
 			VkInstance GetInstance();
 			VkPhysicalDevice GetGpuHandle();
@@ -36,6 +39,7 @@ namespace Nexus
 			VkSurfaceKHR GetSurface();
 			VkQueue GetGraphicsQueue();
 			VkQueue GetPresentQueue();
+			std::pair<uint32_t, uint32_t> GetQueueFamilyIndices();
 			VkSwapchainKHR GetSwapchain();
 			VmaAllocator GetAllocator();
 			VkSampleCountFlagBits GetMaxSampleCount();

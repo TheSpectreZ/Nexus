@@ -35,6 +35,16 @@ void Nexus::Graphics::Engine::EndFrame()
 	Presenter::Get().EndFrame();
 }
 
+VkCommandBuffer Nexus::Graphics::Engine::BeginSingleTimeCommandRecording()
+{
+	return Backend::Get().BeginSingleTimeCommands();
+}
+
+void Nexus::Graphics::Engine::EndSingleTimeCommandRecording(VkCommandBuffer cmd)
+{
+	Backend::Get().EndSingleTimeCommands(cmd);
+}
+
 #pragma region Getters
 
 VkInstance Nexus::Graphics::Engine::GetInstance() { return Backend::Get().m_Instance; }
@@ -48,6 +58,12 @@ VkSurfaceKHR Nexus::Graphics::Engine::GetSurface() { return  Backend::Get().m_Su
 VkQueue Nexus::Graphics::Engine::GetGraphicsQueue() { return  Backend::Get().m_GraphicsQueue; }
 
 VkQueue Nexus::Graphics::Engine::GetPresentQueue() { return  Backend::Get().m_PresentQueue; }
+
+std::pair<uint32_t, uint32_t> Nexus::Graphics::Engine::GetQueueFamilyIndices()
+{
+	QueueIndexFamilies fam = GetQueueIndexFamilies(Backend::Get().m_PhysicalDevice,Backend::Get().m_Surface);
+	return { fam[0].value(),fam[1].value() };
+}
 
 VmaAllocator Nexus::Graphics::Engine::GetAllocator() { return  Backend::Get().m_VmaAllocator; }
 
