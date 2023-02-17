@@ -15,10 +15,12 @@ IncludeDir["vulkanSDK"] = "$(VULKAN_SDK)/Include"
 IncludeDir["vulkanMemoryAllocator"] = (DepDir.."VulkanMemoryAllocator/include")
 IncludeDir["stb"] = (DepDir.."stb")
 IncludeDir["imgui"] = (DepDir.."imgui")
+IncludeDir["openALSoft"] = (DepDir.."openALSoft/include")
 
 IncludeDir["Platform"] = (EngDir.."Platform/include")
 IncludeDir["DebugUtils"] = (EngDir.."DebugUtils/include")
 IncludeDir["Graphics"] = (EngDir.."Graphics/include")
+IncludeDir["Audio"] = (EngDir.."Audio/include")
 IncludeDir["Application"] = (EngDir.."Application/include")
 IncludeDir["UserInterface"] = (EngDir.."UserInterface/include")
 

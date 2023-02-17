@@ -14,6 +14,7 @@ project "Application"
 
         IncludeDir["DebugUtils"],
         IncludeDir["Graphics"],
+        IncludeDir["Audio"],
         IncludeDir["Platform"],
         IncludeDir["UserInterface"],
 
@@ -33,6 +34,7 @@ project "Application"
         "Platform",
         "Graphics",
         "UserInterface",
+        "Audio",
     }
 
     filter "system:windows"
