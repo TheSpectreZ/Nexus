@@ -34,7 +34,7 @@ namespace Nexus
 			void OnWindowResize(uint32_t width, uint32_t height);
 		private:
 			void MakeFramebuffers();
-
+			std::vector<VkClearValue> clearValue;
 			Graphics::DescriptorPool dPool;
 			Graphics::Renderpass rPass;
 			std::vector<Graphics::Framebuffer> fBuffers;

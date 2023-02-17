@@ -63,8 +63,20 @@ void Nexus::UserInterface::Manager::InitWithVulkan(Platform::Window* window)
 
 		rPass.Create(Info);
 	}
-	MakeFramebuffers();
 	
+	// Framebuffers
+	{
+		MakeFramebuffers();
+	}
+
+	clearValue = { { {0.1f,0.1f,0.1f,1.f} } };
+
+	// Binding Renderpass data
+	{
+		rPass.SetFramebuffers(&fBuffers);
+		rPass.SetClearValues(&clearValue);
+	}
+
 	ImGui_ImplGlfw_InitForVulkan(window->handle, true);
 
 	ImGui_ImplVulkan_InitInfo Info{};

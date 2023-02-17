@@ -44,7 +44,7 @@ void Nexus::Application::Run()
 		for (auto& l : m_layerstack)
 			l->OnUpdate();
 
-		Graphics::Engine::Get().StartFrame();
+		auto cmd = Graphics::Engine::Get().StartFrame();
 
 		for (auto& l : m_layerstack)
 			l->OnRender();
@@ -53,6 +53,8 @@ void Nexus::Application::Run()
 		for (auto& l : m_layerstack)
 			l->OnUIRender();
 		UserInterface::Manager::Get()->EndVulkanUIFrame();
+
+		UserInterface::Manager::Get()->RenderVulkanUIFrame(cmd);
 
 		Graphics::Engine::Get().EndFrame();
 	}
