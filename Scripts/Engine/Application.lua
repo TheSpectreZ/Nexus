@@ -15,6 +15,7 @@ project "Application"
         IncludeDir["DebugUtils"],
         IncludeDir["Graphics"],
         IncludeDir["Platform"],
+        IncludeDir["UserInterface"],
 
         IncludeDir["spdlog"],
         IncludeDir["vulkanSDK"],
@@ -30,7 +31,8 @@ project "Application"
     {
         "DebugUtils",
         "Platform",
-        "Graphics"
+        "Graphics",
+        "UserInterface",
     }
 
     filter "system:windows"

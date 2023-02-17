@@ -20,6 +20,7 @@ IncludeDir["Platform"] = (EngDir.."Platform/include")
 IncludeDir["DebugUtils"] = (EngDir.."DebugUtils/include")
 IncludeDir["Graphics"] = (EngDir.."Graphics/include")
 IncludeDir["Application"] = (EngDir.."Application/include")
+IncludeDir["UserInterface"] = (EngDir.."UserInterface/include")
 
 LibDir = {}
 

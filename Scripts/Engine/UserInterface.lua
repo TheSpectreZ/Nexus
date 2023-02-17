@@ -18,6 +18,8 @@ project "UserInterface"
 
         IncludeDir["glfw"],
         IncludeDir["spdlog"],
+        IncludeDir["imgui"],
+        IncludeDir["vulkanSDK"],
     }
 
     files
@@ -33,7 +35,8 @@ project "UserInterface"
         "DebugUtils",
 
         "vulkan-1.lib",
-        "glfw"
+        "glfw",
+        "imgui"
     }
 
     libdirs

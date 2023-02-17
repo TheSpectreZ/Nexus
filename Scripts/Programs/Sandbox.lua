@@ -9,6 +9,8 @@ project "Sandbox"
     {
         IncludeDir["Application"],
         IncludeDir["Platform"],
+        IncludeDir["UserInterface"],
+        IncludeDir["Graphics"],
     }
 
     files
@@ -19,7 +21,7 @@ project "Sandbox"
 
     links
     {
-        "Application"
+        "Application","Platform","UserInterface","Graphics"
     }
 
     filter "system:windows"
