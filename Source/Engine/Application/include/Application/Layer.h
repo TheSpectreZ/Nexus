@@ -13,6 +13,7 @@ namespace Nexus
 		
 		virtual void OnUpdate() = 0;
 		virtual void OnRender() = 0;
+		virtual void OnUIRender() = 0;
 
 		virtual void OnWindowResize(uint32_t width, uint32_t height) = 0;
 	};

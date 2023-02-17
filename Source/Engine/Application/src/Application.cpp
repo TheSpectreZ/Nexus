@@ -6,6 +6,9 @@
 
 #include "Graphics/Engine.h"
 
+#include "UserInterface/UserInterface.h"
+#include "UserInterface/Manager.h"
+
 #include <algorithm>
 
 Nexus::Application::Application()
@@ -26,9 +29,11 @@ void Nexus::Application::Run()
 	Platform::Input::SetContextWindow(p_Window);
 
 	Graphics::EngineSpecification Specs{ &p_Window };
-	
 	Graphics::Engine::Get().Initialize(Specs, NX_BIND_EVENT_FN(Application::OnWindowResize));
 	
+	UserInterface::Initialize();
+	UserInterface::Manager::Get()->InitWithVulkan(&p_Window);
+
 	for (auto& l : m_layerstack)
 		l->OnAttach();
 
@@ -39,11 +44,23 @@ void Nexus::Application::Run()
 		for (auto& l : m_layerstack)
 			l->OnUpdate();
 
+		Graphics::Engine::Get().StartFrame();
+
 		for (auto& l : m_layerstack)
 			l->OnRender();
+
+		UserInterface::Manager::Get()->StartVulkanUIFrame();
+		for (auto& l : m_layerstack)
+			l->OnUIRender();
+		UserInterface::Manager::Get()->EndVulkanUIFrame();
+
+		Graphics::Engine::Get().EndFrame();
 	}
 
 	Graphics::Engine::Get().WaitForDevice();
+
+	UserInterface::Manager::Get()->ShutWithVulkan();
+	UserInterface::Shutdown();
 
 	for (auto& l : m_layerstack)
 	{
@@ -60,6 +77,8 @@ void Nexus::Application::Run()
 
 void Nexus::Application::OnWindowResize(uint32_t width,uint32_t height)
 {
+	UserInterface::Manager::Get()->OnWindowResize(width, height);
+
 	for (auto& l : m_layerstack)
 		l->OnWindowResize(width, height);
 }
