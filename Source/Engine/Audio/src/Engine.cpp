@@ -30,15 +30,6 @@ namespace Nexus
 			alcCloseDevice(s_Device);
 			NEXUS_ASSERT(1, "Couldn't Set Audio Context");
 		}
-
-		{
-			NEXUS_LOG_WARN("Audio Device Info:");
-			NEXUS_LOG_INFO("  Name: " << s_Device->DeviceName);
-			NEXUS_LOG_INFO("  Sample Rate: " << s_Device->Frequency);
-			NEXUS_LOG_INFO("  Max Sources: " << s_Device->SourcesMax);
-			NEXUS_LOG_INFO("    Mono: " << s_Device->NumMonoSources);
-			NEXUS_LOG_INFO("    Stereo: " << s_Device->NumStereoSources);
-		}
 	}
 
 	void Audio::Engine::Shutdown()
