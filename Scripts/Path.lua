@@ -19,6 +19,7 @@ IncludeDir["entt"] = (DepDir.."entt/single_include")
 IncludeDir["yamlcpp"] = (DepDir.."yamlcpp/include")
 IncludeDir["glad"] = (DepDir.."glad/include")
 IncludeDir["nlohmannJson"] = (DepDir.."nlohmannJson/single_include")
+IncludeDir["openALsoft"] = (DepDir.."openALsoft/include")
 
 IncludeDir["Platform"] = (EngDir.."Platform/include")
 IncludeDir["Utility"] = (EngDir.."Utility/include")
