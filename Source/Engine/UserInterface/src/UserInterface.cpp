@@ -1,5 +1,5 @@
 #include "UserInterface/UserInterface.h"
-#include "DebugUtils/Logger.h"
+#include "Utility/Logger.h"
 #include "imgui.h"
 #include "UserInterface/Manager.h"
 

@@ -1,6 +1,6 @@
 #pragma once
-#include "DebugUtils/Assert.h"
-#include "DebugUtils/Logger.h"
+#include "Utility/Assert.h"
+#include "Utility/Logger.h"
 
 #include "vulkan/vk_enum_string_helper.h"
 

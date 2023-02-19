@@ -15,6 +15,11 @@ namespace Nexus
 			}
 
 			void Initialize();
+
+			void BeginDemo(const char* file);
+			void PlayDemo();
+			void EndDemo();
+
 			void Shutdown();
 		};
 	}

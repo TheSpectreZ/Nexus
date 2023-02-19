@@ -1,5 +1,5 @@
 #include "Application/Application.h"
-#include "DebugUtils/Logger.h"
+#include "Utility/Logger.h"
 
 #include "Platform/Manager.h"
 #include "Platform/Input.h"

@@ -1,8 +1,8 @@
 #include "Platform/Manager.h"
 #include "GLFW/glfw3.h"
 
-#include "DebugUtils/Assert.h"
-#include "DebugUtils/Logger.h"
+#include "Utility/Assert.h"
+#include "Utility/Logger.h"
 
 float Nexus::Platform::Manager::deltaTime = 0.f;
 
