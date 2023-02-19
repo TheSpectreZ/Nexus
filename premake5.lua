@@ -15,6 +15,7 @@ workspace "Nexus-Engine"
         include "Scripts/Dependencies/spdlog.lua"
         include "Scripts/Dependencies/imgui.lua"
         include "Scripts/Dependencies/yamlcpp.lua"
+        include "Scripts/Dependencies/openALsoft.lua"
         include "Scripts/Dependencies/glad.lua"
     group ""
 

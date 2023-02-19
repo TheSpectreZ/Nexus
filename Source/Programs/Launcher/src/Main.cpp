@@ -1,16 +1,22 @@
-#define WINDOWED
-#include "Application/EntryPoint.h"
+#ifndef NEXUS_DIST
 
-class Launcher : public Nexus::Application
-{
-public:
-	Launcher()
-	{
-		
-	}
-};
+#define ENTRY_POINT int main()
 
-Nexus::Application* CreateApplication()
+#else
+
+#include <Windows.h>
+int WinMain(HINSTANCE h, HINSTANCE p, LPSTR c, int n)
+
+#endif // NEXUS_DIST
+
+#include "Launcher.h"
+
+ENTRY_POINT
 {
-	return new Launcher();
+	Launcher launcher;
+
+	launcher.Initialize();
+	launcher.Run();
+	launcher.Shutdown();
+
 }

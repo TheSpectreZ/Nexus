@@ -14,8 +14,8 @@ project "Launcher"
 
     files
     {
-        (PrmDir.."Pong/**.h"),
-        (PrmDir.."Pong/**.cpp")
+        (PrmDir.."Launcher/**.h"),
+        (PrmDir.."Launcher/**.cpp")
     }
 
     links
