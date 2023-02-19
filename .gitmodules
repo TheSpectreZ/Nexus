@@ -19,3 +19,6 @@
 [submodule "Source/Dependencies/entt"]
 	path = Source/Dependencies/entt
 	url = https://github.com/skypjack/entt.git
+[submodule "Source/Dependencies/yamlcpp"]
+	path = Source/Dependencies/yamlcpp
+	url = https://github.com/jbeder/yaml-cpp.git
