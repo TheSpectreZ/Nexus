@@ -25,3 +25,6 @@
 [submodule "Source/Dependencies/nlohmannJson"]
 	path = Source/Dependencies/nlohmannJson
 	url = https://github.com/nlohmann/json.git
+[submodule "Source/Dependencies/openAlSoft"]
+	path = Source/Dependencies/openAlSoft
+	url = https://github.com/TheSpectreZ/openAL-Soft.git
