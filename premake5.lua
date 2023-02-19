@@ -8,18 +8,22 @@ workspace "Nexus-Engine"
         "Debug","Release","Dist"
     }
 
+    startproject "Launcher"
+
     group "Dependencies"
         include "Scripts/Dependencies/glfw.lua"
         include "Scripts/Dependencies/spdlog.lua"
         include "Scripts/Dependencies/imgui.lua"
-        include "Scripts/Dependencies/openalSoft.lua"
+        include "Scripts/Dependencies/yamlcpp.lua"
+        include "Scripts/Dependencies/glad.lua"
     group ""
 
     group "Engine"
         include "Scripts/Engine/Platform.lua"
         include "Scripts/Engine/Utility.lua"
         include "Scripts/Engine/Graphics.lua"
-        include "Scripts/Engine/Audio.lua"
-        include "Scripts/Engine/UserInterface.lua"
-        include "Scripts/Engine/Application.lua"
+    group ""
+
+    group "Programs"
+        include "Scripts/Programs/Launcher.lua"
     group ""

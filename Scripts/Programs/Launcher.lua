@@ -1,47 +1,28 @@
-project "UserInterface"
-    kind "SharedLib"
+project "Launcher"
     language "C++"
-    location (EngDir.."UserInterface")
-
-    defines "NEXUS_USER_INTERFACE_DLL"
+    location (PrmDir.."Launcher")
 
     targetdir(BinDir)
     objdir(IntDir)
 
     includedirs
     {
-        IncludeDir["UserInterface"],
-
         IncludeDir["Platform"],
         IncludeDir["Graphics"],
-        IncludeDir["Utility"],
-
-        IncludeDir["glfw"],
-        IncludeDir["spdlog"],
-        IncludeDir["imgui"],
-        IncludeDir["vulkanSDK"],
+        IncludeDir["Utility"]
     }
 
     files
     {
-        (EngDir.."UserInterface/**.h"),
-        (EngDir.."UserInterface/**.cpp")
+        (PrmDir.."Pong/**.h"),
+        (PrmDir.."Pong/**.cpp")
     }
 
     links
     {
         "Platform",
         "Graphics",
-        "Utility",
-
-        "vulkan-1.lib",
-        "glfw",
-        "imgui"
-    }
-
-    libdirs
-    {
-        LibDir["vulkanSDK"]
+        "Utility"
     }
 
     filter "system:windows"
@@ -51,16 +32,19 @@ project "UserInterface"
         disablewarnings { "4251" }
 
     filter "configurations:Debug"
+        kind "ConsoleApp"
         defines "NEXUS_DEBUG"
         optimize "Off"
         symbols "Full"
 
     filter "configurations:Release"
+        kind "ConsoleApp"
         defines "NEXUS_RELEASE"
         optimize "Speed"
         symbols "FastLink"
 
     filter "configurations:Dist"
+        kind "WindowedApp"
         defines "NEXUS_DIST"
         optimize "Full"
         symbols "Off"
