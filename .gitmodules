@@ -22,3 +22,6 @@
 [submodule "Source/Dependencies/glad"]
 	path = Source/Dependencies/glad
 	url = https://github.com/TheSpectreZ/glad.git
+[submodule "Source/Dependencies/nlohmannJson"]
+	path = Source/Dependencies/nlohmannJson
+	url = https://github.com/nlohmann/json.git
