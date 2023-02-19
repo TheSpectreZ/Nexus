@@ -1,10 +1,10 @@
-#include "DebugUtils/Logger.h"
+#include "Utility/Logger.h"
 
 #include "spdlog/sinks/stdout_color_sinks.h"
 
-std::shared_ptr<spdlog::logger> Nexus::DebugUtils::Logger::_logger;
+std::shared_ptr<spdlog::logger> Nexus::Utility::Logger::_logger;
 
-void Nexus::DebugUtils::Logger::Init()
+void Nexus::Utility::Logger::Init()
 {
 	spdlog::set_pattern("NEXUS::%T :%^ %v %$");
 
@@ -12,7 +12,7 @@ void Nexus::DebugUtils::Logger::Init()
 	_logger->set_level(spdlog::level::trace);
 }
 
-void Nexus::DebugUtils::Logger::Shut()
+void Nexus::Utility::Logger::Shut()
 {
 	spdlog::shutdown();
 }
