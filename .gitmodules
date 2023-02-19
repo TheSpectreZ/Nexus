@@ -13,12 +13,12 @@
 [submodule "Source/Dependencies/imgui"]
 	path = Source/Dependencies/imgui
 	url = https://github.com/ocornut/imgui.git
-[submodule "Source/Dependencies/openALSoft"]
-	path = Source/Dependencies/openALSoft
-	url = https://github.com/TheSpectreZ/openAL-Soft.git
 [submodule "Source/Dependencies/entt"]
 	path = Source/Dependencies/entt
 	url = https://github.com/skypjack/entt.git
 [submodule "Source/Dependencies/yamlcpp"]
 	path = Source/Dependencies/yamlcpp
 	url = https://github.com/jbeder/yaml-cpp.git
+[submodule "Source/Dependencies/glad"]
+	path = Source/Dependencies/glad
+	url = https://github.com/TheSpectreZ/glad.git
