@@ -16,3 +16,6 @@
 [submodule "Source/Dependencies/openALSoft"]
 	path = Source/Dependencies/openALSoft
 	url = https://github.com/TheSpectreZ/openAL-Soft.git
+[submodule "Source/Dependencies/entt"]
+	path = Source/Dependencies/entt
+	url = https://github.com/skypjack/entt.git
