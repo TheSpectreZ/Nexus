@@ -1,24 +1,26 @@
-project "DebugUtils"
+project "Utility"
     kind "SharedLib"
     language "C++"
-    location (EngDir.."DebugUtils")
+    location (EngDir.."Utility")
 
-    defines "NEXUS_DEBUG_DLL"
+    defines "NEXUS_UTILITY_DLL"
 
     targetdir(BinDir)
     objdir(IntDir)
 
     includedirs
     {
-        IncludeDir["DebugUtils"],
+        IncludeDir["Utility"],
 
         IncludeDir["spdlog"],
+        IncludeDir["stb"],
+        IncludeDir["entt"],
     }
 
     files
     {
-        (EngDir.."DebugUtils/**.h"),
-        (EngDir.."DebugUtils/**.cpp")
+        (EngDir.."Utility/**.h"),
+        (EngDir.."Utility/**.cpp")
     }
 
     links

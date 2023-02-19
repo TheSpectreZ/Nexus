@@ -12,7 +12,7 @@ project "Application"
     {
         IncludeDir["Application"],
 
-        IncludeDir["DebugUtils"],
+        IncludeDir["Utility"],
         IncludeDir["Graphics"],
         IncludeDir["Audio"],
         IncludeDir["Platform"],
@@ -30,7 +30,7 @@ project "Application"
 
     links
     {
-        "DebugUtils",
+        "Utility",
         "Platform",
         "Graphics",
         "UserInterface",

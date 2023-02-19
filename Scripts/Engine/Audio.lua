@@ -11,7 +11,7 @@ project "Audio"
 	includedirs
 	{
 		IncludeDir["Audio"],
-		IncludeDir["DebugUtils"],
+		IncludeDir["Utility"],
 
 		IncludeDir["openALSoft"],
 		IncludeDir["spdlog"]
@@ -25,7 +25,7 @@ project "Audio"
 
 	links 
 	{
-		"DebugUtils",
+		"Utility",
 
 		"openALSoft",
 	}

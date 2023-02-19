@@ -14,7 +14,7 @@ project "UserInterface"
 
         IncludeDir["Platform"],
         IncludeDir["Graphics"],
-        IncludeDir["DebugUtils"],
+        IncludeDir["Utility"],
 
         IncludeDir["glfw"],
         IncludeDir["spdlog"],
@@ -32,7 +32,7 @@ project "UserInterface"
     {
         "Platform",
         "Graphics",
-        "DebugUtils",
+        "Utility",
 
         "vulkan-1.lib",
         "glfw",

@@ -12,7 +12,7 @@ project "Graphics"
 	{
 		IncludeDir["Graphics"],
 		IncludeDir["Platform"],
-		IncludeDir["DebugUtils"],
+		IncludeDir["Utility"],
 
 		IncludeDir["glfw"],
 		IncludeDir["spdlog"],
@@ -29,7 +29,7 @@ project "Graphics"
 
 	links 
 	{
-		"DebugUtils",
+		"Utility",
 		"Platform",
 
 		"glfw",
