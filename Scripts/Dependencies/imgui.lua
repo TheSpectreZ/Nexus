@@ -38,6 +38,17 @@ project "imgui"
 		IncludeDir["vulkanSDK"],
 	}
 
+	links
+	{
+		"glfw",
+		"vulkan-1.lib"
+	}
+
+	libdirs
+	{
+		LibDir["vulkanSDK"]
+	}
+
 	filter "system:windows"
 		systemversion "latest"
 		cppdialect "C++17"

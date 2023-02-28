@@ -7,16 +7,14 @@ namespace Nexus
 {
 	namespace Platform
 	{
-		class NEXUS_PLATFORM_API Input
+		namespace Input
 		{
-			static GLFWwindow* m_window;
-		public:
-			static void SetContextWindow(const Window& window);
+			void NEXUS_PLATFORM_API SetContextWindow(const Window& window);
 
-			static bool IsKeyPressed(uint16_t key);
-			static bool IsMouseButtonPressed(uint16_t button);
+			bool NEXUS_PLATFORM_API IsKeyPressed(uint16_t key);
+			bool NEXUS_PLATFORM_API IsMouseButtonPressed(uint16_t button);
 
-			static std::pair<float, float> GetMouseCursorPosition();
-		};
+			std::pair<float, float> NEXUS_PLATFORM_API GetMouseCursorPosition();
+		}
 	}
 }

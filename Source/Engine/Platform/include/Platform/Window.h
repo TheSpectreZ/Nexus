@@ -12,6 +12,12 @@ namespace Nexus
 			int width, height;
 			const char* title;
 			GLFWwindow* handle;
+
+			enum class Type
+			{
+				OPENGL, VULKAN
+			};
+			Type type;
 		};
 	}
 }

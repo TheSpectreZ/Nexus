@@ -2,24 +2,27 @@
 #include "Build.h"
 #include <string>
 
+#undef LoadImage
+
 namespace Nexus::Utility
 {
-	struct Image
+	struct NEXUS_UTILITY_API Image
 	{
 		unsigned char* pixels;
-		int width, height;
+		int width, height, channels;
 	};
 
-	class ResourceLoader
+	class NEXUS_UTILITY_API ResourceLoader
 	{
 	public:
-		void Initialize();
-
-		void LoadImage(Image* image, const std::string& filepath);
-		void FreeImage(Image* image);
-
-		void LoadImages(Image** pImages, int count, std::string* pFilepaths);
-		void FreeImages(Image** pImages, int count);
+		
+		static void Initialize();
+		
+		static void LoadImage(Image* image, const std::string& filepath, int channels);
+		static void FreeImage(Image* image);
+		
+		static void LoadImages(Image** pImages, int count, std::string* pFilepaths, int channels);
+		static void FreeImages(Image** pImages, int count);
 	};
 }
 

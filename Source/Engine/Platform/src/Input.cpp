@@ -1,7 +1,10 @@
 #include "Platform/Input.h"
 #include "GLFW/glfw3.h"
 
-GLFWwindow* Nexus::Platform::Input::m_window = nullptr;
+namespace Nexus::Platform::Input
+{
+	GLFWwindow* m_window = nullptr;
+}
 
 void Nexus::Platform::Input::SetContextWindow(const Window& window)
 {

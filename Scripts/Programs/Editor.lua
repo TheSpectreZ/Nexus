@@ -1,6 +1,6 @@
-project "Launcher"
+project "Editor"
     language "C++"
-    location (PrmDir.."Launcher")
+    location (PrmDir.."Editor")
 
     targetdir(BinDir)
     objdir(IntDir)
@@ -8,30 +8,30 @@ project "Launcher"
     includedirs
     {
         IncludeDir["Platform"],
+        IncludeDir["Graphics"],
         IncludeDir["Utility"],
         IncludeDir["Config"],
 
         IncludeDir["spdlog"],
         IncludeDir["imgui"],
-        IncludeDir["glfw"],
-        IncludeDir["glad"],
+        IncludeDir["vulkanSDK"],
     }
 
     files
     {
-        (PrmDir.."Launcher/**.h"),
-        (PrmDir.."Launcher/**.cpp")
+        (PrmDir.."Editor/**.h"),
+        (PrmDir.."Editor/**.cpp")
     }
 
     links
     {
         "Platform",
+        "Graphics",
         "Utility",
         "Config",
-
+        
         "imgui",
-        "glfw",
-        "glad"
+        "spdlog",
     }
 
     filter "system:windows"

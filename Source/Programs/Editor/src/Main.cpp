@@ -9,13 +9,13 @@ int WinMain(HINSTANCE h, HINSTANCE p, LPSTR c, int n)
 
 #endif // NEXUS_DIST
 
-#include "Launcher.h"
+#include "Editor.h"
 
 ENTRY_POINT
 {
-	Launcher launcher;
+	Editor editor;
 
-	launcher.Initialize();
-	launcher.Run();
-	launcher.Shutdown();
+	editor.Initialize();
+	editor.Run();
+	editor.Shutdown();
 }

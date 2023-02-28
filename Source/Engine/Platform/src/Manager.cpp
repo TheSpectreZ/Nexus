@@ -21,7 +21,18 @@ void Nexus::Platform::Shutdown()
 
 void Nexus::Platform::Manager::Create_Window(Window& window)
 {
-	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	if (window.type == Window::Type::VULKAN)
+	{
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	}
+	else
+	{
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GLFW_TRUE);
+		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	}
+	
 	window.handle = glfwCreateWindow(window.width, window.height, window.title, NULL, NULL);
 
 	NEXUS_ASSERT((window.handle == nullptr), "Nexus Window Creation Failed");

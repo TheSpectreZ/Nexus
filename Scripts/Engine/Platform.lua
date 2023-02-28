@@ -3,6 +3,8 @@ project "Platform"
     language "C++"
     location (EngDir.."Platform")
 
+    characterset "MBCS"
+
     defines "NEXUS_PLATFORM_DLL"
 
     targetdir(BinDir)
@@ -27,7 +29,7 @@ project "Platform"
     links
     {
         "Utility",
-        "glfw"
+        "glfw",
     }
 
     filter "system:windows"

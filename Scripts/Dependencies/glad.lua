@@ -1,5 +1,5 @@
 project "glad"
-	kind "SharedLib"
+	kind "StaticLib"
 	language "C"
 	location (vcxDir)
 
@@ -16,12 +16,6 @@ project "glad"
         (DepDir.."glad/include/**.h"),
         (DepDir.."glad/src/**.c"),
 	}
-
-    defines
-    {
-        "GLAD_GLAPI_EXPORT",
-        "GLAD_GLAPI_EXPORT_BUILD"
-    }
 
 	filter "system:windows"
 		systemversion "latest"
