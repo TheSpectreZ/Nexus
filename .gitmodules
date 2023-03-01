@@ -28,3 +28,6 @@
 [submodule "Source/Dependencies/openALsoft"]
 	path = Source/Dependencies/openALsoft
 	url = https://github.com/TheSpectreZ/openAL-Soft.git
+[submodule "Source/Dependencies/assimp"]
+	path = Source/Dependencies/assimp
+	url = https://github.com/assimp/assimp.git
