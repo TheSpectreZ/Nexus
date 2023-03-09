@@ -35,7 +35,8 @@ project "imgui"
 	{
 		IncludeDir["imgui"],
 		IncludeDir["glfw"],
-		IncludeDir["vulkanSDK"],
+		
+		"$(VULKAN_SDK)/Include"
 	}
 
 	links

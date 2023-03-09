@@ -1,6 +1,5 @@
-PrmDir = "%{wks.location}/Source/Programs/"
-EngDir = "%{wks.location}/Source/Engine/"
 DepDir = "%{wks.location}/Source/Dependencies/"
+SrcDir = "%{wks.location}/Source/"
 
 BinDir = "%{wks.location}/Binaries/%{cfg.buildcfg}"
 
@@ -11,7 +10,7 @@ IncludeDir = {}
 
 IncludeDir["glfw"] = (DepDir.."glfw/include")
 IncludeDir["spdlog"] = (DepDir.."spdlog/include")
-IncludeDir["vulkanSDK"] = "$(VULKAN_SDK)/Include"
+
 IncludeDir["vulkanMemoryAllocator"] = (DepDir.."VulkanMemoryAllocator/include")
 IncludeDir["stb"] = (DepDir.."stb")
 IncludeDir["imgui"] = (DepDir.."imgui")
@@ -21,11 +20,7 @@ IncludeDir["glad"] = (DepDir.."glad/include")
 IncludeDir["nlohmannJson"] = (DepDir.."nlohmannJson/single_include")
 IncludeDir["openALsoft"] = (DepDir.."openALsoft/include")
 
-IncludeDir["Platform"] = (EngDir.."Platform/include")
-IncludeDir["Utility"] = (EngDir.."Utility/include")
-IncludeDir["Graphics"] = (EngDir.."Graphics/include")
-
-IncludeDir["Config"] = (EngDir.."Config/include")
+IncludeDir["Nexus"] = (SrcDir.."Nexus/src/Nexus")
 
 LibDir = {}
 
