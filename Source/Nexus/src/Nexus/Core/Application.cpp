@@ -50,6 +50,18 @@ void Nexus::Application::Init()
 		m_Window.handle = glfwCreateWindow(m_Window.width, m_Window.height, m_Window.title, nullptr, nullptr);
 		NEXUS_LOG_TRACE("Window Created: {0}x{1}", m_Window.width, m_Window.height);
 
+		// Callbacks
+		{
+			glfwSetWindowUserPointer(m_Window.handle, &m_Window);
+
+			glfwSetWindowSizeCallback(m_Window.handle, [](GLFWwindow* window, int width, int height)
+				{
+					Window& data = *(Window*)glfwGetWindowUserPointer(window);
+					data.width = width;
+					data.height = height;
+				});
+		}
+
 		Input::SetContextWindow(m_Window);
 	}
 	
@@ -65,6 +77,7 @@ void Nexus::Application::Init()
 			specs.api = RenderAPIType::VULKAN;
 		
 		Renderer::Init(specs);
+		Renderer::ResizeCallback = NEXUS_BIND_EVENT_FN(Application::ResizeCallback);
 	}
 }
 
@@ -134,23 +147,13 @@ void Nexus::Application::Shut()
 	}
 }
 
-#ifdef NEXUS_DEBUG
-
-void Nexus::Application::BreakOnAssert()
+void Nexus::Application::ResizeCallback()
 {
-	for (auto& l : m_layerStack)
+	for (auto& layer : m_layerStack)
 	{
-		l->OnDetach();
-		s_Instance->PopLayer(l);
+		layer->OnWindowResize(m_Window.width, m_Window.height);
 	}
-
-	s_Instance->Shut();
-	s_Instance->~Application();
 }
-
-#endif // NEXUS_DEBUG
-
-
 
 void Nexus::Application::PushLayer(Layer* layer)
 {

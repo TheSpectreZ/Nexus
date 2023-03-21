@@ -21,14 +21,12 @@ namespace Nexus
 
 		static Application* Get() { return s_Instance; }
 		
-#ifdef NEXUS_DEBUG
-		static void BreakOnAssert();
-#endif // NEXUS_DEBUG
-
 		Timestep& GetTimeStep() { return m_TimeStep; }
 		Window& GetWindow() { return m_Window; }
 	protected:
 		ApplicationSpecifications m_AppSpecs;
+
+		void ResizeCallback();
 
 		void PushLayer(Layer* layer);
 		void PopLayer(Layer* layer);

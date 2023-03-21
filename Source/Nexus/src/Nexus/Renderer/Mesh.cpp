@@ -49,6 +49,15 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 		}
 
 	}
+
+	if (sMesh->m_Vertices.empty() || sMesh->m_Indices.empty())
+	{
+		std::string s = Filepath;
+		s += " :: Is Empty";
+
+		NEXUS_ASSERT(1, s.c_str());
+	}
+
 	NEXUS_LOG_TRACE("Mesh Loaded: {0} | vertices-{1} | indices-{2}", Filepath, sMesh->m_Vertices.size(), sMesh->m_Indices.size());
 
 	sMesh->m_Vb = StaticBuffer::Create(sMesh->m_Vertices.size() * sizeof(StaticMeshVertex), BufferType::VERTEX, sMesh->m_Vertices.data());

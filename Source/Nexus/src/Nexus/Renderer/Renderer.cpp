@@ -2,6 +2,7 @@
 #include "Renderer.h"
 
 Nexus::Ref<Nexus::Renderer> Nexus::Renderer::s_Renderer;
+std::function<void()> Nexus::Renderer::ResizeCallback;
 
 void Nexus::Renderer::Init(const RendererSpecifications& specs)
 {

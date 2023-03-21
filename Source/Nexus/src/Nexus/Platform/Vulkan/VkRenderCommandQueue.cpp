@@ -4,6 +4,8 @@
 #include "VkContext.h"
 #include "VkSwapchain.h"
 
+#include "Renderer/Renderer.h"
+
 Nexus::VulkanRenderCommandQueue::VulkanRenderCommandQueue()
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
@@ -110,8 +112,11 @@ void Nexus::VulkanRenderCommandQueue::Begin()
 
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR)
 	{
+		CLEAR_VKR;
 		VulkanSwapchain::Get()->ReCreate();
 		m_swapchain = VulkanSwapchain::Get()->GetHandle();
+		
+		Renderer::ResizeCallback();
 	}
 
 	vkResetFences(m_device, 1, &m_SyncHandles[m_FrameIndex].fence);
@@ -145,8 +150,11 @@ void Nexus::VulkanRenderCommandQueue::Flush()
 
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR || _VKR == VK_SUBOPTIMAL_KHR)
 	{
+		CLEAR_VKR;
 		VulkanSwapchain::Get()->ReCreate();
 		m_swapchain = VulkanSwapchain::Get()->GetHandle();
+		
+		Renderer::ResizeCallback();
 	}
 	else if (_VKR != VK_SUCCESS)
 	{

@@ -30,6 +30,8 @@ namespace Nexus
 
 		static void WaitForDevice();
 
+		static std::function<void()> ResizeCallback;
+
 		static Ref<Context> GetContext() { return s_Renderer->m_Context; }
 		static Ref<Swapchain> GetSwapchain() { return s_Renderer->m_Swapchain; }
 		static Ref<RenderCommandQueue> GetRenderCommandQueue() { return s_Renderer->m_RenderCommandQueue; }

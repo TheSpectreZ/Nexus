@@ -20,7 +20,7 @@ void EditorLayer::OnAttach()
 		Info.pushConstantInfo[0].stage = Nexus::ShaderStage::Vertex;
 
 		Info.rasterizerInfo.lineWidth = 1.f;
-		Info.rasterizerInfo.frontFace = Nexus::FrontFaceType::AntiClockwise;
+		Info.rasterizerInfo.frontFace = Nexus::FrontFaceType::Clockwise;
 		Info.rasterizerInfo.cullMode = Nexus::CullMode::Back;
 		Info.rasterizerInfo.polygonMode = Nexus::PolygonMode::Fill;
 
@@ -56,12 +56,13 @@ void EditorLayer::OnAttach()
 		m_cameraController.SetKeyBindings(CameraBindings::RIGHT, Key::D);
 
 		Nexus::Extent extent = Renderer::GetSwapchain()->GetExtent();
+		
 		m_cameraController.SetPerspectiveProjection(45.f, (float)extent.width,(float)extent.height, 0.1f, 1000.f);
 	}
 
 	// Mesh
 	{
-		m_Mesh = Nexus::StaticMesh::LoadWithAssimp("res/Meshes/suzane.fbx");
+		m_Mesh = Nexus::StaticMesh::LoadWithAssimp("res/Meshes/Suzane.fbx");
 		//m_Mesh = Nexus::StaticMesh::LoadPlane();
 	}
 
@@ -90,4 +91,24 @@ void EditorLayer::OnDetach()
 	m_Pipeline->~Pipeline();
 
 	NEXUS_LOG_DEBUG("Editor Layer Detached");
+}
+
+void EditorLayer::OnWindowResize(int width, int height)
+{
+	// Screen
+	{
+		Nexus::Extent Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
+
+		m_viewport.x = 0.0f;
+		m_viewport.y = 0.0f;
+		m_viewport.width = (float)Extent.width;
+		m_viewport.height = (float)Extent.height;
+		m_viewport.minDepth = 0.0f;
+		m_viewport.maxDepth = 1.0f;
+
+		m_scissor.Offset = { 0,0 };
+		m_scissor.Extent = { Extent.width, Extent.height };
+
+		m_cameraController.SetPerspectiveProjection(45.f, (float)width, (float)height, 0.1f, 1000.f);
+	}
 }

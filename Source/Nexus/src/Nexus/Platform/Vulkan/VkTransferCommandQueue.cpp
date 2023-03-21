@@ -32,7 +32,8 @@ Nexus::VulkanTransferCommandQueue::VulkanTransferCommandQueue()
 	m_CommandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	m_CommandBufferBeginInfo.pNext = nullptr;
 	m_CommandBufferBeginInfo.pInheritanceInfo = nullptr;
-	
+	m_CommandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
 	m_SubmitInfo = {};
 	m_SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 	m_SubmitInfo.pNext = nullptr;

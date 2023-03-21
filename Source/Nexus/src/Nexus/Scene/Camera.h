@@ -34,7 +34,7 @@ namespace Nexus
 		// Key Binds
 		std::array<uint16_t, 6> m_KeyBinds;
 
-		glm::vec3 m_front = { 0.f,0.f,1.f };
+		glm::vec3 m_front = { 0.f,0.f,-1.f };
 		glm::vec3 m_up = { 0.f,1.f,0.f };
 		
 		glm::vec3 GetMovementMultiplier(CameraBindings binding);
