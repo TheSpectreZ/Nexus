@@ -62,8 +62,7 @@ void EditorLayer::OnAttach()
 
 	// Mesh
 	{
-		m_Mesh = Nexus::StaticMesh::LoadWithAssimp("res/Meshes/Suzane.fbx");
-		//m_Mesh = Nexus::StaticMesh::LoadPlane();
+		m_Mesh = Nexus::AssetManager::LoadFromFile<Nexus::StaticMesh>("res/Meshes/Suzane.fbx");
 	}
 
 }
@@ -82,12 +81,12 @@ void EditorLayer::OnRender()
 	Nexus::Command::SetViewport(m_viewport);
 	Nexus::Command::SetScissor(m_scissor);
 
-	Nexus::Command::DrawMesh(m_Mesh);
+	Nexus::Ref<Nexus::StaticMesh> mesh = Nexus::AssetManager::Get<Nexus::StaticMesh>(m_Mesh);
+	Nexus::Command::DrawMesh(mesh);
 }
 
 void EditorLayer::OnDetach()
 {
-	m_Mesh->Destroy();
 	m_Pipeline->~Pipeline();
 
 	NEXUS_LOG_DEBUG("Editor Layer Detached");

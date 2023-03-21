@@ -2,7 +2,8 @@
 #include "RendererUtils.h"
 
 #include "Renderer/Pipeline.h"
-#include "Mesh.h"
+
+#include "Assets/Mesh.h"
 
 namespace Nexus
 {

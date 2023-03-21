@@ -13,8 +13,8 @@ public:
 private:
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
 	
-	Nexus::Ref<Nexus::StaticMesh> m_Mesh;
-
+	Nexus::AssetHandle m_Mesh;
+	
 	Nexus::Viewport m_viewport;
 	Nexus::Scissor m_scissor;
 

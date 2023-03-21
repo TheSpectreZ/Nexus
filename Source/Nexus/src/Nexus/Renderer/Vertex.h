@@ -31,9 +31,8 @@ namespace Nexus
 		AttribFormat format;
 	};
 
-	class StaticMeshVertex 
+	struct StaticMeshVertex 
 	{
-	public:
 		glm::vec3 position;
 		glm::vec3 normal;
 

@@ -7,6 +7,8 @@
 #include "Renderer/Context.h"
 #include "Renderer/Renderer.h"
 
+#include "Assets/AssetManager.h"
+
 Nexus::Application* Nexus::Application::s_Instance = nullptr;
 
 static std::vector<Layer*> m_layerStack;
@@ -79,6 +81,8 @@ void Nexus::Application::Init()
 		Renderer::Init(specs);
 		Renderer::ResizeCallback = NEXUS_BIND_EVENT_FN(Application::ResizeCallback);
 	}
+
+	AssetManager::Initialize();
 }
 
 
@@ -138,6 +142,8 @@ void Nexus::Application::Run()
 
 void Nexus::Application::Shut()
 {
+	AssetManager::Shutdown();
+
 	Renderer::Shut();
 	
 	// Window Destruction
