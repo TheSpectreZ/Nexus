@@ -1,23 +1,52 @@
 #pragma once
+#include "Vertex.h"
+#include "Shader.h"
 
 namespace Nexus
 {
-	struct vec3
+	enum class PolygonMode
 	{
-		float x, y, z;
+		Fill, Line
 	};
 
-	struct ExampleVertex
+	enum class CullMode
 	{
-		vec3 position;
-		vec3 color;
+		Front, Back, None
 	};
 
-	class Shader;
+	enum class FrontFaceType
+	{
+		Clockwise, AntiClockwise
+	};
+
+	enum class TopologyType
+	{
+		TriangleList
+	};
+
+	struct RasterizerInfo
+	{
+		PolygonMode polygonMode;
+		CullMode cullMode;
+		FrontFaceType frontFace;
+		TopologyType topology;
+		float lineWidth;
+	};
+
+	struct PushConstantInfo
+	{
+		ShaderStage stage;
+		uint32_t offset, size;
+	};
 
 	struct PipelineCreateInfo
 	{
 		Ref<Shader> shader;
+		std::vector<VertexAttribInfo> vertexAttribInfo;
+		std::vector<VertexBindInfo> vertexBindInfo;
+		std::vector<PushConstantInfo> pushConstantInfo;
+
+		RasterizerInfo rasterizerInfo;
 	};
 
 	class Pipeline

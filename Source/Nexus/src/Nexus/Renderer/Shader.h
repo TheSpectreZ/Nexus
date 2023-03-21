@@ -4,6 +4,11 @@ typedef std::vector<uint32_t> SpirV;
 
 namespace Nexus
 {
+	enum class ShaderStage
+	{
+		Vertex, Fragment
+	};
+
 	class Shader
 	{
 	public:		

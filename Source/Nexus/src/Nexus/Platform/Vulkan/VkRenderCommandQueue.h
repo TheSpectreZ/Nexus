@@ -18,6 +18,8 @@ namespace Nexus
 		uint32_t GetFrameIndex() { return m_FrameIndex; }
 		VkCommandBuffer GetCurrentCommandBuffer() { return m_CommandBuffer[m_FrameIndex]; }
 	private:
+		void Render();
+
 		VkCommandPool m_CommandPool;
 		std::vector<VkCommandBuffer> m_CommandBuffer;
 		VkCommandBufferBeginInfo m_CommandBufferBeginInfo;

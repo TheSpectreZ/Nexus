@@ -155,3 +155,7 @@ void Nexus::VulkanRenderCommandQueue::Flush()
 
 	m_FrameIndex = (m_FrameIndex + 1) % m_ImageCount;
 }
+
+void Nexus::VulkanRenderCommandQueue::Render()
+{
+}

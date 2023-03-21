@@ -2,6 +2,7 @@
 #include "GLFW/glfw3.h"
 
 #include "Application.h"
+#include "Input.h"
 
 #include "Renderer/Context.h"
 #include "Renderer/Renderer.h"
@@ -48,6 +49,8 @@ void Nexus::Application::Init()
 
 		m_Window.handle = glfwCreateWindow(m_Window.width, m_Window.height, m_Window.title, nullptr, nullptr);
 		NEXUS_LOG_TRACE("Window Created: {0}x{1}", m_Window.width, m_Window.height);
+
+		Input::SetContextWindow(m_Window);
 	}
 	
 	std::cout << std::endl;
@@ -70,22 +73,43 @@ void Nexus::Application::Run()
 {
 	std::cout << std::endl;
 
-	for (auto& l : m_layerStack)
-		l->OnAttach();
+	{
+		for (auto& l : m_layerStack)
+			l->OnAttach();
+	
+		Renderer::FlushTransferCommandQueue();
+	}
 
 	glfwShowWindow(m_Window.handle);
 	while (!glfwWindowShouldClose(m_Window.handle))
 	{
 		glfwPollEvents();
 
-		Renderer::Begin();
-		
-		for (auto& l : m_layerStack)
-			l->OnUpdate();
+		// TimeStep
+		{
+			static float ct, lt;
+			
+			ct = glfwGetTime();
+			m_TimeStep = Timestep(lt - ct);
+			lt = ct;
+		}
 
-		Renderer::End();
+		// Update
+		for (auto& l : m_layerStack)
+		{
+			l->OnUpdate();
+		}
 		
-		Renderer::Flush();
+		// Swapchain Render Pass and Command Queue
+		{
+			Renderer::BeginRenderCommandQueue();
+
+			for (auto& l : m_layerStack)
+				l->OnRender();
+
+			Renderer::EndRenderCommandQueue();
+			Renderer::FlushRenderCommandQueue();
+		}
 	}
 	
 	Renderer::WaitForDevice();

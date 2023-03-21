@@ -100,6 +100,8 @@ Nexus::VulkanShader::~VulkanShader()
 
 	vkDestroyShaderModule(device, m_VertexModule, nullptr);
 	vkDestroyShaderModule(device, m_FragmentModule, nullptr);
+
+	NEXUS_LOG_WARN("Vulkan Shader Destroyed");
 }
 
 VkShaderModule Nexus::VulkanShader::GetModule(VkShaderStageFlagBits flag)

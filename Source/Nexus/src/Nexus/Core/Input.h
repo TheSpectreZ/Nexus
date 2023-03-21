@@ -5,16 +5,13 @@
 
 namespace Nexus
 {
-	namespace Platform
+	namespace Input
 	{
-		namespace Input
-		{
-			void SetContextWindow(const Window& window);
+		void SetContextWindow(const Window& window);
 
-			bool IsKeyPressed(uint16_t key);
-			bool IsMouseButtonPressed(uint16_t button);
+		bool IsKeyPressed(uint16_t key);
+		bool IsMouseButtonPressed(uint16_t button);
 
-			std::pair<float, float> GetMouseCursorPosition();
-		}
+		std::pair<float, float> GetMouseCursorPosition();
 	}
 }

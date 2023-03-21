@@ -3,6 +3,7 @@
 #include "Window.h"
 #include "Layer.h"
 #include "ApplicationSpecifications.h"
+#include "TimeStep.h"
 #include "Renderer/Context.h"
 
 namespace Nexus
@@ -24,6 +25,7 @@ namespace Nexus
 		static void BreakOnAssert();
 #endif // NEXUS_DEBUG
 
+		Timestep& GetTimeStep() { return m_TimeStep; }
 		Window& GetWindow() { return m_Window; }
 	protected:
 		ApplicationSpecifications m_AppSpecs;
@@ -32,6 +34,7 @@ namespace Nexus
 		void PopLayer(Layer* layer);
 	private:
 		Window m_Window;
+		Timestep m_TimeStep;
 	};
 
 }
