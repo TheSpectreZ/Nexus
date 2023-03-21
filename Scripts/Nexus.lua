@@ -28,6 +28,7 @@ project "Nexus"
         IncludeDir["stb"],
         IncludeDir["entt"],
         IncludeDir["yamlcpp"],
+        IncludeDir["assimp"],
         IncludeDir["vulkanMemoryAllocator"],
 
         "$(VULKAN_SDK)/Include",
@@ -38,6 +39,7 @@ project "Nexus"
         "glfw",
         "spdlog",
         "yamlcpp",
+        "assimp",
         "vulkan-1.lib",
     }
 

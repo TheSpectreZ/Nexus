@@ -11,6 +11,7 @@ workspace "Nexus-Engine"
     startproject "NexusEditor"
 
     group "Dependencies"
+        include "Scripts/Dependencies/assimp.lua"
         include "Scripts/Dependencies/glfw.lua"
         include "Scripts/Dependencies/spdlog.lua"
         include "Scripts/Dependencies/imgui.lua"
