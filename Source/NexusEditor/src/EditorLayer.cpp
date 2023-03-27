@@ -4,12 +4,13 @@ void EditorLayer::OnAttach()
 {
 	NEXUS_LOG_DEBUG("Editor Layer Attached");
 
-	Nexus::Ref<Nexus::Shader> SimpleShader = Nexus::Shader::Create("shaders/simple.shader");
+	Nexus::ShaderLib::Get("shaders/pbr.shader");
+	Nexus::ShaderLib::Get("shaders/simple.shader");
 
 	// Pipeline
 	{
 		Nexus::PipelineCreateInfo Info{};
-		Info.shader = SimpleShader;
+		Info.shader = Nexus::ShaderLib::Get("shaders/simple.shader");
 
 		Info.vertexBindInfo = Nexus::StaticMeshVertex::GetBindings();
 		Info.vertexAttribInfo = Nexus::StaticMeshVertex::GetAttributes();
@@ -60,9 +61,15 @@ void EditorLayer::OnAttach()
 		m_cameraController.SetPerspectiveProjection(45.f, (float)extent.width,(float)extent.height, 0.1f, 1000.f);
 	}
 
-	// Mesh
+	// Assets
 	{
-		m_Mesh = Nexus::AssetManager::LoadFromFile<Nexus::StaticMesh>("res/Meshes/Suzane.fbx");
+		Nexus::AssetHandle handle = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("res/Meshes/Suzane.fbx");
+
+		m_Scene = Nexus::Scene::Create();
+		Nexus::Entity entity = m_Scene->CreateEntity();
+		entity.AddComponent<Nexus::Component::Mesh>(handle);
+
+		m_PBRsceneRenderer.Setup(Nexus::ShaderLib::Get("shaders/simple.shader"), m_Scene);
 	}
 
 }
@@ -81,13 +88,15 @@ void EditorLayer::OnRender()
 	Nexus::Command::SetViewport(m_viewport);
 	Nexus::Command::SetScissor(m_scissor);
 
-	Nexus::Ref<Nexus::StaticMesh> mesh = Nexus::AssetManager::Get<Nexus::StaticMesh>(m_Mesh);
-	Nexus::Command::DrawMesh(mesh);
+	m_PBRsceneRenderer.Render();
 }
 
 void EditorLayer::OnDetach()
 {
+	m_PBRsceneRenderer.Terminate();
+
 	m_Pipeline->~Pipeline();
+	m_Scene->clear();
 
 	NEXUS_LOG_DEBUG("Editor Layer Detached");
 }

@@ -13,8 +13,10 @@ public:
 private:
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
 	
-	Nexus::AssetHandle m_Mesh;
+	Nexus::Ref<Nexus::Scene> m_Scene;
 	
+	Nexus::SceneRenderer::PhysicallyBased m_PBRsceneRenderer;
+
 	Nexus::Viewport m_viewport;
 	Nexus::Scissor m_scissor;
 
