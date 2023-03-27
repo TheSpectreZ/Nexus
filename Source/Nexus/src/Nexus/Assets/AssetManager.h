@@ -1,12 +1,9 @@
 #pragma once
 #include <filesystem>
-
-#include "Mesh.h"
+#include "Asset.h"
 
 namespace Nexus
 {
-	typedef uint64_t AssetHandle;
-
 	class AssetManager
 	{
 		static AssetManager* s_Instance;
@@ -19,7 +16,7 @@ namespace Nexus
 		static AssetHandle LoadFromFile(const std::filesystem::path& path);
 
 		template<typename T>
-		static Ref<T> Get(AssetHandle handle);
+		static T& Get(AssetHandle handle);
 
 		template<typename T>
 		static bool Has(AssetHandle handle);
@@ -27,7 +24,7 @@ namespace Nexus
 		template<typename T>
 		static void Remove(AssetHandle handle);
 	private:
-		std::unordered_map<AssetHandle, Ref<StaticMesh>> m_Meshes;
+		std::unordered_map<AssetHandle, StaticMeshAsset> m_StaticMeshes;
 	};
 	
 }

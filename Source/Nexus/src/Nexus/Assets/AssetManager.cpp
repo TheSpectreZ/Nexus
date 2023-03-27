@@ -10,8 +10,7 @@ void Nexus::AssetManager::Initialize()
 
 void Nexus::AssetManager::Shutdown()
 {
-	s_Instance->m_Meshes.clear();
-
+	s_Instance->m_StaticMeshes.clear();
 	delete s_Instance;
 }
 
@@ -22,7 +21,7 @@ Nexus::AssetHandle Nexus::AssetManager::CreateAssetHandle()
 }
 
 #define GET_ASSET(Type,Member) template<>\
-Nexus::Ref<Type> Nexus::AssetManager::Get<Type>(AssetHandle handle)\
+Type& Nexus::AssetManager::Get<Type>(AssetHandle handle)\
 {\
 	return s_Instance->Member[handle];\
 }\
@@ -41,17 +40,21 @@ void Nexus::AssetManager::Remove<Type>(AssetHandle handle)\
 
 
 template<>
-Nexus::AssetHandle Nexus::AssetManager::LoadFromFile<Nexus::StaticMesh>(const std::filesystem::path& path)
+Nexus::AssetHandle Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>(const std::filesystem::path& path)
 {
 	if (path.extension().string() != ".fbx")
 		return UINT64_MAX;
 
 	AssetHandle handle = CreateAssetHandle();
 
-	s_Instance->m_Meshes[handle] = StaticMesh::LoadWithAssimp(path.string().c_str());
+	s_Instance->m_StaticMeshes[handle].Mesh = StaticMesh::LoadWithAssimp(path.string().c_str());
+	s_Instance->m_StaticMeshes[handle].Name = path.filename().string();
+	s_Instance->m_StaticMeshes[handle].Path = path;
+
 	return handle;
 }
 
-GET_ASSET(Nexus::StaticMesh,m_Meshes)
-HAS_ASSET(Nexus::StaticMesh,m_Meshes)
-REMOVE_ASSET(Nexus::StaticMesh,m_Meshes)
+
+GET_ASSET(Nexus::StaticMeshAsset, m_StaticMeshes)
+HAS_ASSET(Nexus::StaticMeshAsset, m_StaticMeshes)
+REMOVE_ASSET(Nexus::StaticMeshAsset, m_StaticMeshes)
