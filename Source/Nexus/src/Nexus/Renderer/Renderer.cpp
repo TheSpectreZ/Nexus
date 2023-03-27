@@ -1,5 +1,6 @@
 #include "nxpch.h"
 #include "Renderer.h"
+#include "Shader.h"
 
 Nexus::Ref<Nexus::Renderer> Nexus::Renderer::s_Renderer;
 std::function<void()> Nexus::Renderer::ResizeCallback;
@@ -20,14 +21,18 @@ void Nexus::Renderer::Init(const RendererSpecifications& specs)
 	s_Renderer->m_TransferCommandQueue = TransferCommandQueue::Create();
 
 	Command::Init();
+
+	ShaderLib::Initialize();
 }
 
 void Nexus::Renderer::Shut()
 {
-	s_Renderer->m_RenderCommandQueue.reset();
-	s_Renderer->m_TransferCommandQueue.reset();
+	ShaderLib::Terminate();
 
 	Command::Shut();
+
+	s_Renderer->m_RenderCommandQueue.reset();
+	s_Renderer->m_TransferCommandQueue.reset();
 
 	s_Renderer->m_Swapchain->Shut();
 	s_Renderer->m_Swapchain.reset();

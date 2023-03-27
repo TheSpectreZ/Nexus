@@ -1,6 +1,7 @@
 #pragma once
 #include "Vertex.h"
 #include "Shader.h"
+#include "ShaderResource.h"
 
 namespace Nexus
 {
@@ -44,7 +45,9 @@ namespace Nexus
 		Ref<Shader> shader;
 		std::vector<VertexAttribInfo> vertexAttribInfo;
 		std::vector<VertexBindInfo> vertexBindInfo;
+		
 		std::vector<PushConstantInfo> pushConstantInfo;
+		std::vector<Ref<ShaderResourceHeapLayout>> shaderResourceHeapLayouts;
 
 		RasterizerInfo rasterizerInfo;
 	};

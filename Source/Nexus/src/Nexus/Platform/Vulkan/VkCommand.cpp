@@ -22,8 +22,8 @@ void Nexus::VulkanCommand::ImplTransferStaticMesh(Ref<StaticMesh> mesh)
 	if (mesh == nullptr)
 		NEXUS_LOG_DEBUG("Mesh Ptr is Null");
 
-	m_TransferQueue->PushStaticBuffer(DynamicPointerCast<VulkanStaticBuffer>(mesh->m_Vb));
-	m_TransferQueue->PushStaticBuffer(DynamicPointerCast<VulkanStaticBuffer>(mesh->m_Ib));
+	m_TransferQueue->PushStaticBuffer(DynamicPointerCast<VulkanStaticBuffer>(mesh->GetVertexBuffer()));
+	m_TransferQueue->PushStaticBuffer(DynamicPointerCast<VulkanStaticBuffer>(mesh->GetIndexBuffer()));
 }
 
 void Nexus::VulkanCommand::ImplBindPipeline(Ref<Pipeline> pipeline)
@@ -34,8 +34,8 @@ void Nexus::VulkanCommand::ImplBindPipeline(Ref<Pipeline> pipeline)
 
 void Nexus::VulkanCommand::ImplDrawMesh(Ref<StaticMesh> mesh)
 {
-	Ref<VulkanStaticBuffer> vb = DynamicPointerCast<VulkanStaticBuffer>(mesh->m_Vb);
-	Ref<VulkanStaticBuffer> ib = DynamicPointerCast<VulkanStaticBuffer>(mesh->m_Ib);
+	Ref<VulkanStaticBuffer> vb = DynamicPointerCast<VulkanStaticBuffer>(mesh->GetVertexBuffer());
+	Ref<VulkanStaticBuffer> ib = DynamicPointerCast<VulkanStaticBuffer>(mesh->GetIndexBuffer());
 
 	VkBuffer buf[] = { vb->Get() };
 	VkDeviceSize off[] = { 0 };
@@ -70,14 +70,4 @@ void Nexus::VulkanCommand::ImplSetPushConstantData(Ref<Pipeline> pipeline, void*
 {
 	Ref<VulkanPipeline> Vkp = DynamicPointerCast<VulkanPipeline>(pipeline);
 	vkCmdPushConstants(m_RenderCommandBuffer, Vkp->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT , 0, size, data);
-}
-
-void Nexus::VulkanCommand::ImplDraw(uint32_t VertexCount, uint32_t InstanceCount, uint32_t FirstVertex, uint32_t FirstInstance)
-{
-	vkCmdDraw(m_RenderCommandBuffer, VertexCount, InstanceCount, FirstVertex, FirstInstance);
-}
-
-void Nexus::VulkanCommand::ImplDrawIndexed(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance)
-{
-	vkCmdDrawIndexed(m_RenderCommandBuffer, IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }

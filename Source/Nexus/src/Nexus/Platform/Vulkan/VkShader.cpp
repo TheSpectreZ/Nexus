@@ -5,43 +5,49 @@
 #include "shaderc/shaderc.hpp"
 
 #include "spirv_cross/spirv_glsl.hpp"
- 
-/*
- 
-	TODO:
+#include "spirv_cross/spirv_reflect.hpp"
 
-	- Generate Reflection before Compiling
-	- Store Reflection data to Create Descriptor Set Layout
-	- Use This Descriptor Set Layout with Some Other Data to Create a Pipeline Object
-
-	- Shader Shouldn't be the focal point of this thing, Make it so that ShaderFile has Pipeline
-		Data ; it is essentially a pipeline description file
-	- Then make Pipeline with Pipeline layout generated from Shader
-
-*/
-
-static void GenerateReflections(SpirV& spirV)
+struct ReflectionData
 {
-	spirv_cross::Compiler compiler(std::move(spirV));
-	spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+	std::unordered_map<uint32_t, std::vector<Nexus::ShaderResouceHeapLayoutBinding>> bindings;
+};
+
+static void GenerateReflections(SpirV* spirV, ReflectionData* data, Nexus::ShaderStage stage)
+{
+	spirv_cross::CompilerGLSL reflector(std::move(*spirV));
+	
+	spirv_cross::ShaderResources resources = reflector.get_shader_resources();
+	
+	// Push Constants
+	for (const auto& resource : resources.uniform_buffers)
+	{
+		auto& name = resource.name;
+		
+		auto& bufferType = reflector.get_type(resource.base_type_id);
+		int32_t memberCount = (int32_t)bufferType.member_types.size();
+		uint32_t size = (uint32_t)reflector.get_declared_struct_size(bufferType);
+	}
 
 	// Uniform Buffers
 	for (const auto& resource : resources.uniform_buffers)
 	{
-		auto activeBuffers = compiler.get_active_buffer_ranges(resource.id);
+		auto activeBuffers = reflector.get_active_buffer_ranges(resource.id);
 
 		if (activeBuffers.size())
 		{
 			auto& name = resource.name;
 			
-			auto& bufferType = compiler.get_type(resource.base_type_id);
+			auto& bufferType = reflector.get_type(resource.base_type_id);
 			int32_t memberCount = (int32_t)bufferType.member_types.size();
-			uint32_t size = (uint32_t)compiler.get_declared_struct_size(bufferType);
+			uint32_t size = (uint32_t)reflector.get_declared_struct_size(bufferType);
 
-			uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-			uint32_t set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+			uint32_t binding = reflector.get_decoration(resource.id, spv::DecorationBinding);
+			uint32_t set = reflector.get_decoration(resource.id, spv::DecorationDescriptorSet);
 
-			NEXUS_LOG_DEBUG("Uniform Buffer: {0} | binding: {1} | set: {2} | size: {3} | memberCount: {4}",name,binding,set,size,memberCount);
+			auto& ref = data->bindings[set].emplace_back();
+			ref.bindPoint = binding;
+			ref.stage = stage;
+			ref.type = Nexus::ShaderResourceType::Uniform;
 		}
 	}
 
@@ -49,20 +55,23 @@ static void GenerateReflections(SpirV& spirV)
 	for (const auto& resource : resources.sampled_images)
 	{
 		auto& name = resource.name;
-		auto& baseType = compiler.get_type(resource.base_type_id);
-		auto& type = compiler.get_type(resource.type_id);
+		auto& baseType = reflector.get_type(resource.base_type_id);
+		auto& type = reflector.get_type(resource.type_id);
 
-		uint32_t binding = compiler.get_decoration(resource.id, spv::DecorationBinding);
-		uint32_t set = compiler.get_decoration(resource.id, spv::DecorationDescriptorSet);
+		uint32_t binding = reflector.get_decoration(resource.id, spv::DecorationBinding);
+		uint32_t set = reflector.get_decoration(resource.id, spv::DecorationDescriptorSet);
 
 		uint32_t dimension = baseType.image.dim;
 		uint32_t arraySize = type.array[0];
 
-		NEXUS_LOG_DEBUG("Sampled Image: {0},{1},{2},{3},{4}", name, binding, set, dimension, arraySize);
+		auto& ref = data->bindings[set].emplace_back();
+		ref.bindPoint = binding;
+		ref.stage = stage;
+		ref.type = Nexus::ShaderResourceType::SampledImage;
 	}
 }
 
-Nexus::VulkanShader::VulkanShader(SpirV& vertexData, SpirV& fragmentData,const char* Filepath)
+Nexus::VulkanShader::VulkanShader(SpirV& vertexData, SpirV& fragmentData, const char* Filepath)
 {
 	// Compiling Source
 	{
@@ -74,7 +83,7 @@ Nexus::VulkanShader::VulkanShader(SpirV& vertexData, SpirV& fragmentData,const c
 		Info.flags = 0;
 		Info.codeSize = (uint32_t)vertexData.size() * sizeof(uint32_t);
 		Info.pCode = vertexData.data();
-		
+
 		_VKR = vkCreateShaderModule(device, &Info, nullptr, &m_VertexModule);
 		CHECK_HANDLE(m_VertexModule, VkShaderModule);
 
@@ -84,23 +93,43 @@ Nexus::VulkanShader::VulkanShader(SpirV& vertexData, SpirV& fragmentData,const c
 		_VKR = vkCreateShaderModule(device, &Info, nullptr, &m_FragmentModule);
 		CHECK_HANDLE(m_FragmentModule, VkShaderModule);
 	}
+
 	NEXUS_LOG_WARN("Vulkan Shader Created: {0}", Filepath);
 
-	// Generating Reflections
-	//{
-	//	GenerateReflections(vertexData);
-	//	GenerateReflections(fragmentData);
-	//}
+	ReflectionData data;
+	GenerateReflections(&vertexData, &data, Nexus::ShaderStage::Vertex);
+	GenerateReflections(&fragmentData, &data, Nexus::ShaderStage::Fragment);
 
+	// Heap Layouts and Pool
+	{
+		NEXUS_LOG_DEBUG("=================");
+		NEXUS_LOG_INFO("Shader Reflection\n");
+
+		for (auto& [set, bindings] : data.bindings)
+		{
+			for (auto& b : bindings)
+			{
+				NEXUS_LOG_TRACE("Set: {0} | BindPoint: {1}, Type: {2}, ShaderStage: {3}",set, b.bindPoint, GetShaderResourceTypeStringName(b.type).c_str(), GetShaderStageTypeStringName(b.stage).c_str());
+			}
+			m_SetResource[set].HeapLayout = CreateRef<VulkanShaderResourceHeapLayout>(bindings);
+			
+			auto& pool = m_SetResource[set].HeapPools.emplace_back();
+			pool = CreateRef<VulkanShaderResourcePool>(m_SetResource[set].HeapLayout, maxHeapCountPerPool);
+			NEXUS_LOG_DEBUG("");
+		}
+		NEXUS_LOG_DEBUG("=================\n");
+	}
 }
 
-Nexus::VulkanShader::~VulkanShader()
+void Nexus::VulkanShader::Destroy()
 {
 	VkDevice device = VulkanContext::Get()->GetDeviceRef()->Get();
 
 	vkDestroyShaderModule(device, m_VertexModule, nullptr);
 	vkDestroyShaderModule(device, m_FragmentModule, nullptr);
 
+	m_SetResource.clear();
+	
 	NEXUS_LOG_WARN("Vulkan Shader Destroyed");
 }
 

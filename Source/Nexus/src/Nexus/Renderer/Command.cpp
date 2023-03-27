@@ -56,13 +56,3 @@ void Nexus::Command::SetPushConstantData(Ref<Pipeline> pipeline, void* data, uin
 {
 	s_Command->ImplSetPushConstantData(pipeline, data, size);
 }
-
-void Nexus::Command::Draw(uint32_t VertexCount, uint32_t InstanceCount, uint32_t FirstVertex, uint32_t FirstInstance)
-{
-	s_Command->ImplDraw(VertexCount, InstanceCount, FirstVertex, FirstInstance);
-}
-
-void Nexus::Command::DrawIndexed(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance)
-{
-	s_Command->ImplDrawIndexed(IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
-}

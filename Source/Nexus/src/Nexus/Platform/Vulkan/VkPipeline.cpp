@@ -1,10 +1,11 @@
 #include "nxpch.h"
 #include "VkPipeline.h"
 #include "VkShader.h"
-
-#include "Renderer/Vertex.h"
+#include "VkShaderResource.h"
 #include "VkContext.h"
 #include "VkSwapchain.h"
+
+#include "Renderer/Vertex.h"
 
 namespace Nexus
 {
@@ -257,8 +258,15 @@ Nexus::VulkanPipeline::VulkanPipeline(const PipelineCreateInfo& i)
     pipelineLayoutInfo.pPushConstantRanges = ranges.data();
     pipelineLayoutInfo.pushConstantRangeCount = (uint32_t)ranges.size();
 
-    pipelineLayoutInfo.pSetLayouts = nullptr;
-    pipelineLayoutInfo.setLayoutCount = 0;
+    std::vector<VkDescriptorSetLayout> layouts(i.shaderResourceHeapLayouts.size());
+
+    for (uint32_t k = 0; k < layouts.size(); k++)
+    {
+        layouts[k] = DynamicPointerCast<VulkanShaderResourceHeapLayout>(i.shaderResourceHeapLayouts[k])->Get();
+    }
+
+    pipelineLayoutInfo.pSetLayouts = layouts.data();
+    pipelineLayoutInfo.setLayoutCount = (uint32_t)layouts.size();
 
     _VKR = vkCreatePipelineLayout(device->Get(), &pipelineLayoutInfo, nullptr, &m_Layout);
     CHECK_HANDLE(m_Layout, VkPipelineLayout);

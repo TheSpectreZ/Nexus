@@ -1,5 +1,5 @@
 #pragma once
-#include "RendererUtils.h"
+#include "RenderTypes.h"
 
 namespace Nexus
 {
