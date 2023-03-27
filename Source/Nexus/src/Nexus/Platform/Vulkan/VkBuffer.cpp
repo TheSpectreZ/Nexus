@@ -8,8 +8,8 @@ static VkBufferUsageFlagBits GetVulkanBufferType(Nexus::BufferType Type)
 {
 	switch (Type)
 	{
-		case Nexus::BufferType::VERTEX: return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		case Nexus::BufferType::INDEX: return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+		case Nexus::BufferType::Vertex: return VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		case Nexus::BufferType::Index: return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 		default:
 			NEXUS_ASSERT(1, "Invalid Buffer Type");
 			return (VkBufferUsageFlagBits)0;
@@ -20,8 +20,8 @@ static const char* GetVulkanBufferTypeName(Nexus::BufferType Type)
 {
 	switch (Type)
 	{
-		case Nexus::BufferType::VERTEX: return "Vertex";
-		case Nexus::BufferType::INDEX: return "Index";
+		case Nexus::BufferType::Vertex: return "Vertex";
+		case Nexus::BufferType::Index: return "Index";
 		default: return "";
 	}
 }
@@ -84,36 +84,33 @@ Nexus::VulkanStaticBuffer::~VulkanStaticBuffer()
 
 #pragma endregion
 
-#pragma region DynamicBuffer
-
-Nexus::VulkanDynamicBuffer::VulkanDynamicBuffer(uint32_t size, BufferType Type)
-{
-}
-
-#pragma endregion
-
 #pragma region UniformBuffer
 
 Nexus::VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size)
-	:m_size(size)
 {
 	VkBufferCreateInfo Info{};
 	Info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	Info.pNext = nullptr;
 	Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-	Info.size = m_size;
+	Info.size = size;
 	Info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
 
 	VmaAllocationCreateInfo aInfo{};
 	aInfo.usage = VMA_MEMORY_USAGE_AUTO;
-	
-	_VKR = vmaCreateBuffer(VulkanContext::Get()->GetDeviceRef()->GetAllocator(), &Info, &aInfo, &m_buffer, &m_allocation, nullptr);
+	aInfo.flags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | VMA_ALLOCATION_CREATE_MAPPED_BIT;
+
+	_VKR = vmaCreateBuffer(VulkanContext::Get()->GetDeviceRef()->GetAllocator(), &Info, &aInfo, &m_buffer, &m_allocation, &m_allocInfo);
 	CHECK_HANDLE(m_buffer, VkBuffer);
 }
 
 Nexus::VulkanUniformBuffer::~VulkanUniformBuffer()
 {
 	vmaDestroyBuffer(VulkanContext::Get()->GetDeviceRef()->GetAllocator(), m_buffer, m_allocation);
+}
+
+void Nexus::VulkanUniformBuffer::Update(void* data)
+{
+	memcpy(m_allocInfo.pMappedData, data, m_allocInfo.size);
 }
 
 #pragma endregion

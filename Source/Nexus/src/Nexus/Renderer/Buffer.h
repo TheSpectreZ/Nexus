@@ -1,12 +1,8 @@
 #pragma once
+#include "RenderTypes.h"
 
 namespace Nexus
 {
-	enum class BufferType
-	{
-		VERTEX, INDEX
-	};
-
 	class StaticBuffer
 	{
 	public:
@@ -16,15 +12,6 @@ namespace Nexus
 		virtual ~StaticBuffer() = default;
 	};
 
-	class DynamicBuffer
-	{
-	public:
-		static Ref<DynamicBuffer> Create(uint32_t size, BufferType Type);
-
-		DynamicBuffer() = default;
-		virtual ~DynamicBuffer() = default;
-	};
-
 	class UniformBuffer
 	{
 	public:
@@ -32,6 +19,8 @@ namespace Nexus
 
 		UniformBuffer() = default;
 		virtual ~UniformBuffer() = default;
+
+		virtual void Update(void* data) = 0;
 	};
 
 }

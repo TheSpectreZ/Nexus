@@ -23,20 +23,19 @@ namespace Nexus
 		VmaAllocation m_allocation, m_StagingAlloc;
 	};
 
-	class VulkanDynamicBuffer : public DynamicBuffer
-	{
-	public:
-		VulkanDynamicBuffer(uint32_t size, BufferType Type);
-	};
-
 	class VulkanUniformBuffer : public UniformBuffer
 	{
 	public:
 		VulkanUniformBuffer(uint32_t size);
 		~VulkanUniformBuffer();
+
+		void Update(void* data) override;
+
+		VkBuffer Get() { return m_buffer; }
+		uint32_t GetSize() { return (uint32_t)m_allocInfo.size; }
 	private:
-		uint32_t m_size;
 		VkBuffer m_buffer;
+		VmaAllocationInfo m_allocInfo;
 		VmaAllocation m_allocation;
 	};
 

@@ -14,16 +14,6 @@ Nexus::Ref<Nexus::StaticBuffer> Nexus::StaticBuffer::Create(uint32_t size, Buffe
 	}
 }
 
-Nexus::Ref<Nexus::DynamicBuffer> Nexus::DynamicBuffer::Create(uint32_t size, BufferType Type)
-{
-	switch (RenderAPI::GetCurrentAPI())
-	{
-		case RenderAPIType::VULKAN: return CreateRef<VulkanDynamicBuffer>(size, Type);
-		case RenderAPIType::NONE: return nullptr;
-		default: return nullptr;
-	}
-}
-
 Nexus::Ref<Nexus::UniformBuffer> Nexus::UniformBuffer::Create(uint32_t size)
 {
 	switch (RenderAPI::GetCurrentAPI())
