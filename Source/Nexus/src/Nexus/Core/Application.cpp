@@ -106,7 +106,7 @@ void Nexus::Application::Run()
 		{
 			static float ct, lt;
 			
-			ct = glfwGetTime();
+			ct = (float)glfwGetTime();
 			m_TimeStep = Timestep(lt - ct);
 			lt = ct;
 		}

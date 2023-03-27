@@ -4,12 +4,15 @@
 namespace Nexus
 {
 	class Entity;
-
+	
 	class Scene
 	{
 		friend class Entity;
 	public:
-		void Clear();
+		static Ref<Scene> Create();
+
+		void clear();
+		entt::registry& getRegistry() { return m_registry; }
 
 		Entity CreateEntity();
 		void DestroyEntity(Entity entity);

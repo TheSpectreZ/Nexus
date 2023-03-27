@@ -18,7 +18,7 @@ namespace Nexus
 		template<typename T,typename... Args>
 		T& AddComponent(Args&&... args)
 		{
-			m_scene->m_registry.emplace<T>(std::forward<Args>(args)...);
+			return m_scene->m_registry.emplace<T>(m_entity,std::forward<Args>(args)...);
 		}
 
 		template<typename T>
