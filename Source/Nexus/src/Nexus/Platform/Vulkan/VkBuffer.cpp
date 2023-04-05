@@ -101,11 +101,13 @@ Nexus::VulkanUniformBuffer::VulkanUniformBuffer(uint32_t size)
 
 	_VKR = vmaCreateBuffer(VulkanContext::Get()->GetDeviceRef()->GetAllocator(), &Info, &aInfo, &m_buffer, &m_allocation, &m_allocInfo);
 	CHECK_HANDLE(m_buffer, VkBuffer);
+	NEXUS_LOG_INFO("Vulkan Uniform Buffer Created");
 }
 
 Nexus::VulkanUniformBuffer::~VulkanUniformBuffer()
 {
 	vmaDestroyBuffer(VulkanContext::Get()->GetDeviceRef()->GetAllocator(), m_buffer, m_allocation);
+	NEXUS_LOG_INFO("Vulkan Uniform Buffer Destroyed");
 }
 
 void Nexus::VulkanUniformBuffer::Update(void* data)

@@ -9,7 +9,7 @@ namespace Nexus
 
 	struct ShaderResouceHeapLayoutBinding
 	{
-		uint32_t bindPoint;
+		uint32_t bindPoint, bufferSize;
 		ShaderResourceType type;
 		ShaderStage stage;
 	};
@@ -45,7 +45,5 @@ namespace Nexus
 		virtual ~ShaderResourcePool() = default;
 
 		static Ref<ShaderResourcePool> Create(Ref<ShaderResourceHeapLayout> layout, uint32_t maxResourceHeapCount);
-
-		virtual void AllocateShaderResourceHeaps(ShaderResourceHeap* pHeaps, uint32_t count) = 0;
 	};
 }

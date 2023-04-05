@@ -19,14 +19,12 @@ namespace Nexus
 		void ImplSetViewport(const Viewport& viewport) override;
 		void ImplSetScissor(const Scissor& scissor) override;
 		
-		void ImplSetPushConstantData(Ref<Pipeline> pipeline, void* data, uint32_t size) override;
-
 		Ref<VulkanTransferCommandQueue> m_TransferQueue;
-
-		VkCommandBuffer m_RenderCommandBuffer;
 
 		VkViewport m_Viewport;
 		VkRect2D m_Scissor;
+	public:
+		VkCommandBuffer m_RenderCommandBuffer;
 	};
 }
 

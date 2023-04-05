@@ -23,8 +23,6 @@ namespace Nexus
 		VulkanShaderResourcePool(Ref<ShaderResourceHeapLayout> layout,uint32_t maxResourceHeapCount);
 		~VulkanShaderResourcePool() override;
 
-		void AllocateShaderResourceHeaps(ShaderResourceHeap* pHeaps, uint32_t count) override;
-
 		VkDescriptorPool Get() { return m_pool; }
 		Ref<VulkanShaderResourceHeapLayout> GetLayout() { return m_layout; }
 	private:
@@ -40,7 +38,7 @@ namespace Nexus
 			:m_set(set)
 		{}
 		
-		VkDescriptorSet Get() { return m_set; }
+		VkDescriptorSet& Get() { return m_set; }
 	private:
 		VkDescriptorSet m_set;
 	};

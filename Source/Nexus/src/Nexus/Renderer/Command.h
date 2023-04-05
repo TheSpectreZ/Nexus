@@ -9,6 +9,8 @@ namespace Nexus
 	class Command
 	{
 	public:
+		static Ref<Command> GetRef();
+
 		static void Init();
 		static void Shut();
 
@@ -16,12 +18,10 @@ namespace Nexus
 
 		static void TransferStaticMesh(Ref<StaticMesh> mesh);
 
-		static void SetPushConstantData(Ref<Pipeline> pipeline, void* data, uint32_t size);
 		static void SetViewport(const Viewport& viewport);
 		static void SetScissor(const Scissor& scissor);
 		
 		static void BindPipeline(Ref<Pipeline> pipeline);
-
 		static void DrawMesh(Ref<StaticMesh> mesh);
 	private:
 		virtual void ImplInit() = 0;
@@ -32,6 +32,5 @@ namespace Nexus
 		virtual void ImplDrawMesh(Ref<StaticMesh> mesh) = 0;
 		virtual void ImplSetViewport(const Viewport& viewport) = 0;
 		virtual void ImplSetScissor(const Scissor& scissor) = 0;
-		virtual void ImplSetPushConstantData(Ref<Pipeline> pipeline, void* data, uint32_t size) = 0;
 	};
 }

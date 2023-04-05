@@ -11,10 +11,8 @@ namespace Nexus
 		~VulkanPipeline() override;
 
 		VkPipeline Get() { return m_Pipeline; }
-		VkPipelineLayout GetLayout() { return m_Layout; }
 	private:
 		VkPipeline m_Pipeline;
-		VkPipelineLayout m_Layout;
 	};
 }
 

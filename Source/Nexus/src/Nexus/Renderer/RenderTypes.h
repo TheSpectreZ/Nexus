@@ -2,6 +2,8 @@
 
 namespace Nexus
 {
+	typedef uint32_t ResourceID;
+
 	struct Viewport
 	{
 		float x, y, width, height, minDepth, maxDepth;

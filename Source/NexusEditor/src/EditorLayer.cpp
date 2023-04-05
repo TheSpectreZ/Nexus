@@ -4,13 +4,13 @@ void EditorLayer::OnAttach()
 {
 	NEXUS_LOG_DEBUG("Editor Layer Attached");
 
-	Nexus::ShaderLib::Get("shaders/pbr.shader");
-	Nexus::ShaderLib::Get("shaders/simple.shader");
-
+	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/simple.shader");
+	//Nexus::Ref<Nexus::Shader> pbrShader = Nexus::ShaderLib::Get("shaders/pbr.shader");
+	
 	// Pipeline
 	{
 		Nexus::PipelineCreateInfo Info{};
-		Info.shader = Nexus::ShaderLib::Get("shaders/simple.shader");
+		Info.shader = simpleShader;
 
 		Info.vertexBindInfo = Nexus::StaticMeshVertex::GetBindings();
 		Info.vertexAttribInfo = Nexus::StaticMeshVertex::GetAttributes();
@@ -69,7 +69,7 @@ void EditorLayer::OnAttach()
 		Nexus::Entity entity = m_Scene->CreateEntity();
 		entity.AddComponent<Nexus::Component::Mesh>(handle);
 
-		m_PBRsceneRenderer.Setup(Nexus::ShaderLib::Get("shaders/simple.shader"), m_Scene);
+		m_PBRsceneRenderer.Initialize(simpleShader, m_Scene, &m_camera);
 	}
 
 }
@@ -83,8 +83,6 @@ void EditorLayer::OnRender()
 {
 	Nexus::Command::BindPipeline(m_Pipeline);
 
-	Nexus::Command::SetPushConstantData(m_Pipeline, (void*)glm::value_ptr(m_camera.projection* m_camera.view), sizeof(glm::mat4));
-
 	Nexus::Command::SetViewport(m_viewport);
 	Nexus::Command::SetScissor(m_scissor);
 
@@ -94,9 +92,9 @@ void EditorLayer::OnRender()
 void EditorLayer::OnDetach()
 {
 	m_PBRsceneRenderer.Terminate();
+	m_Scene->clear();
 
 	m_Pipeline->~Pipeline();
-	m_Scene->clear();
 
 	NEXUS_LOG_DEBUG("Editor Layer Detached");
 }

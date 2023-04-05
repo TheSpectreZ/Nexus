@@ -240,38 +240,6 @@ Nexus::VulkanPipeline::VulkanPipeline(const PipelineCreateInfo& i)
     dynamicState.pDynamicStates = dynamicStates.data();
 
     /////////////////////////////////
-    // Pipeline layout
-    /////////////////////////////////
-
-    VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-    pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    
-    std::vector<VkPushConstantRange> ranges(i.pushConstantInfo.size());
-    
-    for (uint32_t k = 0; k < ranges.size(); k++)
-    {
-        ranges[k].offset = i.pushConstantInfo[k].offset;
-        ranges[k].size = i.pushConstantInfo[k].size;
-        ranges[k].stageFlags = GetVulkanShaderStageFlag(i.pushConstantInfo[k].stage);
-    }
-    
-    pipelineLayoutInfo.pPushConstantRanges = ranges.data();
-    pipelineLayoutInfo.pushConstantRangeCount = (uint32_t)ranges.size();
-
-    std::vector<VkDescriptorSetLayout> layouts(i.shaderResourceHeapLayouts.size());
-
-    for (uint32_t k = 0; k < layouts.size(); k++)
-    {
-        layouts[k] = DynamicPointerCast<VulkanShaderResourceHeapLayout>(i.shaderResourceHeapLayouts[k])->Get();
-    }
-
-    pipelineLayoutInfo.pSetLayouts = layouts.data();
-    pipelineLayoutInfo.setLayoutCount = (uint32_t)layouts.size();
-
-    _VKR = vkCreatePipelineLayout(device->Get(), &pipelineLayoutInfo, nullptr, &m_Layout);
-    CHECK_HANDLE(m_Layout, VkPipelineLayout);
-    
-    /////////////////////////////////
     // Graphics Pipeline
     /////////////////////////////////
 
@@ -287,7 +255,7 @@ Nexus::VulkanPipeline::VulkanPipeline(const PipelineCreateInfo& i)
     pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.pDepthStencilState = &depthStencilState;
-    pipelineInfo.layout = m_Layout;
+    pipelineInfo.layout = shader->GetPipelineLayout();
     pipelineInfo.renderPass = swapchain->GetRenderpass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
@@ -302,7 +270,6 @@ Nexus::VulkanPipeline::~VulkanPipeline()
     VkDevice device = VulkanContext::Get()->GetDeviceRef()->Get();
 
     vkDestroyPipeline(device, m_Pipeline, nullptr);
-    vkDestroyPipelineLayout(device, m_Layout, nullptr);
 
     NEXUS_LOG_WARN("Vulkan Pipeline Destroyed");
 }

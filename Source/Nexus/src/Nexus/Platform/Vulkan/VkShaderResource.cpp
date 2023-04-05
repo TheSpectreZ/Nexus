@@ -92,22 +92,3 @@ Nexus::VulkanShaderResourcePool::~VulkanShaderResourcePool()
 	vkDestroyDescriptorPool(VulkanContext::Get()->GetDeviceRef()->Get(), m_pool, nullptr);
 	NEXUS_LOG_INFO("Vulkan Descriptor Pool Destroyed");
 }
-
-void Nexus::VulkanShaderResourcePool::AllocateShaderResourceHeaps(ShaderResourceHeap* pHeaps, uint32_t count)
-{
-	VkDescriptorSetAllocateInfo allocInfo{};
-	allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-	allocInfo.pNext = nullptr;
-	allocInfo.descriptorPool = m_pool;
-	allocInfo.pSetLayouts = &m_layout->Get();
-	allocInfo.descriptorSetCount = count;
-
-	std::vector<VkDescriptorSet> Sets(count);
-
-	_VKR = vkAllocateDescriptorSets(VulkanContext::Get()->GetDeviceRef()->Get(), &allocInfo, Sets.data());
-	CHECK_LOG_VKR;
-	NEXUS_LOG_INFO("Vulkan Descriptor Set Allocated: {0}",count);
-
-	for (uint32_t i = 0; i < count; i++)
-		pHeaps[i] = VulkanShaderResourceHeap(Sets[i]);
-}

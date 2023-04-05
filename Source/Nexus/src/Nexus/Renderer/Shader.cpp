@@ -81,6 +81,8 @@ void Nexus::ShaderLib::Initialize()
 
 void Nexus::ShaderLib::Terminate()
 {
+	s_Instance->m_ResourcePool.Clear();
+
 	std::cout << std::endl;
 	for (auto& [k, v] : s_Instance->m_Shaders)
 	{

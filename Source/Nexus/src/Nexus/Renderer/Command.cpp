@@ -6,6 +6,11 @@
 
 Nexus::Ref<Nexus::Command> s_Command;
 
+Nexus::Ref<Nexus::Command> Nexus::Command::GetRef()
+{
+	return s_Command;
+}
+
 void Nexus::Command::Init()
 {
 	switch (RenderAPI::GetCurrentAPI())
@@ -50,9 +55,4 @@ void Nexus::Command::SetViewport(const Viewport& viewport)
 void Nexus::Command::SetScissor(const Scissor& scissor)
 {
 	s_Command->ImplSetScissor(scissor);
-}
-
-void Nexus::Command::SetPushConstantData(Ref<Pipeline> pipeline, void* data, uint32_t size)
-{
-	s_Command->ImplSetPushConstantData(pipeline, data, size);
 }

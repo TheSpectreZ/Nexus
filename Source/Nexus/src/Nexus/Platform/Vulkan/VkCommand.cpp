@@ -65,9 +65,3 @@ void Nexus::VulkanCommand::ImplSetScissor(const Scissor& scissor)
 
 	vkCmdSetScissor(m_RenderCommandBuffer, 0, 1, &m_Scissor);
 }
-
-void Nexus::VulkanCommand::ImplSetPushConstantData(Ref<Pipeline> pipeline, void* data, uint32_t size)
-{
-	Ref<VulkanPipeline> Vkp = DynamicPointerCast<VulkanPipeline>(pipeline);
-	vkCmdPushConstants(m_RenderCommandBuffer, Vkp->GetLayout(), VK_SHADER_STAGE_VERTEX_BIT , 0, size, data);
-}
