@@ -31,3 +31,6 @@
 [submodule "Source/Dependencies/Assimp"]
 	path = Source/Dependencies/Assimp
 	url = https://github.com/TheSpectreZ/assimp.git
+[submodule "Source/Dependencies/assimp"]
+	path = Source/Dependencies/assimp
+	url = https://github.com/TheSpectreZ/assimp.git
