@@ -13,7 +13,6 @@ namespace Nexus
 		VkPipeline Get() { return m_Pipeline; }
 	private:
 		VkPipeline m_Pipeline;
-		VkPipelineLayout m_Layout;
 	};
 }
 

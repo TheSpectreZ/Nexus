@@ -33,6 +33,20 @@ static bool CheckLayersAvailability(std::vector<const char*> Layers)
 
 void Nexus::VulkanContext::Init()
 {
+	{
+		uint32_t count;
+		vkEnumerateInstanceLayerProperties(&count, nullptr);
+		std::vector<VkLayerProperties> AvailableLayers(count);
+		vkEnumerateInstanceLayerProperties(&count, AvailableLayers.data());
+
+		NEXUS_LOG_WARN("Vulkan Instance Layers:");
+		for (auto& l : AvailableLayers)
+		{
+			NEXUS_LOG_DEBUG("{0}", l.layerName);
+		}
+
+	}
+
 	std::vector<const char*> InstanceLayers;
 
 	std::vector<const char*> DeviceExtensions;
@@ -51,7 +65,7 @@ void Nexus::VulkanContext::Init()
 	// Instance
 	{
 		VkApplicationInfo app{};
-		app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	//	app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		app.pNext = nullptr;
 		app.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
 		app.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);

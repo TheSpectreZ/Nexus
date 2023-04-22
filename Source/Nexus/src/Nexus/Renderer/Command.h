@@ -1,27 +1,36 @@
 #pragma once
-#include "RendererUtils.h"
+#include "RenderTypes.h"
+#include "Pipeline.h"
 
-#include "Renderer/Pipeline.h"
+#include "Mesh.h"
 
 namespace Nexus
 {
-	class RenderCommand
+	class Command
 	{
 	public:
+		static Ref<Command> GetRef();
+
 		static void Init();
 		static void Shut();
 
 		static void Update();
-		static void BindPipeline(Ref<Pipeline> pipeline);
+
+		static void TransferStaticMesh(Ref<StaticMesh> mesh);
+
 		static void SetViewport(const Viewport& viewport);
 		static void SetScissor(const Scissor& scissor);
 		
-		static void Draw(uint32_t VertexCount, uint32_t InstanceCount, uint32_t FirstVertex, uint32_t FirstInstance);
+		static void BindPipeline(Ref<Pipeline> pipeline);
+		static void DrawMesh(Ref<StaticMesh> mesh);
 	private:
+		virtual void ImplInit() = 0;
 		virtual void ImplUpdate() = 0;
+
+		virtual void ImplTransferStaticMesh(Ref<StaticMesh> mesh) = 0;
 		virtual void ImplBindPipeline(Ref<Pipeline> pipeline) = 0;
+		virtual void ImplDrawMesh(Ref<StaticMesh> mesh) = 0;
 		virtual void ImplSetViewport(const Viewport& viewport) = 0;
 		virtual void ImplSetScissor(const Scissor& scissor) = 0;
-		virtual void ImplDraw(uint32_t VertexCount, uint32_t InstanceCount, uint32_t FirstVertex, uint32_t FirstInstance) = 0;
 	};
 }

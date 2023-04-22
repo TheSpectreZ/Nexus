@@ -6,7 +6,7 @@
 
 Nexus::VulkanSwapchain::VulkanSwapchain()
 {
-	Window& window = Application::Get()->GetWindow();
+	m_window = &Application::Get()->GetWindow();
 	VkPhysicalDevice gpu = VulkanContext::Get()->GetPhysicalDeviceRef()->Get();
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
 	
@@ -27,9 +27,6 @@ Nexus::VulkanSwapchain::VulkanSwapchain()
 
 	// Swapchain Format, Mode and Extent
 	{
-
-		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, m_surface, &m_cap);
-
 		uint32_t size = 0;
 		vkGetPhysicalDeviceSurfaceFormatsKHR(gpu, m_surface, &size, nullptr);
 		std::vector<VkSurfaceFormatKHR> availableFormats(size);
@@ -60,17 +57,7 @@ Nexus::VulkanSwapchain::VulkanSwapchain()
 			}
 		}
 
-		if (m_cap.currentExtent.width != std::numeric_limits<uint32_t>::max())
-		{
-			m_extent = m_cap.currentExtent;
-		}
-		else
-		{
-			m_extent = { (uint32_t)window.width,(uint32_t)window.height };
-
-			m_extent.width = std::clamp(m_extent.width, m_cap.currentExtent.width, m_cap.maxImageExtent.width);
-			m_extent.height = std::clamp(m_extent.height, m_cap.currentExtent.height, m_cap.maxImageExtent.height);
-		}
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(gpu, m_surface, &m_cap);
 
 		m_MinImageCount = m_cap.minImageCount + 1;
 		if (m_cap.maxImageCount > 0 && m_MinImageCount > m_cap.maxImageCount)
@@ -159,6 +146,21 @@ Nexus::VulkanSwapchain::~VulkanSwapchain()
 
 void Nexus::VulkanSwapchain::Init()
 {
+	{
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(VulkanContext::Get()->GetPhysicalDeviceRef()->Get(), m_surface, &m_cap);
+		if (m_cap.currentExtent.width != std::numeric_limits<uint32_t>::max())
+		{
+			m_extent = m_cap.currentExtent;
+		}
+		else
+		{
+			m_extent = { (uint32_t)m_window->width,(uint32_t)m_window->height };
+
+			m_extent.width = std::clamp(m_extent.width, m_cap.currentExtent.width, m_cap.maxImageExtent.width);
+			m_extent.height = std::clamp(m_extent.height, m_cap.currentExtent.height, m_cap.maxImageExtent.height);
+		}
+	}
+
 	// Swapchain
 	{
 		VkSwapchainCreateInfoKHR Info{};

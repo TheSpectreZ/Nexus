@@ -2,9 +2,12 @@
 #include "GLFW/glfw3.h"
 
 #include "Application.h"
+#include "Input.h"
 
 #include "Renderer/Context.h"
 #include "Renderer/Renderer.h"
+
+#include "Assets/AssetManager.h"
 
 Nexus::Application* Nexus::Application::s_Instance = nullptr;
 
@@ -48,6 +51,20 @@ void Nexus::Application::Init()
 
 		m_Window.handle = glfwCreateWindow(m_Window.width, m_Window.height, m_Window.title, nullptr, nullptr);
 		NEXUS_LOG_TRACE("Window Created: {0}x{1}", m_Window.width, m_Window.height);
+
+		// Callbacks
+		{
+			glfwSetWindowUserPointer(m_Window.handle, &m_Window);
+
+			glfwSetWindowSizeCallback(m_Window.handle, [](GLFWwindow* window, int width, int height)
+				{
+					Window& data = *(Window*)glfwGetWindowUserPointer(window);
+					data.width = width;
+					data.height = height;
+				});
+		}
+
+		Input::SetContextWindow(m_Window);
 	}
 	
 	std::cout << std::endl;
@@ -62,7 +79,10 @@ void Nexus::Application::Init()
 			specs.api = RenderAPIType::VULKAN;
 		
 		Renderer::Init(specs);
+		Renderer::ResizeCallback = NEXUS_BIND_EVENT_FN(Application::ResizeCallback);
 	}
+
+	AssetManager::Initialize();
 }
 
 
@@ -70,22 +90,43 @@ void Nexus::Application::Run()
 {
 	std::cout << std::endl;
 
-	for (auto& l : m_layerStack)
-		l->OnAttach();
+	{
+		for (auto& l : m_layerStack)
+			l->OnAttach();
+	
+		Renderer::FlushTransferCommandQueue();
+	}
 
 	glfwShowWindow(m_Window.handle);
 	while (!glfwWindowShouldClose(m_Window.handle))
 	{
 		glfwPollEvents();
 
-		Renderer::Begin();
-		
-		for (auto& l : m_layerStack)
-			l->OnUpdate();
+		// TimeStep
+		{
+			static float ct, lt;
+			
+			ct = (float)glfwGetTime();
+			m_TimeStep = Timestep(lt - ct);
+			lt = ct;
+		}
 
-		Renderer::End();
+		// Update
+		for (auto& l : m_layerStack)
+		{
+			l->OnUpdate();
+		}
 		
-		Renderer::Flush();
+		// Swapchain Render Pass and Command Queue
+		{
+			Renderer::BeginRenderCommandQueue();
+
+			for (auto& l : m_layerStack)
+				l->OnRender();
+
+			Renderer::EndRenderCommandQueue();
+			Renderer::FlushRenderCommandQueue();
+		}
 	}
 	
 	Renderer::WaitForDevice();
@@ -101,6 +142,8 @@ void Nexus::Application::Run()
 
 void Nexus::Application::Shut()
 {
+	AssetManager::Shutdown();
+
 	Renderer::Shut();
 	
 	// Window Destruction
@@ -110,23 +153,13 @@ void Nexus::Application::Shut()
 	}
 }
 
-#ifdef NEXUS_DEBUG
-
-void Nexus::Application::BreakOnAssert()
+void Nexus::Application::ResizeCallback()
 {
-	for (auto& l : m_layerStack)
+	for (auto& layer : m_layerStack)
 	{
-		l->OnDetach();
-		s_Instance->PopLayer(l);
+		layer->OnWindowResize(m_Window.width, m_Window.height);
 	}
-
-	s_Instance->Shut();
-	s_Instance->~Application();
 }
-
-#endif // NEXUS_DEBUG
-
-
 
 void Nexus::Application::PushLayer(Layer* layer)
 {

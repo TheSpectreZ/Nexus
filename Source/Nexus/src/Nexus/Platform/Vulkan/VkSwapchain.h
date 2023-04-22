@@ -3,7 +3,7 @@
 #include "VkAssert.h"
 #include "vk_mem_alloc.h"
 #include "VkDevice.h"
-
+#include "Core/Window.h"
 #include "Renderer/Renderer.h"
 
 namespace Nexus
@@ -45,6 +45,7 @@ namespace Nexus
 	private:
 		VkDevice m_device;
 		VkSurfaceKHR m_surface;
+		Window* m_window;
 
 		VkSwapchainKHR m_Swapchain;
 		

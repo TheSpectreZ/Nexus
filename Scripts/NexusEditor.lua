@@ -17,6 +17,7 @@ project "NexusEditor"
         IncludeDir["Nexus"],
 
         IncludeDir["spdlog"],
+        IncludeDir["entt"],
         IncludeDir["vulkanMemoryAllocator"],
         "$(VULKAN_SDK)/Include"
     }

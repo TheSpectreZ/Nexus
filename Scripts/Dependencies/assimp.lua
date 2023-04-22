@@ -8,33 +8,34 @@ project "assimp"
 
     includedirs
 	{
-		(DepDir.."assimp"),
-		(DepDir.."assimp/include"),
-		(DepDir.."assimp/code"),
-		(DepDir.."assimp/contrib"),
-		(DepDir.."assimp/contrib/irrXML"),
-		(DepDir.."assimp/contrib/unzip"),
-		(DepDir.."assimp/contrib/pugixml/src"),
-		(DepDir.."assimp/contrib/rapidjson/include"),
-		(DepDir.."assimp/contrib/openddlparser/include"),
+		(DepDir.."Assimp"),
+		(DepDir.."Assimp/include"),
+		(DepDir.."Assimp/code"),
+		(DepDir.."Assimp/contrib"),
+		(DepDir.."Assimp/contrib/irrXML"),
+		(DepDir.."Assimp/contrib/unzip"),
+		(DepDir.."Assimp/contrib/zlib"),
+		(DepDir.."Assimp/contrib/pugixml/src"),
+		(DepDir.."Assimp/contrib/rapidjson/include"),
+		(DepDir.."Assimp/contrib/openddlparser/include"),
 	}
 
 	files
 	{
 		-- Dependencies
-		(DepDir.."assimp/contrib/unzip/**"),
-		(DepDir.."assimp/contrib/irrXML/**"),
-		(DepDir.."assimp/contrib/zlib/*"),
+		(DepDir.."Assimp/contrib/unzip/**"),
+		(DepDir.."Assimp/contrib/irrXML/**"),
+		(DepDir.."Assimp/contrib/zlib/*"),
 		
 		-- Common
-		(DepDir.."assimp/code/Common/**"),
-		(DepDir.."assimp/code/PostProcessing/**"),
-		(DepDir.."assimp/code/Material/**"),
-		(DepDir.."assimp/code/CApi/**"),
+		(DepDir.."Assimp/code/Common/**"),
+		(DepDir.."Assimp/code/PostProcessing/**"),
+		(DepDir.."Assimp/code/Material/**"),
+		(DepDir.."Assimp/code/CApi/**"),
 		
 		-- Importers
-		(DepDir.."assimp/code/AssetLib/Obj/**"),
-		(DepDir.."assimp/code/AssetLib/FBX/**"),
+		(DepDir.."Assimp/code/AssetLib/Obj/**"),
+		(DepDir.."Assimp/code/AssetLib/FBX/**"),
 	}
 
 	defines
