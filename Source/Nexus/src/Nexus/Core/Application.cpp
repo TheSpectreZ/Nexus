@@ -9,6 +9,8 @@
 
 #include "Assets/AssetManager.h"
 
+#include "Script/ScriptEngine.h"
+
 Nexus::Application* Nexus::Application::s_Instance = nullptr;
 
 static std::vector<Layer*> m_layerStack;
@@ -83,6 +85,8 @@ void Nexus::Application::Init()
 	}
 
 	AssetManager::Initialize();
+
+	ScriptEngine::Init();
 }
 
 
@@ -144,6 +148,7 @@ void Nexus::Application::Shut()
 {
 	AssetManager::Shutdown();
 
+	ScriptEngine::Shut();
 	Renderer::Shut();
 	
 	// Window Destruction
