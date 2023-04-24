@@ -34,6 +34,8 @@ namespace Nexus
 			NEXUS_ASSERT((index>=m_SwapchainImages.size()),"Swapchain Image View Index out of Bounds"); 
 			return m_SwapchainImages[index].view; 
 		}
+
+		VkCommandBuffer GetCurrentCommandBuffer() { return m_CurrentRenderCommandBuffer; }
 		
 		void Init() override;
 		void Shut() override;
