@@ -120,16 +120,13 @@ project "assimp"
 		systemversion "latest"
 
 	filter "configurations:Debug"
-        defines "DEBUG"
         optimize "Off"
         symbols "Full"
 
     filter "configurations:Release"
-        defines "RELEASE"
         optimize "Speed"
         symbols "FastLink"
 
     filter "configurations:Dist"
-        defines "DIST"
         optimize "Full"
         symbols "Off"
