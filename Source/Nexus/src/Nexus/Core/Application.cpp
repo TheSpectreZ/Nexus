@@ -120,16 +120,31 @@ void Nexus::Application::Run()
 			l->OnUpdate();
 		}
 		
-		// Swapchain Render Pass and Command Queue
+		// Swapchain-ImGui RenderPass and CommandQueue
 		{
 			Renderer::BeginRenderCommandQueue();
 
-			EditorContext::StartFrame();
+			{
+				Renderer::BeginSwapchainPass();
+				
+				for (auto& l : m_layerStack)
+					l->OnRender();
+			
+				Renderer::EndPass();
+			}
 
-			for (auto& l : m_layerStack)
-				l->OnRender();
+			{
+				Renderer::BeginImGuiPass();
 
-			EditorContext::Render();
+				EditorContext::StartFrame();
+				
+				for (auto& l : m_layerStack)
+					l->OnImGuiRender();
+				
+				EditorContext::Render();
+				
+				Renderer::EndPass();
+			}
 
 			Renderer::EndRenderCommandQueue();
 			Renderer::FlushRenderCommandQueue();

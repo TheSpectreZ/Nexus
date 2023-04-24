@@ -25,8 +25,8 @@ void Nexus::EditorContext::Initialize()
 	ImGui::StyleColorsDark();
 	
 	ImGuiIO& io = ImGui::GetIO();
-	//io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	//io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.ConfigViewportsNoAutoMerge = false;
 	io.ConfigViewportsNoTaskBarIcon = true;
 
@@ -37,8 +37,6 @@ void Nexus::EditorContext::Initialize()
 		style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 	}
 
-
-	
 	Window& window = Application::Get()->GetWindow();
 	ImGui_ImplGlfw_InitForVulkan(window.handle, true);
 
@@ -85,7 +83,7 @@ void Nexus::EditorContext::Initialize()
 	Info.MinImageCount = 2;
 	Info.DescriptorPool = s_Data->m_DescPool;
 
-	ImGui_ImplVulkan_Init(&Info, swapchain->GetRenderpass());
+	ImGui_ImplVulkan_Init(&Info, swapchain->GetImGuiRenderpass());
 
 	{
 		VkCommandPoolCreateInfo p{};

@@ -81,10 +81,6 @@ void EditorLayer::OnUpdate()
 
 void EditorLayer::OnRender()
 {
-	ImGui::Begin("Test");
-	ImGui::Text("Hellooo ImGui !");
-	ImGui::End();
-
 	Nexus::Command::BindPipeline(m_Pipeline);
 
 	Nexus::Command::SetViewport(m_viewport);
@@ -101,6 +97,13 @@ void EditorLayer::OnDetach()
 	m_Pipeline->~Pipeline();
 
 	NEXUS_LOG_DEBUG("Editor Layer Detached");
+}
+
+void EditorLayer::OnImGuiRender()
+{
+	ImGui::Begin("Test");
+	ImGui::Text("Hellooo ImGui !");
+	ImGui::End();
 }
 
 void EditorLayer::OnWindowResize(int width, int height)

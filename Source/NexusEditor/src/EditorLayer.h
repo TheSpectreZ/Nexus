@@ -8,7 +8,7 @@ public:
 	void OnUpdate() override;
 	void OnRender() override;
 	void OnDetach() override;
-
+	void OnImGuiRender() override;
 	void OnWindowResize(int width, int height) override;
 private:
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;

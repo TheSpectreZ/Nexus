@@ -256,7 +256,7 @@ Nexus::VulkanPipeline::VulkanPipeline(const PipelineCreateInfo& i)
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.pDepthStencilState = &depthStencilState;
     pipelineInfo.layout = shader->GetPipelineLayout();
-    pipelineInfo.renderPass = swapchain->GetRenderpass();
+    pipelineInfo.renderPass = swapchain->GetSwapchainRenderpass();
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
