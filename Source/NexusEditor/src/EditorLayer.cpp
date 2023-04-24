@@ -81,6 +81,10 @@ void EditorLayer::OnUpdate()
 
 void EditorLayer::OnRender()
 {
+	ImGui::Begin("Test");
+	ImGui::Text("Hellooo ImGui !");
+	ImGui::End();
+
 	Nexus::Command::BindPipeline(m_Pipeline);
 
 	Nexus::Command::SetViewport(m_viewport);
