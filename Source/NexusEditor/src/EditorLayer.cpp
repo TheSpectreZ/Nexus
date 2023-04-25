@@ -99,6 +99,13 @@ void EditorLayer::OnDetach()
 	NEXUS_LOG_DEBUG("Editor Layer Detached");
 }
 
+void EditorLayer::OnImGuiRender()
+{
+	ImGui::Begin("Test");
+	ImGui::Text("Hellooo ImGui !");
+	ImGui::End();
+}
+
 void EditorLayer::OnWindowResize(int width, int height)
 {
 	// Screen

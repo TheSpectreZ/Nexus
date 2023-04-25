@@ -41,17 +41,29 @@ void Nexus::Renderer::Shut()
 	s_Renderer->m_Context.reset();
 }
 
+void Nexus::Renderer::BeginSwapchainPass()
+{
+	s_Renderer->m_Swapchain->BeginSwapchainPass();
+}
+
+void Nexus::Renderer::BeginImGuiPass()
+{
+	s_Renderer->m_Swapchain->BeginImGuiPass();
+}
+
+void Nexus::Renderer::EndPass()
+{
+	s_Renderer->m_Swapchain->EndPass();
+}
+
 void Nexus::Renderer::BeginRenderCommandQueue()
 {
 	s_Renderer->m_RenderCommandQueue->Begin();
-	s_Renderer->m_Swapchain->BeginRenderPass();
-
 	Command::Update();
 }
 
 void Nexus::Renderer::EndRenderCommandQueue()
 {
-	s_Renderer->m_Swapchain->EndRenderPass();
 	s_Renderer->m_RenderCommandQueue->End();
 }
 

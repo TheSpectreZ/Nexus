@@ -25,3 +25,5 @@
 #include "Scene/Component.h"
 
 #include "Scene/Renderer/PhysicallyBased.h"
+
+#include "Editor/EditorContext.h"

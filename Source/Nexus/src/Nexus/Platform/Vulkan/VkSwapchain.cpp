@@ -23,6 +23,9 @@ Nexus::VulkanSwapchain::VulkanSwapchain()
 
 		m_SwapchainImageClearValues[0] = { {0.5f,0.8f,0.6f} };
 		m_SwapchainImageClearValues[1] = { {1.f,0.f} };
+
+		m_ImGuiImageClearValues.resize(1);
+		m_ImGuiImageClearValues[0] = { {0.5f,0.8f,0.6f} };
 	}
 
 	// Swapchain Format, Mode and Extent
@@ -82,7 +85,7 @@ Nexus::VulkanSwapchain::VulkanSwapchain()
 		colorAttachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		colorAttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		colorAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colorAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		colorAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 		auto& depthAttachmentDesc = Attachments.emplace_back();
 		depthAttachmentDesc.format = VulkanContext::Get()->GetPhysicalDeviceRef()->GetDepthFormat();
@@ -136,10 +139,63 @@ Nexus::VulkanSwapchain::VulkanSwapchain()
 		NEXUS_LOG_INFO("Vulkan Swapchain Renderpass Created");
 	}
 
+	{
+		std::vector<VkAttachmentDescription> Attachments;
+
+		auto& colorAttachmentDesc = Attachments.emplace_back();
+		colorAttachmentDesc.format = m_format.format;
+		colorAttachmentDesc.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		colorAttachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachmentDesc.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		colorAttachmentDesc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		VkAttachmentReference colorReference = {};
+		colorReference.attachment = 0;
+		colorReference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpassDescription = {};
+		subpassDescription.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpassDescription.colorAttachmentCount = 1;
+		subpassDescription.pColorAttachments = &colorReference;
+		subpassDescription.pDepthStencilAttachment = nullptr;
+		subpassDescription.inputAttachmentCount = 0;
+		subpassDescription.pInputAttachments = nullptr;
+		subpassDescription.preserveAttachmentCount = 0;
+		subpassDescription.pPreserveAttachments = nullptr;
+		subpassDescription.pResolveAttachments = nullptr;
+
+		VkSubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		VkRenderPassCreateInfo renderPassInfo = {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = (uint32_t)Attachments.size();
+		renderPassInfo.pAttachments = Attachments.data();
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subpassDescription;
+		renderPassInfo.dependencyCount = 1;
+		renderPassInfo.pDependencies = &dependency;
+
+		_VKR = vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_ImGuiRenderpass);
+		CHECK_HANDLE(m_ImGuiRenderpass, VkRenderPass);
+		NEXUS_LOG_INFO("Vulkan Swapchain Renderpass Created");
+	}
+
 }
 
 Nexus::VulkanSwapchain::~VulkanSwapchain()
 {
+	vkDestroyRenderPass(m_device, m_ImGuiRenderpass, nullptr);
+	NEXUS_LOG_TRACE("Vulkan ImGui Renderpass Destroyed");
+	
 	vkDestroyRenderPass(m_device, m_SwapchainRenderpass, nullptr);
 	NEXUS_LOG_TRACE("Vulkan Swapchain Renderpass Destroyed");
 }
@@ -282,7 +338,7 @@ void Nexus::VulkanSwapchain::Init()
 		std::array<VkImageView, 2> views{};
 		views[1] = m_DepthImage.view;
 
-		VkFramebufferCreateInfo Info{};
+		VkFramebufferCreateInfo Info{}, Info2{};
 		Info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		Info.pNext = nullptr;
 		Info.flags = 0;
@@ -293,14 +349,25 @@ void Nexus::VulkanSwapchain::Init()
 		Info.height = m_extent.height;
 		Info.renderPass = m_SwapchainRenderpass;
 
+		Info2 = Info;
+		Info2.renderPass = m_ImGuiRenderpass;
+		Info2.attachmentCount = 1;
+
 		m_SwapchainFramebuffers.resize(m_SwapchainImages.size());
+		m_ImGuiFramebuffers.resize(m_SwapchainImages.size());
+
 		for (size_t i = 0; i < m_SwapchainImages.size(); i++)
 		{
 			views[0] = m_SwapchainImages[i].view;
 			
 			_VKR = vkCreateFramebuffer(m_device, &Info, nullptr, &m_SwapchainFramebuffers[i]);
 			CHECK_LOG_VKR;
+			
+			Info2.pAttachments = &m_SwapchainImages[i].view;
+			_VKR = vkCreateFramebuffer(m_device, &Info2, nullptr, &m_ImGuiFramebuffers[i]);
+			CHECK_LOG_VKR;
 		}
+		NEXUS_LOG_INFO("Vulkan ImGui Framebuffers Created: {0} | Attachment Count: {1}", m_SwapchainImages.size(), views.size());
 		NEXUS_LOG_INFO("Vulkan Swapchain Framebuffers Created: {0} | Attachment Count: {1}", m_SwapchainImages.size(), views.size());
 	}
 
@@ -309,10 +376,12 @@ void Nexus::VulkanSwapchain::Init()
 void Nexus::VulkanSwapchain::Shut()
 {
 	// Swapchain Framebuffers
-	for (auto& f : m_SwapchainFramebuffers)
+	for (uint32_t i = 0; i < m_SwapchainFramebuffers.size(); i++)
 	{
-		vkDestroyFramebuffer(m_device, f, nullptr);
+		vkDestroyFramebuffer(m_device, m_ImGuiFramebuffers[i], nullptr);
+		vkDestroyFramebuffer(m_device, m_SwapchainFramebuffers[i], nullptr);
 	}
+	NEXUS_LOG_TRACE("Vulkan ImGui Framebuffers Destroyed: {0}",m_ImGuiFramebuffers.size());
 	NEXUS_LOG_TRACE("Vulkan Swapchain Framebuffers Destroyed: {0}",m_SwapchainFramebuffers.size());
 
 	// Depth Attachment
@@ -333,7 +402,7 @@ void Nexus::VulkanSwapchain::Shut()
 	NEXUS_LOG_INFO("Vulkan Swapchain Destroyed");
 }
 
-void Nexus::VulkanSwapchain::BeginRenderPass()
+void Nexus::VulkanSwapchain::BeginSwapchainPass()
 {
 	Ref<VulkanRenderCommandQueue> queue = DynamicPointerCast<VulkanRenderCommandQueue>(Renderer::GetRenderCommandQueue());
 	
@@ -353,7 +422,22 @@ void Nexus::VulkanSwapchain::BeginRenderPass()
 	vkCmdBeginRenderPass(m_CurrentRenderCommandBuffer, &Info, VK_SUBPASS_CONTENTS_INLINE);
 }
 
-void Nexus::VulkanSwapchain::EndRenderPass()
+void Nexus::VulkanSwapchain::BeginImGuiPass()
+{	
+	VkRenderPassBeginInfo Info{};
+	Info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	Info.pNext = nullptr;
+	Info.renderPass = m_ImGuiRenderpass;
+	Info.framebuffer = m_ImGuiFramebuffers[m_CurrentFrame];
+	Info.renderArea.offset = { 0,0 };
+	Info.renderArea.extent = m_extent;
+	Info.clearValueCount = (uint32_t)m_ImGuiImageClearValues.size();
+	Info.pClearValues = m_ImGuiImageClearValues.data();
+
+	vkCmdBeginRenderPass(m_CurrentRenderCommandBuffer, &Info, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Nexus::VulkanSwapchain::EndPass()
 {
 	vkCmdEndRenderPass(m_CurrentRenderCommandBuffer);
 }

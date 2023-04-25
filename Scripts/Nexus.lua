@@ -29,6 +29,7 @@ project "Nexus"
         IncludeDir["entt"],
         IncludeDir["yamlcpp"],
         IncludeDir["assimp"],
+        IncludeDir["imgui"],
         IncludeDir["vulkanMemoryAllocator"],
         IncludeDir["mono"],
 
@@ -41,6 +42,7 @@ project "Nexus"
         "spdlog",
         "yamlcpp",
         "assimp",
+        "imgui",
         "vulkan-1.lib",
         "libmono-static-sgen.lib"
     }

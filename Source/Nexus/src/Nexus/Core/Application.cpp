@@ -9,6 +9,7 @@
 
 #include "Assets/AssetManager.h"
 
+#include "Editor/EditorContext.h"
 #include "Script/ScriptEngine.h"
 
 Nexus::Application* Nexus::Application::s_Instance = nullptr;
@@ -84,6 +85,7 @@ void Nexus::Application::Init()
 		Renderer::ResizeCallback = NEXUS_BIND_EVENT_FN(Application::ResizeCallback);
 	}
 
+	EditorContext::Initialize();
 	AssetManager::Initialize();
 
 	ScriptEngine::Init();
@@ -121,12 +123,31 @@ void Nexus::Application::Run()
 			l->OnUpdate();
 		}
 		
-		// Swapchain Render Pass and Command Queue
+		// Swapchain-ImGui RenderPass and CommandQueue
 		{
 			Renderer::BeginRenderCommandQueue();
 
-			for (auto& l : m_layerStack)
-				l->OnRender();
+			{
+				Renderer::BeginSwapchainPass();
+				
+				for (auto& l : m_layerStack)
+					l->OnRender();
+			
+				Renderer::EndPass();
+			}
+
+			{
+				Renderer::BeginImGuiPass();
+
+				EditorContext::StartFrame();
+				
+				for (auto& l : m_layerStack)
+					l->OnImGuiRender();
+				
+				EditorContext::Render();
+				
+				Renderer::EndPass();
+			}
 
 			Renderer::EndRenderCommandQueue();
 			Renderer::FlushRenderCommandQueue();
@@ -148,7 +169,9 @@ void Nexus::Application::Shut()
 {
 	AssetManager::Shutdown();
 
+	EditorContext::Shutdown();
 	ScriptEngine::Shut();
+
 	Renderer::Shut();
 	
 	// Window Destruction
