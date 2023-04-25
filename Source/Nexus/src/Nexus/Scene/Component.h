@@ -52,5 +52,16 @@ namespace Nexus
 
 			AssetHandle handle;
 		};
+
+		struct Script
+		{
+			Script() = default;
+			Script(const Script&) = default;
+			Script(std::string Name)
+				:name(Name)
+			{}
+			
+			std::string name;
+		};
 	}
 }
