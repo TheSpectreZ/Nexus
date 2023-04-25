@@ -23,7 +23,8 @@
 #include "Scene/Entity.h"
 #include "Scene/Scene.h"
 #include "Scene/Component.h"
-
 #include "Scene/Renderer/PhysicallyBased.h"
+
+#include "Script/ScriptEngine.h"
 
 #include "Editor/EditorContext.h"
