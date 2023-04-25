@@ -14,7 +14,7 @@
 
 Nexus::Application* Nexus::Application::s_Instance = nullptr;
 
-static std::vector<Layer*> m_layerStack;
+static std::vector<Nexus::Layer*> m_layerStack;
 
 Nexus::Application::Application()
 {
@@ -113,14 +113,14 @@ void Nexus::Application::Run()
 			static float ct, lt;
 			
 			ct = (float)glfwGetTime();
-			m_TimeStep = Timestep(lt - ct);
+			m_TimeStep = Timestep(ct - lt);
 			lt = ct;
 		}
 
 		// Update
 		for (auto& l : m_layerStack)
 		{
-			l->OnUpdate();
+			l->OnUpdate(m_TimeStep);
 		}
 		
 		// Swapchain-ImGui RenderPass and CommandQueue
