@@ -10,6 +10,7 @@
 #include "Assets/AssetManager.h"
 
 #include "Editor/EditorContext.h"
+#include "Script/ScriptEngine.h"
 
 Nexus::Application* Nexus::Application::s_Instance = nullptr;
 
@@ -86,6 +87,8 @@ void Nexus::Application::Init()
 
 	EditorContext::Initialize();
 	AssetManager::Initialize();
+
+	ScriptEngine::Init();
 }
 
 
@@ -165,7 +168,10 @@ void Nexus::Application::Run()
 void Nexus::Application::Shut()
 {
 	AssetManager::Shutdown();
+
 	EditorContext::Shutdown();
+	ScriptEngine::Shut();
+
 	Renderer::Shut();
 	
 	// Window Destruction
