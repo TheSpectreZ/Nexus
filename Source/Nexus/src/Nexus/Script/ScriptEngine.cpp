@@ -110,6 +110,11 @@ void Nexus::ScriptEngine::Shut()
     ShutdownMono();
 }
 
+static void TestInternalCall()
+{
+    std::cout << "Internal Call from C++\n";
+}
+
 void Nexus::ScriptEngine::InitMono()
 {
 	mono_set_assemblies_path("mono/lib");
@@ -121,6 +126,8 @@ void Nexus::ScriptEngine::InitMono()
 	char friendlyName[] = "NexusAppDomain";
 	s_ScriptEngineData.appDomain = mono_domain_create_appdomain(friendlyName, nullptr);
     mono_domain_set(s_ScriptEngineData.appDomain, true);
+
+    mono_add_internal_call("Nexus.Main::TestInternalCall", TestInternalCall);
 
     s_ScriptEngineData.coreAssembly = LoadCSharpAssembly("Resources/Scripts/NexusScriptCore.dll");
     PrintAssemblyTypes(s_ScriptEngineData.coreAssembly);

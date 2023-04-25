@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 
 namespace Nexus
 {
@@ -9,6 +10,7 @@ namespace Nexus
         public Main()
         {
             Console.WriteLine("Main Construtor");
+            TestInternalCall();
         }
 
         ~Main()
@@ -30,5 +32,8 @@ namespace Nexus
         {
             Console.WriteLine($"C# says: {message}");
         }
+
+        [MethodImplAttribute(MethodImplOptions.InternalCall)]
+        extern static void TestInternalCall();
     }
 }
