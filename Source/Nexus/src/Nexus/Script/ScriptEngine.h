@@ -1,4 +1,5 @@
 #pragma once
+#include "Scene/Scene.h"
 
 extern "C" {
 	typedef struct _MonoDomain MonoDomain;
@@ -11,31 +12,6 @@ extern "C" {
 
 namespace Nexus
 {
-	class ScriptEngine
-	{
-		friend class ScriptInstance;
-		static ScriptEngine* s_Instance;
-	public:
-		static void Init();
-		static void Shut();
-	private:
-		void InitMono();
-		void ShutdownMono();
-		
-		char* ReadBytes(const std::string& filepath, uint32_t* outSize);
-		void PrintAssemblyTypes(MonoAssembly* assembly,const char* name);
-		MonoAssembly* LoadAssembly(const std::string& assemblyPath);
-
-		void LoadCoreAssemblyClasses();
-	private:
-		MonoDomain* m_RootDomain;
-		MonoDomain* m_AppDomain;
-		MonoAssembly* m_CoreAssembly;
-		MonoImage* m_CoreAssemblyImage;
-
-		std::unordered_map<std::string, MonoClass*> m_EntityClasses;
-	};
-
 	class ScriptInstance
 	{
 	public:
@@ -53,4 +29,35 @@ namespace Nexus
 		MonoMethod* m_OnUpdate;
 		MonoMethod* m_OnDestroy;
 	};
+
+	class ScriptEngine
+	{
+		friend class ScriptInstance;
+		static ScriptEngine* s_Instance;
+	public:
+		static void Init();
+		static void Shut();
+
+		static void OnSceneStart(Ref<Scene> scene);
+		static void OnSceneUpdate(float ts);
+		static void OnSceneStop();
+	private:
+		void InitMono();
+		void ShutdownMono();
+		
+		char* ReadBytes(const std::string& filepath, uint32_t* outSize);
+		void PrintAssemblyTypes(MonoAssembly* assembly,const char* name);
+		MonoAssembly* LoadAssembly(const std::string& assemblyPath);
+
+		void LoadCoreAssemblyClasses();
+	private:
+		MonoDomain* m_RootDomain;
+		MonoDomain* m_AppDomain;
+		MonoAssembly* m_CoreAssembly;
+		MonoImage* m_CoreAssemblyImage;
+
+		std::unordered_map<std::string, MonoClass*> m_EntityClasses;
+		std::unordered_map<uint64_t, ScriptInstance> m_EntityScriptInstances;
+	};
+
 }

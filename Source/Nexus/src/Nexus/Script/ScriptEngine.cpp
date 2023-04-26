@@ -5,6 +5,8 @@
 #include "mono/metadata/assembly.h"
 #include "mono/metadata/object.h"
 
+#include "Scene/Entity.h"
+
 Nexus::ScriptEngine* Nexus::ScriptEngine::s_Instance = nullptr;
 
 void Nexus::ScriptEngine::Init()
@@ -17,6 +19,38 @@ void Nexus::ScriptEngine::Shut()
 {
     s_Instance->ShutdownMono();
     delete s_Instance;
+}
+
+void Nexus::ScriptEngine::OnSceneStart(Ref<Scene> scene)
+{
+    Nexus::Entity entity;
+    auto view = scene->m_registry.view<Nexus::Component::Script>();
+    for (auto& e : view)
+    {
+        entity = Nexus::Entity(e, scene.get());
+        auto& id = entity.GetComponent<Nexus::Component::Identity>().uuid;
+        auto& Script = entity.GetComponent<Nexus::Component::Script>();
+
+        s_Instance->m_EntityScriptInstances[id] = Nexus::ScriptInstance(Script.name);
+        s_Instance->m_EntityScriptInstances[id].InVokeOnCreate();
+    }
+}
+
+void Nexus::ScriptEngine::OnSceneUpdate(float ts)
+{
+    for (auto& [k, v] : s_Instance->m_EntityScriptInstances)
+    {
+        v.InVokeOnUpdate(ts);
+    }
+}
+
+void Nexus::ScriptEngine::OnSceneStop()
+{
+    for (auto& [k, v] : s_Instance->m_EntityScriptInstances)
+    {
+        v.InVokeOnDestroy();
+    }
+    s_Instance->m_EntityScriptInstances.clear();
 }
 
 void Nexus::ScriptEngine::InitMono()
