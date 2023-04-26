@@ -12,6 +12,7 @@ namespace Nexus
 		friend class Entity;
 		friend class SceneBuildData;
 		friend class SceneRenderer;
+		friend class ScriptEngine;
 	public:
 		static Ref<Scene> Create();
 		void Clear();
