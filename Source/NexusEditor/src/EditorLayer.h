@@ -12,8 +12,7 @@ public:
 	void OnWindowResize(int width, int height) override;
 private:
 	bool m_IsScenePlaying;
-	std::unordered_map<std::string, Nexus::ScriptInstance> m_ScriptInstance;
-
+	
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
 	Nexus::Ref<Nexus::Scene> m_Scene;
 	Nexus::Ref<Nexus::SceneBuildData> m_SceneData;

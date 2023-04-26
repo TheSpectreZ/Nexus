@@ -85,10 +85,7 @@ void EditorLayer::OnUpdate(Nexus::Timestep ts)
 
 	if (m_IsScenePlaying)
 	{
-		for (auto& [k, v] : m_ScriptInstance)
-		{
-			v.InVokeOnUpdate(ts.GetSeconds());
-		}
+		Nexus::ScriptEngine::OnSceneStart(m_Scene);
 	}
 }
 
@@ -120,29 +117,13 @@ void EditorLayer::OnImGuiRender()
 	if (ImGui::Button("Start Scene"))
 	{
 		m_IsScenePlaying = true;
-
-		Nexus::Entity entity;
-		auto view = m_Scene->getRegistry().view<Nexus::Component::Script>();
-		for (auto& e : view)
-		{
-			entity = Nexus::Entity(e, m_Scene.get());
-			auto& Script = entity.GetComponent<Nexus::Component::Script>();
-
-			m_ScriptInstance[Script.name] = Nexus::ScriptInstance(Script.name);
-			m_ScriptInstance[Script.name].InVokeOnCreate();
-		}
+		Nexus::ScriptEngine::OnSceneStart(m_Scene);
 	}
 
 	if (ImGui::Button("End Scene") && m_IsScenePlaying)
 	{
 		m_IsScenePlaying = false;
-
-		for (auto& [k, v] : m_ScriptInstance)
-		{
-			v.InVokeOnDestroy();
-		}
-		
-		m_ScriptInstance.clear();
+		Nexus::ScriptEngine::OnSceneStop();
 	}
 
 	ImGui::End();
