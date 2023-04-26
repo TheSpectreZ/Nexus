@@ -26,4 +26,6 @@
 #include "Scene/SceneBuilder.h"
 #include "Scene/SceneRenderer.h"
 
+#include "Script/ScriptEngine.h"
+
 #include "Editor/EditorContext.h"

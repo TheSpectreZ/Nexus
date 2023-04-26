@@ -31,6 +31,7 @@ project "Nexus"
         IncludeDir["assimp"],
         IncludeDir["imgui"],
         IncludeDir["vulkanMemoryAllocator"],
+        IncludeDir["mono"],
 
         "$(VULKAN_SDK)/Include",
     }
@@ -43,6 +44,7 @@ project "Nexus"
         "assimp",
         "imgui",
         "vulkan-1.lib",
+        "libmono-static-sgen.lib"
     }
 
     libdirs
@@ -63,6 +65,13 @@ project "Nexus"
 
     filter "system:windows"
 		systemversion "latest"
+        links
+        {
+            "Ws2_32.lib",
+            "Winmm.lib",
+            "Version.lib",
+            "Bcrypt.lib",
+        }
 
 	filter "configurations:Debug"
         defines "NEXUS_DEBUG"
@@ -73,6 +82,10 @@ project "Nexus"
             "shaderc_combinedd.lib",
             "spirv-cross-glsld.lib",
             "spirv-cross-cored.lib",
+        }
+        libdirs
+        {
+            (VenDir.."Mono/lib/debug"),
         }
 
     filter "configurations:Release"
@@ -85,6 +98,10 @@ project "Nexus"
             "spirv-cross-glsl.lib",
             "spirv-cross-core.lib",
         }
+        libdirs
+        {
+            (VenDir.."Mono/lib/release"),
+        }
 
     filter "configurations:Dist"
         defines "NEXUS_DIST"
@@ -95,4 +112,8 @@ project "Nexus"
             "shaderc_combined.lib",
             "spirv-cross-glsl.lib",
             "spirv-cross-core.lib",
+        }
+        libdirs
+        {
+            (VenDir.."Mono/lib/release"),
         }

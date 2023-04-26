@@ -66,8 +66,10 @@ void EditorLayer::OnAttach()
 		Nexus::AssetHandle handle = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("res/Meshes/Suzane.fbx");
 
 		m_Scene = Nexus::Scene::Create();
+		
 		Nexus::Entity entity = m_Scene->CreateEntity();
 		entity.AddComponent<Nexus::Component::Mesh>(handle);
+		entity.AddComponent<Nexus::Component::Script>("Sandbox.Player");
 
 		m_SceneData = Nexus::SceneBuildData::Build(m_Scene, simpleShader);
 		
@@ -75,11 +77,19 @@ void EditorLayer::OnAttach()
 	}
 }
 
-void EditorLayer::OnUpdate()
+void EditorLayer::OnUpdate(Nexus::Timestep ts)
 {
 	m_cameraController.Move();
 	
 	m_SceneData->Update(m_Scene, m_camera);
+
+	if (m_IsScenePlaying)
+	{
+		for (auto& [k, v] : m_ScriptInstance)
+		{
+			v.InVokeOnUpdate(ts.GetSeconds());
+		}
+	}
 }
 
 void EditorLayer::OnRender()
@@ -104,8 +114,37 @@ void EditorLayer::OnDetach()
 
 void EditorLayer::OnImGuiRender()
 {
-	ImGui::Begin("Test");
-	ImGui::Text("Hellooo ImGui !");
+	ImGui::Begin("Script");
+	ImGui::Text("Hellooo Scripting !");
+
+	if (ImGui::Button("Start Scene"))
+	{
+		m_IsScenePlaying = true;
+
+		Nexus::Entity entity;
+		auto view = m_Scene->getRegistry().view<Nexus::Component::Script>();
+		for (auto& e : view)
+		{
+			entity = Nexus::Entity(e, m_Scene.get());
+			auto& Script = entity.GetComponent<Nexus::Component::Script>();
+
+			m_ScriptInstance[Script.name] = Nexus::ScriptInstance(Script.name);
+			m_ScriptInstance[Script.name].InVokeOnCreate();
+		}
+	}
+
+	if (ImGui::Button("End Scene") && m_IsScenePlaying)
+	{
+		m_IsScenePlaying = false;
+
+		for (auto& [k, v] : m_ScriptInstance)
+		{
+			v.InVokeOnDestroy();
+		}
+		
+		m_ScriptInstance.clear();
+	}
+
 	ImGui::End();
 }
 
