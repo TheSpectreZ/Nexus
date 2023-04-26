@@ -81,7 +81,7 @@ void Nexus::Application::Init()
 			specs.api = RenderAPIType::VULKAN;
 		
 		Renderer::Init(specs);
-		Renderer::ResizeCallback = NEXUS_BIND_EVENT_FN(Application::ResizeCallback);
+		Renderer::ResizeCallback = NEXUS_BIND_FN(Application::ResizeCallback,this);
 	}
 
 	EditorContext::Initialize();
