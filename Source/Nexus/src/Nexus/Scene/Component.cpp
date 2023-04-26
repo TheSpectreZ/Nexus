@@ -6,12 +6,12 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include <random>
 
+#pragma region MathUtils
 
 glm::vec3 Scale(const glm::vec3& v, float desiredLength)
 {
 	return v * desiredLength / glm::length(v);
 }
-
 bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm::quat& rotation, glm::vec3& scale)
 {
 	using namespace glm;
@@ -177,6 +177,9 @@ bool DecomposeTransform(const glm::mat4& transform, glm::vec3& translation, glm:
 	return true;
 }
 
+#pragma endregion
+
+#pragma region UUID
 namespace Nexus
 {
 	static std::random_device s_RandomDevice;
@@ -184,21 +187,50 @@ namespace Nexus
 	static std::uniform_int_distribution<uint64_t> s_UniformDistribution;
 }
 
-Nexus::UUID Nexus::GetUUID()
+Nexus::UUID Nexus::CreateUUID()
 {
 	return s_UniformDistribution(eng);
 }
+#pragma endregion
 
+#pragma region Tag
+
+Nexus::Component::Tag::Tag(const std::string& Name)
+	:name(Name)
+{}
+
+#pragma endregion
+
+#pragma region Identity
+
+Nexus::Component::Identity::Identity()
+{
+	uuid = CreateUUID();
+}
+
+#pragma endregion
+
+#pragma region Transform
 
 Nexus::Component::Transform::Transform(glm::vec3 translation)
-	:Translation(translation), Rotation(glm::vec3(0.f)), Scale(glm::vec3(1.f))
-{}
+	:Translation(translation), Scale(glm::vec3(1.f))
+{
+	SetRotationEuler(glm::vec3(0.f));
+}
 
 glm::mat4 Nexus::Component::Transform::GetTransform() const
 {
-	return glm::translate(glm::mat4(1.0f), Translation)
-		* glm::toMat4(Rotation)
-		* glm::scale(glm::mat4(1.0f), Scale);
+	return glm::translate(glm::mat4(1.0f), Translation) * glm::toMat4(Rotation) * glm::scale(glm::mat4(1.0f), Scale);
+}
+
+glm::vec3 Nexus::Component::Transform::GetRotationEuler() const
+{
+	return RotationEuler;
+}
+
+glm::quat Nexus::Component::Transform::GetRotation() const
+{
+	return Rotation;
 }
 
 void Nexus::Component::Transform::SetTransform(const glm::mat4& transform)
@@ -207,20 +239,10 @@ void Nexus::Component::Transform::SetTransform(const glm::mat4& transform)
 	RotationEuler = glm::eulerAngles(Rotation);
 }
 
-glm::vec3 Nexus::Component::Transform::GetRotationEuler() const
-{
-	return RotationEuler;
-}
-
 void Nexus::Component::Transform::SetRotationEuler(const glm::vec3& euler)
 {
 	RotationEuler = euler;
 	Rotation = glm::quat(RotationEuler);
-}
-
-glm::quat Nexus::Component::Transform::GetRotation() const
-{
-	return Rotation;
 }
 
 void Nexus::Component::Transform::SetRotation(const glm::quat& quat)
@@ -229,12 +251,14 @@ void Nexus::Component::Transform::SetRotation(const glm::quat& quat)
 	RotationEuler = glm::eulerAngles(Rotation);
 }
 
-Nexus::Component::Mesh::Mesh(AssetHandle assetHandle)
-	:handle(assetHandle)
-{}
+#pragma endregion
 
-Nexus::Component::Identity::Identity()
+#pragma region Mesh
+
+Nexus::Component::Mesh::Mesh(AssetHandle assetHandle)
 {
-	ShaderResourceHandle = GetUUID();
-	TransformUniformHandle = GetUUID();
+	handle = assetHandle;
 }
+
+#pragma endregion
+

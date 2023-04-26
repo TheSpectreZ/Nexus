@@ -61,7 +61,7 @@ void EditorLayer::OnAttach()
 		m_cameraController.SetPerspectiveProjection(45.f, (float)extent.width,(float)extent.height, 0.1f, 1000.f);
 	}
 
-	// Assets
+	// Scene
 	{
 		Nexus::AssetHandle handle = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("res/Meshes/Suzane.fbx");
 
@@ -71,14 +71,17 @@ void EditorLayer::OnAttach()
 		entity.AddComponent<Nexus::Component::Mesh>(handle);
 		entity.AddComponent<Nexus::Component::Script>("Sandbox.Player");
 
-		m_PBRsceneRenderer.Initialize(simpleShader, m_Scene, &m_camera);
+		m_SceneData = Nexus::SceneBuildData::Build(m_Scene, simpleShader);
+		
+		m_SceneRenderer.SetContext(m_Scene, m_SceneData);
 	}
-
 }
 
 void EditorLayer::OnUpdate(Nexus::Timestep ts)
 {
 	m_cameraController.Move();
+	
+	m_SceneData->Update(m_Scene, m_camera);
 
 	if (m_IsScenePlaying)
 	{
@@ -96,13 +99,13 @@ void EditorLayer::OnRender()
 	Nexus::Command::SetViewport(m_viewport);
 	Nexus::Command::SetScissor(m_scissor);
 
-	m_PBRsceneRenderer.Render();
+	m_SceneRenderer.Render();
 }
 
 void EditorLayer::OnDetach()
 {
-	m_PBRsceneRenderer.Terminate();
-	m_Scene->clear();
+	m_SceneData->Destroy();
+	m_Scene->Clear();
 
 	m_Pipeline->~Pipeline();
 

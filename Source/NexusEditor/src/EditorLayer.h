@@ -16,8 +16,9 @@ private:
 
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
 	Nexus::Ref<Nexus::Scene> m_Scene;
+	Nexus::Ref<Nexus::SceneBuildData> m_SceneData;
 	
-	Nexus::SceneRenderer::PhysicallyBased m_PBRsceneRenderer;
+	Nexus::SceneRenderer m_SceneRenderer;
 
 	Nexus::Viewport m_viewport;
 	Nexus::Scissor m_scissor;
