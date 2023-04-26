@@ -27,3 +27,4 @@
 #include "Scene/SceneRenderer.h"
 
 #include "Editor/EditorContext.h"
+#include "Editor/SceneHeirarchy.h"
