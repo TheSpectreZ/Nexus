@@ -33,14 +33,14 @@ namespace Nexus
 		VulkanShader(SpirV& vertexData, SpirV& fragmentData, const char* Filepath);
 		void Destroy() override;
 
-		void AllocateShaderResourceHeap(uint64_t hashId, uint32_t set) override;
-		void DeallocateShaderResourceHeap(uint64_t hashId, uint32_t set) override;
-		void BindShaderResourceHeap(uint64_t hashId, uint32_t set) override;
+		void AllocateShaderResourceHeap(ResourceHeapHandle handle) override;
+		void DeallocateShaderResourceHeap(ResourceHeapHandle handle) override;
+		void BindShaderResourceHeap(ResourceHeapHandle handle) override;
 
-		void AllocateUniformBuffer(uint64_t hashId, uint32_t set, uint32_t binding) override;
-		void DeallocateUniformBuffer(uint64_t hashId) override;
-		void BindUniformWithResourceHeap(uint64_t uniformId, uint64_t heapId, uint32_t set, uint32_t binding) override;
-		void SetUniformData(uint64_t uniformId, void* data) override;
+		void AllocateUniformBuffer(UniformBufferHandle handle) override;
+		void DeallocateUniformBuffer(UniformBufferHandle handle) override;
+		void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, UniformBufferHandle bufferHandle) override;
+		void SetUniformData(UniformBufferHandle handle, void* data) override;
 
 		VkShaderModule GetModule(VkShaderStageFlagBits flag);
 		VkPipelineLayout GetPipelineLayout() { return m_Layout; }

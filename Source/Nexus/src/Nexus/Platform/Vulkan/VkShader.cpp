@@ -161,49 +161,49 @@ void Nexus::VulkanShader::Destroy()
 	NEXUS_LOG_WARN("Vulkan Shader Destroyed");
 }
 
-void Nexus::VulkanShader::AllocateShaderResourceHeap(uint64_t hashId, uint32_t set)
+void Nexus::VulkanShader::AllocateShaderResourceHeap(ResourceHeapHandle handle)
 {
-	if (!m_SetResource[set].GarbageHeaps.empty())
+	if (!m_SetResource[handle.set].GarbageHeaps.empty())
 	{
 		uint64_t id = 0;
-		for (auto& i : m_SetResource[set].GarbageHeaps)
+		for (auto& i : m_SetResource[handle.set].GarbageHeaps)
 		{
 			id = i.first;
 			break;
 		}
-		m_SetResource[set].GarbageHeaps.erase(id);
+		m_SetResource[handle.set].GarbageHeaps.erase(id);
 
-		auto nh = m_SetResource[set].Heaps.extract(id);
-		nh.key() = hashId;
-		m_SetResource[set].Heaps.insert(std::move(nh));	
+		auto nh = m_SetResource[handle.set].Heaps.extract(id);
+		nh.key() = handle.hashId;
+		m_SetResource[handle.set].Heaps.insert(std::move(nh));	
 
 		return;
 	}
 
-	VkDescriptorSet& Heap = m_SetResource[set].Heaps[hashId].Get();
+	VkDescriptorSet& Heap = m_SetResource[handle.set].Heaps[handle.hashId].Get();
 
 	VkDescriptorSetAllocateInfo Info{};
 	Info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 	Info.pNext = nullptr;
 	Info.descriptorSetCount = 1;
-	Info.pSetLayouts = &m_SetResource[set].HeapLayout->Get();
+	Info.pSetLayouts = &m_SetResource[handle.set].HeapLayout->Get();
 
 	bool allocSuccess = false;
 	
 	do
 	{
-		Info.descriptorPool = m_SetResource[set].HeapPools.back()->Get();
+		Info.descriptorPool = m_SetResource[handle.set].HeapPools.back()->Get();
 		_VKR = vkAllocateDescriptorSets(VulkanContext::Get()->GetDeviceRef()->Get(), &Info, &Heap);
 
 		if (_VKR == VK_SUCCESS)
 		{
 			allocSuccess = true;
-			NEXUS_LOG_TRACE("Vulkan Shader Resource Heap Allocated: {0},{1}", set, hashId);
+			NEXUS_LOG_TRACE("Vulkan Shader Resource Heap Allocated: {0},{1}", handle.set, handle.hashId);
 		}
 		else if (_VKR == VK_ERROR_OUT_OF_POOL_MEMORY)
 		{
-			auto& pool = m_SetResource[set].HeapPools.emplace_back();
-			pool = CreateRef<VulkanShaderResourcePool>(m_SetResource[set].HeapLayout, maxHeapCountPerPool);
+			auto& pool = m_SetResource[handle.set].HeapPools.emplace_back();
+			pool = CreateRef<VulkanShaderResourcePool>(m_SetResource[handle.set].HeapLayout, maxHeapCountPerPool);
 		}
 		else
 		{
@@ -213,49 +213,49 @@ void Nexus::VulkanShader::AllocateShaderResourceHeap(uint64_t hashId, uint32_t s
 	} while (!allocSuccess);
 }
 
-void Nexus::VulkanShader::DeallocateShaderResourceHeap(uint64_t hashId, uint32_t set)
+void Nexus::VulkanShader::DeallocateShaderResourceHeap(ResourceHeapHandle handle)
 {
-	if (!m_SetResource.contains(set))
+	if (!m_SetResource.contains(handle.set))
 		return;
 
-	if (m_SetResource[set].GarbageHeaps.contains(hashId)) // Try Checking HashValue
+	if (m_SetResource[handle.set].GarbageHeaps.contains(handle.hashId)) // Try Checking HashValue
 		return;
 
-	m_SetResource[set].GarbageHeaps[hashId] = true;
-	NEXUS_LOG_TRACE("Vulkan Shader Resource Heap Deallocated: {0},{1}", set, hashId);
+	m_SetResource[handle.set].GarbageHeaps[handle.hashId] = true;
+	NEXUS_LOG_TRACE("Vulkan Shader Resource Heap Deallocated: {0},{1}", handle.set, handle.hashId);
 }
 
-void Nexus::VulkanShader::BindShaderResourceHeap(uint64_t hashId, uint32_t set)
+void Nexus::VulkanShader::BindShaderResourceHeap(ResourceHeapHandle handle)
 {
 	Ref<VulkanCommand> cmd = DynamicPointerCast<VulkanCommand>(Command::GetRef());
 
-	VkDescriptorSet& Set = m_SetResource[set].Heaps[hashId].Get();
-	vkCmdBindDescriptorSets(cmd->m_RenderCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Layout, set, 1, &Set, 0, nullptr);
+	VkDescriptorSet& Set = m_SetResource[handle.set].Heaps[handle.hashId].Get();
+	vkCmdBindDescriptorSets(cmd->m_RenderCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Layout, handle.set, 1, &Set, 0, nullptr);
 }
 
-void Nexus::VulkanShader::AllocateUniformBuffer(uint64_t hashId, uint32_t set, uint32_t binding)
+void Nexus::VulkanShader::AllocateUniformBuffer(UniformBufferHandle handle)
 {
 	uint32_t size = 0;
-	for (auto& b : m_ReflectionData.bindings[set])
+	for (auto& b : m_ReflectionData.bindings[handle.set])
 	{
-		if (b.bindPoint == binding)
+		if (b.bindPoint == handle.binding)
 		{
 			size = b.bufferSize;
 		}
 	}
 
 	NEXUS_ASSERT((size == 0), "Uniform Buffer to be allocated has Size Zero");
-	ShaderLib::s_Instance->m_ResourcePool.AllocateUniformBuffer(hashId, size);
+	ShaderLib::s_Instance->m_ResourcePool.AllocateUniformBuffer(handle.hashId, size);
 }
 
-void Nexus::VulkanShader::DeallocateUniformBuffer(uint64_t hashId)
+void Nexus::VulkanShader::DeallocateUniformBuffer(UniformBufferHandle handle)
 {
-	ShaderLib::s_Instance->m_ResourcePool.DeallocateUniformBuffer(hashId);
+	ShaderLib::s_Instance->m_ResourcePool.DeallocateUniformBuffer(handle.hashId);
 }
 
-void Nexus::VulkanShader::BindUniformWithResourceHeap(uint64_t uniformId, uint64_t heapId, uint32_t set, uint32_t binding)
+void Nexus::VulkanShader::BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, UniformBufferHandle bufferhandle)
 {
-	Ref<VulkanUniformBuffer> Uniform = DynamicPointerCast<VulkanUniformBuffer>(ShaderLib::s_Instance->m_ResourcePool.GetUniformBuffer(uniformId));
+	Ref<VulkanUniformBuffer> Uniform = DynamicPointerCast<VulkanUniformBuffer>(ShaderLib::s_Instance->m_ResourcePool.GetUniformBuffer(bufferhandle.hashId));
 
 	VkDescriptorBufferInfo Info{};
 	Info.buffer = Uniform->Get();
@@ -268,7 +268,7 @@ void Nexus::VulkanShader::BindUniformWithResourceHeap(uint64_t uniformId, uint64
 	write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 	write.descriptorCount = 1;
 	write.dstArrayElement = 0;
-	write.dstSet = m_SetResource[set].Heaps[heapId].Get();
+	write.dstSet = m_SetResource[heapHandle.set].Heaps[heapHandle.hashId].Get();
 	write.pBufferInfo = &Info;
 	write.pImageInfo = nullptr;
 	write.pTexelBufferView = nullptr;
@@ -276,12 +276,12 @@ void Nexus::VulkanShader::BindUniformWithResourceHeap(uint64_t uniformId, uint64
 	// Optimize this to Do Together for every entity
 	vkUpdateDescriptorSets(VulkanContext::Get()->GetDeviceRef()->Get(), 1, &write, 0, nullptr);
 
-	NEXUS_LOG_TRACE("Vulkan Uniform Buffer Binded With Resource Heap: {0}|{1} : {2}", set, binding, Info.range);
+	NEXUS_LOG_TRACE("Vulkan Uniform Buffer Binded With Resource Heap: {0}|{1} : {2}", heapHandle.set, bufferhandle.binding, Info.range);
 }
 
-void Nexus::VulkanShader::SetUniformData(uint64_t uniformId, void* data)
+void Nexus::VulkanShader::SetUniformData(UniformBufferHandle handle, void* data)
 {
-	ShaderLib::s_Instance->m_ResourcePool.GetUniformBuffer(uniformId)->Update(data);
+	ShaderLib::s_Instance->m_ResourcePool.GetUniformBuffer(handle.hashId)->Update(data);
 }
 
 VkShaderModule Nexus::VulkanShader::GetModule(VkShaderStageFlagBits flag)
