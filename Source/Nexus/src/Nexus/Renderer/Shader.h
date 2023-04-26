@@ -9,6 +9,19 @@ typedef std::vector<uint32_t> SpirV;
 
 namespace Nexus
 {
+	struct ResourceHeapHandle
+	{
+		uint64_t hashId;
+		uint32_t set;
+	};
+
+	struct UniformBufferHandle
+	{
+		uint64_t hashId;
+		uint32_t set;
+		uint32_t binding;
+	};
+
 	class Shader
 	{
 	public:		
@@ -18,14 +31,14 @@ namespace Nexus
 		Shader() = default;
 		~Shader() = default;
 
-		virtual void AllocateShaderResourceHeap(uint64_t hashId,uint32_t set) = 0;
-		virtual void DeallocateShaderResourceHeap(uint64_t hashId, uint32_t set) = 0;
-		virtual void BindShaderResourceHeap(uint64_t hashId, uint32_t set) = 0;
+		virtual void AllocateShaderResourceHeap(ResourceHeapHandle handle) = 0;
+		virtual void DeallocateShaderResourceHeap(ResourceHeapHandle handle) = 0;
+		virtual void BindShaderResourceHeap(ResourceHeapHandle handle) = 0;
 
-		virtual void AllocateUniformBuffer(uint64_t hashId, uint32_t set, uint32_t binding) = 0;
-		virtual void DeallocateUniformBuffer(uint64_t hashId) = 0;
-		virtual void BindUniformWithResourceHeap(uint64_t uniformId, uint64_t heapId, uint32_t set, uint32_t binding) = 0;
-		virtual void SetUniformData(uint64_t uniformId,void* data) = 0;
+		virtual void AllocateUniformBuffer(UniformBufferHandle handle) = 0;
+		virtual void DeallocateUniformBuffer(UniformBufferHandle handle) = 0;
+		virtual void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, UniformBufferHandle bufferHandle) = 0;
+		virtual void SetUniformData(UniformBufferHandle handle, void* data) = 0;
 	};
 
 	class ShaderLib

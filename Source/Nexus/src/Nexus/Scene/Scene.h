@@ -1,34 +1,25 @@
 #pragma once
 #include "entt/entt.hpp"
+#include "Component.h"
 
 namespace Nexus
 {
 	class Entity;
 	class Shader;
 	
-	namespace Component
-	{
-		struct Identity;
-	}
-
 	class Scene
 	{
 		friend class Entity;
+		friend class SceneBuildData;
+		friend class SceneRenderer;
 	public:
 		static Ref<Scene> Create();
-
-		void clear();
-		entt::registry& getRegistry() { return m_registry; }
+		void Clear();
 
 		Entity CreateEntity();
+		Entity CreateEntity(const std::string& name);
 		void DestroyEntity(Entity entity);
-
-		void PushShader(Shader* shader);
-		uint32_t PushEntityDeletionCallback(const std::function<void(const Component::Identity&)>& EntityDeletionCallback);
-		void PopEntityDeletionCallback(uint32_t Id);
 	private:
 		entt::registry m_registry;
-		std::unordered_map<uint32_t, std::function<void(const Component::Identity&)>> m_EntityDeletionCallback;
-		std::vector<Shader*> m_Shaders;
 	};
 }
