@@ -9,18 +9,28 @@
 namespace Nexus
 {
 	typedef uint64_t UUID;
-	UUID GetUUID();
+	UUID CreateUUID();
 
 	namespace Component
 	{
+		struct Tag
+		{
+			Tag() = default;
+			Tag(const Tag&) = default;
+			Tag(const std::string& Name);
+			
+			std::string name;
+		};
+
 		struct Identity
 		{
 			Identity();
 			Identity(const Identity&) = default;
+			Identity(UUID id)
+				:uuid(id)
+			{}
 
-			uint32_t SetId = 0;
-			UUID ShaderResourceHandle;
-			UUID TransformUniformHandle;
+			UUID uuid;
 		};
 
 		struct Transform
@@ -28,7 +38,7 @@ namespace Nexus
 			Transform() = default;
 			Transform(const Transform&) = default;
 			Transform(const glm::vec3 translation);
-
+				
 			glm::vec3 Translation = { 0.f,0.f,0.f };
 			glm::vec3 Scale = { 1.f,1.f,1.f };
 
