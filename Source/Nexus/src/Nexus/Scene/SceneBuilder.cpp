@@ -5,8 +5,10 @@
 Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene, Ref<Shader> shader)
 {
     Ref<SceneBuildData> data = CreateRef<SceneBuildData>();
-
     data->shader = shader;
+
+    scene->SceneDestructionCallback = NEXUS_BIND_FN(SceneBuildData::OnSceneDestruction, data);
+    scene->EntityDestructionCallback = NEXUS_BIND_FN(SceneBuildData::OnEntityDestruction, data);
 
     // Per Scene
     {
@@ -50,7 +52,6 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
             shader->BindUniformWithResourceHeap(heapHandle, uniformHandle);
         }
     }
-
     NEXUS_LOG_WARN("Scene Data Built");
 
     return data;
@@ -93,4 +94,12 @@ void Nexus::SceneBuildData::Destroy()
     }
 
     NEXUS_LOG_WARN("Scene Data Destroyed");
+}
+
+void Nexus::SceneBuildData::OnSceneDestruction()
+{
+}
+
+void Nexus::SceneBuildData::OnEntityDestruction(Entity e)
+{
 }

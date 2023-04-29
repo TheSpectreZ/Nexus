@@ -18,6 +18,8 @@ private:
 	
 	Nexus::SceneRenderer m_SceneRenderer;
 
+	Nexus::SceneHeirarchy m_SceneHeirarchy;
+
 	Nexus::Viewport m_viewport;
 	Nexus::Scissor m_scissor;
 

@@ -70,8 +70,8 @@ void EditorLayer::OnAttach()
 		entity.AddComponent<Nexus::Component::Mesh>(handle);
 
 		m_SceneData = Nexus::SceneBuildData::Build(m_Scene, simpleShader);
-		
 		m_SceneRenderer.SetContext(m_Scene, m_SceneData);
+		m_SceneHeirarchy.SetContext(m_Scene);
 	}
 }
 
@@ -107,6 +107,8 @@ void EditorLayer::OnImGuiRender()
 	ImGui::Begin("Test");
 	ImGui::Text("Hellooo ImGui !");
 	ImGui::End();
+
+	m_SceneHeirarchy.Render();
 }
 
 void EditorLayer::OnWindowResize(int width, int height)

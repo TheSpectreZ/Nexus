@@ -17,6 +17,9 @@ namespace Nexus
 		void Update(Ref<Scene> scene, Camera camera);
 		void Destroy();
 	private:
+		void OnSceneDestruction();
+		void OnEntityDestruction(Entity e);
+
 		Ref<Scene> scene;
 		Ref<Shader> shader;
 
