@@ -15,11 +15,6 @@ void EditorLayer::OnAttach()
 		Info.vertexBindInfo = Nexus::StaticMeshVertex::GetBindings();
 		Info.vertexAttribInfo = Nexus::StaticMeshVertex::GetAttributes();
 
-		Info.pushConstantInfo.resize(1);
-		Info.pushConstantInfo[0].offset = 0;
-		Info.pushConstantInfo[0].size = sizeof(glm::mat4);
-		Info.pushConstantInfo[0].stage = Nexus::ShaderStage::Vertex;
-
 		Info.rasterizerInfo.lineWidth = 1.f;
 		Info.rasterizerInfo.frontFace = Nexus::FrontFaceType::Clockwise;
 		Info.rasterizerInfo.cullMode = Nexus::CullMode::Back;
@@ -85,7 +80,7 @@ void EditorLayer::OnUpdate(Nexus::Timestep ts)
 
 	if (m_IsScenePlaying)
 	{
-		Nexus::ScriptEngine::OnSceneStart(m_Scene);
+		Nexus::ScriptEngine::OnSceneUpdate(ts.GetSeconds());
 	}
 }
 
