@@ -20,7 +20,17 @@ namespace Nexus
 		Entity CreateEntity();
 		Entity CreateEntity(const std::string& name);
 		void DestroyEntity(Entity entity);
+
+		template<typename... T>
+		auto GetAllEntitiesWith()
+		{
+			return m_registry.view<T...>();
+		}
+
+		Entity GetEntityWithUUID(UUID id);
+
 	private:
 		entt::registry m_registry;
+		std::unordered_map<UUID, Entity> m_EntityMap;
 	};
 }

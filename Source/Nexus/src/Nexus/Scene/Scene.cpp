@@ -40,15 +40,27 @@ Nexus::Entity Nexus::Scene::CreateEntity()
 Nexus::Entity Nexus::Scene::CreateEntity(const std::string& name)
 {
 	entt::entity entity = m_registry.create();
-	
-	m_registry.emplace<Component::Tag>(entity,name);
-	m_registry.emplace<Component::Identity>(entity);
-	m_registry.emplace<Component::Transform>(entity);
 
-	return { entity,this };
+	m_registry.emplace<Component::Tag>(entity,name);
+	m_registry.emplace<Component::Transform>(entity);
+	
+	auto& i = m_registry.emplace<Component::Identity>(entity);
+	m_EntityMap[i.uuid] = { entity,this };
+
+	return m_EntityMap[i.uuid];
 }
 
 void Nexus::Scene::DestroyEntity(Entity entity)
 {
 	m_registry.destroy(entity);
+}
+
+Nexus::Entity Nexus::Scene::GetEntityWithUUID(UUID id)
+{
+	auto end = m_EntityMap.end();
+	auto it = m_EntityMap.find(id);
+
+	NEXUS_ASSERT((it == end), "Failed To Get Entity With ID");
+
+	return m_EntityMap.at(id);
 }
