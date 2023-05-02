@@ -1,5 +1,6 @@
 #include "nxpch.h"
 #include "ScriptEngine.h"
+#include "ScriptGlue.h"
 
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
@@ -13,6 +14,10 @@ void Nexus::ScriptEngine::Init()
 {
     s_Instance = new ScriptEngine();
 	s_Instance->InitMono();
+    s_Instance->InitAssembly();
+
+    ScriptGlue::BindComponents();
+    ScriptGlue::BindInternalCalls();
 }
 
 void Nexus::ScriptEngine::Shut()
@@ -23,16 +28,23 @@ void Nexus::ScriptEngine::Shut()
 
 void Nexus::ScriptEngine::OnSceneStart(Ref<Scene> scene)
 {
+    s_Instance->m_scene = scene;;
+
     Nexus::Entity entity;
     auto view = scene->m_registry.view<Nexus::Component::Script>();
     for (auto& e : view)
     {
         entity = Nexus::Entity(e, scene.get());
-        auto& id = entity.GetComponent<Nexus::Component::Identity>().uuid;
+        auto& id = entity.GetComponent<Nexus::Component::Identity>();
         auto& Script = entity.GetComponent<Nexus::Component::Script>();
 
-        s_Instance->m_EntityScriptInstances[id] = Nexus::ScriptInstance(Script.name);
-        s_Instance->m_EntityScriptInstances[id].InVokeOnCreate();
+        Nexus::ScriptInstance inst(Script.name);
+
+        void* param = &id.uuid;
+        mono_runtime_invoke(s_Instance->m_EntityBaseConstructor, inst.m_Object, &param, nullptr);
+
+        s_Instance->m_EntityScriptInstances[id.uuid] = inst;
+        s_Instance->m_EntityScriptInstances[id.uuid].InVokeOnCreate();
     }
 }
 
@@ -51,30 +63,20 @@ void Nexus::ScriptEngine::OnSceneStop()
         v.InVokeOnDestroy();
     }
     s_Instance->m_EntityScriptInstances.clear();
+    s_Instance->m_scene = nullptr;
 }
 
 void Nexus::ScriptEngine::InitMono()
 {
-    // Domain and Assembly
-    {
-        mono_set_assemblies_path("mono/lib");
+    mono_set_assemblies_path("mono/lib");
 
-        MonoDomain* rootDomain = mono_jit_init("NexusJITRuntime");
-        NEXUS_ASSERT((rootDomain == nullptr), "Failed To Initialize Mono JIT");
-        m_RootDomain = rootDomain;
+    MonoDomain* rootDomain = mono_jit_init("NexusJITRuntime");
+    NEXUS_ASSERT((rootDomain == nullptr), "Failed To Initialize Mono JIT");
+    m_RootDomain = rootDomain;
 
-        char friendlyName[] = "NexusAppDomain";
-        m_AppDomain = mono_domain_create_appdomain(friendlyName, nullptr);
-        mono_domain_set(m_AppDomain, true);
-        
-        m_CoreAssembly = LoadAssembly("Resources/Scripts/NexusScriptCore.dll");
-        m_CoreAssemblyImage = mono_assembly_get_image(m_CoreAssembly);
-
-        PrintAssemblyTypes(m_CoreAssembly, "Core Assembly");
-    }
-
-    // Loading Classes
-    LoadCoreAssemblyClasses();
+    char friendlyName[] = "NexusAppDomain";
+    m_AppDomain = mono_domain_create_appdomain(friendlyName, nullptr);
+    mono_domain_set(m_AppDomain, true);
 }
 
 void Nexus::ScriptEngine::ShutdownMono()
@@ -83,6 +85,17 @@ void Nexus::ScriptEngine::ShutdownMono()
 
     mono_jit_cleanup(m_RootDomain);
     m_RootDomain = nullptr;
+}
+
+void Nexus::ScriptEngine::InitAssembly()
+{
+    m_CoreAssembly = LoadAssembly("Resources/Scripts/NexusScriptCore.dll");
+    m_CoreAssemblyImage = mono_assembly_get_image(m_CoreAssembly);
+
+    PrintAssemblyTypes(m_CoreAssembly, "Core Assembly");
+    
+    // Loading Classes
+    LoadCoreAssemblyClasses();
 }
 
 void Nexus::ScriptEngine::PrintAssemblyTypes(MonoAssembly* assembly,const char* name)
@@ -112,7 +125,8 @@ void Nexus::ScriptEngine::LoadCoreAssemblyClasses()
     const MonoTableInfo* table = mono_image_get_table_info(m_CoreAssemblyImage, MONO_TABLE_TYPEDEF);
     int32_t count = mono_table_info_get_rows(table);
 
-    MonoClass* eClass = mono_class_from_name(m_CoreAssemblyImage, "Nexus", "Entity");
+    m_EntityBaseClass = mono_class_from_name(m_CoreAssemblyImage, "Nexus", "Entity");
+    m_EntityBaseConstructor = mono_class_get_method_from_name(m_EntityBaseClass, ".ctor", 1);
 
     NEXUS_LOG_WARN("Loading Script Classes...");
     for (int32_t i = 0; i < count; i++)
@@ -131,10 +145,10 @@ void Nexus::ScriptEngine::LoadCoreAssemblyClasses()
 
         MonoClass* cl = mono_class_from_name(m_CoreAssemblyImage, nameSpace, name);
 
-        if (cl == eClass)
+        if (cl == m_EntityBaseClass)
             continue;
 
-        if (mono_class_is_subclass_of(cl, eClass, false))
+        if (mono_class_is_subclass_of(cl, m_EntityBaseClass, false))
         {
             std::string key = nameSpace + std::string(".") + name;
 
