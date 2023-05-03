@@ -84,6 +84,26 @@ Nexus::VulkanPhysicalDevice::VulkanPhysicalDevice(const std::vector<const char*>
 
 		NEXUS_ASSERT((m_DepthFormat == VK_FORMAT_UNDEFINED), "No Suitable Depth Format Available");
 	}
+
+	// Max Sample Count
+	{
+		VkSampleCountFlags counts = m_properties.limits.framebufferColorSampleCounts & m_properties.limits.framebufferDepthSampleCounts;
+
+		if (counts & VK_SAMPLE_COUNT_64_BIT)
+			m_MaxSampleCount = VK_SAMPLE_COUNT_64_BIT;
+		if (counts & VK_SAMPLE_COUNT_32_BIT) 
+			m_MaxSampleCount = VK_SAMPLE_COUNT_32_BIT;
+		if (counts & VK_SAMPLE_COUNT_16_BIT) 
+			m_MaxSampleCount = VK_SAMPLE_COUNT_16_BIT;
+		if (counts & VK_SAMPLE_COUNT_8_BIT)
+			m_MaxSampleCount = VK_SAMPLE_COUNT_8_BIT;
+		if (counts & VK_SAMPLE_COUNT_4_BIT)
+			m_MaxSampleCount = VK_SAMPLE_COUNT_4_BIT;
+		if (counts & VK_SAMPLE_COUNT_2_BIT)
+			m_MaxSampleCount = VK_SAMPLE_COUNT_2_BIT;
+		else
+			m_MaxSampleCount = VK_SAMPLE_COUNT_1_BIT;
+	}
 }
 
 enum QueueType : int32_t
