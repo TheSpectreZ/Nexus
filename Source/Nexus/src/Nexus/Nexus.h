@@ -18,6 +18,7 @@
 #include "Renderer/Vertex.h"
 #include "Renderer/Mesh.h"
 #include "Renderer/ShaderResource.h"
+#include "Renderer/Renderpass.h"
 
 #include "Scene/Camera.h"
 #include "Scene/Entity.h"
