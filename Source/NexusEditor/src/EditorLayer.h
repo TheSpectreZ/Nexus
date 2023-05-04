@@ -8,9 +8,14 @@ public:
 	void OnUpdate() override;
 	void OnRender() override;
 	void OnDetach() override;
-	void OnImGuiRender() override;
 	void OnWindowResize(int width, int height) override;
 private:
+	Nexus::Ref<Nexus::Renderpass> m_GraphicsPass;
+	Nexus::Ref<Nexus::Framebuffer> m_GraphicsFramebuffer;
+
+	Nexus::Ref<Nexus::Renderpass> m_ImGuiPass;
+	Nexus::Ref<Nexus::Framebuffer> m_ImGuiFramebuffer;
+
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
 	
 	Nexus::Ref<Nexus::Scene> m_Scene;

@@ -12,11 +12,13 @@ namespace Nexus
 		VkPhysicalDevice Get() { return m_physicalDevice; }
 
 		VkFormat GetDepthFormat() { return m_DepthFormat; }
+		VkSampleCountFlagBits GetMaxSampleCount() { return m_MaxSampleCount; }
 	private:
 		VkPhysicalDevice m_physicalDevice;
 		VkPhysicalDeviceProperties m_properties;
 
 		VkFormat m_DepthFormat;
+		VkSampleCountFlagBits m_MaxSampleCount;
 	};
 
 	class VulkanDevice

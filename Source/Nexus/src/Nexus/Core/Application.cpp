@@ -84,7 +84,6 @@ void Nexus::Application::Init()
 		Renderer::ResizeCallback = NEXUS_BIND_FN(Application::ResizeCallback,this);
 	}
 
-	EditorContext::Initialize();
 	AssetManager::Initialize();
 }
 
@@ -124,27 +123,8 @@ void Nexus::Application::Run()
 		{
 			Renderer::BeginRenderCommandQueue();
 
-			{
-				Renderer::BeginSwapchainPass();
-				
-				for (auto& l : m_layerStack)
-					l->OnRender();
-			
-				Renderer::EndPass();
-			}
-
-			{
-				Renderer::BeginImGuiPass();
-
-				EditorContext::StartFrame();
-				
-				for (auto& l : m_layerStack)
-					l->OnImGuiRender();
-				
-				EditorContext::Render();
-				
-				Renderer::EndPass();
-			}
+			for (auto& l : m_layerStack)
+				l->OnRender();
 
 			Renderer::EndRenderCommandQueue();
 			Renderer::FlushRenderCommandQueue();
@@ -165,7 +145,6 @@ void Nexus::Application::Run()
 void Nexus::Application::Shut()
 {
 	AssetManager::Shutdown();
-	EditorContext::Shutdown();
 	Renderer::Shut();
 	
 	// Window Destruction

@@ -7,6 +7,6 @@ public:
 	virtual void OnUpdate(){};
 	virtual void OnRender(){};
 	virtual void OnDetach(){};
-	virtual void OnImGuiRender(){};
 	virtual void OnWindowResize(int width, int height) {};
+	virtual ~Layer() {};
 };

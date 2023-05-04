@@ -4,7 +4,7 @@
 #include "VkShaderResource.h"
 #include "VkContext.h"
 #include "VkSwapchain.h"
-
+#include "VkRenderpass.h"
 #include "Renderer/Vertex.h"
 
 namespace Nexus
@@ -79,6 +79,7 @@ namespace Nexus
 Nexus::VulkanPipeline::VulkanPipeline(const PipelineCreateInfo& i)
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
+    Ref<VulkanPhysicalDevice> gpu = VulkanContext::Get()->GetPhysicalDeviceRef();
 	Ref<VulkanSwapchain> swapchain = VulkanSwapchain::Get();
 
     /////////////////////////////////
@@ -188,7 +189,7 @@ Nexus::VulkanPipeline::VulkanPipeline(const PipelineCreateInfo& i)
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_FALSE;
-    multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+    multisampling.rasterizationSamples = i.multisampled ? gpu->GetMaxSampleCount() : VK_SAMPLE_COUNT_1_BIT;
 
     /////////////////////////////////
     // Blending
@@ -256,8 +257,8 @@ Nexus::VulkanPipeline::VulkanPipeline(const PipelineCreateInfo& i)
     pipelineInfo.pDynamicState = &dynamicState;
     pipelineInfo.pDepthStencilState = &depthStencilState;
     pipelineInfo.layout = shader->GetPipelineLayout();
-    pipelineInfo.renderPass = swapchain->GetSwapchainRenderpass();
-    pipelineInfo.subpass = 0;
+    pipelineInfo.renderPass = DynamicPointerCast<VulkanRenderpass>(i.renderpass)->Get();
+    pipelineInfo.subpass = i.subpass;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
     _VKR = vkCreateGraphicsPipelines(device->Get(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline);

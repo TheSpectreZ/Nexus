@@ -22,10 +22,6 @@ namespace Nexus
 		static void Init(const RendererSpecifications& specs);
 		static void Shut();
 
-		static void BeginSwapchainPass();
-		static void BeginImGuiPass();
-		static void EndPass();
-
 		static void BeginRenderCommandQueue();
 		static void EndRenderCommandQueue();
 		static void FlushRenderCommandQueue();
