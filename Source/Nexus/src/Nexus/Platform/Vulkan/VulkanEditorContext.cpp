@@ -8,6 +8,7 @@
 #include "Platform/Vulkan/VkContext.h"
 #include "Platform/Vulkan/VkSwapchain.h"
 #include "Platform/Vulkan/VkRenderpass.h"
+#include "Platform/Vulkan/VkCommand.h"
 
 Nexus::VulkanEditorContext::VulkanEditorContext(Ref<Renderpass> renderpass)
 {
@@ -131,7 +132,7 @@ Nexus::VulkanEditorContext::~VulkanEditorContext()
 
 void Nexus::VulkanEditorContext::Start()
 {
-	m_CmdBuffer = VulkanSwapchain::Get()->GetCurrentCommandBuffer();
+	m_CmdBuffer = DynamicPointerCast<VulkanCommand>(Command::GetRef())->m_RenderCommandBuffer;
 
 	ImGui_ImplVulkan_NewFrame();
 	ImGui_ImplGlfw_NewFrame();

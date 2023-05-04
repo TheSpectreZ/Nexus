@@ -244,7 +244,7 @@ void EditorLayer::OnRender()
 		Nexus::EditorContext::StartFrame();
 		
 		m_SceneHeirarchy.Render();
-	
+
 		Nexus::EditorContext::Render();
 		Nexus::Command::EndRenderpass();
 	}

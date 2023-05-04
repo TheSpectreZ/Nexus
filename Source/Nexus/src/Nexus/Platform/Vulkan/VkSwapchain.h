@@ -12,8 +12,7 @@ namespace Nexus
 	{
 	public:
 		VulkanSwapchain();
-		~VulkanSwapchain();
-
+		
 		void ReCreate();
 		
 		static Ref<VulkanSwapchain> Get() { return DynamicPointerCast<VulkanSwapchain>(Renderer::GetSwapchain()); }
@@ -29,8 +28,6 @@ namespace Nexus
 			return m_SwapchainImages[index].view; 
 		}
 
-		VkCommandBuffer GetCurrentCommandBuffer() { return m_CurrentRenderCommandBuffer; }
-		
 		void Init() override;
 		void Shut() override;
 
@@ -43,8 +40,7 @@ namespace Nexus
 		VkSwapchainKHR m_Swapchain;
 		
 		uint32_t m_CurrentFrame;
-		VkCommandBuffer m_CurrentRenderCommandBuffer;
-
+		
 		VkSurfaceCapabilitiesKHR m_cap;
 		VkSurfaceFormatKHR m_format;
 		VkPresentModeKHR m_mode;

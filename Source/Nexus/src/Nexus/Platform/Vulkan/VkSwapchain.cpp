@@ -14,7 +14,6 @@ Nexus::VulkanSwapchain::VulkanSwapchain()
 	m_device = device->Get();
 
 	m_CurrentFrame = 0;
-	m_CurrentRenderCommandBuffer = nullptr;
 	m_Swapchain = nullptr;
 
 	// Swapchain Format, Mode and Extent
@@ -60,11 +59,6 @@ Nexus::VulkanSwapchain::VulkanSwapchain()
 		NEXUS_LOG_WARN("Vulkan Min Image Count: {0}", m_MinImageCount);
 
 	}
-}
-
-Nexus::VulkanSwapchain::~VulkanSwapchain()
-{
-
 }
 
 void Nexus::VulkanSwapchain::Init()
