@@ -4,13 +4,154 @@ void EditorLayer::OnAttach()
 {
 	NEXUS_LOG_DEBUG("Editor Layer Attached");
 
+	// Graphics Renderpass
+	{
+		std::vector<Nexus::RenderpassAttachmentDescription> attachments;
+		{
+			auto& color = attachments.emplace_back();
+			color.type = Nexus::ImageType::Color;
+			color.multiSampled = true;
+			color.load = Nexus::ImageOperation::Clear;
+			color.store = Nexus::ImageOperation::Store;
+			color.initialLayout = Nexus::ImageLayout::Undefined;
+			color.finalLayout = Nexus::ImageLayout::ColorAttachment;
+
+			auto& depth = attachments.emplace_back();
+			depth.type = Nexus::ImageType::Depth;
+			depth.multiSampled = true;
+			depth.load = Nexus::ImageOperation::Clear;
+			depth.store = Nexus::ImageOperation::DontCare;
+			depth.initialLayout = Nexus::ImageLayout::Undefined;
+			depth.finalLayout = Nexus::ImageLayout::DepthStencilAttachment;
+
+			auto& resolve = attachments.emplace_back();
+			resolve.type = Nexus::ImageType::Resolve;
+			resolve.multiSampled = false;
+			resolve.load = Nexus::ImageOperation::DontCare;
+			resolve.store = Nexus::ImageOperation::Store;
+			resolve.initialLayout = Nexus::ImageLayout::Undefined;
+			resolve.finalLayout = Nexus::ImageLayout::ColorAttachment;
+		}
+
+		std::vector<Nexus::SubpassDescription> subpasses;
+		{
+			auto& subpass0 = subpasses.emplace_back();
+			subpass0.ColorAttachments = { 0 };
+			subpass0.DepthAttachment = 1;
+			subpass0.ResolveAttachment = 2;
+		}
+
+		std::vector<Nexus::SubpassDependency> subpassDependencies;
+		{
+			auto& dep = subpassDependencies.emplace_back();
+			dep.srcSubpass = Nexus::SubpassDependency::ExternalSubpass;
+			dep.dstSubpass = 0;
+			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.srcAccessFlags = Nexus::AccessFlag::None;
+			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite;
+		}
+
+		Nexus::RenderpassSpecification specs{};
+		specs.attachments = &attachments;
+		specs.subpasses = &subpasses;
+		specs.dependencies = &subpassDependencies;
+
+		m_GraphicsPass = Nexus::Renderpass::Create(specs);
+	}
+
+	// Imgui Renderpass
+	{
+		std::vector<Nexus::RenderpassAttachmentDescription> attachments;
+		{
+			auto& color = attachments.emplace_back();
+			color.type = Nexus::ImageType::Color;
+			color.multiSampled = false;
+			color.load = Nexus::ImageOperation::Load;
+			color.store = Nexus::ImageOperation::Store;
+			color.initialLayout = Nexus::ImageLayout::ColorAttachment;
+			color.finalLayout = Nexus::ImageLayout::PresentSrc;
+		}
+
+		std::vector<Nexus::SubpassDescription> subpasses;
+		{
+			auto& subpass0 = subpasses.emplace_back();
+			subpass0.ColorAttachments = { 0 };
+		}
+
+		std::vector<Nexus::SubpassDependency> subpassDependencies;
+		{
+			auto& dep = subpassDependencies.emplace_back();
+			dep.srcSubpass = Nexus::SubpassDependency::ExternalSubpass;
+			dep.dstSubpass = 0;
+			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.srcAccessFlags = Nexus::AccessFlag::None;
+			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite;
+		}
+
+		Nexus::RenderpassSpecification specs{};
+		specs.attachments = &attachments;
+		specs.subpasses = &subpasses;
+		specs.dependencies = &subpassDependencies;
+
+		m_ImGuiPass = Nexus::Renderpass::Create(specs);
+	}
+
+	// Graphics Framebuffer
+	{
+		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
+
+		Nexus::FramebufferSpecification specs{};
+		
+		auto& a1 = specs.attachments.emplace_back();
+		a1.Type = Nexus::FramebufferAttachmentType::Color;
+		a1.multisampled = true;
+		a1.extent = extent;
+
+		auto& a2 = specs.attachments.emplace_back();
+		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
+		a2.multisampled = true;
+		a2.extent = extent;
+
+		auto& a3 = specs.attachments.emplace_back();
+		a3.Type = Nexus::FramebufferAttachmentType::PresentSrc;
+		a3.multisampled = false;
+		a3.extent = extent;
+
+		specs.extent = extent;
+		specs.renderpass = m_GraphicsPass;
+
+		m_GraphicsFramebuffer = Nexus::Framebuffer::Create(specs);
+	}
+	
+	// ImGui Framebuffer
+	{
+		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
+
+		Nexus::FramebufferSpecification specs{};
+		
+		auto& a1 = specs.attachments.emplace_back();
+		a1.Type = Nexus::FramebufferAttachmentType::PresentSrc;
+		a1.multisampled = false;
+		a1.extent = extent;
+
+		specs.extent = extent;
+		specs.renderpass = m_ImGuiPass;
+
+		m_ImGuiFramebuffer = Nexus::Framebuffer::Create(specs);
+	}
+
+	Nexus::EditorContext::Initialize(m_ImGuiPass);
 	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/simple.shader");
-	//Nexus::Ref<Nexus::Shader> pbrShader = Nexus::ShaderLib::Get("shaders/pbr.shader");
 	
 	// Pipeline
 	{
 		Nexus::PipelineCreateInfo Info{};
 		Info.shader = simpleShader;
+		Info.subpass = 0;
+		Info.renderpass = m_GraphicsPass;
+		Info.multisampled = true;
 
 		Info.vertexBindInfo = Nexus::StaticMeshVertex::GetBindings();
 		Info.vertexAttribInfo = Nexus::StaticMeshVertex::GetAttributes();
@@ -78,18 +219,35 @@ void EditorLayer::OnAttach()
 void EditorLayer::OnUpdate()
 {
 	m_cameraController.Move();
-	
 	m_SceneData->Update(m_Scene, m_camera);
 }
 
 void EditorLayer::OnRender()
 {
-	Nexus::Command::BindPipeline(m_Pipeline);
+	// Graphics
+	{
+		Nexus::Command::BeginRenderpass(m_GraphicsPass, m_GraphicsFramebuffer);
 
-	Nexus::Command::SetViewport(m_viewport);
-	Nexus::Command::SetScissor(m_scissor);
+		Nexus::Command::BindPipeline(m_Pipeline);
 
-	m_SceneRenderer.Render();
+		Nexus::Command::SetViewport(m_viewport);
+		Nexus::Command::SetScissor(m_scissor);
+
+		m_SceneRenderer.Render();
+
+		Nexus::Command::EndRenderpass();
+	}
+
+	// ImGui
+	{
+		Nexus::Command::BeginRenderpass(m_ImGuiPass, m_ImGuiFramebuffer);
+		Nexus::EditorContext::StartFrame();
+		
+		m_SceneHeirarchy.Render();
+	
+		Nexus::EditorContext::Render();
+		Nexus::Command::EndRenderpass();
+	}
 }
 
 void EditorLayer::OnDetach()
@@ -97,18 +255,8 @@ void EditorLayer::OnDetach()
 	m_SceneData->Destroy();
 	m_Scene->Clear();
 
-	m_Pipeline->~Pipeline();
-
+	Nexus::EditorContext::Shutdown();
 	NEXUS_LOG_DEBUG("Editor Layer Detached");
-}
-
-void EditorLayer::OnImGuiRender()
-{
-	ImGui::Begin("Test");
-	ImGui::Text("Hellooo ImGui !");
-	ImGui::End();
-
-	m_SceneHeirarchy.Render();
 }
 
 void EditorLayer::OnWindowResize(int width, int height)
