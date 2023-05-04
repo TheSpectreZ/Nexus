@@ -56,3 +56,13 @@ void Nexus::Command::SetScissor(const Scissor& scissor)
 {
 	s_Command->ImplSetScissor(scissor);
 }
+
+void Nexus::Command::BeginRenderpass(Ref<Renderpass> renderpass, Ref<Framebuffer> framebuffer)
+{
+	s_Command->ImplBeginRenderpass(renderpass, framebuffer);
+}
+
+void Nexus::Command::EndRenderpass()
+{
+	s_Command->ImplEndRenderpass();
+}

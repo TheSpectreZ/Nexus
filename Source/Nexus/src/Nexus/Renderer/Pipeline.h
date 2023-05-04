@@ -1,6 +1,7 @@
 #pragma once
 #include "Vertex.h"
 #include "Shader.h"
+#include "Renderpass.h"
 #include "ShaderResource.h"
 
 namespace Nexus
@@ -43,6 +44,9 @@ namespace Nexus
 	struct PipelineCreateInfo
 	{
 		Ref<Shader> shader;
+		Ref<Renderpass> renderpass;
+		uint32_t subpass;
+		bool multisampled;
 		std::vector<VertexAttribInfo> vertexAttribInfo;
 		std::vector<VertexBindInfo> vertexBindInfo;
 		

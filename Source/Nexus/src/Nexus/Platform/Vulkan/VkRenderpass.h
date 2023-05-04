@@ -9,6 +9,8 @@ namespace Nexus
 	public:
 		VulkanRenderpass(const RenderpassSpecification& specs);
 		~VulkanRenderpass() override;
+		
+		VkRenderPass& Get() { return m_Pass; }
 	private:
 		VkRenderPass m_Pass;
 	};

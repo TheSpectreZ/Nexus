@@ -18,16 +18,8 @@ namespace Nexus
 		
 		static Ref<VulkanSwapchain> Get() { return DynamicPointerCast<VulkanSwapchain>(Renderer::GetSwapchain()); }
 
-		VkRenderPass GetSwapchainRenderpass() { return m_SwapchainRenderpass; }
-		VkRenderPass GetImGuiRenderpass() { return m_ImGuiRenderpass; }
-
 		VkSwapchainKHR GetHandle() { return m_Swapchain; }
-		VkFramebuffer GetFramebuffer(uint32_t index)
-		{
-			NEXUS_ASSERT((index >= m_SwapchainFramebuffers.size()), "Swapchain Framebuffer Index out of Bounds");
-			return m_SwapchainFramebuffers[index];
-		}
-
+		
 		VkExtent2D GetImageExtent() { return m_extent; }
 		VkFormat GetImageFormat() { return m_format.format; }
 		uint32_t GetImageCount() { return (uint32_t)m_SwapchainImages.size(); }
@@ -41,10 +33,6 @@ namespace Nexus
 		
 		void Init() override;
 		void Shut() override;
-
-		void BeginSwapchainPass() override;
-		void BeginImGuiPass() override;
-		void EndPass() override;
 
 		Extent GetExtent() override;
 	private:
@@ -67,17 +55,7 @@ namespace Nexus
 		{
 			VkImage image = nullptr;
 			VkImageView view = nullptr;
-			VmaAllocation vma = nullptr;
 		};
-		SwapchainImage m_DepthImage;
 		std::vector<SwapchainImage> m_SwapchainImages;
-
-		VkRenderPass m_ImGuiRenderpass;
-		std::vector<VkFramebuffer> m_ImGuiFramebuffers;
-		std::vector<VkClearValue> m_ImGuiImageClearValues;
-
-		VkRenderPass m_SwapchainRenderpass;
-		std::vector<VkFramebuffer> m_SwapchainFramebuffers;
-		std::vector<VkClearValue> m_SwapchainImageClearValues;
 	};
 }

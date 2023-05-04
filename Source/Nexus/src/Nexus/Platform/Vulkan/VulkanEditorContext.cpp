@@ -7,8 +7,9 @@
 #include "Core/Application.h"
 #include "Platform/Vulkan/VkContext.h"
 #include "Platform/Vulkan/VkSwapchain.h"
+#include "Platform/Vulkan/VkRenderpass.h"
 
-Nexus::VulkanEditorContext::VulkanEditorContext()
+Nexus::VulkanEditorContext::VulkanEditorContext(Ref<Renderpass> renderpass)
 {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -73,7 +74,7 @@ Nexus::VulkanEditorContext::VulkanEditorContext()
 	Info.MinImageCount = 2;
 	Info.DescriptorPool = m_Pool;
 
-	ImGui_ImplVulkan_Init(&Info, swapchain->GetImGuiRenderpass());
+	ImGui_ImplVulkan_Init(&Info, DynamicPointerCast<VulkanRenderpass>(renderpass)->Get());
 
 	{
 		VkCommandPoolCreateInfo p{};

@@ -2,19 +2,44 @@
 #include "VkCommand.h"
 
 #include "Renderer/Renderer.h"
-#include "VkRenderCommandQueue.h"
-#include "VkTransferCommandQueue.h"
+#include "VkRenderpass.h"
+#include "VkFramebuffer.h"
 #include "VkBuffer.h"
 #include "VkPipeline.h"
 
 void Nexus::VulkanCommand::ImplInit()
 {
 	m_TransferQueue = DynamicPointerCast<VulkanTransferCommandQueue>(Renderer::GetTransferCommandQueue());
+	m_RenderQueue = DynamicPointerCast<VulkanRenderCommandQueue>(Renderer::GetRenderCommandQueue());
 }
 
 void Nexus::VulkanCommand::ImplUpdate()
 {
-	m_RenderCommandBuffer = DynamicPointerCast<VulkanRenderCommandQueue>(Renderer::GetRenderCommandQueue())->GetCurrentCommandBuffer();
+	m_RenderCommandBuffer = m_RenderQueue->GetCurrentCommandBuffer();
+	m_FrameIndex = m_RenderQueue->GetFrameIndex();
+}
+
+void Nexus::VulkanCommand::ImplBeginRenderpass(Ref<Renderpass> r, Ref<Framebuffer> f)
+{
+	Ref<VulkanRenderpass> renderpass = DynamicPointerCast<VulkanRenderpass>(r);
+	Ref<VulkanFramebuffer> framebuffer = DynamicPointerCast<VulkanFramebuffer>(f);
+
+	VkRenderPassBeginInfo Info{};
+	Info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	Info.pNext = nullptr;
+	Info.renderPass = renderpass->Get();
+	Info.framebuffer = framebuffer->Get(m_FrameIndex);
+	Info.renderArea.offset = { 0,0 };
+	Info.renderArea.extent = framebuffer->GetExtent();
+	Info.clearValueCount = (uint32_t)framebuffer->GetClearValues().size();
+	Info.pClearValues = framebuffer->GetClearValues().data();
+
+	vkCmdBeginRenderPass(m_RenderCommandBuffer, &Info, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Nexus::VulkanCommand::ImplEndRenderpass()
+{
+	vkCmdEndRenderPass(m_RenderCommandBuffer);
 }
 
 void Nexus::VulkanCommand::ImplTransferStaticMesh(Ref<StaticMesh> mesh)
