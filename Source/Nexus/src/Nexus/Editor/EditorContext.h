@@ -1,5 +1,6 @@
 #pragma once
 #include "imgui.h"
+#include "Renderer/Renderpass.h"
 
 namespace Nexus
 {
@@ -9,7 +10,7 @@ namespace Nexus
 		EditorContext() = default;
 		virtual ~EditorContext() = default;
 
-		static void Initialize();
+		static void Initialize(Ref<Renderpass> renderpass);
 		static void Shutdown();
 
 		static void StartFrame();
