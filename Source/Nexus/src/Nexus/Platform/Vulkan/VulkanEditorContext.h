@@ -6,8 +6,9 @@ namespace Nexus
 {
 	class VulkanEditorContext : public EditorContext
 	{
+		friend class VulkanEditorViewport;
 	public:
-		VulkanEditorContext();
+		VulkanEditorContext(Ref<Renderpass> rednerpass);
 		~VulkanEditorContext();
 	private:
 		void Start() override;

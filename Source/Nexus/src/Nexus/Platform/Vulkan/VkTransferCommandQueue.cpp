@@ -13,7 +13,7 @@ Nexus::VulkanTransferCommandQueue::VulkanTransferCommandQueue()
 	VkCommandPoolCreateInfo Info{};
 	Info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 	Info.pNext = nullptr;
-	Info.flags = 0;
+	Info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	Info.queueFamilyIndex = device->GetQueueFamilyIndices().Transfer;
 
 	_VKR = vkCreateCommandPool(m_device, &Info, nullptr, &m_CommandPool);
@@ -32,7 +32,7 @@ Nexus::VulkanTransferCommandQueue::VulkanTransferCommandQueue()
 	m_CommandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 	m_CommandBufferBeginInfo.pNext = nullptr;
 	m_CommandBufferBeginInfo.pInheritanceInfo = nullptr;
-	m_CommandBufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	m_CommandBufferBeginInfo.flags = 0;
 
 	m_SubmitInfo = {};
 	m_SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

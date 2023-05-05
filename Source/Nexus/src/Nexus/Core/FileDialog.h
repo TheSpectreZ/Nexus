@@ -4,7 +4,7 @@
 
 // Currently Supports Windows Only !
 
-namespace Nexus::Platform
+namespace Nexus
 {
 	namespace FileDialog
 	{

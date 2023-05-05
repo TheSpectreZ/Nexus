@@ -8,19 +8,13 @@
 
 void Nexus::Scene::Clear()
 {
-	//for (auto& shader : m_Shaders)
-	//{
-	//	if (shader == nullptr)
-	//		continue;
-	//
-	//	m_registry.each([&](entt::entity e)
-	//		{
-	//			auto& Identity = m_registry.get<Component::Identity>(e);
-	//
-	//			shader->DeallocateUniformBuffer(Identity.TransformUniformHandle);
-	//			shader->DeallocateShaderResourceHeap(Identity.ShaderResourceHandle, Identity.SetId);
-	//		});
-	//}
+	m_registry.each([&](entt::entity e)
+		{
+			DestroyEntity({ e,this });
+		});
+	
+	
+	SceneDestructionCallback();
 
 	m_registry.clear();
 	NEXUS_LOG_TRACE("Scene Cleared");
@@ -41,17 +35,33 @@ Nexus::Entity Nexus::Scene::CreateEntity(const std::string& name)
 {
 	entt::entity entity = m_registry.create();
 
-	m_registry.emplace<Component::Tag>(entity,name);
+  m_registry.emplace<Component::Tag>(entity,name);
 	m_registry.emplace<Component::Transform>(entity);
-	
-	auto& i = m_registry.emplace<Component::Identity>(entity);
-	m_EntityMap[i.uuid] = { entity,this };
-
+  auto& i = m_registry.emplace<Component::Identity>(entity);
+  
+  m_EntityMap[i.uuid] = { entity,this };
+  EntityCreationCallback(m_EntityMap[i.uuid]);
+  
 	return m_EntityMap[i.uuid];
+}
+
+Nexus::Entity Nexus::Scene::CreateEntity(const std::string& name, UUID uuid)
+{
+	entt::entity entity = m_registry.create();
+
+	m_registry.emplace<Component::Tag>(entity, name);
+	m_registry.emplace<Component::Identity>(entity, uuid);
+	m_registry.emplace<Component::Transform>(entity);
+ 
+  m_EntityMap[uuid] = { entity,this };
+  EntityCreationCallback(m_EntityMap[uuid]);
+  
+	return m_EntityMap[uuid];
 }
 
 void Nexus::Scene::DestroyEntity(Entity entity)
 {
+	EntityDestructionCallback(entity);
 	m_registry.destroy(entity);
 }
 

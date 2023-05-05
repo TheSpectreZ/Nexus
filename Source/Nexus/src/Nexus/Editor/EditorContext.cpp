@@ -6,12 +6,12 @@
 
 Nexus::EditorContext* Nexus::EditorContext::s_Instance = nullptr;
 
-void Nexus::EditorContext::Initialize()
+void Nexus::EditorContext::Initialize(Ref<Renderpass> renderpass)
 {
 	switch (RenderAPI::GetCurrentAPI())
 	{
 	case Nexus::RenderAPIType::VULKAN:
-		s_Instance = new VulkanEditorContext();
+		s_Instance = new VulkanEditorContext(renderpass);
 		break;
 	case Nexus::RenderAPIType::NONE:
 		s_Instance = nullptr;

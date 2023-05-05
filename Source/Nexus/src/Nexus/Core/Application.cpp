@@ -3,13 +3,12 @@
 
 #include "Application.h"
 #include "Input.h"
-
+#include "FileDialog.h"
 #include "Renderer/Context.h"
 #include "Renderer/Renderer.h"
 
 #include "Assets/AssetManager.h"
 
-#include "Editor/EditorContext.h"
 #include "Script/ScriptEngine.h"
 
 Nexus::Application* Nexus::Application::s_Instance = nullptr;
@@ -68,6 +67,7 @@ void Nexus::Application::Init()
 		}
 
 		Input::SetContextWindow(m_Window);
+		FileDialog::SetContextWindow(m_Window);
 	}
 	
 	std::cout << std::endl;
@@ -82,12 +82,10 @@ void Nexus::Application::Init()
 			specs.api = RenderAPIType::VULKAN;
 		
 		Renderer::Init(specs);
-		Renderer::ResizeCallback = NEXUS_BIND_EVENT_FN(Application::ResizeCallback);
+		Renderer::ResizeCallback = NEXUS_BIND_FN(Application::ResizeCallback,this);
 	}
 
-	EditorContext::Initialize();
 	AssetManager::Initialize();
-
 	ScriptEngine::Init();
 }
 
@@ -122,32 +120,14 @@ void Nexus::Application::Run()
 		{
 			l->OnUpdate(m_TimeStep);
 		}
+		Renderer::FlushTransferCommandQueue();
 		
-		// Swapchain-ImGui RenderPass and CommandQueue
+		// Rendering
 		{
 			Renderer::BeginRenderCommandQueue();
 
-			{
-				Renderer::BeginSwapchainPass();
-				
-				for (auto& l : m_layerStack)
-					l->OnRender();
-			
-				Renderer::EndPass();
-			}
-
-			{
-				Renderer::BeginImGuiPass();
-
-				EditorContext::StartFrame();
-				
-				for (auto& l : m_layerStack)
-					l->OnImGuiRender();
-				
-				EditorContext::Render();
-				
-				Renderer::EndPass();
-			}
+			for (auto& l : m_layerStack)
+				l->OnRender();
 
 			Renderer::EndRenderCommandQueue();
 			Renderer::FlushRenderCommandQueue();
@@ -168,10 +148,7 @@ void Nexus::Application::Run()
 void Nexus::Application::Shut()
 {
 	AssetManager::Shutdown();
-
-	EditorContext::Shutdown();
 	ScriptEngine::Shut();
-
 	Renderer::Shut();
 	
 	// Window Destruction

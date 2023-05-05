@@ -14,10 +14,6 @@ namespace Nexus
 		virtual void Init() = 0;
 		virtual void Shut() = 0;
 
-		virtual void BeginSwapchainPass() = 0;
-		virtual void BeginImGuiPass() = 0;
-		virtual void EndPass() = 0;
-
 		virtual Extent GetExtent() = 0;
 	};
 }

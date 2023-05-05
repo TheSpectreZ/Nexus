@@ -5,8 +5,11 @@
 Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene, Ref<Shader> shader)
 {
     Ref<SceneBuildData> data = CreateRef<SceneBuildData>();
-
     data->shader = shader;
+
+    scene->SceneDestructionCallback = NEXUS_BIND_FN(SceneBuildData::OnSceneDestruction, data);
+    scene->EntityCreationCallback = NEXUS_BIND_FN(SceneBuildData::OnEntityCreation, data);
+    scene->EntityDestructionCallback = NEXUS_BIND_FN(SceneBuildData::OnEntityDestruction, data);
 
     // Per Scene
     {
@@ -34,7 +37,7 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
 
             ResourceHeapHandle heapHandle{};
             heapHandle.hashId = CreateUUID();
-            heapHandle.set =1;
+            heapHandle.set = 1;
 
             shader->AllocateShaderResourceHeap(heapHandle);
             data->PerEntityHeap[Identity.uuid] = heapHandle;
@@ -50,7 +53,6 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
             shader->BindUniformWithResourceHeap(heapHandle, uniformHandle);
         }
     }
-
     NEXUS_LOG_WARN("Scene Data Built");
 
     return data;
@@ -91,6 +93,47 @@ void Nexus::SceneBuildData::Destroy()
         shader->DeallocateShaderResourceHeap(v);
         shader->DeallocateUniformBuffer(PerEntityUniform[k]);
     }
+    PerEntityHeap.clear();
+    PerEntityUniform.clear();
 
     NEXUS_LOG_WARN("Scene Data Destroyed");
+}
+
+void Nexus::SceneBuildData::OnSceneDestruction()
+{
+    shader->DeallocateShaderResourceHeap(PerSceneHeap);
+    shader->DeallocateUniformBuffer(PerSceneUniform);
+}
+
+void Nexus::SceneBuildData::OnEntityCreation(Entity e)
+{
+    auto& Identity = e.GetComponent<Component::Identity>();
+
+    ResourceHeapHandle heapHandle{};
+    heapHandle.hashId = CreateUUID();
+    heapHandle.set = 1;
+
+    shader->AllocateShaderResourceHeap(heapHandle);
+    PerEntityHeap[Identity.uuid] = heapHandle;
+
+    UniformBufferHandle uniformHandle{};
+    uniformHandle.hashId = CreateUUID();
+    uniformHandle.set = 1;
+    uniformHandle.binding = 0;
+
+    shader->AllocateUniformBuffer(uniformHandle);
+    PerEntityUniform[Identity.uuid] = uniformHandle;
+
+    shader->BindUniformWithResourceHeap(heapHandle, uniformHandle);
+}
+
+void Nexus::SceneBuildData::OnEntityDestruction(Entity e)
+{
+    UUID id = e.GetComponent<Component::Identity>().uuid;
+
+    shader->DeallocateShaderResourceHeap(PerEntityHeap[id]);
+    shader->DeallocateUniformBuffer(PerEntityUniform[id]);
+
+    PerEntityHeap.erase(id);
+    PerEntityUniform.erase(id);
 }

@@ -18,6 +18,8 @@
 #include "Renderer/Vertex.h"
 #include "Renderer/Mesh.h"
 #include "Renderer/ShaderResource.h"
+#include "Renderer/Renderpass.h"
+#include "Renderer/Framebuffer.h"
 
 #include "Scene/Camera.h"
 #include "Scene/Entity.h"
@@ -29,3 +31,5 @@
 #include "Script/ScriptEngine.h"
 
 #include "Editor/EditorContext.h"
+#include "Editor/EditorViewport.h"
+#include "Editor/SceneHeirarchy.h"

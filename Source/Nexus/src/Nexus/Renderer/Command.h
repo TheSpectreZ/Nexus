@@ -2,6 +2,7 @@
 #include "RenderTypes.h"
 #include "Pipeline.h"
 
+#include "Framebuffer.h"
 #include "Mesh.h"
 
 namespace Nexus
@@ -21,12 +22,17 @@ namespace Nexus
 		static void SetViewport(const Viewport& viewport);
 		static void SetScissor(const Scissor& scissor);
 		
+		static void BeginRenderpass(Ref<Renderpass> renderpass, Ref<Framebuffer> framebuffer);
+		static void EndRenderpass();
+
 		static void BindPipeline(Ref<Pipeline> pipeline);
 		static void DrawMesh(Ref<StaticMesh> mesh);
 	private:
 		virtual void ImplInit() = 0;
 		virtual void ImplUpdate() = 0;
 
+		virtual void ImplBeginRenderpass(Ref<Renderpass> r, Ref<Framebuffer> f) = 0;
+		virtual void ImplEndRenderpass() = 0;
 		virtual void ImplTransferStaticMesh(Ref<StaticMesh> mesh) = 0;
 		virtual void ImplBindPipeline(Ref<Pipeline> pipeline) = 0;
 		virtual void ImplDrawMesh(Ref<StaticMesh> mesh) = 0;
