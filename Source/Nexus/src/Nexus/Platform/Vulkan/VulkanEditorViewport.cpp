@@ -101,10 +101,15 @@ void Nexus::VulkanEditorViewport::Render()
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("Viewport");
 
-    ImVec2 PanelSize = ImGui::GetContentRegionAvail();
+    m_Panelsize = ImGui::GetContentRegionAvail();
 
-    ImGui::Image(m_DescriptorSets[m_Command->m_FrameIndex], PanelSize);
+    ImGui::Image(m_DescriptorSets[m_Command->m_FrameIndex], m_Panelsize);
    
     ImGui::End();
     ImGui::PopStyleVar();
+}
+
+glm::vec2 Nexus::VulkanEditorViewport::GetViewportSize()
+{
+    return { m_Panelsize.x,m_Panelsize.y };
 }

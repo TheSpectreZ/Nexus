@@ -3,6 +3,7 @@
 #include "VkFramebuffer.h"
 #include "VkCommand.h"
 #include "VkSwapchain.h"
+#include "imgui.h"
 
 namespace Nexus
 {
@@ -14,6 +15,7 @@ namespace Nexus
 
 		void SetContext(Ref<Framebuffer> framebuffer, uint32_t attachmentIndex) override;
 		void Render() override;
+		glm::vec2 GetViewportSize() override;
 	private:
 		Ref<VulkanFramebuffer> m_Framebuffer;
 		std::vector<VkDescriptorSet> m_DescriptorSets;
@@ -22,6 +24,7 @@ namespace Nexus
 		VkPipelineLayout* m_layout;
 		Ref<VulkanSwapchain> m_Swapchain;
 		Ref<VulkanCommand> m_Command;
+		ImVec2 m_Panelsize;
 	};
 }
 

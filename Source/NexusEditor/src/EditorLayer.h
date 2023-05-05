@@ -18,6 +18,7 @@ private:
 	Nexus::FramebufferSpecification m_ImGuiFBspecs;
 	Nexus::Ref<Nexus::Framebuffer> m_ImGuiFramebuffer;
 
+	glm::vec2 m_ImGuiEditorViewportSize;
 	Nexus::Ref<Nexus::EditorViewport> m_ImGuiEditorViewport;
 
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;

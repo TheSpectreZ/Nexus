@@ -142,6 +142,21 @@ void EditorLayer::OnAttach()
 		m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
 	}
 
+	// Screen
+	{
+		Nexus::Extent Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
+
+		m_viewport.x = 0.0f;
+		m_viewport.y = 0.0f;
+		m_viewport.width = (float)Extent.width;
+		m_viewport.height = (float)Extent.height;
+		m_viewport.minDepth = 0.0f;
+		m_viewport.maxDepth = 1.0f;
+
+		m_scissor.Offset = { 0,0 };
+		m_scissor.Extent = { Extent.width, Extent.height };
+	}
+
 	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/simple.shader");
 	
 	// Pipeline
@@ -168,21 +183,7 @@ void EditorLayer::OnAttach()
 		m_Pipeline = Nexus::Pipeline::Create(Info);
 	}
 
-	// Screen
-	{
-		Nexus::Extent Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
-
-		m_viewport.x = 0.0f;
-		m_viewport.y = 0.0f;
-		m_viewport.width = (float)Extent.width;
-		m_viewport.height = (float)Extent.height;
-		m_viewport.minDepth = 0.0f;
-		m_viewport.maxDepth = 1.0f;
-
-		m_scissor.Offset = { 0,0 };
-		m_scissor.Extent = { Extent.width, Extent.height };
-	}
-
+	
 	// Camera
 	{
 		using namespace Nexus;
@@ -217,6 +218,13 @@ void EditorLayer::OnAttach()
 
 void EditorLayer::OnUpdate()
 {
+	glm::vec2 size = m_ImGuiEditorViewport->GetViewportSize();
+	if (size != m_ImGuiEditorViewportSize)
+	{
+		m_ImGuiEditorViewportSize = size;
+		m_cameraController.SetPerspectiveProjection(45.f, size.x, size.y, 0.1f, 1000.f);
+	}
+
 	m_cameraController.Move();
 	m_SceneData->Update(m_Scene, m_camera);
 }
