@@ -2,6 +2,7 @@
 #include "VkSwapchain.h"
 #include "VkContext.h"
 #include "VkRenderCommandQueue.h"
+#include "GLFW/glfw3.h"
 #include "Core/Application.h"
 
 Nexus::VulkanSwapchain::VulkanSwapchain()
@@ -169,6 +170,13 @@ Nexus::Extent Nexus::VulkanSwapchain::GetExtent()
 
 void Nexus::VulkanSwapchain::ReCreate()
 {
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(m_window->handle, &width, &height);
+	while (width == 0 || height == 0) {
+		glfwGetFramebufferSize(m_window->handle, &width, &height);
+		glfwWaitEvents();
+	}
+
 	VulkanContext::Get()->GetDeviceRef()->Wait();
 
 	Shut();
