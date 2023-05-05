@@ -16,6 +16,8 @@ private:
 	Nexus::Ref<Nexus::Renderpass> m_ImGuiPass;
 	Nexus::Ref<Nexus::Framebuffer> m_ImGuiFramebuffer;
 
+	Nexus::Ref<Nexus::EditorViewport> m_ImGuiEditorViewport;
+
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
 	
 	Nexus::Ref<Nexus::Scene> m_Scene;

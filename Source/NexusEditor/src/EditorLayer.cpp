@@ -30,7 +30,7 @@ void EditorLayer::OnAttach()
 			resolve.load = Nexus::ImageOperation::DontCare;
 			resolve.store = Nexus::ImageOperation::Store;
 			resolve.initialLayout = Nexus::ImageLayout::Undefined;
-			resolve.finalLayout = Nexus::ImageLayout::ColorAttachment;
+			resolve.finalLayout = Nexus::ImageLayout::ShaderReadOnly;
 		}
 
 		std::vector<Nexus::SubpassDescription> subpasses;
@@ -67,9 +67,9 @@ void EditorLayer::OnAttach()
 			auto& color = attachments.emplace_back();
 			color.type = Nexus::ImageType::Color;
 			color.multiSampled = false;
-			color.load = Nexus::ImageOperation::Load;
+			color.load = Nexus::ImageOperation::Clear;
 			color.store = Nexus::ImageOperation::Store;
-			color.initialLayout = Nexus::ImageLayout::ColorAttachment;
+			color.initialLayout = Nexus::ImageLayout::Undefined;
 			color.finalLayout = Nexus::ImageLayout::PresentSrc;
 		}
 
@@ -108,17 +108,17 @@ void EditorLayer::OnAttach()
 		a1.Type = Nexus::FramebufferAttachmentType::Color;
 		a1.multisampled = true;
 		a1.extent = extent;
-
+		
 		auto& a2 = specs.attachments.emplace_back();
 		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
 		a2.multisampled = true;
 		a2.extent = extent;
-
+		
 		auto& a3 = specs.attachments.emplace_back();
-		a3.Type = Nexus::FramebufferAttachmentType::PresentSrc;
+		a3.Type = Nexus::FramebufferAttachmentType::ShaderReadOnly_Color;
 		a3.multisampled = false;
 		a3.extent = extent;
-
+		
 		specs.extent = extent;
 		specs.renderpass = m_GraphicsPass;
 
@@ -135,14 +135,21 @@ void EditorLayer::OnAttach()
 		a1.Type = Nexus::FramebufferAttachmentType::PresentSrc;
 		a1.multisampled = false;
 		a1.extent = extent;
-
+		
 		specs.extent = extent;
 		specs.renderpass = m_ImGuiPass;
 
 		m_ImGuiFramebuffer = Nexus::Framebuffer::Create(specs);
 	}
 
-	Nexus::EditorContext::Initialize(m_ImGuiPass);
+	// Editor
+	{
+		Nexus::EditorContext::Initialize(m_ImGuiPass);
+
+		m_ImGuiEditorViewport = Nexus::EditorViewport::Create();
+		m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
+	}
+
 	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/simple.shader");
 	
 	// Pipeline
@@ -244,6 +251,7 @@ void EditorLayer::OnRender()
 		Nexus::EditorContext::StartFrame();
 		
 		m_SceneHeirarchy.Render();
+		m_ImGuiEditorViewport->Render();
 
 		Nexus::EditorContext::Render();
 		Nexus::Command::EndRenderpass();
