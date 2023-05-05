@@ -29,7 +29,7 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
     // Per Entity Heaps
     {
         Entity entity;
-        auto view = scene->m_registry.view<Component::Identity>();
+        auto view = scene->GetAllEntitiesWith<Component::Identity>();
         for (auto& e : view)
         {
             entity = Entity(e, scene.get());
@@ -69,7 +69,7 @@ void Nexus::SceneBuildData::Update(Ref<Scene> scene, Camera camera)
     // Per Entity Transforms
     {
         Entity entity;
-        auto view = scene->m_registry.view<Component::Identity>();
+        auto view = scene->GetAllEntitiesWith<Component::Identity>();
         for (auto& e : view)
         {
             entity = Entity(e, scene.get());

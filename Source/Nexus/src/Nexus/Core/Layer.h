@@ -1,12 +1,16 @@
 #pragma once
+#include "TimeStep.h"
 
-class Layer
+namespace Nexus
 {
-public:
-	virtual void OnAttach(){};
-	virtual void OnUpdate(){};
-	virtual void OnRender(){};
-	virtual void OnDetach(){};
-	virtual void OnWindowResize(int width, int height) {};
-	virtual ~Layer() {};
-};
+  class Layer
+  {
+  public:
+	  virtual void OnAttach(){};
+  	virtual void OnUpdate(Timestep ts){};
+	  virtual void OnRender(){};
+	  virtual void OnDetach(){};
+	  virtual void OnWindowResize(int width, int height) {};
+	  virtual ~Layer() {};
+  };
+}

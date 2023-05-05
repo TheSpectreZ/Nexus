@@ -131,10 +131,9 @@ void EditorLayer::OnAttach()
 		m_ImGuiFBspecs.extent = extent;
 		m_ImGuiFBspecs.renderpass = m_ImGuiPass;
 
-		m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
+    m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
 	}
 
-	// Editor
 	{
 		Nexus::EditorContext::Initialize(m_ImGuiPass);
 
@@ -211,13 +210,14 @@ void EditorLayer::OnAttach()
 
 		Nexus::Entity entity = m_Scene->CreateEntity();
 		entity.AddComponent<Nexus::Component::Mesh>(handle);
+		entity.AddComponent<Nexus::Component::Script>("Sandbox.Player");
 
 		m_SceneRenderer.SetContext(m_Scene, m_SceneData);
 		m_SceneHeirarchy.SetContext(m_Scene);
 	}
 }
 
-void EditorLayer::OnUpdate()
+void EditorLayer::OnUpdate(Nexus::Timestep ts)
 {
 	glm::vec2 size = m_ImGuiEditorViewport->GetViewportSize();
 	if (size != m_ImGuiEditorViewportSize)
@@ -228,6 +228,11 @@ void EditorLayer::OnUpdate()
 
 	m_cameraController.Move();
 	m_SceneData->Update(m_Scene, m_camera);
+
+	if (m_IsScenePlaying)
+	{
+		Nexus::ScriptEngine::OnSceneUpdate(ts.GetSeconds());
+	}
 }
 
 void EditorLayer::OnRender()
@@ -255,6 +260,22 @@ void EditorLayer::OnRender()
 
 		m_SceneHeirarchy.Render();
 		m_ImGuiEditorViewport->Render();
+
+    ImGui::Begin("Script");
+	  ImGui::Text("Hellooo Scripting !");
+
+	  if (ImGui::Button("Start Scene"))
+	  {
+  		m_IsScenePlaying = true;
+  		Nexus::ScriptEngine::OnSceneStart(m_Scene);
+	  }
+
+	  if (ImGui::Button("End Scene") && m_IsScenePlaying)
+	  {
+  		m_IsScenePlaying = false;
+	  	Nexus::ScriptEngine::OnSceneStop();
+	  }
+	  ImGui::End();
 
 		Nexus::EditorContext::Render();
 		Nexus::Command::EndRenderpass();

@@ -17,8 +17,18 @@ namespace Nexus
 		Entity CreateEntity(const std::string& name);
 		Entity CreateEntity(const std::string& name, UUID uuid);
 		void DestroyEntity(Entity entity);
+
+		template<typename... T>
+		auto GetAllEntitiesWith()
+		{
+			return m_registry.view<T...>();
+		}
+
+		Entity GetEntityWithUUID(UUID id);
+
 	private:
 		entt::registry m_registry;
+		std::unordered_map<UUID, Entity> m_EntityMap;
 
 		std::function<void(Entity)> EntityCreationCallback;
 		std::function<void(Entity)> EntityDestructionCallback;
@@ -29,5 +39,6 @@ namespace Nexus
 		friend class SceneRenderer;
 		friend class SceneSerializer;
 		friend class SceneHeirarchy;
+		friend class ScriptEngine;
 	};
 }

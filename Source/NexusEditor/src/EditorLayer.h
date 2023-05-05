@@ -1,16 +1,18 @@
 #pragma once
 #include "Nexus.h"
 
-class EditorLayer : public Layer
+class EditorLayer : public Nexus::Layer
 {
 public:
 	void OnAttach() override;
-	void OnUpdate() override;
+	void OnUpdate(Nexus::Timestep step) override;
 	void OnRender() override;
 	void OnDetach() override;
 	void OnWindowResize(int width, int height) override;
 private:
-	Nexus::Ref<Nexus::Renderpass> m_GraphicsPass;
+	bool m_IsScenePlaying;
+  
+  Nexus::Ref<Nexus::Renderpass> m_GraphicsPass;
 	Nexus::FramebufferSpecification m_GraphicsFBspecs;
 	Nexus::Ref<Nexus::Framebuffer> m_GraphicsFramebuffer;
 
@@ -22,7 +24,6 @@ private:
 	Nexus::Ref<Nexus::EditorViewport> m_ImGuiEditorViewport;
 
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
-	
 	Nexus::Ref<Nexus::Scene> m_Scene;
 	Nexus::Ref<Nexus::SceneBuildData> m_SceneData;
 	
