@@ -11,9 +11,11 @@ public:
 	void OnWindowResize(int width, int height) override;
 private:
 	Nexus::Ref<Nexus::Renderpass> m_GraphicsPass;
+	Nexus::FramebufferSpecification m_GraphicsFBspecs;
 	Nexus::Ref<Nexus::Framebuffer> m_GraphicsFramebuffer;
 
 	Nexus::Ref<Nexus::Renderpass> m_ImGuiPass;
+	Nexus::FramebufferSpecification m_ImGuiFBspecs;
 	Nexus::Ref<Nexus::Framebuffer> m_ImGuiFramebuffer;
 
 	Nexus::Ref<Nexus::EditorViewport> m_ImGuiEditorViewport;
