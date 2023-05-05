@@ -38,6 +38,9 @@ void Nexus::ScriptEngine::OnSceneStart(Ref<Scene> scene)
         auto& id = entity.GetComponent<Nexus::Component::Identity>();
         auto& Script = entity.GetComponent<Nexus::Component::Script>();
 
+        if (!s_Instance->m_EntityClasses.contains(Script.name))
+            continue;
+
         Nexus::ScriptInstance inst(Script.name);
 
         void* param = &id.uuid;

@@ -4,6 +4,7 @@
 #include "imgui_internal.h"
 #include "Core/FileDialog.h"
 #include "Assets/AssetManager.h"
+#include "Script/ScriptEngine.h"
 
 static void DrawVec3Control(const char* label, glm::vec3& vector, float reset = 0.f, float columnWidth = 100.f)
 {
@@ -147,7 +148,7 @@ void Nexus::SceneHeirarchy::Render()
 			}
 		);
 
-		if (ImGui::BeginPopupContextWindow(0, 1)) 
+		if (m_SelectedEntity == entt::null && ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight)) 
 		{
 			if (ImGui::MenuItem("Create Entity"))
 				m_Scene->CreateEntity();
@@ -231,6 +232,7 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 		if (ImGui::BeginPopup("AddComponent"))
 		{
 			DisplayAddComponentEntry<Component::Mesh>("Mesh", en);
+			DisplayAddComponentEntry<Component::Script>("Script", en);
 			ImGui::EndPopup();
 		}
 
@@ -292,5 +294,19 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 				component.handle = newhandle;
 			}
+		});
+
+	DrawComponent<Component::Script>("Script", { e,m_Scene.get() }, [&](auto& component)
+		{
+			bool scriptClassExists = ScriptEngine::EntityClassExists(component.name);
+
+			static char buffer[64];
+			strcpy_s(buffer, sizeof(buffer), component.name.c_str());
+
+			if (ImGui::InputText("ClassName", buffer, sizeof(buffer)))
+			{
+				component.name = buffer;
+			}
+		
 		});
 }
