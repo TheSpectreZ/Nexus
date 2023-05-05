@@ -207,10 +207,11 @@ void EditorLayer::OnAttach()
 		Nexus::AssetHandle handle = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("res/Meshes/Suzane.fbx");
 
 		m_Scene = Nexus::Scene::Create();
+		m_SceneData = Nexus::SceneBuildData::Build(m_Scene, simpleShader);
+
 		Nexus::Entity entity = m_Scene->CreateEntity();
 		entity.AddComponent<Nexus::Component::Mesh>(handle);
 
-		m_SceneData = Nexus::SceneBuildData::Build(m_Scene, simpleShader);
 		m_SceneRenderer.SetContext(m_Scene, m_SceneData);
 		m_SceneHeirarchy.SetContext(m_Scene);
 	}
