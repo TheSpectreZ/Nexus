@@ -45,6 +45,8 @@ namespace Nexus
 		static void OnSceneStop();
 
 		static Ref<Scene> GetSceneContext() { return s_Instance->m_scene; }
+
+		static bool EntityClassExists(const std::string& name) { return s_Instance->m_EntityClasses.contains(name); }
 	private:
 		void InitMono();
 		void ShutdownMono();
