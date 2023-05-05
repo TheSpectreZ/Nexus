@@ -23,7 +23,7 @@ Nexus::VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec
 			auto& k = m_Attachments[i].emplace_back();
 
 			if (a.Type != FramebufferAttachmentType::PresentSrc)
-				k.Create(a);
+				k.Create(a,specs.extent);
 			else
 			{
 				k.image = nullptr;
@@ -86,10 +86,10 @@ Nexus::VulkanFramebuffer::~VulkanFramebuffer()
 
 		vkDestroyFramebuffer(device->Get(), m_Framebuffer[i], nullptr);
 	}
-
+	NEXUS_LOG_TRACE("Vulkan Framebuffer Destroyed");
 }
 
-void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDescription& desc)
+void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDescription& desc,Extent extent)
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
 	Ref<VulkanPhysicalDevice> gpu = VulkanContext::Get()->GetPhysicalDeviceRef();
@@ -100,7 +100,7 @@ void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDes
 		VkImageCreateInfo Info{};
 		Info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		Info.pNext = nullptr;
-		Info.extent = { desc.extent.width,desc.extent.height,1 };
+		Info.extent = { extent.width,extent.height,1 };
 		Info.arrayLayers = 1;
 		Info.flags = 0;
 		Info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;

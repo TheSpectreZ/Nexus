@@ -12,7 +12,6 @@ namespace Nexus
 	struct FramebufferAttachmentDescription
 	{
 		FramebufferAttachmentType Type;
-		Extent extent;
 		bool multisampled;
 	};
 
