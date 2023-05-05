@@ -45,11 +45,19 @@ Nexus::AssetHandle Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>(con
 	if (path.extension().string() != ".fbx")
 		return UINT64_MAX;
 
+	std::string p = path.string();
+	if (s_Instance->m_AssetHandleCache.contains(p))
+	{
+		return s_Instance->m_AssetHandleCache[p];
+	}
+
 	AssetHandle handle = CreateAssetHandle();
 
 	s_Instance->m_StaticMeshes[handle].Mesh = StaticMesh::LoadWithAssimp(path.string().c_str());
 	s_Instance->m_StaticMeshes[handle].Name = path.filename().string();
 	s_Instance->m_StaticMeshes[handle].Path = path;
+
+	s_Instance->m_AssetHandleCache[p] = handle;
 
 	return handle;
 }
