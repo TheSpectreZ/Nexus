@@ -3,7 +3,7 @@
 
 #include "Application.h"
 #include "Input.h"
-
+#include "FileDialog.h"
 #include "Renderer/Context.h"
 #include "Renderer/Renderer.h"
 
@@ -67,6 +67,7 @@ void Nexus::Application::Init()
 		}
 
 		Input::SetContextWindow(m_Window);
+		FileDialog::SetContextWindow(m_Window);
 	}
 	
 	std::cout << std::endl;
@@ -118,6 +119,7 @@ void Nexus::Application::Run()
 		{
 			l->OnUpdate();
 		}
+		Renderer::FlushTransferCommandQueue();
 		
 		// Swapchain-ImGui RenderPass and CommandQueue
 		{
