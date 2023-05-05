@@ -30,7 +30,7 @@ void EditorLayer::OnAttach()
 			resolve.load = Nexus::ImageOperation::DontCare;
 			resolve.store = Nexus::ImageOperation::Store;
 			resolve.initialLayout = Nexus::ImageLayout::Undefined;
-			resolve.finalLayout = Nexus::ImageLayout::ColorAttachment;
+			resolve.finalLayout = Nexus::ImageLayout::ShaderReadOnly;
 		}
 
 		std::vector<Nexus::SubpassDescription> subpasses;
@@ -67,9 +67,9 @@ void EditorLayer::OnAttach()
 			auto& color = attachments.emplace_back();
 			color.type = Nexus::ImageType::Color;
 			color.multiSampled = false;
-			color.load = Nexus::ImageOperation::Load;
+			color.load = Nexus::ImageOperation::Clear;
 			color.store = Nexus::ImageOperation::Store;
-			color.initialLayout = Nexus::ImageLayout::ColorAttachment;
+			color.initialLayout = Nexus::ImageLayout::Undefined;
 			color.finalLayout = Nexus::ImageLayout::PresentSrc;
 		}
 
@@ -102,47 +102,60 @@ void EditorLayer::OnAttach()
 	{
 		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
 
-		Nexus::FramebufferSpecification specs{};
-		
-		auto& a1 = specs.attachments.emplace_back();
+		auto& a1 = m_GraphicsFBspecs.attachments.emplace_back();
 		a1.Type = Nexus::FramebufferAttachmentType::Color;
 		a1.multisampled = true;
-		a1.extent = extent;
-
-		auto& a2 = specs.attachments.emplace_back();
+		
+		auto& a2 = m_GraphicsFBspecs.attachments.emplace_back();
 		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
 		a2.multisampled = true;
-		a2.extent = extent;
-
-		auto& a3 = specs.attachments.emplace_back();
-		a3.Type = Nexus::FramebufferAttachmentType::PresentSrc;
+		
+		auto& a3 = m_GraphicsFBspecs.attachments.emplace_back();
+		a3.Type = Nexus::FramebufferAttachmentType::ShaderReadOnly_Color;
 		a3.multisampled = false;
-		a3.extent = extent;
+		
+		m_GraphicsFBspecs.extent = extent;
+		m_GraphicsFBspecs.renderpass = m_GraphicsPass;
 
-		specs.extent = extent;
-		specs.renderpass = m_GraphicsPass;
-
-		m_GraphicsFramebuffer = Nexus::Framebuffer::Create(specs);
+		m_GraphicsFramebuffer = Nexus::Framebuffer::Create(m_GraphicsFBspecs);
 	}
 	
 	// ImGui Framebuffer
 	{
 		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
 
-		Nexus::FramebufferSpecification specs{};
-		
-		auto& a1 = specs.attachments.emplace_back();
+		auto& a1 = m_ImGuiFBspecs.attachments.emplace_back();
 		a1.Type = Nexus::FramebufferAttachmentType::PresentSrc;
 		a1.multisampled = false;
-		a1.extent = extent;
+		
+		m_ImGuiFBspecs.extent = extent;
+		m_ImGuiFBspecs.renderpass = m_ImGuiPass;
 
-		specs.extent = extent;
-		specs.renderpass = m_ImGuiPass;
-
-		m_ImGuiFramebuffer = Nexus::Framebuffer::Create(specs);
+    m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
 	}
 
-	Nexus::EditorContext::Initialize(m_ImGuiPass);
+	{
+		Nexus::EditorContext::Initialize(m_ImGuiPass);
+
+		m_ImGuiEditorViewport = Nexus::EditorViewport::Create();
+		m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
+	}
+
+	// Screen
+	{
+		Nexus::Extent Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
+
+		m_viewport.x = 0.0f;
+		m_viewport.y = 0.0f;
+		m_viewport.width = (float)Extent.width;
+		m_viewport.height = (float)Extent.height;
+		m_viewport.minDepth = 0.0f;
+		m_viewport.maxDepth = 1.0f;
+
+		m_scissor.Offset = { 0,0 };
+		m_scissor.Extent = { Extent.width, Extent.height };
+	}
+
 	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/simple.shader");
 	
 	// Pipeline
@@ -169,21 +182,7 @@ void EditorLayer::OnAttach()
 		m_Pipeline = Nexus::Pipeline::Create(Info);
 	}
 
-	// Screen
-	{
-		Nexus::Extent Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
-
-		m_viewport.x = 0.0f;
-		m_viewport.y = 0.0f;
-		m_viewport.width = (float)Extent.width;
-		m_viewport.height = (float)Extent.height;
-		m_viewport.minDepth = 0.0f;
-		m_viewport.maxDepth = 1.0f;
-
-		m_scissor.Offset = { 0,0 };
-		m_scissor.Extent = { Extent.width, Extent.height };
-	}
-
+	
 	// Camera
 	{
 		using namespace Nexus;
@@ -207,19 +206,33 @@ void EditorLayer::OnAttach()
 		Nexus::AssetHandle handle = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("res/Meshes/Suzane.fbx");
 
 		m_Scene = Nexus::Scene::Create();
+		m_SceneData = Nexus::SceneBuildData::Build(m_Scene, simpleShader);
+
 		Nexus::Entity entity = m_Scene->CreateEntity();
 		entity.AddComponent<Nexus::Component::Mesh>(handle);
+		entity.AddComponent<Nexus::Component::Script>("Sandbox.Player");
 
-		m_SceneData = Nexus::SceneBuildData::Build(m_Scene, simpleShader);
 		m_SceneRenderer.SetContext(m_Scene, m_SceneData);
 		m_SceneHeirarchy.SetContext(m_Scene);
 	}
 }
 
-void EditorLayer::OnUpdate()
+void EditorLayer::OnUpdate(Nexus::Timestep ts)
 {
+	glm::vec2 size = m_ImGuiEditorViewport->GetViewportSize();
+	if (size != m_ImGuiEditorViewportSize)
+	{
+		m_ImGuiEditorViewportSize = size;
+		m_cameraController.SetPerspectiveProjection(45.f, size.x, size.y, 0.1f, 1000.f);
+	}
+
 	m_cameraController.Move();
 	m_SceneData->Update(m_Scene, m_camera);
+
+	if (m_IsScenePlaying)
+	{
+		Nexus::ScriptEngine::OnSceneUpdate(ts.GetSeconds());
+	}
 }
 
 void EditorLayer::OnRender()
@@ -243,7 +256,26 @@ void EditorLayer::OnRender()
 		Nexus::Command::BeginRenderpass(m_ImGuiPass, m_ImGuiFramebuffer);
 		Nexus::EditorContext::StartFrame();
 		
+		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
 		m_SceneHeirarchy.Render();
+		m_ImGuiEditorViewport->Render();
+
+    ImGui::Begin("Script");
+	  ImGui::Text("Hellooo Scripting !");
+
+	  if (ImGui::Button("Start Scene"))
+	  {
+  		m_IsScenePlaying = true;
+  		Nexus::ScriptEngine::OnSceneStart(m_Scene);
+	  }
+
+	  if (ImGui::Button("End Scene") && m_IsScenePlaying)
+	  {
+  		m_IsScenePlaying = false;
+	  	Nexus::ScriptEngine::OnSceneStop();
+	  }
+	  ImGui::End();
 
 		Nexus::EditorContext::Render();
 		Nexus::Command::EndRenderpass();
@@ -261,10 +293,10 @@ void EditorLayer::OnDetach()
 
 void EditorLayer::OnWindowResize(int width, int height)
 {
+	Nexus::Extent Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
+	
 	// Screen
 	{
-		Nexus::Extent Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
-
 		m_viewport.x = 0.0f;
 		m_viewport.y = 0.0f;
 		m_viewport.width = (float)Extent.width;
@@ -277,4 +309,15 @@ void EditorLayer::OnWindowResize(int width, int height)
 
 		m_cameraController.SetPerspectiveProjection(45.f, (float)width, (float)height, 0.1f, 1000.f);
 	}
+
+	m_GraphicsFramebuffer.reset();
+	m_ImGuiFramebuffer.reset();
+
+	m_GraphicsFBspecs.extent = Extent;
+	m_GraphicsFramebuffer = Nexus::Framebuffer::Create(m_GraphicsFBspecs);
+
+	m_ImGuiFBspecs.extent = Extent;
+	m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
+
+	m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
 }

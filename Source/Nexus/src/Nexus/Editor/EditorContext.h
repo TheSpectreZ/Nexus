@@ -1,6 +1,7 @@
 #pragma once
 #include "imgui.h"
 #include "Renderer/Renderpass.h"
+#include "Renderer/ShaderResource.h"
 
 namespace Nexus
 {

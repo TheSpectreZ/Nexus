@@ -24,6 +24,7 @@ namespace Nexus
 		template<typename T>
 		static void Remove(AssetHandle handle);
 	private:
+		std::unordered_map<std::string, AssetHandle> m_AssetHandleCache;
 		std::unordered_map<AssetHandle, StaticMeshAsset> m_StaticMeshes;
 	};
 	

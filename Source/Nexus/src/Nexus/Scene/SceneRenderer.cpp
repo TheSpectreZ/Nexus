@@ -15,7 +15,7 @@ void Nexus::SceneRenderer::Render()
 	m_Data->shader->BindShaderResourceHeap(m_Data->PerSceneHeap);
 
 	Entity entity;
-	auto meshView = m_Scene->m_registry.view<Component::Mesh>();
+	auto meshView = m_Scene->GetAllEntitiesWith<Component::Mesh>();
 	for (auto& e : meshView)
 	{
 		entity = Entity(e, m_Scene.get());

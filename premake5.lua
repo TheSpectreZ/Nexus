@@ -18,7 +18,10 @@ workspace "Nexus-Engine"
         include "Scripts/Dependencies/yamlcpp.lua"
         include "Scripts/Dependencies/openALsoft.lua"
         include "Scripts/Dependencies/glad.lua"
-    group ""
-
-    include "Scripts/Nexus.lua"
-    include "Scripts/NexusEditor.lua"
+    
+    group "Core"
+        include "Scripts/Nexus.lua"
+        include "Scripts/NexusScriptCore.lua"
+    
+    group "Tools"
+        include "Scripts/NexusEditor.lua"

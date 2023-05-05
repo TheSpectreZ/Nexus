@@ -24,7 +24,7 @@ namespace Nexus
 			VkImageView view;
 			VmaAllocation mem;
 
-			void Create(const FramebufferAttachmentDescription& desc);
+			void Create(const FramebufferAttachmentDescription& desc, Extent extent);
 			void Destroy(VkDevice device,VmaAllocator allocator);
 		};
 		std::vector<std::vector<Attachment>> m_Attachments;

@@ -23,7 +23,7 @@ Nexus::VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec
 			auto& k = m_Attachments[i].emplace_back();
 
 			if (a.Type != FramebufferAttachmentType::PresentSrc)
-				k.Create(a);
+				k.Create(a,specs.extent);
 			else
 			{
 				k.image = nullptr;
@@ -86,10 +86,10 @@ Nexus::VulkanFramebuffer::~VulkanFramebuffer()
 
 		vkDestroyFramebuffer(device->Get(), m_Framebuffer[i], nullptr);
 	}
-
+	NEXUS_LOG_TRACE("Vulkan Framebuffer Destroyed");
 }
 
-void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDescription& desc)
+void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDescription& desc,Extent extent)
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
 	Ref<VulkanPhysicalDevice> gpu = VulkanContext::Get()->GetPhysicalDeviceRef();
@@ -100,7 +100,7 @@ void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDes
 		VkImageCreateInfo Info{};
 		Info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		Info.pNext = nullptr;
-		Info.extent = { desc.extent.width,desc.extent.height,1 };
+		Info.extent = { extent.width,extent.height,1 };
 		Info.arrayLayers = 1;
 		Info.flags = 0;
 		Info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -112,15 +112,21 @@ void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDes
 		Info.imageType = VK_IMAGE_TYPE_2D;
 		Info.samples = desc.multisampled ? gpu->GetMaxSampleCount() : VK_SAMPLE_COUNT_1_BIT;
 		
+		// NOTE: Usage is Kind of hardcoded to engine's use case, if in future something breaks considering checking it out
+
 		switch (desc.Type)
 		{
 			case FramebufferAttachmentType::Color: 
 				Info.format = swapchain->GetImageFormat();
-				Info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+				Info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
 				break;
 			case FramebufferAttachmentType::DepthStencil: 
 				Info.format = gpu->GetDepthFormat(); 
 				Info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT; 
+				break;
+			case FramebufferAttachmentType::ShaderReadOnly_Color:
+				Info.format = swapchain->GetImageFormat();
+				Info.usage = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 				break;
 			default:
 				Info.format = VK_FORMAT_UNDEFINED; 
@@ -160,6 +166,10 @@ void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDes
 		case FramebufferAttachmentType::DepthStencil:
 			Info.format = gpu->GetDepthFormat();
 			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+			break;
+		case FramebufferAttachmentType::ShaderReadOnly_Color:
+			Info.format = swapchain->GetImageFormat();
+			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			break;
 		default:
 			Info.format = VK_FORMAT_UNDEFINED;

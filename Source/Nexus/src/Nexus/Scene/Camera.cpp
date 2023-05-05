@@ -78,17 +78,17 @@ glm::vec3 Nexus::CameraController::GetMovementMultiplier(CameraBindings binding)
 	switch (binding)
 	{
 	case Nexus::CameraBindings::FRONT:
-		return -m_front;
-	case Nexus::CameraBindings::BACK:
 		return m_front;
+	case Nexus::CameraBindings::BACK:
+		return -m_front;
 	case Nexus::CameraBindings::UP:
-		return -m_up;
-	case Nexus::CameraBindings::DOWN:
 		return m_up;
+	case Nexus::CameraBindings::DOWN:
+		return -m_up;
 	case Nexus::CameraBindings::RIGHT:
-		return -glm::normalize(glm::cross(m_front, m_up));
-	case Nexus::CameraBindings::LEFT:
 		return glm::normalize(glm::cross(m_front, m_up));
+	case Nexus::CameraBindings::LEFT:
+		return -glm::normalize(glm::cross(m_front, m_up));
 	default:
 		return glm::vec3(0.f);
 	}

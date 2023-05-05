@@ -18,6 +18,7 @@ namespace Nexus
 		void Destroy();
 	private:
 		void OnSceneDestruction();
+		void OnEntityCreation(Entity e);
 		void OnEntityDestruction(Entity e);
 
 		Ref<Scene> scene;

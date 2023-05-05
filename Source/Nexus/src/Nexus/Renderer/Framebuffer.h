@@ -6,13 +6,12 @@ namespace Nexus
 {
 	enum FramebufferAttachmentType
 	{
-		Color, DepthStencil, PresentSrc
+		Color, DepthStencil, PresentSrc, ShaderReadOnly_Color
 	};
 
 	struct FramebufferAttachmentDescription
 	{
 		FramebufferAttachmentType Type;
-		Extent extent;
 		bool multisampled;
 	};
 

@@ -2,6 +2,8 @@
 #include "SceneHeirarchy.h"
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "Core/FileDialog.h"
+#include "Assets/AssetManager.h"
 
 static void DrawVec3Control(const char* label, glm::vec3& vector, float reset = 0.f, float columnWidth = 100.f)
 {
@@ -145,6 +147,13 @@ void Nexus::SceneHeirarchy::Render()
 			}
 		);
 
+		if (ImGui::BeginPopupContextWindow(0, 1)) 
+		{
+			if (ImGui::MenuItem("Create Entity"))
+				m_Scene->CreateEntity();
+			ImGui::EndPopup();
+		}
+		
 		if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
 		{
 			m_SelectedEntity = entt::null;
@@ -247,7 +256,7 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			if (open)
 			{
 				auto& component = en.GetComponent<Component::Transform>();
-				glm::vec3 rot = component.GetRotationEuler();
+				glm::vec3& rot = component.GetRotationEuler();
 
 				DrawVec3Control("Translation", component.Translation);
 				DrawVec3Control("Rotation", rot);
@@ -259,6 +268,29 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Mesh>("Mesh", {e,m_Scene.get()}, [&](auto& component)
 		{
+			AssetHandle handle = component.handle;
+			auto& meshAsset = AssetManager::Get<StaticMeshAsset>(handle);
+			ImGui::LabelText("MeshName", meshAsset.Name.c_str());
+			ImGui::LabelText("MeshPath", meshAsset.Path.string().c_str());
+			ImGui::SameLine();
+			
+			static std::string browsedString;
+			if (ImGui::Button("Browse"))
+			{
+				std::string path = FileDialog::OpenFile("FBX Model (*.fbx)\0*.fbx\0");
+				if (!path.empty())
+				{
+					browsedString = path;
 
+				}
+			}
+
+			if (ImGui::Button("Set Mesh"))
+			{
+				AssetHandle newhandle = AssetManager::LoadFromFile<StaticMeshAsset>(browsedString);
+				browsedString.clear();
+
+				component.handle = newhandle;
+			}
 		});
 }
