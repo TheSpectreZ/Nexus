@@ -33,6 +33,7 @@ Nexus::VulkanEditorViewport::VulkanEditorViewport()
     }
 
     m_Swapchain = VulkanSwapchain::Get();
+    m_DescriptorSets.resize(m_Swapchain->GetImageCount());
     m_Command = DynamicPointerCast<VulkanCommand>(Command::GetRef());
 }
 
@@ -50,12 +51,18 @@ void Nexus::VulkanEditorViewport::SetContext(Ref<Framebuffer> framebuffer, uint3
     ImGui_ImplVulkan_InitInfo* v = &bd->VulkanInitInfo;
 
     uint32_t count = m_Swapchain->GetImageCount();
-
+       
     // Create Descriptor Set:
-    m_DescriptorSets.resize(count);
+    if (m_DescriptorSets[0] != nullptr)
+    {
+        vkFreeDescriptorSets(VulkanContext::Get()->GetDeviceRef()->Get(), v->DescriptorPool, (uint32_t)m_DescriptorSets.size(), m_DescriptorSets.data());
+    }
+
     std::vector<VkDescriptorSetLayout> lays(count);
-    for (auto& l : lays)
-        l = bd->DescriptorSetLayout;
+    for (uint32_t i = 0; i < count; i++)
+    {
+        lays[i] = bd->DescriptorSetLayout;
+    }
 
     m_layout = &bd->PipelineLayout;
 
