@@ -8,17 +8,17 @@
 #include <commdlg.h>
 #include <ShlObj_core.h>
 
-namespace Nexus::Platform::FileDialog
+namespace Nexus::FileDialog
 {
 	GLFWwindow* m_window = nullptr;
 }
 
-void Nexus::Platform::FileDialog::SetContextWindow(const Window& Window)
+void Nexus::FileDialog::SetContextWindow(const Window& Window)
 {
 	m_window = Window.handle;
 }
 
-std::string Nexus::Platform::FileDialog::OpenFile(const char* Filter)
+std::string Nexus::FileDialog::OpenFile(const char* Filter)
 {
 	OPENFILENAMEA ofn;
 
@@ -42,7 +42,7 @@ std::string Nexus::Platform::FileDialog::OpenFile(const char* Filter)
 	return std::string();
 }
 
-std::string Nexus::Platform::FileDialog::SaveFile(const char* Filter)
+std::string Nexus::FileDialog::SaveFile(const char* Filter)
 {
 	OPENFILENAMEA ofn;
 
@@ -66,7 +66,7 @@ std::string Nexus::Platform::FileDialog::SaveFile(const char* Filter)
 	return std::string();
 }
 
-std::string Nexus::Platform::FileDialog::SelectFolder()
+std::string Nexus::FileDialog::SelectFolder()
 {
 	TCHAR szDir[260] = { 0 };
 
