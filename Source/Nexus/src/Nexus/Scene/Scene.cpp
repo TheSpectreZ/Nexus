@@ -13,6 +13,7 @@ void Nexus::Scene::Clear()
 			DestroyEntity({ e,this });
 		});
 	
+	
 	SceneDestructionCallback();
 
 	m_registry.clear();
@@ -33,12 +34,14 @@ Nexus::Entity Nexus::Scene::CreateEntity()
 Nexus::Entity Nexus::Scene::CreateEntity(const std::string& name)
 {
 	entt::entity entity = m_registry.create();
+	Entity e = { entity,this };
 	
 	m_registry.emplace<Component::Tag>(entity,name);
 	m_registry.emplace<Component::Identity>(entity);
 	m_registry.emplace<Component::Transform>(entity);
 
-	return { entity,this };
+	EntityCreationCallback(e);
+	return e;
 }
 
 Nexus::Entity Nexus::Scene::CreateEntity(const std::string& name, UUID uuid)

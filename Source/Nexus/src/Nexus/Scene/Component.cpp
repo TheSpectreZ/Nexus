@@ -228,6 +228,11 @@ glm::vec3 Nexus::Component::Transform::GetRotationEuler() const
 	return RotationEuler;
 }
 
+glm::vec3& Nexus::Component::Transform::GetRotationEuler()
+{
+	return RotationEuler;
+}
+
 glm::quat Nexus::Component::Transform::GetRotation() const
 {
 	return Rotation;

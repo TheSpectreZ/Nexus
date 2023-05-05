@@ -46,6 +46,8 @@ namespace Nexus
 			glm::quat GetRotation() const;
 			glm::vec3 GetRotationEuler() const;
 
+			glm::vec3& GetRotationEuler();
+
 			void SetTransform(const glm::mat4& transform);
 			void SetRotation(const glm::quat& quat);
 			void SetRotationEuler(const glm::vec3& euler);
