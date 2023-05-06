@@ -32,6 +32,8 @@ project "Nexus"
         IncludeDir["imgui"],
         IncludeDir["vulkanMemoryAllocator"],
         IncludeDir["mono"],
+        IncludeDir["joltRoot"],
+        IncludeDir["jolt"],
 
         "$(VULKAN_SDK)/Include",
     }
@@ -43,6 +45,7 @@ project "Nexus"
         "yamlcpp",
         "assimp",
         "imgui",
+        "jolt",
         "vulkan-1.lib",
         "libmono-static-sgen.lib"
     }

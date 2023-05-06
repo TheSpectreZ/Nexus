@@ -11,7 +11,7 @@ project "jolt"
     includedirs
     {
         IncludeDir["jolt"],
-        (DepDir.."Jolt"),
+        IncludeDir["joltRoot"],
     }
 
 	files
