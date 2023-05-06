@@ -24,6 +24,7 @@ IncludeDir["nlohmannJson"] = (DepDir.."nlohmannJson/single_include")
 IncludeDir["assimp"] = (DepDir.."Assimp/include")
 IncludeDir["openALsoft"] = (DepDir.."openALsoft/include")
 IncludeDir["mono"] = (VenDir.."Mono/include")
+IncludeDir["jolt"] = (DepDir.."Jolt/Jolt")
 IncludeDir["Nexus"] = (SrcDir.."Nexus/src/Nexus")
 
 LibDir = {}
