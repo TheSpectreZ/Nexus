@@ -268,7 +268,7 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 		}
 	}
 
-	DrawComponent<Component::Mesh>("Mesh", {e,m_Scene.get()}, [&](auto& component)
+	DrawComponent<Component::Mesh>("Mesh", en, [&](auto& component)
 		{
 			AssetHandle handle = component.handle;
 			auto& meshAsset = AssetManager::Get<StaticMeshAsset>(handle);
@@ -296,17 +296,46 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			}
 		});
 
-	DrawComponent<Component::Script>("Script", { e,m_Scene.get() }, [&](auto& component)
+	DrawComponent<Component::Script>("Script", en, [&](auto& component)
 		{
 			bool scriptClassExists = ScriptEngine::EntityClassExists(component.name);
 
 			static char buffer[64];
 			strcpy_s(buffer, sizeof(buffer), component.name.c_str());
 
+			if (!scriptClassExists)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.f));
+
 			if (ImGui::InputText("ClassName", buffer, sizeof(buffer)))
 			{
 				component.name = buffer;
 			}
 		
+			if (!scriptClassExists)
+				ImGui::PopStyleColor();
+
+			if (scriptClassExists)
+			{
+				UUID id = en.GetComponent<Component::Identity>().uuid;
+
+				if (ScriptEngine::EntityInstanceExists(id))
+				{
+					ScriptInstance* instance = ScriptEngine::GetEntityScriptInstance(id);
+					const auto& fields = instance->GetScriptClass()->GetFields();
+
+					for (const auto& [k, v] : fields)
+					{
+						if (v.Type == ScriptFieldType::Float)
+						{
+							auto value = instance->GetFieldValue<float>(k);
+							if (ImGui::DragFloat(k.c_str(), &value))
+							{
+								instance->SetFieldValue(k, (void*)&value);
+							}
+						}
+					}
+				}
+			}
+
 		});
 }

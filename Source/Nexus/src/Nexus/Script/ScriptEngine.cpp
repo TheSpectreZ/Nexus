@@ -5,6 +5,7 @@
 #include "mono/jit/jit.h"
 #include "mono/metadata/assembly.h"
 #include "mono/metadata/object.h"
+#include "mono/metadata/attrdefs.h"
 
 #include "Scene/Entity.h"
 
@@ -50,7 +51,7 @@ void Nexus::ScriptEngine::OnSceneStart(Ref<Scene> scene)
         if (!s_Instance->m_EntityClasses.contains(Script.name))
             continue;
 
-        Nexus::ScriptInstance inst(Script.name);
+        Nexus::ScriptInstance inst(&s_Instance->m_EntityClasses[Script.name]);
 
         void* param = &id.uuid;
         mono_runtime_invoke(s_Instance->m_EntityBaseConstructor, inst.m_Object, &param, nullptr);
@@ -165,7 +166,7 @@ void Nexus::ScriptEngine::LoadCoreAssemblyClasses()
         {
             std::string key = nameSpace + std::string(".") + name;
 
-            m_EntityClasses[key] = cl;
+            m_EntityClasses[key] = ScriptClass(cl);
             NEXUS_LOG_TRACE("Loaded: {0}", key);
         }
     }
@@ -225,29 +226,110 @@ MonoAssembly* Nexus::ScriptEngine::LoadAssembly(const std::string& assemblyPath)
     return assembly;
 }
 
-Nexus::ScriptInstance::ScriptInstance(const std::string& ClassName)
+Nexus::ScriptInstance::ScriptInstance(ScriptClass* Class)
 {
-    m_Class = ScriptEngine::s_Instance->m_EntityClasses[ClassName];
-    m_Object = mono_object_new(ScriptEngine::s_Instance->m_AppDomain, m_Class);
+    m_ScriptClass = Class;
+    m_Object = mono_object_new(ScriptEngine::s_Instance->m_AppDomain, m_ScriptClass->m_Class);
     mono_runtime_object_init(m_Object);
-    
-    m_OnCreate = mono_class_get_method_from_name(m_Class, "OnCreate", 0);
-    m_OnUpdate = mono_class_get_method_from_name(m_Class, "OnUpdate", 1);
-    m_OnDestroy = mono_class_get_method_from_name(m_Class, "OnDestroy", 0);
 }
 
 void Nexus::ScriptInstance::InVokeOnCreate()
 {
-    mono_runtime_invoke(m_OnCreate, m_Object, nullptr, nullptr);
+    mono_runtime_invoke(m_ScriptClass->m_OnCreate, m_Object, nullptr, nullptr);
 }
 
 void Nexus::ScriptInstance::InVokeOnUpdate(float ts)
 {
     void* param = &ts;
-    mono_runtime_invoke(m_OnUpdate, m_Object, &param, nullptr);
+    mono_runtime_invoke(m_ScriptClass->m_OnUpdate, m_Object, &param, nullptr);
 }
 
 void Nexus::ScriptInstance::InVokeOnDestroy()
 {
-    mono_runtime_invoke(m_OnDestroy, m_Object, nullptr, nullptr);
+    mono_runtime_invoke(m_ScriptClass->m_OnDestroy, m_Object, nullptr, nullptr);
+}
+
+bool Nexus::ScriptInstance::GetFieldValueInternal(const std::string& name,void* buffer)
+{
+    if (!m_ScriptClass->m_Fields.contains(name))
+        return false;
+
+    ScriptField& f = m_ScriptClass->m_Fields[name];
+    mono_field_get_value(m_Object, f.Field, buffer);
+    return true;
+}
+
+void Nexus::ScriptInstance::SetFieldValue(const std::string& name,void* value)
+{
+    if (!m_ScriptClass->m_Fields.contains(name))
+        return;
+
+    ScriptField& f = m_ScriptClass->m_Fields[name];
+    mono_field_set_value(m_Object, f.Field, value);
+}
+
+Nexus::ScriptFieldType GetScriptFieldType(MonoType* type)
+{
+    std::string Typename = mono_type_get_name_full(type, MonoTypeNameFormat::MONO_TYPE_NAME_FORMAT_FULL_NAME);
+    
+    if (Typename == "System.Single")
+        return Nexus::ScriptFieldType::Float;
+    if (Typename == "System.Double")
+        return Nexus::ScriptFieldType::Double;
+    if (Typename == "Nexus.Vector3")
+        return Nexus::ScriptFieldType::Vec3;
+
+    return Nexus::ScriptFieldType::None;
+}
+
+const char* GetScriptFieldTypeString(Nexus::ScriptFieldType Type)
+{
+    switch (Type)
+    {
+    case Nexus::ScriptFieldType::None:
+        return "None";  
+    case Nexus::ScriptFieldType::Float:
+        return "Float";
+    case Nexus::ScriptFieldType::Double:
+        return "Double";
+    case Nexus::ScriptFieldType::UInt:
+        return "Unsigned Integer";
+    case Nexus::ScriptFieldType::Int:
+        return "Integer";
+    case Nexus::ScriptFieldType::Bool:
+        return "Bool";
+    case Nexus::ScriptFieldType::Vec2:
+        return "Vector2";  
+    case Nexus::ScriptFieldType::Vec3:
+        return "Vector3";
+    case Nexus::ScriptFieldType::Vec4:
+        return "Vector4";
+    default:
+        return "<InValid>";
+    }
+}
+
+Nexus::ScriptClass::ScriptClass(MonoClass* Class)
+{
+    m_Class = Class;
+
+    m_OnCreate = mono_class_get_method_from_name(m_Class, "OnCreate", 0);
+    m_OnUpdate = mono_class_get_method_from_name(m_Class, "OnUpdate", 1);
+    m_OnDestroy = mono_class_get_method_from_name(m_Class, "OnDestroy", 0);
+
+    void* Iter = nullptr;
+    while (MonoClassField* field = mono_class_get_fields(m_Class, &Iter))
+    {
+        uint32_t flag = mono_field_get_flags(field);
+
+        if (flag & MONO_FIELD_ATTR_PUBLIC)
+        {
+            std::string name = mono_field_get_name(field);
+            ScriptFieldType type = GetScriptFieldType(mono_field_get_type(field));
+            m_Fields[name] = { type ,field };
+
+            NEXUS_LOG_TRACE("\t{0} : {1}", name, GetScriptFieldTypeString(type));
+        }
+
+    }
 }
