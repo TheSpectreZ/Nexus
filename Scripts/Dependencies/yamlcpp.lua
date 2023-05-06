@@ -24,6 +24,12 @@ project "yamlcpp"
         "yaml_cpp_EXPORTS"
     }
 
+    disablewarnings
+    {
+        "4275",
+        "4251"
+    }
+    
 	filter "system:windows"
 		systemversion "latest"
 		cppdialect "C++17"

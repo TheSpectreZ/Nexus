@@ -54,13 +54,16 @@ project "Nexus"
 
     disablewarnings
     {
-        "4005"
+        "4005",
+        "4275",
+        "4251"
     }
     
     linkoptions 
 	{
 		"-IGNORE:4098",
 		"-IGNORE:4099", 
+		"-IGNORE:4006", 
 	}
 
     filter "system:windows"
