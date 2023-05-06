@@ -34,3 +34,6 @@
 [submodule "Source/Dependencies/assimp"]
 	path = Source/Dependencies/assimp
 	url = https://github.com/TheSpectreZ/assimp.git
+[submodule "Source/Dependencies/Jolt"]
+	path = Source/Dependencies/Jolt
+	url = https://github.com/jrouwe/JoltPhysics.git
