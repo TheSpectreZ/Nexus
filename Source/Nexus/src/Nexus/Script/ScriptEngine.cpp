@@ -26,6 +26,15 @@ void Nexus::ScriptEngine::Shut()
     delete s_Instance;
 }
 
+void Nexus::ScriptEngine::ReloadAssembly()
+{
+    mono_domain_set(mono_get_root_domain(), false);
+    mono_domain_unload(s_Instance->m_AppDomain);
+
+    s_Instance->InitAssembly();
+    ScriptGlue::BindComponents();
+}
+
 void Nexus::ScriptEngine::OnSceneStart(Ref<Scene> scene)
 {
     s_Instance->m_scene = scene;;
@@ -76,15 +85,12 @@ void Nexus::ScriptEngine::InitMono()
     MonoDomain* rootDomain = mono_jit_init("NexusJITRuntime");
     NEXUS_ASSERT((rootDomain == nullptr), "Failed To Initialize Mono JIT");
     m_RootDomain = rootDomain;
-
-    char friendlyName[] = "NexusAppDomain";
-    m_AppDomain = mono_domain_create_appdomain(friendlyName, nullptr);
-    mono_domain_set(m_AppDomain, true);
 }
 
 void Nexus::ScriptEngine::ShutdownMono()
 {
-    m_AppDomain = nullptr;
+    mono_domain_set(mono_get_root_domain(), false);
+    mono_domain_unload(s_Instance->m_AppDomain);
 
     mono_jit_cleanup(m_RootDomain);
     m_RootDomain = nullptr;
@@ -92,6 +98,10 @@ void Nexus::ScriptEngine::ShutdownMono()
 
 void Nexus::ScriptEngine::InitAssembly()
 {
+    char friendlyName[] = "NexusAppDomain";
+    m_AppDomain = mono_domain_create_appdomain(friendlyName, nullptr);
+    mono_domain_set(m_AppDomain, true);
+
     m_CoreAssembly = LoadAssembly("Resources/Scripts/NexusScriptCore.dll");
     m_CoreAssemblyImage = mono_assembly_get_image(m_CoreAssembly);
 
@@ -174,7 +184,7 @@ char* Nexus::ScriptEngine::ReadBytes(const std::string& filepath, uint32_t* outS
 
     std::streampos end = stream.tellg();
     stream.seekg(0, std::ios::beg);
-    uint32_t size = end - stream.tellg();
+    uint32_t size = (uint32_t)(end - stream.tellg());
 
     if (size == 0)
     {

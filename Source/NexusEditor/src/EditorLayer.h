@@ -10,9 +10,13 @@ public:
 	void OnDetach() override;
 	void OnWindowResize(int width, int height) override;
 private:
+	void CreateRenderpassAndFramebuffers();
+
+	void RenderEditorMainMenu();
+private:
 	bool m_IsScenePlaying;
   
-  Nexus::Ref<Nexus::Renderpass> m_GraphicsPass;
+	Nexus::Ref<Nexus::Renderpass> m_GraphicsPass;
 	Nexus::FramebufferSpecification m_GraphicsFBspecs;
 	Nexus::Ref<Nexus::Framebuffer> m_GraphicsFramebuffer;
 

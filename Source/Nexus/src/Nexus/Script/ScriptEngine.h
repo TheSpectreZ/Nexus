@@ -40,6 +40,8 @@ namespace Nexus
 		static void Init();
 		static void Shut();
 
+		static void ReloadAssembly();
+
 		static void OnSceneStart(Ref<Scene> scene);
 		static void OnSceneUpdate(float ts);
 		static void OnSceneStop();

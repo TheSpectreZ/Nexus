@@ -4,135 +4,7 @@ void EditorLayer::OnAttach()
 {
 	NEXUS_LOG_DEBUG("Editor Layer Attached");
 
-	// Graphics Renderpass
-	{
-		std::vector<Nexus::RenderpassAttachmentDescription> attachments;
-		{
-			auto& color = attachments.emplace_back();
-			color.type = Nexus::ImageType::Color;
-			color.multiSampled = true;
-			color.load = Nexus::ImageOperation::Clear;
-			color.store = Nexus::ImageOperation::Store;
-			color.initialLayout = Nexus::ImageLayout::Undefined;
-			color.finalLayout = Nexus::ImageLayout::ColorAttachment;
-
-			auto& depth = attachments.emplace_back();
-			depth.type = Nexus::ImageType::Depth;
-			depth.multiSampled = true;
-			depth.load = Nexus::ImageOperation::Clear;
-			depth.store = Nexus::ImageOperation::DontCare;
-			depth.initialLayout = Nexus::ImageLayout::Undefined;
-			depth.finalLayout = Nexus::ImageLayout::DepthStencilAttachment;
-
-			auto& resolve = attachments.emplace_back();
-			resolve.type = Nexus::ImageType::Resolve;
-			resolve.multiSampled = false;
-			resolve.load = Nexus::ImageOperation::DontCare;
-			resolve.store = Nexus::ImageOperation::Store;
-			resolve.initialLayout = Nexus::ImageLayout::Undefined;
-			resolve.finalLayout = Nexus::ImageLayout::ShaderReadOnly;
-		}
-
-		std::vector<Nexus::SubpassDescription> subpasses;
-		{
-			auto& subpass0 = subpasses.emplace_back();
-			subpass0.ColorAttachments = { 0 };
-			subpass0.DepthAttachment = 1;
-			subpass0.ResolveAttachment = 2;
-		}
-
-		std::vector<Nexus::SubpassDependency> subpassDependencies;
-		{
-			auto& dep = subpassDependencies.emplace_back();
-			dep.srcSubpass = Nexus::SubpassDependency::ExternalSubpass;
-			dep.dstSubpass = 0;
-			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
-			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
-			dep.srcAccessFlags = Nexus::AccessFlag::None;
-			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite;
-		}
-
-		Nexus::RenderpassSpecification specs{};
-		specs.attachments = &attachments;
-		specs.subpasses = &subpasses;
-		specs.dependencies = &subpassDependencies;
-
-		m_GraphicsPass = Nexus::Renderpass::Create(specs);
-	}
-
-	// Imgui Renderpass
-	{
-		std::vector<Nexus::RenderpassAttachmentDescription> attachments;
-		{
-			auto& color = attachments.emplace_back();
-			color.type = Nexus::ImageType::Color;
-			color.multiSampled = false;
-			color.load = Nexus::ImageOperation::Clear;
-			color.store = Nexus::ImageOperation::Store;
-			color.initialLayout = Nexus::ImageLayout::Undefined;
-			color.finalLayout = Nexus::ImageLayout::PresentSrc;
-		}
-
-		std::vector<Nexus::SubpassDescription> subpasses;
-		{
-			auto& subpass0 = subpasses.emplace_back();
-			subpass0.ColorAttachments = { 0 };
-		}
-
-		std::vector<Nexus::SubpassDependency> subpassDependencies;
-		{
-			auto& dep = subpassDependencies.emplace_back();
-			dep.srcSubpass = Nexus::SubpassDependency::ExternalSubpass;
-			dep.dstSubpass = 0;
-			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
-			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
-			dep.srcAccessFlags = Nexus::AccessFlag::None;
-			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite;
-		}
-
-		Nexus::RenderpassSpecification specs{};
-		specs.attachments = &attachments;
-		specs.subpasses = &subpasses;
-		specs.dependencies = &subpassDependencies;
-
-		m_ImGuiPass = Nexus::Renderpass::Create(specs);
-	}
-
-	// Graphics Framebuffer
-	{
-		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
-
-		auto& a1 = m_GraphicsFBspecs.attachments.emplace_back();
-		a1.Type = Nexus::FramebufferAttachmentType::Color;
-		a1.multisampled = true;
-		
-		auto& a2 = m_GraphicsFBspecs.attachments.emplace_back();
-		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
-		a2.multisampled = true;
-		
-		auto& a3 = m_GraphicsFBspecs.attachments.emplace_back();
-		a3.Type = Nexus::FramebufferAttachmentType::ShaderReadOnly_Color;
-		a3.multisampled = false;
-		
-		m_GraphicsFBspecs.extent = extent;
-		m_GraphicsFBspecs.renderpass = m_GraphicsPass;
-
-		m_GraphicsFramebuffer = Nexus::Framebuffer::Create(m_GraphicsFBspecs);
-	}
-	
-	// ImGui Framebuffer
-	{
-		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
-
-		auto& a1 = m_ImGuiFBspecs.attachments.emplace_back();
-		a1.Type = Nexus::FramebufferAttachmentType::PresentSrc;
-		a1.multisampled = false;
-		
-		m_ImGuiFBspecs.extent = extent;
-		m_ImGuiFBspecs.renderpass = m_ImGuiPass;
-
-    m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
-	}
+	CreateRenderpassAndFramebuffers();
 
 	{
 		Nexus::EditorContext::Initialize(m_ImGuiPass);
@@ -261,21 +133,7 @@ void EditorLayer::OnRender()
 		m_SceneHeirarchy.Render();
 		m_ImGuiEditorViewport->Render();
 
-    ImGui::Begin("Script");
-	  ImGui::Text("Hellooo Scripting !");
-
-	  if (ImGui::Button("Start Scene"))
-	  {
-  		m_IsScenePlaying = true;
-  		Nexus::ScriptEngine::OnSceneStart(m_Scene);
-	  }
-
-	  if (ImGui::Button("End Scene") && m_IsScenePlaying)
-	  {
-  		m_IsScenePlaying = false;
-	  	Nexus::ScriptEngine::OnSceneStop();
-	  }
-	  ImGui::End();
+		RenderEditorMainMenu();
 
 		Nexus::EditorContext::Render();
 		Nexus::Command::EndRenderpass();
@@ -320,4 +178,175 @@ void EditorLayer::OnWindowResize(int width, int height)
 	m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
 
 	m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
+}
+
+void EditorLayer::CreateRenderpassAndFramebuffers()
+{
+	// Graphics Renderpass
+	{
+		std::vector<Nexus::RenderpassAttachmentDescription> attachments;
+		{
+			auto& color = attachments.emplace_back();
+			color.type = Nexus::ImageType::Color;
+			color.multiSampled = true;
+			color.load = Nexus::ImageOperation::Clear;
+			color.store = Nexus::ImageOperation::Store;
+			color.initialLayout = Nexus::ImageLayout::Undefined;
+			color.finalLayout = Nexus::ImageLayout::ColorAttachment;
+
+			auto& depth = attachments.emplace_back();
+			depth.type = Nexus::ImageType::Depth;
+			depth.multiSampled = true;
+			depth.load = Nexus::ImageOperation::Clear;
+			depth.store = Nexus::ImageOperation::DontCare;
+			depth.initialLayout = Nexus::ImageLayout::Undefined;
+			depth.finalLayout = Nexus::ImageLayout::DepthStencilAttachment;
+
+			auto& resolve = attachments.emplace_back();
+			resolve.type = Nexus::ImageType::Resolve;
+			resolve.multiSampled = false;
+			resolve.load = Nexus::ImageOperation::DontCare;
+			resolve.store = Nexus::ImageOperation::Store;
+			resolve.initialLayout = Nexus::ImageLayout::Undefined;
+			resolve.finalLayout = Nexus::ImageLayout::ShaderReadOnly;
+		}
+
+		std::vector<Nexus::SubpassDescription> subpasses;
+		{
+			auto& subpass0 = subpasses.emplace_back();
+			subpass0.ColorAttachments = { 0 };
+			subpass0.DepthAttachment = 1;
+			subpass0.ResolveAttachment = 2;
+		}
+
+		std::vector<Nexus::SubpassDependency> subpassDependencies;
+		{
+			auto& dep = subpassDependencies.emplace_back();
+			dep.srcSubpass = Nexus::SubpassDependency::ExternalSubpass;
+			dep.dstSubpass = 0;
+			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.srcAccessFlags = Nexus::AccessFlag::None;
+			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite;
+		}
+
+		Nexus::RenderpassSpecification specs{};
+		specs.attachments = &attachments;
+		specs.subpasses = &subpasses;
+		specs.dependencies = &subpassDependencies;
+
+		m_GraphicsPass = Nexus::Renderpass::Create(specs);
+	}
+
+	// Imgui Renderpass
+	{
+		std::vector<Nexus::RenderpassAttachmentDescription> attachments;
+		{
+			auto& color = attachments.emplace_back();
+			color.type = Nexus::ImageType::Color;
+			color.multiSampled = false;
+			color.load = Nexus::ImageOperation::Clear;
+			color.store = Nexus::ImageOperation::Store;
+			color.initialLayout = Nexus::ImageLayout::Undefined;
+			color.finalLayout = Nexus::ImageLayout::PresentSrc;
+		}
+
+		std::vector<Nexus::SubpassDescription> subpasses;
+		{
+			auto& subpass0 = subpasses.emplace_back();
+			subpass0.ColorAttachments = { 0 };
+		}
+
+		std::vector<Nexus::SubpassDependency> subpassDependencies;
+		{
+			auto& dep = subpassDependencies.emplace_back();
+			dep.srcSubpass = Nexus::SubpassDependency::ExternalSubpass;
+			dep.dstSubpass = 0;
+			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.srcAccessFlags = Nexus::AccessFlag::None;
+			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite;
+		}
+
+		Nexus::RenderpassSpecification specs{};
+		specs.attachments = &attachments;
+		specs.subpasses = &subpasses;
+		specs.dependencies = &subpassDependencies;
+
+		m_ImGuiPass = Nexus::Renderpass::Create(specs);
+	}
+
+	// Graphics Framebuffer
+	{
+		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
+
+		auto& a1 = m_GraphicsFBspecs.attachments.emplace_back();
+		a1.Type = Nexus::FramebufferAttachmentType::Color;
+		a1.multisampled = true;
+
+		auto& a2 = m_GraphicsFBspecs.attachments.emplace_back();
+		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
+		a2.multisampled = true;
+
+		auto& a3 = m_GraphicsFBspecs.attachments.emplace_back();
+		a3.Type = Nexus::FramebufferAttachmentType::ShaderReadOnly_Color;
+		a3.multisampled = false;
+
+		m_GraphicsFBspecs.extent = extent;
+		m_GraphicsFBspecs.renderpass = m_GraphicsPass;
+
+		m_GraphicsFramebuffer = Nexus::Framebuffer::Create(m_GraphicsFBspecs);
+	}
+
+	// ImGui Framebuffer
+	{
+		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
+
+		auto& a1 = m_ImGuiFBspecs.attachments.emplace_back();
+		a1.Type = Nexus::FramebufferAttachmentType::PresentSrc;
+		a1.multisampled = false;
+
+		m_ImGuiFBspecs.extent = extent;
+		m_ImGuiFBspecs.renderpass = m_ImGuiPass;
+
+		m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
+	}
+}
+
+void EditorLayer::RenderEditorMainMenu()
+{
+	ImGui::BeginMainMenuBar();
+	
+	if(ImGui::BeginMenu("File"))
+	{
+		ImGui::MenuItem("New Scene");
+		ImGui::MenuItem("Open Scene");
+		ImGui::MenuItem("Save Scene");
+		
+		ImGui::EndMenu();
+	}
+	
+	if(ImGui::BeginMenu("Scripting"))
+	{
+		if (ImGui::MenuItem("Play Scene"))
+		{
+			Nexus::ScriptEngine::OnSceneStart(m_Scene);
+			m_IsScenePlaying = true;
+		}
+
+		if (ImGui::MenuItem("Stop Scene"))
+		{
+			Nexus::ScriptEngine::OnSceneStop();
+			m_IsScenePlaying = false;
+		}
+		
+		if (ImGui::MenuItem("Reload Assembly"))
+		{
+			Nexus::ScriptEngine::ReloadAssembly();
+		}
+		
+		ImGui::EndMenu();
+	}
+
+	ImGui::EndMainMenuBar();
 }
