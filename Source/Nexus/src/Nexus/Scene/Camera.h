@@ -28,8 +28,12 @@ namespace Nexus
 		void AttachCamera(Camera* camera);
 		void SetPerspectiveProjection(float fovy, float width, float height, float zNear, float zFar);
 		void Move();
+
+		void SetSpeed(float speed) { m_Speed = speed; }
 	private:
 		Camera* m_Camera;
+
+		float m_Speed;
 
 		// Key Binds
 		std::array<uint16_t, 6> m_KeyBinds;
