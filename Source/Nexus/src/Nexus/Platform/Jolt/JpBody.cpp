@@ -45,7 +45,8 @@ Nexus::JoltBody Nexus::JoltBodyFactor::CreateRigidBody(JPH::BodyInterface& inter
 		(RigidBody.motionType == Component::RigidBody::MotionType::Static) ? Layers::NON_MOVING : Layers::MOVING);
 
 	setting.mMassPropertiesOverride.mMass = RigidBody.mass;
-	setting.mRestitution = 0.4f;
+	setting.mRestitution = RigidBody.restitution;
+	setting.mFriction = RigidBody.friction;
 
 	JoltBody JB;
 	JB.body = interface.CreateBody(setting);

@@ -383,6 +383,8 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 				ImGui::EndCombo();
 			}
 			ImGui::DragFloat("Mass", &component.mass);
+			ImGui::DragFloat("Friction", &component.friction);
+			ImGui::DragFloat("Restitution", &component.restitution);
 			ImGui::Checkbox("Simulate", &component.Simulate);
 
 		});

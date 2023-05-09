@@ -81,7 +81,10 @@ namespace Nexus
 
 			enum class MotionType { Static = 0, Dynamic = 1, Kinematic = 2 };
 			MotionType motionType = MotionType::Static;
+			
 			float mass = 1.f;
+			float friction = 0.2f;
+			float restitution = 0.5f;
 
 			bool Simulate = true;
 		};
