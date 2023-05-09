@@ -33,3 +33,6 @@
 #include "Editor/EditorContext.h"
 #include "Editor/EditorViewport.h"
 #include "Editor/SceneHeirarchy.h"
+
+#include "Physics/PhysicsEngine.h"
+#include "Physics/PhysicsWorld.h"
