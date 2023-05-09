@@ -4,12 +4,15 @@
 #include "Application.h"
 #include "Input.h"
 #include "FileDialog.h"
+
 #include "Renderer/Context.h"
 #include "Renderer/Renderer.h"
 
 #include "Assets/AssetManager.h"
 
 #include "Script/ScriptEngine.h"
+
+#include "Physics/PhysicsEngine.h"
 
 Nexus::Application* Nexus::Application::s_Instance = nullptr;
 
@@ -78,7 +81,7 @@ void Nexus::Application::Init()
 		specs.vsync = m_AppSpecs.Vsync;
 		specs.msaa = m_AppSpecs.MultiSampling;
 
-		if (m_AppSpecs.Api == RenderAPI_Vulkan)
+		if (m_AppSpecs.rApi == RenderAPI_Vulkan)
 			specs.api = RenderAPIType::VULKAN;
 		
 		Renderer::Init(specs);
@@ -87,6 +90,14 @@ void Nexus::Application::Init()
 
 	AssetManager::Initialize();
 	ScriptEngine::Init();
+
+	{
+		PhysicsAPIType pApi = PhysicsAPIType::None;
+		if (m_AppSpecs.pApi == PhysicsAPI_Jolt)
+			pApi = PhysicsAPIType::Jolt;
+
+		PhysicsEngine::Initialize(pApi);
+	}
 }
 
 
@@ -147,6 +158,8 @@ void Nexus::Application::Run()
 
 void Nexus::Application::Shut()
 {
+	PhysicsEngine::Shutdown();
+
 	AssetManager::Shutdown();
 	ScriptEngine::Shut();
 	Renderer::Shut();
