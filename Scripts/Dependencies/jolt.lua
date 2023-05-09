@@ -3,8 +3,7 @@ project "jolt"
 	language "C++"
     cppdialect "C++17"
 	location (vcxDir)
-    staticruntime "off"
-
+    
 	targetdir (BinDir)
     objdir (IntDir)
 
@@ -24,7 +23,7 @@ project "jolt"
 
 	filter "system:windows"
 		systemversion "latest"
-        files { (DepDir.."Jolt/Jolt.natvis") }
+        files { (DepDir.."Jolt/Jolt/Jolt.natvis") }
 
 	filter "configurations:Debug"
         optimize "Off"

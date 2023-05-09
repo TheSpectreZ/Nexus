@@ -80,7 +80,11 @@ project "Nexus"
         }
 
 	filter "configurations:Debug"
-        defines "NEXUS_DEBUG"
+        defines 
+        {
+            "NEXUS_DEBUG",
+            "JPH_PROFILE_ENABLED"
+        }
         optimize "Off"
         symbols "Full"
         links
@@ -95,7 +99,11 @@ project "Nexus"
         }
 
     filter "configurations:Release"
-        defines "NEXUS_RELEASE"
+        defines 
+        {
+            "NEXUS_RELEASE",
+            "JPH_PROFILE_ENABLED"
+        }
         optimize "Speed"
         symbols "FastLink"
         links
