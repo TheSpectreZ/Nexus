@@ -14,7 +14,7 @@ private:
 
 	void RenderEditorMainMenu();
 private:
-	bool m_IsScenePlaying;
+	bool m_IsScenePlaying, m_PauseScene;
   
 	Nexus::Ref<Nexus::Renderpass> m_GraphicsPass;
 	Nexus::FramebufferSpecification m_GraphicsFBspecs;
@@ -28,9 +28,15 @@ private:
 	Nexus::Ref<Nexus::EditorViewport> m_ImGuiEditorViewport;
 
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
-	Nexus::Ref<Nexus::Scene> m_Scene;
+	
+	Nexus::Ref<Nexus::Scene> m_EditorScene;
+	Nexus::Ref<Nexus::Scene> m_RuntimeScene;
+	Nexus::Ref<Nexus::Scene> m_CurrentScene;
+
 	Nexus::Ref<Nexus::SceneBuildData> m_SceneData;
 	
+	Nexus::Ref<Nexus::PhysicsWorld> m_PhysicsWorld;
+
 	Nexus::SceneRenderer m_SceneRenderer;
 
 	Nexus::SceneHeirarchy m_SceneHeirarchy;

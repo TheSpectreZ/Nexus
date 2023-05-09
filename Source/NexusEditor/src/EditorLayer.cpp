@@ -60,6 +60,7 @@ void EditorLayer::OnAttach()
 		using namespace Nexus;
 
 		m_cameraController.AttachCamera(&m_camera);
+		m_cameraController.SetSpeed(100.f);
 		
 		m_cameraController.SetKeyBindings(CameraBindings::FRONT, Key::W);
 		m_cameraController.SetKeyBindings(CameraBindings::BACK, Key::S);
@@ -75,18 +76,26 @@ void EditorLayer::OnAttach()
 
 	// Scene
 	{
-		Nexus::AssetHandle handle = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("res/Meshes/Suzane.fbx");
+		Nexus::AssetHandle cube = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("Resources/Assets/Meshes/Cube.fbx");
+		
+		m_EditorScene = Nexus::Scene::Create();
+		m_CurrentScene = m_EditorScene;
 
-		m_Scene = Nexus::Scene::Create();
-		m_SceneData = Nexus::SceneBuildData::Build(m_Scene, simpleShader);
+		Nexus::Entity e1 = m_EditorScene->CreateEntity("Floor");
+		e1.AddComponent<Nexus::Component::BoxCollider>();
 
-		Nexus::Entity entity = m_Scene->CreateEntity();
-		entity.AddComponent<Nexus::Component::Mesh>(handle);
-		entity.AddComponent<Nexus::Component::Script>("Sandbox.Player");
+		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
+		e2.GetComponent<Nexus::Component::Transform>().Scale = glm::vec3(0.1f);
+		e2.AddComponent<Nexus::Component::Mesh>(cube);
+		e2.AddComponent<Nexus::Component::BoxCollider>();
+		e2.AddComponent<Nexus::Component::RigidBody>();
 
-		m_SceneRenderer.SetContext(m_Scene, m_SceneData);
-		m_SceneHeirarchy.SetContext(m_Scene);
+		m_SceneData = Nexus::SceneBuildData::Build(m_EditorScene, simpleShader);
+		m_SceneRenderer.SetContext(m_EditorScene, m_SceneData);
+		m_SceneHeirarchy.SetContext(m_SceneData, m_EditorScene);
 	}
+
+	m_PhysicsWorld = Nexus::PhysicsWorld::Create();
 }
 
 void EditorLayer::OnUpdate(Nexus::Timestep ts)
@@ -99,11 +108,13 @@ void EditorLayer::OnUpdate(Nexus::Timestep ts)
 	}
 
 	m_cameraController.Move();
-	m_SceneData->Update(m_Scene, m_camera);
 
-	if (m_IsScenePlaying)
+	m_SceneData->Update(m_CurrentScene, m_camera);
+
+	if (m_IsScenePlaying && !m_PauseScene)
 	{
 		Nexus::ScriptEngine::OnSceneUpdate(ts.GetSeconds());
+		m_PhysicsWorld->OnSceneUpdate(ts.GetSeconds());
 	}
 }
 
@@ -143,7 +154,10 @@ void EditorLayer::OnRender()
 void EditorLayer::OnDetach()
 {
 	m_SceneData->Destroy();
-	m_Scene->Clear();
+	m_EditorScene->Clear();
+
+	if (m_RuntimeScene)
+		m_RuntimeScene->Clear();
 
 	Nexus::EditorContext::Shutdown();
 	NEXUS_LOG_DEBUG("Editor Layer Detached");
@@ -330,14 +344,39 @@ void EditorLayer::RenderEditorMainMenu()
 	{
 		if (ImGui::MenuItem("Play Scene"))
 		{
-			Nexus::ScriptEngine::OnSceneStart(m_Scene);
-			m_IsScenePlaying = true;
+			if (!m_IsScenePlaying)
+			{
+				m_RuntimeScene = m_EditorScene->Duplicate();
+				m_CurrentScene = m_RuntimeScene;
+
+				m_SceneRenderer.SetContext(m_RuntimeScene, m_SceneData);
+
+				Nexus::ScriptEngine::OnSceneStart(m_RuntimeScene);
+				m_PhysicsWorld->OnSceneStart(m_RuntimeScene);
+				m_IsScenePlaying = true;
+				m_PauseScene = false;
+			}
 		}
 
 		if (ImGui::MenuItem("Stop Scene"))
 		{
-			Nexus::ScriptEngine::OnSceneStop();
-			m_IsScenePlaying = false;
+			if (m_IsScenePlaying)
+			{
+				m_SceneRenderer.SetContext(m_EditorScene, m_SceneData);
+				m_CurrentScene = m_EditorScene;
+
+				Nexus::ScriptEngine::OnSceneStop();
+				m_PhysicsWorld->OnSceneStop();
+				m_IsScenePlaying = false;
+
+				m_RuntimeScene->Clear();
+				m_RuntimeScene.reset();
+			}
+		}
+
+		if (ImGui::MenuItem("Pause Scene"))
+		{
+			m_PauseScene = !m_PauseScene;
 		}
 		
 		if (ImGui::MenuItem("Reload Assembly"))
