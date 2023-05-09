@@ -7,6 +7,11 @@ namespace Nexus
 		RenderAPI_Vulkan
 	};
 
+	enum PhysicsAPI
+	{
+		PhysicsAPI_Jolt
+	};
+
 	struct ApplicationSpecifications
 	{
 		int Window_Width;
@@ -15,6 +20,7 @@ namespace Nexus
 		bool Vsync;
 		bool MultiSampling;
 
-		RenderApi Api;
+		RenderApi rApi;
+		PhysicsAPI pApi;
 	};
 }
