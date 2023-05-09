@@ -1,5 +1,5 @@
 #pragma once
-#include "Scene/Scene.h"
+#include "Scene/SceneBuilder.h"
 #include "Scene/Entity.h"
 
 namespace Nexus
@@ -7,10 +7,11 @@ namespace Nexus
 	class SceneHeirarchy
 	{
 	public:
-		void SetContext(Ref<Scene> scene);
+		void SetContext(Ref<SceneBuildData> scenedata, Ref<Scene> scene);
 		void Render();
 	private:
 		Ref<Scene> m_Scene;
+		Ref<SceneBuildData> m_SceneData;
 		entt::entity m_SelectedEntity;
 
 		void DrawEntityNode(entt::entity e);
