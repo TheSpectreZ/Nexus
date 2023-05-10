@@ -6,7 +6,7 @@
 #include "Assets/AssetManager.h"
 #include "Script/ScriptEngine.h"
 
-static bool DrawVec3Control(const char* label, glm::vec3& vector, float reset = 0.f, float columnWidth = 100.f)
+bool Nexus::ImGuiUtils::DrawVec3Control(const char* label, glm::vec3& vector, float reset , float columnWidth )
 {
 	bool changed = false;
 
@@ -151,6 +151,7 @@ static void DrawComponent(const std::string& name, Nexus::Entity e, UIFuntion ui
 void Nexus::SceneHeirarchy::SetContext(Ref<SceneBuildData> scenedata, Ref<Scene> scene)
 {
 	m_Scene = scene;
+	m_SceneData = scenedata;
 }
 
 void Nexus::SceneHeirarchy::Render()
@@ -260,6 +261,9 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			DisplayAddComponentEntry<Component::Script>("Script", en);
 			DisplayAddComponentEntry<Component::RigidBody>("RigidBody", en);
 			DisplayAddComponentEntry<Component::BoxCollider>("BoxCollider", en);
+			DisplayAddComponentEntry<Component::SphereCollider>("SphereCollider", en);
+			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
+			DisplayAddComponentEntry<Component::CapsuleCollider>("CapsuleCollider", en);
 			ImGui::EndPopup();
 		}
 
@@ -282,12 +286,12 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 				auto& component = en.GetComponent<Component::Transform>();
 				glm::vec3 rot = component.GetRotationEuler();
 
-				DrawVec3Control("Translation", component.Translation);
-				if (DrawVec3Control("Rotation", rot))
+				ImGuiUtils::DrawVec3Control("Translation", component.Translation);
+				if (ImGuiUtils::DrawVec3Control("Rotation", rot))
 				{
 					component.SetRotationEuler(rot);
 				}
-				DrawVec3Control("Scale", component.Scale, 1.f);
+				ImGuiUtils::DrawVec3Control("Scale", component.Scale, 1.f);
 				ImGui::TreePop();
 			}
 		}
@@ -391,6 +395,24 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::BoxCollider>("Box Collider", en, [&](auto& component)
 		{
-			DrawVec3Control("HalfExtent", component.HalfExtent, 0.5f);
+			ImGuiUtils::DrawVec3Control("Half-Extent", component.HalfExtent, 0.5f);
+		});
+
+	DrawComponent<Component::SphereCollider>("Sphere Collider", en, [&](auto& component)
+		{
+			ImGui::DragFloat("Radius", &component.Radius);
+		});
+
+	DrawComponent<Component::CylinderCollider>("Cylinder Collider", en, [&](auto& component)
+		{
+			ImGui::DragFloat("Radius", &component.Radius);
+			ImGui::DragFloat("Half-Height", &component.HalfHeight);
+		});
+
+	DrawComponent<Component::CapsuleCollider>("Capsule Collider", en, [&](auto& component)
+		{
+			ImGui::DragFloat("Top-Radius", &component.TopRadius);
+			ImGui::DragFloat("Bottom-Radius", &component.BottomRadius);
+			ImGui::DragFloat("Half-Height", &component.HalfHeight);
 		});
 }

@@ -17,4 +17,9 @@ namespace Nexus
 		void DrawEntityNode(entt::entity e);
 		void DrawComponents(entt::entity e);
 	};
+
+	namespace ImGuiUtils
+	{
+		bool DrawVec3Control(const char* label, glm::vec3& vector, float reset = 0.f, float columnWidth = 100.f);
+	}
 }
