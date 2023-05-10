@@ -1,6 +1,17 @@
 #include "nxpch.h"
 #include "JpImpls.h"
 
+
+JPH::Vec3 Nexus::JoltUtils::ToJoltVector3(const glm::vec3& vector)
+{
+	return { vector.x,vector.y,vector.z };
+}
+
+JPH::Quat Nexus::JoltUtils::ToJoltQuat(const glm::quat& quat)
+{
+	return { quat.x,quat.y,quat.z,quat.w };
+}
+
 bool Nexus::ObjectLayerPairFilterImpl::ShouldCollide(JPH::ObjectLayer o1, JPH::ObjectLayer o2) const
 {
 	switch (o1)

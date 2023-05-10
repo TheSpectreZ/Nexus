@@ -1,4 +1,8 @@
 #pragma once
+#define GLM_ENABLE_EXPERIMENTAL
+#include "glm/glm.hpp"
+#include "glm/gtx/quaternion.hpp"
+
 #include "Jolt/Jolt.h"
 #include "Jolt/Physics/Collision/ObjectLayer.h"
 #include "Jolt/Physics/Collision/BroadPhase/BroadPhaseLayer.h"
@@ -7,6 +11,12 @@ using namespace JPH::literals;
 
 namespace Nexus
 {
+	namespace JoltUtils
+	{
+		JPH::Vec3 ToJoltVector3(const glm::vec3& vector);
+		JPH::Quat ToJoltQuat(const glm::quat& quat);
+	}
+
 	namespace Layers
 	{
 		static constexpr JPH::ObjectLayer NON_MOVING = 0;
