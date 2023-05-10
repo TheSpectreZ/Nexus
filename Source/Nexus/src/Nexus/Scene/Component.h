@@ -96,5 +96,32 @@ namespace Nexus
 
 			glm::vec3 HalfExtent = glm::vec3(0.5f);
 		};
+
+		struct SphereCollider
+		{
+			SphereCollider() = default;
+			SphereCollider(const SphereCollider&) = default;
+
+			float Radius = 0.5f;
+		};
+
+		struct CapsuleCollider
+		{
+			CapsuleCollider() = default;
+			CapsuleCollider(const CapsuleCollider&) = default;
+
+			float HalfHeight = 0.5f;
+			float TopRadius = 0.5f;
+			float BottomRadius = 0.5f;
+		};
+
+		struct CylinderCollider
+		{
+			CylinderCollider() = default;
+			CylinderCollider(const CylinderCollider&) = default;
+
+			float HalfHeight = 0.5f;
+			float Radius = 0.5f;
+		};
 	}
 }
