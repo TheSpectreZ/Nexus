@@ -87,7 +87,11 @@ void EditorLayer::OnAttach()
 		
 		m_PhysicsWorld = Nexus::PhysicsWorld::Create();
 	}
-
+	
+	// Default Sandbox Project
+	{
+		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxProject\\SandboxProject.nxProject", m_ProjectSpecs);
+	}
 
 	// Editor
 	{
@@ -97,6 +101,7 @@ void EditorLayer::OnAttach()
 		m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
 		
 		m_SceneHeirarchy.SetContext(m_SceneData, m_EditorScene);
+		m_ContentBrowser.SetContext(m_ProjectSpecs.RootPath);
 	}
 }
 
@@ -144,6 +149,7 @@ void EditorLayer::OnRender()
 		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
 
 		m_SceneHeirarchy.Render();
+		m_ContentBrowser.Render();
 		m_ImGuiEditorViewport->Render();
 
 		RenderEditorMainMenu();
