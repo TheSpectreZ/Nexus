@@ -13,9 +13,6 @@ void Nexus::Scene::Clear()
 			DestroyEntity({ e,this });
 		});
 	
-	
-	SceneDestructionCallback();
-
 	m_registry.clear();
 	NEXUS_LOG_TRACE("Scene Cleared");
 }
@@ -23,7 +20,49 @@ void Nexus::Scene::Clear()
 Nexus::Ref<Nexus::Scene> Nexus::Scene::Create()
 {
 	NEXUS_LOG_TRACE("Scene Created");
-	return CreateRef<Scene>();
+	
+	auto scene = CreateRef<Scene>();
+	return scene;
+}
+
+Nexus::Ref<Nexus::Scene> Nexus::Scene::Duplicate()
+{
+	Ref<Scene> newScene = CreateRef<Scene>();
+	
+	Entity entity, newEntity;
+	auto entities = m_registry.view<Component::Identity>();
+	for (auto& e : entities)
+	{
+		entity = { e,this };
+		newEntity = { newScene->m_registry.create(),newScene.get() };
+
+		auto& i = newEntity.AddComponent<Component::Identity>(entity.GetComponent<Component::Identity>());
+		newScene->m_EntityMap[i.uuid] = newEntity;
+
+		newEntity.AddComponent<Component::Tag>(entity.GetComponent<Component::Tag>());
+		newEntity.AddComponent<Component::Transform>(entity.GetComponent<Component::Transform>());
+
+		if (entity.HasComponent<Component::Mesh>())
+		{
+			newEntity.AddComponent<Component::Mesh>(entity.GetComponent<Component::Mesh>());
+		}
+
+		if (entity.HasComponent<Component::Script>())
+		{
+			newEntity.AddComponent<Component::Script>(entity.GetComponent<Component::Script>());
+		}
+
+		if (entity.HasComponent<Component::BoxCollider>())
+		{
+			newEntity.AddComponent<Component::BoxCollider>(entity.GetComponent<Component::BoxCollider>());
+		}
+
+		if (entity.HasComponent<Component::RigidBody>())
+		{
+			newEntity.AddComponent<Component::RigidBody>(entity.GetComponent<Component::RigidBody>());
+		}
+	}
+	return newScene;
 }
 
 Nexus::Entity Nexus::Scene::CreateEntity()
@@ -35,13 +74,12 @@ Nexus::Entity Nexus::Scene::CreateEntity(const std::string& name)
 {
 	entt::entity entity = m_registry.create();
 
-  m_registry.emplace<Component::Tag>(entity,name);
+	m_registry.emplace<Component::Tag>(entity,name);
 	m_registry.emplace<Component::Transform>(entity);
-  auto& i = m_registry.emplace<Component::Identity>(entity);
+	auto& i = m_registry.emplace<Component::Identity>(entity);
   
-  m_EntityMap[i.uuid] = { entity,this };
-  EntityCreationCallback(m_EntityMap[i.uuid]);
-  
+	m_EntityMap[i.uuid] = { entity,this };
+	
 	return m_EntityMap[i.uuid];
 }
 
@@ -53,16 +91,47 @@ Nexus::Entity Nexus::Scene::CreateEntity(const std::string& name, UUID uuid)
 	m_registry.emplace<Component::Identity>(entity, uuid);
 	m_registry.emplace<Component::Transform>(entity);
  
-  m_EntityMap[uuid] = { entity,this };
-  EntityCreationCallback(m_EntityMap[uuid]);
-  
+	m_EntityMap[uuid] = { entity,this };
+	
 	return m_EntityMap[uuid];
 }
 
 void Nexus::Scene::DestroyEntity(Entity entity)
 {
-	EntityDestructionCallback(entity);
 	m_registry.destroy(entity);
+}
+
+Nexus::Entity Nexus::Scene::DuplicateEntity(Entity entity)
+{
+	Entity newEntity = { m_registry.create(),this };
+
+	auto& i = newEntity.AddComponent<Component::Identity>(entity.GetComponent<Component::Identity>());
+	m_EntityMap[i.uuid] = newEntity;
+
+	newEntity.AddComponent<Component::Tag>(entity.GetComponent<Component::Tag>());
+	newEntity.AddComponent<Component::Transform>(entity.GetComponent<Component::Transform>());
+
+	if (entity.HasComponent<Component::Mesh>())
+	{
+		newEntity.AddComponent<Component::Mesh>(entity.GetComponent<Component::Mesh>());
+	}
+	
+	if (entity.HasComponent<Component::Script>())
+	{
+		newEntity.AddComponent<Component::Script>(entity.GetComponent<Component::Script>());
+	}
+	
+	if (entity.HasComponent<Component::BoxCollider>())
+	{
+		newEntity.AddComponent<Component::BoxCollider>(entity.GetComponent<Component::BoxCollider>());
+	}
+	
+	if (entity.HasComponent<Component::RigidBody>())
+	{
+		newEntity.AddComponent<Component::RigidBody>(entity.GetComponent<Component::RigidBody>());
+	}
+
+	return newEntity;
 }
 
 Nexus::Entity Nexus::Scene::GetEntityWithUUID(UUID id)

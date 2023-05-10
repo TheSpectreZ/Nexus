@@ -32,6 +32,8 @@ project "Nexus"
         IncludeDir["imgui"],
         IncludeDir["vulkanMemoryAllocator"],
         IncludeDir["mono"],
+        IncludeDir["joltRoot"],
+        IncludeDir["jolt"],
 
         "$(VULKAN_SDK)/Include",
     }
@@ -43,6 +45,7 @@ project "Nexus"
         "yamlcpp",
         "assimp",
         "imgui",
+        "jolt",
         "vulkan-1.lib",
         "libmono-static-sgen.lib"
     }
@@ -77,7 +80,11 @@ project "Nexus"
         }
 
 	filter "configurations:Debug"
-        defines "NEXUS_DEBUG"
+        defines 
+        {
+            "NEXUS_DEBUG",
+            "JPH_PROFILE_ENABLED"
+        }
         optimize "Off"
         symbols "Full"
         links
@@ -92,7 +99,11 @@ project "Nexus"
         }
 
     filter "configurations:Release"
-        defines "NEXUS_RELEASE"
+        defines 
+        {
+            "NEXUS_RELEASE",
+            "JPH_PROFILE_ENABLED"
+        }
         optimize "Speed"
         symbols "FastLink"
         links

@@ -46,8 +46,6 @@ namespace Nexus
 			glm::quat GetRotation() const;
 			glm::vec3 GetRotationEuler() const;
 
-			glm::vec3& GetRotationEuler();
-
 			void SetTransform(const glm::mat4& transform);
 			void SetRotation(const glm::quat& quat);
 			void SetRotationEuler(const glm::vec3& euler);
@@ -74,6 +72,56 @@ namespace Nexus
 			{}
 			
 			std::string name;
+		};
+
+		struct RigidBody
+		{
+			RigidBody() = default;
+			RigidBody(const RigidBody&) = default;
+
+			enum class MotionType { Static = 0, Dynamic = 1, Kinematic = 2 };
+			MotionType motionType = MotionType::Static;
+			
+			float mass = 1.f;
+			float friction = 0.2f;
+			float restitution = 0.5f;
+
+			bool Simulate = true;
+		};
+
+		struct BoxCollider
+		{
+			BoxCollider() = default;
+			BoxCollider(const BoxCollider&) = default;
+
+			glm::vec3 HalfExtent = glm::vec3(0.5f);
+		};
+
+		struct SphereCollider
+		{
+			SphereCollider() = default;
+			SphereCollider(const SphereCollider&) = default;
+
+			float Radius = 0.5f;
+		};
+
+		struct CapsuleCollider
+		{
+			CapsuleCollider() = default;
+			CapsuleCollider(const CapsuleCollider&) = default;
+
+			float HalfHeight = 0.5f;
+			float TopRadius = 0.5f;
+			float BottomRadius = 0.5f;
+		};
+
+		struct CylinderCollider
+		{
+			CylinderCollider() = default;
+			CylinderCollider(const CylinderCollider&) = default;
+
+			float HalfHeight = 0.5f;
+			float Radius = 0.5f;
 		};
 	}
 }

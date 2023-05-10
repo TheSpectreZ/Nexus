@@ -30,7 +30,7 @@ void Nexus::CameraController::Move()
 	{
 		if (Input::IsKeyPressed(m_KeyBinds[i]))
 		{
-			m_Camera->position += GetMovementMultiplier((CameraBindings)i) * dt.GetSeconds() * 20.f;
+			m_Camera->position += GetMovementMultiplier((CameraBindings)i) * dt.GetSeconds() * m_Speed;
 		}
 	}
 

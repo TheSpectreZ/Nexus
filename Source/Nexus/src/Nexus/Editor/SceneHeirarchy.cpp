@@ -6,8 +6,10 @@
 #include "Assets/AssetManager.h"
 #include "Script/ScriptEngine.h"
 
-static void DrawVec3Control(const char* label, glm::vec3& vector, float reset = 0.f, float columnWidth = 100.f)
+bool Nexus::ImGuiUtils::DrawVec3Control(const char* label, glm::vec3& vector, float reset , float columnWidth )
 {
+	bool changed = false;
+
 	ImGui::PushID(label);
 
 	ImGui::Columns(2);
@@ -29,12 +31,16 @@ static void DrawVec3Control(const char* label, glm::vec3& vector, float reset = 
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.6f,0.1f,0.1f,1.f });
 	ImGui::PushFont(BoldFont);
 	if (ImGui::Button("X", buttonsize))
+	{
 		vector.x = reset;
+		changed = true;
+	}
 	ImGui::PopStyleColor(3);
 	ImGui::PopFont();
 
 	ImGui::SameLine();
-	ImGui::DragFloat("##X", &vector.x, 0.1f);
+	if (ImGui::DragFloat("##X", &vector.x, 0.1f))
+		changed = true;
 	ImGui::PopItemWidth();
 	ImGui::SameLine();
 
@@ -43,12 +49,16 @@ static void DrawVec3Control(const char* label, glm::vec3& vector, float reset = 
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.1f,0.6f,0.1f,1.f });
 	ImGui::PushFont(BoldFont);
 	if (ImGui::Button("Y", buttonsize))
+	{
 		vector.y = reset;
+		changed = true;
+	}
 	ImGui::PopStyleColor(3);
 	ImGui::PopFont();
 
 	ImGui::SameLine();
-	ImGui::DragFloat("##Y", &vector.y, 0.1f);
+	if (ImGui::DragFloat("##Y", &vector.y, 0.1f))
+		changed = true;
 	ImGui::PopItemWidth();
 	ImGui::SameLine();
 
@@ -57,12 +67,16 @@ static void DrawVec3Control(const char* label, glm::vec3& vector, float reset = 
 	ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.1f,0.1f,0.6f,1.f });
 	ImGui::PushFont(BoldFont);
 	if (ImGui::Button("Z", buttonsize))
+	{
 		vector.z = reset;
+		changed = true;
+	}
 	ImGui::PopStyleColor(3);
 	ImGui::PopFont();
 
 	ImGui::SameLine();
-	ImGui::DragFloat("##Z", &vector.z, 0.1f);
+	if (ImGui::DragFloat("##Z", &vector.z, 0.1f))
+		changed = true;
 	ImGui::PopItemWidth();
 	ImGui::SameLine();
 
@@ -71,6 +85,8 @@ static void DrawVec3Control(const char* label, glm::vec3& vector, float reset = 
 	ImGui::Columns(1);
 
 	ImGui::PopID();
+
+	return changed;
 }
 
 template <typename T>
@@ -132,9 +148,10 @@ static void DrawComponent(const std::string& name, Nexus::Entity e, UIFuntion ui
 	}
 }
 
-void Nexus::SceneHeirarchy::SetContext(Ref<Scene> scene)
+void Nexus::SceneHeirarchy::SetContext(Ref<SceneBuildData> scenedata, Ref<Scene> scene)
 {
 	m_Scene = scene;
+	m_SceneData = scenedata;
 }
 
 void Nexus::SceneHeirarchy::Render()
@@ -151,7 +168,9 @@ void Nexus::SceneHeirarchy::Render()
 		if (m_SelectedEntity == entt::null && ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight)) 
 		{
 			if (ImGui::MenuItem("Create Entity"))
-				m_Scene->CreateEntity();
+			{
+				m_SceneData->OnEntityCreation(m_Scene->CreateEntity());
+			}
 			ImGui::EndPopup();
 		}
 		
@@ -190,6 +209,11 @@ void Nexus::SceneHeirarchy::DrawEntityNode(entt::entity e)
 	bool Delete = false;
 	if (ImGui::BeginPopupContextItem())
 	{
+		if (ImGui::MenuItem("Duplicate Entity"))
+		{
+			m_SceneData->OnEntityCreation(m_Scene->DuplicateEntity({ e,m_Scene.get() }));
+		}
+
 		if (ImGui::MenuItem("Delete Entity"))
 			Delete = true;
 		ImGui::EndPopup();
@@ -200,7 +224,9 @@ void Nexus::SceneHeirarchy::DrawEntityNode(entt::entity e)
 
 	if (Delete)
 	{
-		m_Scene->DestroyEntity({ e,m_Scene.get() });
+		Entity en = { e,m_Scene.get() };
+		m_SceneData->OnEntityDestruction(en);
+		m_Scene->DestroyEntity(en);
 
 		if (m_SelectedEntity == e)
 			m_SelectedEntity = entt::null;
@@ -233,6 +259,11 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 		{
 			DisplayAddComponentEntry<Component::Mesh>("Mesh", en);
 			DisplayAddComponentEntry<Component::Script>("Script", en);
+			DisplayAddComponentEntry<Component::RigidBody>("RigidBody", en);
+			DisplayAddComponentEntry<Component::BoxCollider>("BoxCollider", en);
+			DisplayAddComponentEntry<Component::SphereCollider>("SphereCollider", en);
+			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
+			DisplayAddComponentEntry<Component::CapsuleCollider>("CapsuleCollider", en);
 			ImGui::EndPopup();
 		}
 
@@ -245,11 +276,6 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 		if (en.HasComponent<Component::Transform>())
 		{
-
-			ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-
-			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
-
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
 			ImGui::Separator();
 			bool open = ImGui::TreeNodeEx((void*)typeid(Component::Transform).hash_code(), treeNodeFlags, "Transform");
@@ -258,11 +284,14 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			if (open)
 			{
 				auto& component = en.GetComponent<Component::Transform>();
-				glm::vec3& rot = component.GetRotationEuler();
+				glm::vec3 rot = component.GetRotationEuler();
 
-				DrawVec3Control("Translation", component.Translation);
-				DrawVec3Control("Rotation", rot);
-				DrawVec3Control("Scale", component.Scale, 1.f);
+				ImGuiUtils::DrawVec3Control("Translation", component.Translation);
+				if (ImGuiUtils::DrawVec3Control("Rotation", rot))
+				{
+					component.SetRotationEuler(rot);
+				}
+				ImGuiUtils::DrawVec3Control("Scale", component.Scale, 1.f);
 				ImGui::TreePop();
 			}
 		}
@@ -337,5 +366,53 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 				}
 			}
 
+		});
+
+	DrawComponent<Component::RigidBody>("Rigid Body", en, [&](auto& component)
+		{
+			static const char* types[3] = { "Static","Dynamic","Kinematic" };
+			static uint32_t typeIndex = 0;
+
+			if (ImGui::BeginCombo("MotionType",types[typeIndex]))
+			{
+				for (uint32_t i = 0; i < 3; i++)
+				{
+					if (ImGui::Selectable(types[i]))
+					{
+						typeIndex = i;
+						component.motionType = (Component::RigidBody::MotionType)i;
+					}
+				}
+
+				ImGui::EndCombo();
+			}
+			ImGui::DragFloat("Mass", &component.mass);
+			ImGui::DragFloat("Friction", &component.friction);
+			ImGui::DragFloat("Restitution", &component.restitution);
+			ImGui::Checkbox("Simulate", &component.Simulate);
+
+		});
+
+	DrawComponent<Component::BoxCollider>("Box Collider", en, [&](auto& component)
+		{
+			ImGuiUtils::DrawVec3Control("Half-Extent", component.HalfExtent, 0.5f);
+		});
+
+	DrawComponent<Component::SphereCollider>("Sphere Collider", en, [&](auto& component)
+		{
+			ImGui::DragFloat("Radius", &component.Radius);
+		});
+
+	DrawComponent<Component::CylinderCollider>("Cylinder Collider", en, [&](auto& component)
+		{
+			ImGui::DragFloat("Radius", &component.Radius);
+			ImGui::DragFloat("Half-Height", &component.HalfHeight);
+		});
+
+	DrawComponent<Component::CapsuleCollider>("Capsule Collider", en, [&](auto& component)
+		{
+			ImGui::DragFloat("Top-Radius", &component.TopRadius);
+			ImGui::DragFloat("Bottom-Radius", &component.BottomRadius);
+			ImGui::DragFloat("Half-Height", &component.HalfHeight);
 		});
 }

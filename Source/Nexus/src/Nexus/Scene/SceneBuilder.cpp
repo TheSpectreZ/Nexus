@@ -7,10 +7,6 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
     Ref<SceneBuildData> data = CreateRef<SceneBuildData>();
     data->shader = shader;
 
-    scene->SceneDestructionCallback = NEXUS_BIND_FN(SceneBuildData::OnSceneDestruction, data);
-    scene->EntityCreationCallback = NEXUS_BIND_FN(SceneBuildData::OnEntityCreation, data);
-    scene->EntityDestructionCallback = NEXUS_BIND_FN(SceneBuildData::OnEntityDestruction, data);
-
     // Per Scene
     {
         data->PerSceneHeap.hashId = CreateUUID();
