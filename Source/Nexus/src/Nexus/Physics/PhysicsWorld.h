@@ -14,5 +14,7 @@ namespace Nexus
 		virtual void OnSceneStart(Ref<Scene> scene) = 0;
 		virtual void OnSceneUpdate(float dt) = 0;
 		virtual void OnSceneStop() = 0;
+		
+		virtual void SetGravity(const glm::vec3& gravity) = 0;
 	};
 }

@@ -16,8 +16,6 @@ Nexus::JoltPhysicsWorld::JoltPhysicsWorld()
 		m_BpLayerInterface, m_ObjVsBpLayerFilter, m_ObjLayerPairFilter);
 
 	m_BodyInterface = &m_PhysicsSystem->GetBodyInterface();
-
-	m_PhysicsSystem->SetGravity(JPH::Vec3(0.f, -9.8f, 0.f));
 }
 
 Nexus::JoltPhysicsWorld::~JoltPhysicsWorld()
@@ -30,26 +28,21 @@ void Nexus::JoltPhysicsWorld::OnSceneStart(Ref<Scene> scene)
 	m_ActiveEntities.clear();
 	m_Bodies.clear();
 
-	Entity en;
 	auto boxColliderView = scene->GetAllEntitiesWith<Component::BoxCollider>();
 	for (auto& e : boxColliderView)
-	{
-		en = { e,scene.get() };
+		CreateBodyWithEntity({ e,scene.get() });
 
-		JoltBody body{};
-		
-		if (en.HasComponent<Component::RigidBody>())
-		{
-			body = JoltBodyFactor::CreateRigidBody(*m_BodyInterface, en);
-			m_ActiveEntities[body.Id.GetIndexAndSequenceNumber()] = en;
-		}
-		else
-		{
-			body = JoltBodyFactor::CreateCollider(*m_BodyInterface, en);
-		}
-		m_Bodies.push_back(body.Id);
-		m_BodyInterface->AddBody(body.Id, body.activationflag);
-	}
+	auto capsuleColliderView = scene->GetAllEntitiesWith<Component::CapsuleCollider>();
+	for (auto& e : capsuleColliderView)
+		CreateBodyWithEntity({ e,scene.get() });
+
+	auto sphereColliderView = scene->GetAllEntitiesWith<Component::SphereCollider>();
+	for (auto& e : sphereColliderView)
+		CreateBodyWithEntity({ e,scene.get() });
+
+	auto cylinderColliderView = scene->GetAllEntitiesWith<Component::CylinderCollider>();
+	for (auto& e : cylinderColliderView)
+		CreateBodyWithEntity({ e,scene.get() });
 
 	m_PhysicsSystem->OptimizeBroadPhase();
 }
@@ -77,4 +70,26 @@ void Nexus::JoltPhysicsWorld::OnSceneStop()
 
 	m_BodyInterface->RemoveBodies(m_Bodies.data(), (int)m_Bodies.size());
 	m_BodyInterface->DestroyBodies(m_Bodies.data(), (int)m_Bodies.size());
+}
+
+void Nexus::JoltPhysicsWorld::SetGravity(const glm::vec3& gravity)
+{
+	m_PhysicsSystem->SetGravity(JoltUtils::ToJoltVector3(gravity));
+}
+
+void Nexus::JoltPhysicsWorld::CreateBodyWithEntity(Entity en)
+{
+	JoltBody body{};
+
+	if (en.HasComponent<Component::RigidBody>())
+	{
+		body = JoltBodyFactor::CreateRigidBody(*m_BodyInterface, en);
+		m_ActiveEntities[body.Id.GetIndexAndSequenceNumber()] = en;
+	}
+	else
+	{
+		body = JoltBodyFactor::CreateCollider(*m_BodyInterface, en);
+	}
+	m_Bodies.push_back(body.Id);
+	m_BodyInterface->AddBody(body.Id, body.activationflag);
 }

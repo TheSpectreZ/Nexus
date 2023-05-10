@@ -19,7 +19,11 @@ namespace Nexus
 		void OnSceneStart(Ref<Scene> Scene) override;
 		void OnSceneUpdate(float dt) override;
 		void OnSceneStop() override;
+
+		void SetGravity(const glm::vec3& gravity) override;
 	private:
+		void CreateBodyWithEntity(Entity e);
+
 		JPH::PhysicsSystem* m_PhysicsSystem;
 		JPH::BodyInterface* m_BodyInterface;
 
