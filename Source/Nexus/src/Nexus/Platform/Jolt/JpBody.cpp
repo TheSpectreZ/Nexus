@@ -3,30 +3,21 @@
 #include "JpImpls.h"
 
 #include "Jolt/Physics/Collision/Shape/BoxShape.h"
+#include "Jolt/Physics/Collision/Shape/SphereShape.h"
+#include "Jolt/Physics/Collision/Shape/CapsuleShape.h"
+#include "Jolt/Physics/Collision/Shape/CylinderShape.h"
+#include "Jolt/Physics/Collision/Shape/TaperedCapsuleShape.h"
 
-namespace JoltUtils
+JPH::EMotionType ToJoltMotionType(Nexus::Component::RigidBody::MotionType Type)
 {
-	JPH::Vec3 ToJoltVector3(glm::vec3 vector)
+	switch (Type)
 	{
-		return { vector.x,vector.y,vector.z };
-	}
-
-	JPH::Quat ToJoltQuat(glm::quat quat)
-	{
-		return { quat.x,quat.y,quat.z,quat.w };
-	}
-
-	JPH::EMotionType ToJoltMotionType(Nexus::Component::RigidBody::MotionType Type)
-	{
-		switch (Type)
-		{
-		case Nexus::Component::RigidBody::MotionType::Dynamic:
-			return JPH::EMotionType::Dynamic;
-		case Nexus::Component::RigidBody::MotionType::Kinematic:
-			return JPH::EMotionType::Kinematic;
-		default:
-			return JPH::EMotionType::Static;
-		}
+	case Nexus::Component::RigidBody::MotionType::Dynamic:
+		return JPH::EMotionType::Dynamic;
+	case Nexus::Component::RigidBody::MotionType::Kinematic:
+		return JPH::EMotionType::Kinematic;
+	default:
+		return JPH::EMotionType::Static;
 	}
 }
 
@@ -41,7 +32,7 @@ Nexus::JoltBody Nexus::JoltBodyFactor::CreateRigidBody(JPH::BodyInterface& inter
 	JPH::BodyCreationSettings setting(shape.GetPtr(),
 		JoltUtils::ToJoltVector3(Transform.Translation),
 		JoltUtils::ToJoltQuat(Transform.GetRotation()),
-		JoltUtils::ToJoltMotionType(RigidBody.motionType),
+		ToJoltMotionType(RigidBody.motionType),
 		(RigidBody.motionType == Component::RigidBody::MotionType::Static) ? Layers::NON_MOVING : Layers::MOVING);
 
 	setting.mMassPropertiesOverride.mMass = RigidBody.mass;
@@ -90,6 +81,43 @@ JPH::Ref<JPH::Shape> Nexus::JoltBodyFactor::BuildShape(Entity e)
 		JPH::ShapeSettings::ShapeResult boxShapeResult = boxShapeSettings.Create();
 
 		return boxShapeResult.Get();
+	}
+	else if (e.HasComponent<Component::SphereCollider>())
+	{
+		auto& collider = e.GetComponent<Component::SphereCollider>();
+
+		JPH::SphereShapeSettings sphereShapeSettings = JPH::SphereShapeSettings(collider.Radius);
+		JPH::ShapeSettings::ShapeResult result = sphereShapeSettings.Create();
+
+		return result.Get();
+	}
+	else if (e.HasComponent<Component::CapsuleCollider>())
+	{
+		auto& collider = e.GetComponent<Component::CapsuleCollider>();
+
+		if (collider.TopRadius == collider.TopRadius)
+		{
+			JPH::CapsuleShapeSettings settings = JPH::CapsuleShapeSettings(collider.HalfHeight, collider.TopRadius);
+			JPH::ShapeSettings::ShapeResult result = settings.Create();
+
+			return result.Get();
+		}
+		else
+		{
+			JPH::TaperedCapsuleShapeSettings settings = JPH::TaperedCapsuleShapeSettings(collider.HalfHeight, collider.TopRadius,collider.BottomRadius);
+			JPH::ShapeSettings::ShapeResult result = settings.Create();
+
+			return result.Get();
+		}
+	}
+	else if (e.HasComponent<Component::CylinderCollider>())
+	{
+		auto& collider = e.GetComponent<Component::CylinderCollider>();
+
+		JPH::CylinderShapeSettings settings = JPH::CylinderShapeSettings(collider.HalfHeight, collider.Radius);
+		JPH::ShapeSettings::ShapeResult result = settings.Create();
+
+		return result.Get();
 	}
 
 	NEXUS_ASSERT(true, "Rigid Body Creation Failed due to Lack of Collider Component");
