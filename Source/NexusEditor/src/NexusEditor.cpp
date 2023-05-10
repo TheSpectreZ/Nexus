@@ -6,8 +6,8 @@ class NexusEditor : public Nexus::Application
 public:
 	NexusEditor()
 	{
-		m_AppSpecs.Window_Width = 1280;
-		m_AppSpecs.Window_height = 720;
+		m_AppSpecs.Window_Width = 1600;
+		m_AppSpecs.Window_height = 900;
 		m_AppSpecs.Window_Title = "Nexus Editor";
 		m_AppSpecs.rApi = Nexus::RenderAPI_Vulkan;
 		m_AppSpecs.pApi = Nexus::PhysicsAPI_Jolt;
