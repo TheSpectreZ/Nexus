@@ -13,6 +13,7 @@ private:
 	void CreateRenderpassAndFramebuffers();
 
 	void RenderEditorMainMenu();
+	void RenderEditorWorldControls();
 private:
 	bool m_IsScenePlaying, m_PauseScene;
   

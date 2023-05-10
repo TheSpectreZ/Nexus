@@ -6,13 +6,6 @@ void EditorLayer::OnAttach()
 
 	CreateRenderpassAndFramebuffers();
 
-	{
-		Nexus::EditorContext::Initialize(m_ImGuiPass);
-
-		m_ImGuiEditorViewport = Nexus::EditorViewport::Create();
-		m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
-	}
-
 	// Screen
 	{
 		Nexus::Extent Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
@@ -54,7 +47,6 @@ void EditorLayer::OnAttach()
 		m_Pipeline = Nexus::Pipeline::Create(Info);
 	}
 
-	
 	// Camera
 	{
 		using namespace Nexus;
@@ -87,15 +79,25 @@ void EditorLayer::OnAttach()
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
 		e2.GetComponent<Nexus::Component::Transform>().Scale = glm::vec3(0.1f);
 		e2.AddComponent<Nexus::Component::Mesh>(cube);
-		e2.AddComponent<Nexus::Component::BoxCollider>();
+		e2.AddComponent<Nexus::Component::SphereCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
-
+		
 		m_SceneData = Nexus::SceneBuildData::Build(m_EditorScene, simpleShader);
 		m_SceneRenderer.SetContext(m_EditorScene, m_SceneData);
-		m_SceneHeirarchy.SetContext(m_SceneData, m_EditorScene);
+		
+		m_PhysicsWorld = Nexus::PhysicsWorld::Create();
 	}
 
-	m_PhysicsWorld = Nexus::PhysicsWorld::Create();
+
+	// Editor
+	{
+		Nexus::EditorContext::Initialize(m_ImGuiPass);
+
+		m_ImGuiEditorViewport = Nexus::EditorViewport::Create();
+		m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
+		
+		m_SceneHeirarchy.SetContext(m_SceneData, m_EditorScene);
+	}
 }
 
 void EditorLayer::OnUpdate(Nexus::Timestep ts)
@@ -145,6 +147,7 @@ void EditorLayer::OnRender()
 		m_ImGuiEditorViewport->Render();
 
 		RenderEditorMainMenu();
+		RenderEditorWorldControls();
 
 		Nexus::EditorContext::Render();
 		Nexus::Command::EndRenderpass();
@@ -153,6 +156,21 @@ void EditorLayer::OnRender()
 
 void EditorLayer::OnDetach()
 {
+	if (m_IsScenePlaying)
+	{
+		m_SceneRenderer.SetContext(m_EditorScene, m_SceneData);
+		m_CurrentScene = m_EditorScene;
+
+		Nexus::ScriptEngine::OnSceneStop();
+		m_PhysicsWorld->OnSceneStop();
+		m_IsScenePlaying = false;
+
+		m_RuntimeScene->Clear();
+		m_RuntimeScene.reset();
+
+		NEXUS_LOG_WARN("Stopped Scene Runtime");
+	}
+
 	m_SceneData->Destroy();
 	m_EditorScene->Clear();
 
@@ -355,6 +373,8 @@ void EditorLayer::RenderEditorMainMenu()
 				m_PhysicsWorld->OnSceneStart(m_RuntimeScene);
 				m_IsScenePlaying = true;
 				m_PauseScene = false;
+
+				NEXUS_LOG_WARN("Started Scene Runtime");
 			}
 		}
 
@@ -371,6 +391,8 @@ void EditorLayer::RenderEditorMainMenu()
 
 				m_RuntimeScene->Clear();
 				m_RuntimeScene.reset();
+
+				NEXUS_LOG_WARN("Stopped Scene Runtime");
 			}
 		}
 
@@ -388,4 +410,27 @@ void EditorLayer::RenderEditorMainMenu()
 	}
 
 	ImGui::EndMainMenuBar();
+}
+
+void EditorLayer::RenderEditorWorldControls()
+{
+	ImGui::Begin("World");
+	
+	if (ImGui::BeginTabBar("World"))
+	{
+		if (ImGui::BeginTabItem("Physics"))
+		{
+			static glm::vec3 gravity;
+			if (Nexus::ImGuiUtils::DrawVec3Control("Gravity", gravity, 0.f))
+			{
+				m_PhysicsWorld->SetGravity(gravity);
+			}
+			
+			ImGui::EndTabItem();
+		}
+
+		ImGui::EndTabBar();
+	}
+
+	ImGui::End();
 }
