@@ -25,6 +25,7 @@ namespace Nexus
 
 		ResourceHeapHandle PerSceneHeap;
 		UniformBufferHandle PerSceneUniform;
+		CombinedImageSamplerHandle PerSceneTestTexture;
 
 		std::unordered_map<UUID, ResourceHeapHandle> PerEntityHeap;
 		std::unordered_map<UUID, UniformBufferHandle> PerEntityUniform;

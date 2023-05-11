@@ -10,6 +10,8 @@ namespace Nexus
 	public:
 		VulkanTexture(const TextureCreateInfo& Info);
 		~VulkanTexture() override;
+
+		VkImageView Get() { return m_View; }
 	private:
 		Extent m_Extent;
 
@@ -19,5 +21,16 @@ namespace Nexus
 
 		VkBuffer m_StagingBuffer;
 		VmaAllocation m_StagingAlloc;
+	};
+
+	class VulkanSampler : public Sampler
+	{
+	public:
+		VulkanSampler(SamplerFilter Near, SamplerFilter Far);
+		~VulkanSampler() override;
+
+		VkSampler Get() { return m_Sampler; }
+	private:
+		VkSampler m_Sampler;
 	};
 }

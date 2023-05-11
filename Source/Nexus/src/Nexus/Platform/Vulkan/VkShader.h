@@ -40,6 +40,7 @@ namespace Nexus
 		void AllocateUniformBuffer(UniformBufferHandle handle) override;
 		void DeallocateUniformBuffer(UniformBufferHandle handle) override;
 		void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, UniformBufferHandle bufferHandle) override;
+		void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texture) override;
 		void SetUniformData(UniformBufferHandle handle, void* data) override;
 
 		VkShaderModule GetModule(VkShaderStageFlagBits flag);

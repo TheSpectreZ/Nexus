@@ -20,6 +20,13 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
 
         shader->AllocateUniformBuffer(data->PerSceneUniform);
         shader->BindUniformWithResourceHeap(data->PerSceneHeap, data->PerSceneUniform);
+        
+        data->PerSceneTestTexture.texture = Texture::LoadFromFile("Resources/Assets/Textures/Weapon_BaseColor.png");
+        data->PerSceneTestTexture.sampler = Sampler::Create(SamplerFilter::Nearest, SamplerFilter::Linear);
+        data->PerSceneTestTexture.set = 0;
+        data->PerSceneTestTexture.binding = 1;
+
+        shader->BindTextureWithResourceHeap(data->PerSceneHeap, data->PerSceneTestTexture);
     }
 
     // Per Entity Heaps

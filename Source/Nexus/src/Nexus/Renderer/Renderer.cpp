@@ -35,6 +35,11 @@ void Nexus::Renderer::TransferMeshToGPU(Ref<StaticMesh> mesh)
 	s_Renderer->m_CommandQueue->TransferMeshToGPU(mesh);
 }
 
+void Nexus::Renderer::TransferTextureToGPU(Ref<Texture> texture)
+{
+	s_Renderer->m_CommandQueue->TransferTextureToGPU(texture);
+}
+
 void Nexus::Renderer::DrawMesh(Ref<StaticMesh> mesh)
 {
 	s_Renderer->m_CommandQueue->DrawMesh(mesh);

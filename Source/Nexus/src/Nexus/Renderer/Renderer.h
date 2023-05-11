@@ -9,6 +9,7 @@
 #include "Framebuffer.h"
 #include "RenderTypes.h"
 #include "Pipeline.h"
+#include "Texture.h"
 
 namespace Nexus
 {
@@ -37,6 +38,8 @@ namespace Nexus
 		static void SetViewport(Viewport viewport);
 
 		static void TransferMeshToGPU(Ref<StaticMesh> mesh);
+		static void TransferTextureToGPU(Ref<Texture> texture);
+
 		static void DrawMesh(Ref<StaticMesh> mesh);
 	private:
 		static void Init(const RendererSpecifications& specs);

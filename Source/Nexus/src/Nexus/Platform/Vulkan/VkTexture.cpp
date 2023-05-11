@@ -1,6 +1,5 @@
 #include "nxpch.h"
 #include "VkTexture.h"
-#include "VkTransferCommandQueue.h"
 #include "VkContext.h"
 #include "VkSwapchain.h"
 
@@ -83,6 +82,8 @@ Nexus::VulkanTexture::VulkanTexture(const TextureCreateInfo& info)
 			memcpy(allocInfo.pMappedData, info.pixeldata, size);
 		}
 	}
+
+	NEXUS_LOG_INFO("Vulkan Texture Created");
 }
 
 Nexus::VulkanTexture::~VulkanTexture()
@@ -94,4 +95,55 @@ Nexus::VulkanTexture::~VulkanTexture()
 
 	vmaDestroyImage(device->GetAllocator(), m_Image, m_Alloc);
 	vkDestroyImageView(device->Get(), m_View, nullptr);
+
+	NEXUS_LOG_INFO("Vulkan Texture Destroyed");
+}
+
+VkFilter GetVulkanSamplerFilter(Nexus::SamplerFilter filter)
+{
+	switch (filter)
+	{
+	case Nexus::SamplerFilter::Nearest:
+		return VK_FILTER_NEAREST;
+	case Nexus::SamplerFilter::Linear:
+		return VK_FILTER_LINEAR;
+	default:
+		return VK_FILTER_MAX_ENUM;
+	}
+}
+
+Nexus::VulkanSampler::VulkanSampler(SamplerFilter Near, SamplerFilter Far)
+{
+	VkSamplerCreateInfo info{};
+	info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+	info.magFilter = GetVulkanSamplerFilter(Near);
+	info.minFilter = GetVulkanSamplerFilter(Far);
+	info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	info.anisotropyEnable = VK_TRUE;
+
+	VkPhysicalDeviceProperties Props;
+	vkGetPhysicalDeviceProperties(VulkanContext::Get()->GetPhysicalDeviceRef()->Get(), &Props);
+
+	info.maxAnisotropy = Props.limits.maxSamplerAnisotropy;
+	info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+	info.unnormalizedCoordinates = VK_FALSE;
+	info.compareEnable = VK_FALSE;
+	info.compareOp = VK_COMPARE_OP_ALWAYS;
+	info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	info.mipLodBias = 0.f;
+	info.minLod = 0.f;
+	info.maxLod = 1;
+
+	_VKR = vkCreateSampler(VulkanContext::Get()->GetDeviceRef()->Get(), &info, nullptr, &m_Sampler);
+	CHECK_HANDLE(m_Sampler, VkSampler);
+
+	NEXUS_LOG_INFO("Vulkan Sampler Created");
+}
+
+Nexus::VulkanSampler::~VulkanSampler()
+{
+	vkDestroySampler(VulkanContext::Get()->GetDeviceRef()->Get(), m_Sampler, nullptr);
+	NEXUS_LOG_INFO("Vulkan Sampler Destroyed");
 }

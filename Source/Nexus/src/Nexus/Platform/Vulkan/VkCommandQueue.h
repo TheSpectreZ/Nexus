@@ -33,6 +33,8 @@ namespace Nexus
 		void SetViewport(Viewport viewport) override;
 
 		void TransferMeshToGPU(Ref<StaticMesh> mesh) override;
+		void TransferTextureToGPU(Ref<Texture> texture) override;
+
 		void DrawMesh(Ref<StaticMesh> mesh) override;
 	private:
 		uint32_t m_FrameIndex, m_ImageIndex, m_ImageCount;

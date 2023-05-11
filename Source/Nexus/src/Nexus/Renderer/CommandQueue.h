@@ -31,6 +31,8 @@ namespace Nexus
 		virtual void SetViewport(Viewport viewport) = 0;
 
 		virtual void TransferMeshToGPU(Ref<StaticMesh> mesh) = 0;
+		virtual void TransferTextureToGPU(Ref<Texture> texture) = 0;
+
 		virtual void DrawMesh(Ref<StaticMesh> mesh) = 0;
 	};
 }

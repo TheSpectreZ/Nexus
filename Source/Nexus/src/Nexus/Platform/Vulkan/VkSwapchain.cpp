@@ -1,7 +1,6 @@
 #include "nxpch.h"
 #include "VkSwapchain.h"
 #include "VkContext.h"
-#include "VkRenderCommandQueue.h"
 #include "GLFW/glfw3.h"
 #include "Core/Application.h"
 

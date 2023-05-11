@@ -219,8 +219,8 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 			barrier.subresourceRange.levelCount = 1;
 			barrier.subresourceRange.baseArrayLayer = 0;
 			barrier.subresourceRange.layerCount = 1;
-			barrier.srcQueueFamilyIndex = m_TransferQueueIndex;
-			barrier.dstQueueFamilyIndex = m_TransferQueueIndex;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 			barrier.srcAccessMask = 0;
 			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
@@ -247,7 +247,7 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 			barrier.srcQueueFamilyIndex = m_TransferQueueIndex;
 			barrier.dstQueueFamilyIndex = m_RenderQueueIndex;
 			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			barrier.dstAccessMask = 0;
 
 			vkCmdPipelineBarrier(m_TransferCommandBuffer[m_FrameIndex], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
@@ -276,10 +276,10 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 			barrier.srcQueueFamilyIndex = m_TransferQueueIndex;
 			barrier.dstQueueFamilyIndex = m_RenderQueueIndex;
-			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.srcAccessMask = 0;
 			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-			vkCmdPipelineBarrier(m_TransferCommandBuffer[m_FrameIndex], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+			vkCmdPipelineBarrier(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 		}
 	}
 	vkEndCommandBuffer(m_RenderCommandBuffer[m_FrameIndex]);
@@ -361,6 +361,11 @@ void Nexus::VulkanCommandQueue::TransferMeshToGPU(Ref<StaticMesh> mesh)
 {
 	m_TransferData.m_StaticBuffer.push_back(DynamicPointerCast<VulkanStaticBuffer>(mesh->GetVertexBuffer()));
 	m_TransferData.m_StaticBuffer.push_back(DynamicPointerCast<VulkanStaticBuffer>(mesh->GetIndexBuffer()));
+}
+
+void Nexus::VulkanCommandQueue::TransferTextureToGPU(Ref<Texture> texture)
+{
+	m_TransferData.m_Textures.push_back(DynamicPointerCast<VulkanTexture>(texture));
 }
 
 void Nexus::VulkanCommandQueue::DrawMesh(Ref<StaticMesh> mesh)

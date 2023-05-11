@@ -3,6 +3,7 @@
 #include "VkContext.h"
 #include "VkBuffer.h"
 #include "VkCommandQueue.h"
+#include "VkTexture.h"
 
 #include "shaderc/shaderc.hpp"
 
@@ -132,9 +133,10 @@ Nexus::VulkanShader::VulkanShader(SpirV& vertexData, SpirV& fragmentData, const 
 
 		std::vector<VkDescriptorSetLayout> layouts;
 
-		for (auto& [k, v] : m_SetResource)
+		uint32_t size = m_SetResource.size();
+		for (uint32_t i = 0; i < size; i++)
 		{
-			layouts.push_back(v.HeapLayout->Get());
+			layouts.push_back(m_SetResource[i].HeapLayout->Get());
 		}
 
 		pipelineLayoutInfo.pSetLayouts = layouts.data();
@@ -269,14 +271,42 @@ void Nexus::VulkanShader::BindUniformWithResourceHeap(ResourceHeapHandle heapHan
 	write.descriptorCount = 1;
 	write.dstArrayElement = 0;
 	write.dstSet = m_SetResource[heapHandle.set].Heaps[heapHandle.hashId].Get();
+	write.dstBinding = bufferhandle.binding;
 	write.pBufferInfo = &Info;
 	write.pImageInfo = nullptr;
 	write.pTexelBufferView = nullptr;
 	
-	// Optimize this to Do Together for every entity
+	//[Note] Optimize this to Do Together for every entity
 	vkUpdateDescriptorSets(VulkanContext::Get()->GetDeviceRef()->Get(), 1, &write, 0, nullptr);
 
 	NEXUS_LOG_TRACE("Vulkan Uniform Buffer Binded With Resource Heap: {0}|{1} : {2}", heapHandle.set, bufferhandle.binding, Info.range);
+}
+
+void Nexus::VulkanShader::BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texHandle)
+{
+	Ref<VulkanTexture> texture = DynamicPointerCast<VulkanTexture>(texHandle.texture);
+	Ref<VulkanSampler> sampler = DynamicPointerCast<VulkanSampler>(texHandle.sampler);
+
+	VkDescriptorImageInfo Info{};
+	Info.imageView = texture->Get();
+	Info.sampler = sampler->Get();
+	Info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	VkWriteDescriptorSet write{};
+	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	write.pNext = nullptr;
+	write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	write.descriptorCount = 1;
+	write.dstArrayElement = 0;
+	write.dstSet = m_SetResource[heapHandle.set].Heaps[heapHandle.hashId].Get();
+	write.dstBinding = texHandle.binding;
+	write.pImageInfo = &Info;
+	write.pBufferInfo = nullptr;
+	write.pTexelBufferView = nullptr;
+
+	vkUpdateDescriptorSets(VulkanContext::Get()->GetDeviceRef()->Get(), 1, &write, 0, nullptr);
+
+	NEXUS_LOG_TRACE("Vulkan Texture Binded With Resource Heap: {0}|{1}", heapHandle.set, texHandle.binding);
 }
 
 void Nexus::VulkanShader::SetUniformData(UniformBufferHandle handle, void* data)

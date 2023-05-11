@@ -13,6 +13,7 @@ namespace Nexus
 
 		VkFormat GetDepthFormat() { return m_DepthFormat; }
 		VkSampleCountFlagBits GetMaxSampleCount() { return m_MaxSampleCount; }
+		VkPhysicalDeviceProperties GetProperties() { return m_properties; }
 	private:
 		VkPhysicalDevice m_physicalDevice;
 		VkPhysicalDeviceProperties m_properties;

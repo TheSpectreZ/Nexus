@@ -68,7 +68,7 @@ void EditorLayer::OnAttach()
 
 	// Scene
 	{
-		Nexus::AssetHandle cube = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("Resources/Assets/Meshes/Cube.fbx");
+		Nexus::AssetHandle cube = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("Resources/Assets/Meshes/Cyborg_Weapon.fbx");
 		
 		m_EditorScene = Nexus::Scene::Create();
 		m_CurrentScene = m_EditorScene;
@@ -77,7 +77,7 @@ void EditorLayer::OnAttach()
 		e1.AddComponent<Nexus::Component::BoxCollider>();
 
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		e2.GetComponent<Nexus::Component::Transform>().Scale = glm::vec3(0.1f);
+		e2.GetComponent<Nexus::Component::Transform>().Scale = glm::vec3(20.f);
 		e2.AddComponent<Nexus::Component::Mesh>(cube);
 		e2.AddComponent<Nexus::Component::SphereCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();

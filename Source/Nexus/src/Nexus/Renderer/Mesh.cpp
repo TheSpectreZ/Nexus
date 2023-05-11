@@ -13,7 +13,8 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 {
 	static Assimp::Importer importer;
 
-	uint32_t flags = aiProcess_Triangulate | aiProcess_GenNormals | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes;
+	uint32_t flags = aiProcess_Triangulate | aiProcess_FlipUVs |
+		aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes;
 	const aiScene* scene = importer.ReadFile(Filepath, flags);
 
 	if (!scene)
@@ -40,6 +41,16 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 			vertex.normal.x = mesh->mNormals[j].x;
 			vertex.normal.y = mesh->mNormals[j].y;
 			vertex.normal.z = mesh->mNormals[j].z;
+
+			if (mesh->HasTextureCoords(0))
+			{
+				vertex.texCoord.x = mesh->mTextureCoords[0][j].x;
+				vertex.texCoord.y = mesh->mTextureCoords[0][j].y;
+			}
+			else
+			{
+				vertex.texCoord = { 0.f ,0.f };
+			}
 		}
 
 		for (uint32_t k = 0; k < mesh->mNumFaces; k++)

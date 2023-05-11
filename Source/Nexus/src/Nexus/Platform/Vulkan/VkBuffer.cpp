@@ -1,7 +1,6 @@
 #include "nxpch.h"
 #include "VkBuffer.h"
 #include "VkContext.h"
-#include "VkTransferCommandQueue.h"
 #include "Renderer/Renderer.h"
 
 static VkBufferUsageFlagBits GetVulkanBufferType(Nexus::BufferType Type)

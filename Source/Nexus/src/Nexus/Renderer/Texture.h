@@ -19,4 +19,18 @@ namespace Nexus
 		Texture() = default;
 		virtual ~Texture() = default;
 	};
+
+	enum class SamplerFilter
+	{
+		Nearest, Linear
+	};
+
+	class Sampler
+	{
+	public:
+		static Ref<Sampler> Create(SamplerFilter Near, SamplerFilter Far);
+		
+		Sampler() = default;
+		virtual ~Sampler() = default;
+	};
 }

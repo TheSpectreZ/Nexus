@@ -3,6 +3,7 @@
 #include "Buffer.h"
 #include "ShaderResource.h"
 #include "ResourcePool.h"
+#include "Texture.h"
 #include <filesystem>
 
 typedef std::vector<uint32_t> SpirV;
@@ -22,6 +23,14 @@ namespace Nexus
 		uint32_t binding;
 	};
 
+	struct CombinedImageSamplerHandle
+	{
+		Ref<Texture> texture;
+		Ref<Sampler> sampler;
+		uint32_t set;
+		uint32_t binding;
+	};
+
 	class Shader
 	{
 	public:		
@@ -37,7 +46,10 @@ namespace Nexus
 
 		virtual void AllocateUniformBuffer(UniformBufferHandle handle) = 0;
 		virtual void DeallocateUniformBuffer(UniformBufferHandle handle) = 0;
+		
 		virtual void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, UniformBufferHandle bufferHandle) = 0;
+		virtual void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texture) = 0;
+		
 		virtual void SetUniformData(UniformBufferHandle handle, void* data) = 0;
 	};
 
