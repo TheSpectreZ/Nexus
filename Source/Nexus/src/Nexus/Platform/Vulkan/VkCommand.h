@@ -16,6 +16,7 @@ namespace Nexus
 		void ImplEndRenderpass();
 
 		void ImplTransferStaticMesh(Ref<StaticMesh> mesh) override;
+		void ImplTransferMaterial(Ref<Material> material) override;
 
 		void ImplBindPipeline(Ref<Pipeline> pipeline) override;
 

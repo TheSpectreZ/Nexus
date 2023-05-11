@@ -4,6 +4,7 @@
 
 #include "Framebuffer.h"
 #include "Mesh.h"
+#include "Material.h"
 
 namespace Nexus
 {
@@ -18,6 +19,7 @@ namespace Nexus
 		static void Update();
 
 		static void TransferStaticMesh(Ref<StaticMesh> mesh);
+		static void TransferMaterial(Ref<Material> material);
 
 		static void SetViewport(const Viewport& viewport);
 		static void SetScissor(const Scissor& scissor);
@@ -34,6 +36,7 @@ namespace Nexus
 		virtual void ImplBeginRenderpass(Ref<Renderpass> r, Ref<Framebuffer> f) = 0;
 		virtual void ImplEndRenderpass() = 0;
 		virtual void ImplTransferStaticMesh(Ref<StaticMesh> mesh) = 0;
+		virtual void ImplTransferMaterial(Ref<Material> material) = 0;
 		virtual void ImplBindPipeline(Ref<Pipeline> pipeline) = 0;
 		virtual void ImplDrawMesh(Ref<StaticMesh> mesh) = 0;
 		virtual void ImplSetViewport(const Viewport& viewport) = 0;

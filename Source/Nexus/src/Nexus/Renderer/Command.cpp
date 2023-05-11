@@ -37,6 +37,11 @@ void Nexus::Command::TransferStaticMesh(Ref<StaticMesh> mesh)
 	s_Command->ImplTransferStaticMesh(mesh);
 }
 
+void Nexus::Command::TransferMaterial(Ref<Material> material)
+{
+	s_Command->ImplTransferMaterial(material);
+}
+
 void Nexus::Command::BindPipeline(Ref<Pipeline> pipeline)
 {
 	s_Command->ImplBindPipeline(pipeline);

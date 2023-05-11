@@ -7,6 +7,7 @@ namespace Nexus
 
 	class VulkanRenderCommandQueue : public RenderCommandQueue
 	{
+		friend class VulkanTransferCommandQueue;
 	public:
 		VulkanRenderCommandQueue();
 		~VulkanRenderCommandQueue() override;

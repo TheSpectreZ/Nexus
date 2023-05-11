@@ -3,6 +3,7 @@
 #include "VkAssert.h"
 
 #include "VkBuffer.h"
+#include "VkTexture.h"
 
 namespace Nexus 
 {
@@ -16,8 +17,10 @@ namespace Nexus
 
 		VkCommandBuffer GetCurrentCommandBuffer() { return m_CommandBuffer; }
 		void PushStaticBuffer(Ref<VulkanStaticBuffer> buffer);
+		void PushTexture(Ref<VulkanTexture> texture);
 	private:
 		VkDevice m_device;
+		uint32_t m_TransferQueueIndex, m_RenderQueueIndex;
 
 		VkCommandPool m_CommandPool;
 		VkCommandBuffer m_CommandBuffer;
@@ -29,15 +32,17 @@ namespace Nexus
 		struct TransferData
 		{
 			std::vector<Ref<VulkanStaticBuffer>> m_StaticBuffers;
+			std::vector<Ref<VulkanTexture>> m_Textures;
 
 			bool empty()
 			{
-				return m_StaticBuffers.empty();
+				return m_StaticBuffers.empty() && m_Textures.empty();
 			}
 
 			void clear();
 		} m_TransferData;
 
 		void Transfer();
+		void DoImageBarriers();
 	};
 }

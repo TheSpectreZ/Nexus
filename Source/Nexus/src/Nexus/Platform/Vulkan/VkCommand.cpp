@@ -51,6 +51,14 @@ void Nexus::VulkanCommand::ImplTransferStaticMesh(Ref<StaticMesh> mesh)
 	m_TransferQueue->PushStaticBuffer(DynamicPointerCast<VulkanStaticBuffer>(mesh->GetIndexBuffer()));
 }
 
+void Nexus::VulkanCommand::ImplTransferMaterial(Ref<Material> material)
+{
+	if (material == nullptr)
+		NEXUS_LOG_DEBUG("Material Ptr is Null");
+
+	m_TransferQueue->PushTexture(DynamicPointerCast<VulkanTexture>(material->GetAlebdoTexture()));
+}
+
 void Nexus::VulkanCommand::ImplBindPipeline(Ref<Pipeline> pipeline)
 {
 	Ref<VulkanPipeline> Vkp = DynamicPointerCast<VulkanPipeline>(pipeline);

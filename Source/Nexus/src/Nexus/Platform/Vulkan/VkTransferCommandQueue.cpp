@@ -1,5 +1,6 @@
 #include "nxpch.h"
 #include "VkTransferCommandQueue.h"
+#include "VkRenderCommandQueue.h"
 #include "VkContext.h"
 #include "VkSwapchain.h"
 
@@ -9,6 +10,9 @@ Nexus::VulkanTransferCommandQueue::VulkanTransferCommandQueue()
 
 	m_device = device->Get();
 	m_transferQueue = device->GetTransferQueue();
+
+	m_TransferQueueIndex = device->GetQueueFamilyIndices().Transfer;
+	m_RenderQueueIndex = device->GetQueueFamilyIndices().Graphics;
 
 	VkCommandPoolCreateInfo Info{};
 	Info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -59,6 +63,9 @@ void Nexus::VulkanTransferCommandQueue::Flush()
 		
 		_VKR = vkQueueSubmit(m_transferQueue, 1, &m_SubmitInfo, nullptr);
 		vkQueueWaitIdle(m_transferQueue);
+
+		DoImageBarriers();
+
 		m_TransferData.clear();
 	}
 }
@@ -66,6 +73,11 @@ void Nexus::VulkanTransferCommandQueue::Flush()
 void Nexus::VulkanTransferCommandQueue::PushStaticBuffer(Ref<VulkanStaticBuffer> buffer)
 {
 	m_TransferData.m_StaticBuffers.emplace_back(buffer);
+}
+
+void Nexus::VulkanTransferCommandQueue::PushTexture(Ref<VulkanTexture> texture)
+{
+	m_TransferData.m_Textures.emplace_back(texture);
 }
 
 void Nexus::VulkanTransferCommandQueue::Transfer()
@@ -80,6 +92,93 @@ void Nexus::VulkanTransferCommandQueue::Transfer()
 
 		vkCmdCopyBuffer(m_CommandBuffer, buffer->m_StagingBuff, buffer->m_buffer, 1, &copy);
 	}
+	
+	for (auto& texture : m_TransferData.m_Textures)
+	{
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.pNext = nullptr;
+		barrier.image = texture->m_Image;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.srcQueueFamilyIndex = m_TransferQueueIndex;
+		barrier.dstQueueFamilyIndex = m_TransferQueueIndex;
+		barrier.srcAccessMask = 0;
+		barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		
+		vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+		VkBufferImageCopy copy{};
+
+		copy.bufferOffset = 0;
+		copy.bufferRowLength = 0;
+		copy.bufferImageHeight = 0;
+
+		copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		copy.imageSubresource.mipLevel = 0;
+		copy.imageSubresource.baseArrayLayer = 0;
+		copy.imageSubresource.layerCount = 1;
+
+		copy.imageOffset = { 0, 0, 0 };
+		copy.imageExtent = { texture->m_Extent.width,texture->m_Extent.height,1 };
+
+		vkCmdCopyBufferToImage(m_CommandBuffer, texture->m_StagingBuffer, texture->m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+		
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barrier.srcQueueFamilyIndex = m_TransferQueueIndex;
+		barrier.dstQueueFamilyIndex = m_RenderQueueIndex;
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		
+		vkCmdPipelineBarrier(m_CommandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+		
+	}
+}
+
+void Nexus::VulkanTransferCommandQueue::DoImageBarriers()
+{
+	Ref<VulkanRenderCommandQueue> queue = DynamicPointerCast<VulkanRenderCommandQueue>(Renderer::GetRenderCommandQueue());
+
+	VkCommandBuffer cmd = queue->GetCurrentCommandBuffer();
+
+	vkBeginCommandBuffer(cmd, &m_CommandBufferBeginInfo);
+
+	for (auto& i : m_TransferData.m_Textures)
+	{
+		VkImageMemoryBarrier barrier{};
+		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		barrier.pNext = nullptr;
+		barrier.image = i->m_Image;
+		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		barrier.subresourceRange.baseMipLevel = 0;
+		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseArrayLayer = 0;
+		barrier.subresourceRange.layerCount = 1;
+		barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		barrier.srcQueueFamilyIndex = m_TransferQueueIndex;
+		barrier.dstQueueFamilyIndex = m_RenderQueueIndex;
+		barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+		barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+		vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+	}
+	vkEndCommandBuffer(cmd);
+
+	VkSubmitInfo SubmitInfo = {};
+	SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	SubmitInfo.pNext = nullptr;
+	SubmitInfo.pCommandBuffers = &cmd;
+	SubmitInfo.commandBufferCount = 1;
+
+	vkQueueSubmit(queue->m_renderQueue, 1, &SubmitInfo, nullptr);
+	vkQueueWaitIdle(queue->m_renderQueue);
 }
 
 void Nexus::VulkanTransferCommandQueue::TransferData::clear()
@@ -92,4 +191,11 @@ void Nexus::VulkanTransferCommandQueue::TransferData::clear()
 		b->m_StagingBuff = nullptr;
 	}
 	m_StaticBuffers.clear();
+
+	for(auto& i : m_Textures)
+	{
+		vmaDestroyBuffer(device->GetAllocator(), i->m_StagingBuffer, i->m_StagingAlloc);
+		i->m_StagingBuffer = nullptr;
+	}
+	m_Textures.clear();
 }
