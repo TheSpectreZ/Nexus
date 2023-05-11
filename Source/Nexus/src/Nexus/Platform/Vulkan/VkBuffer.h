@@ -9,8 +9,7 @@ namespace Nexus
 	
 	class VulkanStaticBuffer : public StaticBuffer
 	{
-		friend class VulkanCommand;
-		friend class VulkanTransferCommandQueue;
+		friend class VulkanCommandQueue;
 	public:
 		VulkanStaticBuffer(uint32_t size, BufferType Type, void* data);
 		~VulkanStaticBuffer() override;

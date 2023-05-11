@@ -1,7 +1,6 @@
 #pragma once
 #include "Editor/EditorViewport.h"
 #include "VkFramebuffer.h"
-#include "VkCommand.h"
 #include "VkSwapchain.h"
 #include "imgui.h"
 
@@ -23,7 +22,6 @@ namespace Nexus
 		VkExtent2D m_Extent;
 		VkPipelineLayout* m_layout;
 		Ref<VulkanSwapchain> m_Swapchain;
-		Ref<VulkanCommand> m_Command;
 		ImVec2 m_Panelsize;
 	};
 }

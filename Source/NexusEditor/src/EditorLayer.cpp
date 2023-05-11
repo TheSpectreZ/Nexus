@@ -129,21 +129,21 @@ void EditorLayer::OnRender()
 {
 	// Graphics
 	{
-		Nexus::Command::BeginRenderpass(m_GraphicsPass, m_GraphicsFramebuffer);
+		Nexus::Renderer::BeginRenderPass(m_GraphicsPass, m_GraphicsFramebuffer);
 
-		Nexus::Command::BindPipeline(m_Pipeline);
+		Nexus::Renderer::BindPipeline(m_Pipeline);
 
-		Nexus::Command::SetViewport(m_viewport);
-		Nexus::Command::SetScissor(m_scissor);
+		Nexus::Renderer::SetViewport(m_viewport);
+		Nexus::Renderer::SetScissor(m_scissor);
 
 		m_SceneRenderer.Render();
 
-		Nexus::Command::EndRenderpass();
+		Nexus::Renderer::EndRenderPass();
 	}
 
 	// ImGui
 	{
-		Nexus::Command::BeginRenderpass(m_ImGuiPass, m_ImGuiFramebuffer);
+		Nexus::Renderer::BeginRenderPass(m_ImGuiPass, m_ImGuiFramebuffer);
 		Nexus::EditorContext::StartFrame();
 		
 		ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
@@ -156,7 +156,7 @@ void EditorLayer::OnRender()
 		RenderEditorWorldControls();
 
 		Nexus::EditorContext::Render();
-		Nexus::Command::EndRenderpass();
+		Nexus::Renderer::EndRenderPass();
 	}
 }
 

@@ -2,7 +2,7 @@
 #include "VkShader.h"
 #include "VkContext.h"
 #include "VkBuffer.h"
-#include "VkCommand.h"
+#include "VkCommandQueue.h"
 
 #include "shaderc/shaderc.hpp"
 
@@ -227,10 +227,10 @@ void Nexus::VulkanShader::DeallocateShaderResourceHeap(ResourceHeapHandle handle
 
 void Nexus::VulkanShader::BindShaderResourceHeap(ResourceHeapHandle handle)
 {
-	Ref<VulkanCommand> cmd = DynamicPointerCast<VulkanCommand>(Command::GetRef());
+	Ref<VulkanCommandQueue> cmd = DynamicPointerCast<VulkanCommandQueue>(Renderer::GetCommandQueue());
 
 	VkDescriptorSet& Set = m_SetResource[handle.set].Heaps[handle.hashId].Get();
-	vkCmdBindDescriptorSets(cmd->m_RenderCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_Layout, handle.set, 1, &Set, 0, nullptr);
+	vkCmdBindDescriptorSets(cmd->GetCurrentCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, m_Layout, handle.set, 1, &Set, 0, nullptr);
 }
 
 void Nexus::VulkanShader::AllocateUniformBuffer(UniformBufferHandle handle)

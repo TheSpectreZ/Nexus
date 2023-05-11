@@ -1,5 +1,6 @@
 #include "nxpch.h"
 #include "VkContext.h"
+#include "VkCommandQueue.h"
 #include "VulkanEditorViewport.h"
 #include "backends/imgui_impl_vulkan.cpp"
 
@@ -34,7 +35,6 @@ Nexus::VulkanEditorViewport::VulkanEditorViewport()
 
     m_Swapchain = VulkanSwapchain::Get();
     m_DescriptorSets.resize(m_Swapchain->GetImageCount());
-    m_Command = DynamicPointerCast<VulkanCommand>(Command::GetRef());
 }
 
 Nexus::VulkanEditorViewport::~VulkanEditorViewport()
@@ -96,14 +96,17 @@ void Nexus::VulkanEditorViewport::SetContext(Ref<Framebuffer> framebuffer, uint3
 
 void Nexus::VulkanEditorViewport::Render()
 {
-    vkCmdBindDescriptorSets(m_Command->m_RenderCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_layout, 0, 1, &m_DescriptorSets[m_Command->m_FrameIndex], 0, nullptr);
+    VkCommandBuffer cmd = VulkanCommandQueue::Get()->GetCurrentCommandBuffer();
+    uint32_t frameIndex = VulkanCommandQueue::Get()->GetFrameIndex();
+
+    vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, *m_layout, 0, 1, &m_DescriptorSets[frameIndex], 0, nullptr);
 
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
     ImGui::Begin("Viewport");
 
     m_Panelsize = ImGui::GetContentRegionAvail();
 
-    ImGui::Image(m_DescriptorSets[m_Command->m_FrameIndex], m_Panelsize);
+    ImGui::Image(m_DescriptorSets[frameIndex], m_Panelsize);
    
     ImGui::End();
     ImGui::PopStyleVar();

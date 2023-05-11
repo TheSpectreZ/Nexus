@@ -7,7 +7,7 @@
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
 
-#include "Command.h"
+#include "Renderer.h"
 
 Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* Filepath)
 {
@@ -68,7 +68,7 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 	sMesh->m_Vb = StaticBuffer::Create((uint32_t)m_Vertices.size() * sizeof(StaticMeshVertex), BufferType::Vertex, m_Vertices.data());
 	sMesh->m_Ib = StaticBuffer::Create((uint32_t)m_Indices.size() * sizeof(uint32_t), BufferType::Index, m_Indices.data());
 
-	Command::TransferStaticMesh(sMesh);
+	Renderer::TransferMeshToGPU(sMesh);
 
 	return sMesh;
 }

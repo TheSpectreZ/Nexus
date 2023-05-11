@@ -6,8 +6,7 @@ namespace Nexus
 {
 	class VulkanTexture : public Texture
 	{
-		friend class VulkanCommand;
-		friend class VulkanTransferCommandQueue;
+		friend class VulkanCommandQueue;
 	public:
 		VulkanTexture(const TextureCreateInfo& Info);
 		~VulkanTexture() override;

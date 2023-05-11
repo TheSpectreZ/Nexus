@@ -1,7 +1,7 @@
 #include "nxpch.h"
 #include "SceneRenderer.h"
+#include "Renderer/Renderer.h"
 #include "Entity.h"
-#include "Renderer/Command.h"
 #include "Assets/AssetManager.h"
 
 void Nexus::SceneRenderer::SetContext(Ref<Scene> scene, Ref<SceneBuildData> data)
@@ -28,6 +28,6 @@ void Nexus::SceneRenderer::Render()
 		auto& meshHandle = entity.GetComponent<Component::Mesh>().handle;
 		auto& meshAsset = AssetManager::Get<StaticMeshAsset>(meshHandle);
 
-		Command::DrawMesh(meshAsset.Mesh);
+		Renderer::DrawMesh(meshAsset.Mesh);
 	}
 }

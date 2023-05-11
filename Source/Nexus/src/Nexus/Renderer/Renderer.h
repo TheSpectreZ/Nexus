@@ -3,9 +3,12 @@
 
 #include "Context.h"
 #include "Swapchain.h"
-#include "Command.h"
-#include "RenderCommandQueue.h"
-#include "TransferCommandQueue.h"
+#include "CommandQueue.h"
+
+#include "Mesh.h"
+#include "Framebuffer.h"
+#include "RenderTypes.h"
+#include "Pipeline.h"
 
 namespace Nexus
 {
@@ -18,7 +21,24 @@ namespace Nexus
 	class Renderer
 	{
 		static Ref<Renderer> s_Renderer;
+		friend class Application;
 	public:
+		static Ref<Context> GetContext() { return s_Renderer->m_Context; }
+		static Ref<Swapchain> GetSwapchain() { return s_Renderer->m_Swapchain; }
+		static Ref<CommandQueue> GetCommandQueue() { return s_Renderer->m_CommandQueue; }
+		static std::function<void()> ResizeCallback;
+		
+		static void BeginRenderPass(Ref<Renderpass> pass,Ref<Framebuffer> framebuffer);
+		static void EndRenderPass();
+		
+		static void BindPipeline(Ref<Pipeline> pipeline);
+		
+		static void SetScissor(Scissor scissor);
+		static void SetViewport(Viewport viewport);
+
+		static void TransferMeshToGPU(Ref<StaticMesh> mesh);
+		static void DrawMesh(Ref<StaticMesh> mesh);
+	private:
 		static void Init(const RendererSpecifications& specs);
 		static void Shut();
 
@@ -30,17 +50,9 @@ namespace Nexus
 
 		static void WaitForDevice();
 
-		static std::function<void()> ResizeCallback;
-
-		static Ref<Context> GetContext() { return s_Renderer->m_Context; }
-		static Ref<Swapchain> GetSwapchain() { return s_Renderer->m_Swapchain; }
-		static Ref<RenderCommandQueue> GetRenderCommandQueue() { return s_Renderer->m_RenderCommandQueue; }
-		static Ref<TransferCommandQueue> GetTransferCommandQueue() { return s_Renderer->m_TransferCommandQueue; }
 	private:
 		Ref<Context> m_Context;
 		Ref<Swapchain> m_Swapchain;
-		Ref<Command> m_RenderCommand;
-		Ref<RenderCommandQueue> m_RenderCommandQueue;
-		Ref<TransferCommandQueue> m_TransferCommandQueue;
+		Ref<CommandQueue> m_CommandQueue;
 	};
 }
