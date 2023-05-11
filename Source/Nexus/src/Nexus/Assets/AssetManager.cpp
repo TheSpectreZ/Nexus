@@ -66,3 +66,56 @@ Nexus::AssetHandle Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>(con
 GET_ASSET(Nexus::StaticMeshAsset, m_StaticMeshes)
 HAS_ASSET(Nexus::StaticMeshAsset, m_StaticMeshes)
 REMOVE_ASSET(Nexus::StaticMeshAsset, m_StaticMeshes)
+
+template<>
+Nexus::AssetHandle Nexus::AssetManager::LoadFromFile<Nexus::TextureAsset>(const std::filesystem::path& path)
+{
+	auto extension = path.extension().string();
+	if (extension != ".png" && extension != ".jpg")
+		return UINT64_MAX;
+
+	std::string p = path.string();
+	if (s_Instance->m_AssetHandleCache.contains(p))
+		return s_Instance->m_AssetHandleCache[p];
+
+	AssetHandle handle = CreateAssetHandle();
+
+	s_Instance->m_Textures[handle].Texture = Texture::LoadFromFile(p.c_str());
+	s_Instance->m_Textures[handle].Name = path.filename().string();
+	s_Instance->m_Textures[handle].Path = path;
+
+	s_Instance->m_AssetHandleCache[p] = handle;
+
+	return handle;
+}
+
+GET_ASSET(Nexus::TextureAsset, m_Textures)
+HAS_ASSET(Nexus::TextureAsset, m_Textures)
+REMOVE_ASSET(Nexus::TextureAsset, m_Textures)
+
+template<>
+Nexus::AssetHandle Nexus::AssetManager::LoadFromFile<Nexus::MaterialAsset>(const std::filesystem::path& path)
+{
+	auto extension = path.extension().string();
+	if (extension != ".nxMat")
+		return UINT64_MAX;
+
+	std::string p = path.string();
+	if (s_Instance->m_AssetHandleCache.contains(p))
+		return s_Instance->m_AssetHandleCache[p];
+
+	AssetHandle handle = CreateAssetHandle();
+
+	s_Instance->m_Materials[handle].Material = Material::Create(p.c_str());
+	s_Instance->m_Materials[handle].Name = path.filename().string();
+	s_Instance->m_Materials[handle].Path = path;
+
+	s_Instance->m_AssetHandleCache[p] = handle;
+
+	return handle;
+}
+
+GET_ASSET(Nexus::MaterialAsset, m_Materials)
+HAS_ASSET(Nexus::MaterialAsset, m_Materials)
+REMOVE_ASSET(Nexus::MaterialAsset, m_Materials)
+

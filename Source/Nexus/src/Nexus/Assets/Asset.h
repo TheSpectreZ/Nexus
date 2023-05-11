@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include "Renderer/Mesh.h"
+#include "Renderer/Texture.h"
 
 namespace Nexus
 {
@@ -16,4 +17,11 @@ namespace Nexus
 		Ref<StaticMesh> Mesh;
 	};
 
+	struct TextureAsset
+	{
+		std::string Name;
+		std::filesystem::path Path;
+
+		Ref<Texture> Texture;
+	};
 }
