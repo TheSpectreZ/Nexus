@@ -15,6 +15,8 @@ private:
 	void RenderEditorMainMenu();
 	void RenderEditorWorldControls();
 private:
+	Nexus::ProjectSpecifications m_ProjectSpecs;
+
 	bool m_IsScenePlaying, m_PauseScene;
   
 	Nexus::Ref<Nexus::Renderpass> m_GraphicsPass;
@@ -27,6 +29,8 @@ private:
 
 	glm::vec2 m_ImGuiEditorViewportSize;
 	Nexus::Ref<Nexus::EditorViewport> m_ImGuiEditorViewport;
+	Nexus::SceneHeirarchy m_SceneHeirarchy;
+	Nexus::ContentBrowser m_ContentBrowser;
 
 	Nexus::Ref<Nexus::Pipeline> m_Pipeline;
 	
@@ -40,7 +44,6 @@ private:
 
 	Nexus::SceneRenderer m_SceneRenderer;
 
-	Nexus::SceneHeirarchy m_SceneHeirarchy;
 
 	Nexus::Viewport m_viewport;
 	Nexus::Scissor m_scissor;
