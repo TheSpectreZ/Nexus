@@ -77,6 +77,13 @@ void Nexus::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 		{
 			EditorContext::s_Instance->BindTextureID(m_FileID);
 			ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
+			
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+			{	
+				const wchar_t* itemPath = p.c_str();
+				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
+				ImGui::EndDragDropSource();
+			}
 		}
 		ImGui::TextWrapped(filenameString.c_str());
 

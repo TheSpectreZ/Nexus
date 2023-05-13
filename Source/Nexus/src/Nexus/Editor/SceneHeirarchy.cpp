@@ -305,23 +305,22 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			ImGui::LabelText("MeshPath", meshAsset.Path.string().c_str());
 			ImGui::SameLine();
 			
-			static std::string browsedString;
-			if (ImGui::Button("Browse"))
+			ImGui::Button("Mesh", { 100.f,50.f });
+			if (ImGui::BeginDragDropTarget())
 			{
-				std::string path = FileDialog::OpenFile("FBX Model (*.fbx)\0*.fbx\0");
-				if (!path.empty())
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 				{
-					browsedString = path;
+					const wchar_t* path = (const wchar_t*)payload->Data;
 
+					std::filesystem::path s = path;
+
+					if (s.extension().string() == ".fbx" || s.extension().string() == ".obj")
+					{
+						AssetHandle handle = AssetManager::LoadFromFile<StaticMeshAsset>(s);
+						component.handle = handle;
+					}
 				}
-			}
-
-			if (ImGui::Button("Set Mesh"))
-			{
-				AssetHandle newhandle = AssetManager::LoadFromFile<StaticMeshAsset>(browsedString);
-				browsedString.clear();
-
-				component.handle = newhandle;
+				ImGui::EndDragDropTarget();
 			}
 		});
 
