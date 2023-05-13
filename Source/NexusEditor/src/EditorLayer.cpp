@@ -52,7 +52,7 @@ void EditorLayer::OnAttach()
 		using namespace Nexus;
 
 		m_cameraController.AttachCamera(&m_camera);
-	
+		m_cameraController.SetSpeed(5.f);
 		m_cameraController.SetKeyBindings(CameraBindings::FRONT, Key::W);
 		m_cameraController.SetKeyBindings(CameraBindings::BACK, Key::S);
 		m_cameraController.SetKeyBindings(CameraBindings::DOWN, Key::E);
@@ -67,7 +67,6 @@ void EditorLayer::OnAttach()
 
 	// Scene
 	{
-		Nexus::UUID cube = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("Resources/Assets/Meshes/Cyborg_Weapon.fbx");
 		
 		m_EditorScene = Nexus::Scene::Create();
 		m_CurrentScene = m_EditorScene;
@@ -76,8 +75,8 @@ void EditorLayer::OnAttach()
 		e1.AddComponent<Nexus::Component::BoxCollider>();
 
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		e2.AddComponent<Nexus::Component::Mesh>(cube);
-		e2.AddComponent<Nexus::Component::SphereCollider>();
+		e2.AddComponent<Nexus::Component::Mesh>();
+		e2.AddComponent<Nexus::Component::BoxCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
 		
 		m_SceneData = Nexus::SceneBuildData::Build(m_EditorScene, simpleShader);
@@ -425,7 +424,7 @@ void EditorLayer::RenderEditorWorldControls()
 	{
 		if (ImGui::BeginTabItem("Scene"))
 		{
-			static float camSpeed;
+			static float camSpeed = 5.f;
 			if (ImGui::DragFloat("Camera Speed", &camSpeed, 1.f, 1.f, 50.f))
 				m_cameraController.SetSpeed(camSpeed);
 
