@@ -15,5 +15,6 @@ namespace Nexus
 		virtual void Shut() = 0;
 
 		virtual Extent GetExtent() = 0;
+		virtual uint32_t GetImageCount() = 0;
 	};
 }

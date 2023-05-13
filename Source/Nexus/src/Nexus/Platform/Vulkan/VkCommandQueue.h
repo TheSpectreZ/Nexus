@@ -13,7 +13,7 @@ namespace Nexus
 		static VulkanCommandQueue* Get() { return s_Instance; }
 
 		VkCommandBuffer GetCurrentCommandBuffer() { return m_RenderCommandBuffer[m_FrameIndex]; }
-		uint32_t GetFrameIndex() { return m_FrameIndex; }
+		uint32_t GetFrameIndex() override { return m_FrameIndex; }
 
 		void Init() override;
 		void Shut() override;
