@@ -97,17 +97,19 @@ void EditorLayer::OnAttach()
 	{
 		Nexus::EditorContext::Initialize(m_ImGuiPass);
 
-		m_ImGuiEditorViewport = Nexus::EditorViewport::Create();
-		m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
+		m_ImGuiEditorViewport.Initialize();
+		m_ImGuiEditorViewport.SetContext(m_GraphicsFramebuffer, 2);
 		
 		m_SceneHeirarchy.SetContext(m_SceneData, m_EditorScene);
+		
+		//Nexus::ContentBrowser::Initialize();
 		m_ContentBrowser.SetContext(m_ProjectSpecs.RootPath);
 	}
 }
 
 void EditorLayer::OnUpdate(Nexus::Timestep ts)
 {
-	glm::vec2 size = m_ImGuiEditorViewport->GetViewportSize();
+	glm::vec2 size = m_ImGuiEditorViewport.GetViewportSize();
 	if (size != m_ImGuiEditorViewportSize)
 	{
 		m_ImGuiEditorViewportSize = size;
@@ -150,7 +152,7 @@ void EditorLayer::OnRender()
 
 		m_SceneHeirarchy.Render();
 		m_ContentBrowser.Render();
-		m_ImGuiEditorViewport->Render();
+		m_ImGuiEditorViewport.Render();
 
 		RenderEditorMainMenu();
 		RenderEditorWorldControls();
@@ -215,7 +217,7 @@ void EditorLayer::OnWindowResize(int width, int height)
 	m_ImGuiFBspecs.extent = Extent;
 	m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
 
-	m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
+	m_ImGuiEditorViewport.SetContext(m_GraphicsFramebuffer, 2);
 }
 
 void EditorLayer::CreateRenderpassAndFramebuffers()

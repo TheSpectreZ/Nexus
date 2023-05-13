@@ -1,12 +1,14 @@
 #pragma once
 #include "imgui.h"
-#include "Renderer/Renderpass.h"
+#include "Renderer/FrameBuffer.h"
 #include "Renderer/ShaderResource.h"
+#include "Renderer/Texture.h"
 
 namespace Nexus
 {
 	class EditorContext
 	{
+		friend class EditorViewport;
 	public:
 		EditorContext() = default;
 		virtual ~EditorContext() = default;
@@ -20,6 +22,13 @@ namespace Nexus
 		virtual void Start() = 0;
 		virtual void End() = 0;
 		
+		virtual ImTextureID MakeTextureID(Ref<Framebuffer> framebuffer, Ref<Sampler> sampler, uint32_t bufferIndex, uint32_t imageIndex) = 0;
+		virtual ImTextureID MakeTextureID(Ref<Texture> texture, Ref<Sampler> sampler) = 0;
+		virtual void DestroyTextureID(ImTextureID Id) = 0;
+		
+		
+		virtual void BindTextureID(ImTextureID Id) = 0;
+
 		static EditorContext* s_Instance;
 	};
 }

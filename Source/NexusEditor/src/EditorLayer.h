@@ -28,7 +28,7 @@ private:
 	Nexus::Ref<Nexus::Framebuffer> m_ImGuiFramebuffer;
 
 	glm::vec2 m_ImGuiEditorViewportSize;
-	Nexus::Ref<Nexus::EditorViewport> m_ImGuiEditorViewport;
+	Nexus::EditorViewport m_ImGuiEditorViewport;
 	Nexus::SceneHeirarchy m_SceneHeirarchy;
 	Nexus::ContentBrowser m_ContentBrowser;
 

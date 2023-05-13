@@ -8,15 +8,20 @@ namespace Nexus
 	class EditorViewport
 	{
 	public:
-		static Ref<EditorViewport> Create();
+		~EditorViewport() = default;
 
-		EditorViewport() = default;
-		virtual ~EditorViewport() = default;
+		void Initialize();
+		void SetContext(Ref<Framebuffer> framebuffer, uint32_t attachmentIndex);
+		void Render();
 
-		virtual void SetContext(Ref<Framebuffer> framebuffer, uint32_t attachmentIndex) = 0;
-		virtual void Render() = 0;
+		glm::vec2 GetViewportSize();
+	private:
+		Ref<Framebuffer> m_Framebuffer;
+		Ref<Sampler> m_Sampler;
+		std::vector<ImTextureID> m_TextureIDs;
 
-		virtual glm::vec2 GetViewportSize() = 0;
+		Extent m_Extent;
+		ImVec2 m_Panelsize;
 	};
 }
 
