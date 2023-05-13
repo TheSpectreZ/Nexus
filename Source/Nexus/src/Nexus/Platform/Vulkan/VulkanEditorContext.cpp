@@ -42,7 +42,7 @@ Nexus::VulkanEditorContext::VulkanEditorContext(Ref<Renderpass> renderpass)
 	{
 		auto& colors = style.Colors;
 
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.05f, 0.02f, 0.01f, 1.0f };
+		colors[ImGuiCol_WindowBg] = ImVec4{ 0.09f, 0.09f, 0.09f, 1.0f };
 
 		// Headers
 		colors[ImGuiCol_Header] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };

@@ -8,9 +8,13 @@ void Nexus::ContentBrowser::Initialize()
 
 	m_FileTexture = Texture::LoadFromFile("Resources/Icons/File.png");
 	m_FolderTexture = Texture::LoadFromFile("Resources/Icons/Folder.png");
+	m_ForwardTexture = Texture::LoadFromFile("Resources/Icons/Forward.png");
+	m_BackwardTexture = Texture::LoadFromFile("Resources/Icons/Back.png");
 
 	m_FileID = EditorContext::s_Instance->MakeTextureID(m_FileTexture, m_Sampler);
 	m_FolderID = EditorContext::s_Instance->MakeTextureID(m_FolderTexture, m_Sampler);
+	m_ForwardID = EditorContext::s_Instance->MakeTextureID(m_ForwardTexture, m_Sampler);
+	m_BackwardID = EditorContext::s_Instance->MakeTextureID(m_BackwardTexture, m_Sampler);
 }
 
 void Nexus::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
@@ -22,9 +26,16 @@ void Nexus::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
 
 		const auto& p = dir.path();
 		auto filenameString = p.filename().string();
+		
+		if (p == m_SelectedDirectory)
+		{
+			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
+			m_SelectedDirectory.clear();
+		}
 
 		if (ImGui::TreeNode(filenameString.c_str()))
 		{
+			m_PreviousDirectory = path;
 			m_CurrentDirectory = p;
 			DrawDirectoryNodes(p);
 			ImGui::TreePop();
@@ -52,25 +63,39 @@ void Nexus::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 	{
 		ImGui::PushID(i++);
 
-		const auto& path = dir.path();
-		auto filenameString = path.filename().string();
+		const auto& p = dir.path();
+		auto filenameString = p.filename().string();
 
 		if (dir.is_directory())
 		{
 			EditorContext::s_Instance->BindTextureID(m_FolderID);
-			ImGui::ImageButton(m_FolderID, {100.f,100.f});
+			if (ImGui::ImageButton(m_FolderID, { thumbnailSize,thumbnailSize }))
+			{
+				m_SelectedDirectory = p;
+			}
 		}
 		else 
 		{
 			EditorContext::s_Instance->BindTextureID(m_FileID);
-			ImGui::ImageButton(m_FileID, {100.f,100.f});
+			ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
 		}
+		ImGui::TextWrapped(filenameString.c_str());
 
 		ImGui::PopID();
 		ImGui::NextColumn();
 	}
 	ImGui::PopStyleColor();
 	ImGui::Columns(1);
+}
+
+void Nexus::ContentBrowser::DrawDirectoryFilesTopBar()
+{
+	EditorContext::s_Instance->BindTextureID(m_ForwardID);
+	EditorContext::s_Instance->BindTextureID(m_BackwardID);
+
+	ImGui::ImageButton(m_BackwardID, { 20.f,20.f });
+	ImGui::SameLine(32.f);
+	ImGui::ImageButton(m_ForwardID, { 20.f,20.f });
 }
 
 void Nexus::ContentBrowser::SetContext(const std::string& projectRootPath)
@@ -108,6 +133,8 @@ void Nexus::ContentBrowser::Render()
 		ImGui::TableSetColumnIndex(1);
 
 		ImGui::BeginChild("Files", { ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y });
+		//DrawDirectoryFilesTopBar();
+		ImGui::Separator();
 		DrawDirectoryFiles(m_CurrentDirectory);
 		ImGui::EndChild();
 
