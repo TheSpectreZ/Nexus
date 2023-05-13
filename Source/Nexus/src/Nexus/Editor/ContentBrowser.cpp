@@ -1,7 +1,17 @@
 #include "nxpch.h"
+#include "EditorContext.h"
 #include "ContentBrowser.h"
 
-#include "imgui.h"
+void Nexus::ContentBrowser::Initialize()
+{
+	m_Sampler = Sampler::Create(SamplerFilter::Linear, SamplerFilter::Linear);
+
+	m_FileTexture = Texture::LoadFromFile("Resources/Icons/File.png");
+	m_FolderTexture = Texture::LoadFromFile("Resources/Icons/Folder.png");
+
+	m_FileID = EditorContext::s_Instance->MakeTextureID(m_FileTexture, m_Sampler);
+	m_FolderID = EditorContext::s_Instance->MakeTextureID(m_FolderTexture, m_Sampler);
+}
 
 void Nexus::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
 {
@@ -35,6 +45,8 @@ void Nexus::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 	ImGui::Columns(columnCount, 0, false);
 
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
+
 	int i = 0;
 	for (auto& dir : std::filesystem::directory_iterator(path))
 	{
@@ -43,15 +55,21 @@ void Nexus::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 		const auto& path = dir.path();
 		auto filenameString = path.filename().string();
 
-		if (ImGui::Button(filenameString.c_str(), ImVec2(100.f, 100.f)))
+		if (dir.is_directory())
 		{
-			if (dir.is_directory())
-				m_CurrentDirectory = path;	
+			EditorContext::s_Instance->BindTextureID(m_FolderID);
+			ImGui::ImageButton(m_FolderID, {100.f,100.f});
+		}
+		else 
+		{
+			EditorContext::s_Instance->BindTextureID(m_FileID);
+			ImGui::ImageButton(m_FileID, {100.f,100.f});
 		}
 
 		ImGui::PopID();
 		ImGui::NextColumn();
 	}
+	ImGui::PopStyleColor();
 	ImGui::Columns(1);
 }
 

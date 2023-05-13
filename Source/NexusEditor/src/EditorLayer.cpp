@@ -102,7 +102,7 @@ void EditorLayer::OnAttach()
 		
 		m_SceneHeirarchy.SetContext(m_SceneData, m_EditorScene);
 		
-		//Nexus::ContentBrowser::Initialize();
+		m_ContentBrowser.Initialize();
 		m_ContentBrowser.SetContext(m_ProjectSpecs.RootPath);
 	}
 }
@@ -174,8 +174,7 @@ void EditorLayer::OnDetach()
 		m_IsScenePlaying = false;
 
 		m_RuntimeScene->Clear();
-		m_RuntimeScene.reset();
-
+		
 		NEXUS_LOG_WARN("Stopped Scene Runtime");
 	}
 

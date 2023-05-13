@@ -9,6 +9,7 @@ namespace Nexus
 	class EditorContext
 	{
 		friend class EditorViewport;
+		friend class ContentBrowser;
 	public:
 		EditorContext() = default;
 		virtual ~EditorContext() = default;
