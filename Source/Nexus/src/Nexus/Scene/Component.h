@@ -8,9 +8,6 @@
 
 namespace Nexus
 {
-	typedef uint64_t UUID;
-	UUID CreateUUID();
-
 	namespace Component
 	{
 		struct Tag
@@ -30,7 +27,7 @@ namespace Nexus
 				:uuid(id)
 			{}
 
-			UUID uuid;
+			UUID uuid = NullUUID;
 		};
 
 		struct Transform
@@ -51,16 +48,16 @@ namespace Nexus
 			void SetRotationEuler(const glm::vec3& euler);
 		private:
 			glm::vec3 RotationEuler = { 0.0f, 0.0f, 0.0f };
-			glm::quat Rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
+			glm::quat Rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
 		};
 
 		struct Mesh
 		{
 			Mesh() = default;
 			Mesh(const Mesh&) = default;
-			Mesh(AssetHandle assetHandle);
+			Mesh(UUID UUID);
 
-			AssetHandle handle;
+			UUID handle = NullUUID;
 		};
 
 		struct Script

@@ -21,7 +21,7 @@ namespace Nexus
 		
 		VkExtent2D GetImageExtent() { return m_extent; }
 		VkFormat GetImageFormat() { return m_format.format; }
-		uint32_t GetImageCount() { return (uint32_t)m_SwapchainImages.size(); }
+		uint32_t GetImageCount() override { return (uint32_t)m_SwapchainImages.size(); }
 		VkImageView GetImageView(uint32_t index) 
 		{ 
 			NEXUS_ASSERT((index>=m_SwapchainImages.size()),"Swapchain Image View Index out of Bounds"); 

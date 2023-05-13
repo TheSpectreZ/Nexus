@@ -16,6 +16,8 @@ namespace Nexus
 		virtual void Init() = 0;
 		virtual void Shut() = 0;
 
+		virtual uint32_t GetFrameIndex() = 0;
+
 		virtual void BeginRenderQueue() = 0;
 		virtual void EndRenderQueue() = 0;
 		virtual void FlushRenderQueue() = 0;

@@ -133,7 +133,7 @@ Nexus::VulkanShader::VulkanShader(SpirV& vertexData, SpirV& fragmentData, const 
 
 		std::vector<VkDescriptorSetLayout> layouts;
 
-		uint32_t size = m_SetResource.size();
+		uint32_t size = (uint32_t)m_SetResource.size();
 		for (uint32_t i = 0; i < size; i++)
 		{
 			layouts.push_back(m_SetResource[i].HeapLayout->Get());

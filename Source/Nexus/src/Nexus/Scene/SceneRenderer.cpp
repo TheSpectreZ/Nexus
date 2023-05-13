@@ -20,14 +20,15 @@ void Nexus::SceneRenderer::Render()
 	{
 		entity = Entity(e, m_Scene.get());
 
+		auto& meshHandle = entity.GetComponent<Component::Mesh>().handle;
+		if (meshHandle == NullUUID)
+			continue;
+
 		auto& Identity = entity.GetComponent<Component::Identity>();
 		auto& resourceHeap = m_Data->PerEntityHeap[Identity.uuid];
-
 		m_Data->shader->BindShaderResourceHeap(resourceHeap);
 
-		auto& meshHandle = entity.GetComponent<Component::Mesh>().handle;
 		auto& meshAsset = AssetManager::Get<StaticMeshAsset>(meshHandle);
-
 		Renderer::DrawMesh(meshAsset.Mesh);
 	}
 }

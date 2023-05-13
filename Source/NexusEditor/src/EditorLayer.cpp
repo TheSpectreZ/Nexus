@@ -52,8 +52,7 @@ void EditorLayer::OnAttach()
 		using namespace Nexus;
 
 		m_cameraController.AttachCamera(&m_camera);
-		m_cameraController.SetSpeed(100.f);
-		
+		m_cameraController.SetSpeed(5.f);
 		m_cameraController.SetKeyBindings(CameraBindings::FRONT, Key::W);
 		m_cameraController.SetKeyBindings(CameraBindings::BACK, Key::S);
 		m_cameraController.SetKeyBindings(CameraBindings::DOWN, Key::E);
@@ -68,7 +67,6 @@ void EditorLayer::OnAttach()
 
 	// Scene
 	{
-		Nexus::AssetHandle cube = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("Resources/Assets/Meshes/Cyborg_Weapon.fbx");
 		
 		m_EditorScene = Nexus::Scene::Create();
 		m_CurrentScene = m_EditorScene;
@@ -77,9 +75,8 @@ void EditorLayer::OnAttach()
 		e1.AddComponent<Nexus::Component::BoxCollider>();
 
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		e2.GetComponent<Nexus::Component::Transform>().Scale = glm::vec3(20.f);
-		e2.AddComponent<Nexus::Component::Mesh>(cube);
-		e2.AddComponent<Nexus::Component::SphereCollider>();
+		e2.AddComponent<Nexus::Component::Mesh>();
+		e2.AddComponent<Nexus::Component::BoxCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
 		
 		m_SceneData = Nexus::SceneBuildData::Build(m_EditorScene, simpleShader);
@@ -97,17 +94,19 @@ void EditorLayer::OnAttach()
 	{
 		Nexus::EditorContext::Initialize(m_ImGuiPass);
 
-		m_ImGuiEditorViewport = Nexus::EditorViewport::Create();
-		m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
+		m_ImGuiEditorViewport.Initialize();
+		m_ImGuiEditorViewport.SetContext(m_GraphicsFramebuffer, 2);
 		
 		m_SceneHeirarchy.SetContext(m_SceneData, m_EditorScene);
+		
+		m_ContentBrowser.Initialize();
 		m_ContentBrowser.SetContext(m_ProjectSpecs.RootPath);
 	}
 }
 
 void EditorLayer::OnUpdate(Nexus::Timestep ts)
 {
-	glm::vec2 size = m_ImGuiEditorViewport->GetViewportSize();
+	glm::vec2 size = m_ImGuiEditorViewport.GetViewportSize();
 	if (size != m_ImGuiEditorViewportSize)
 	{
 		m_ImGuiEditorViewportSize = size;
@@ -150,7 +149,7 @@ void EditorLayer::OnRender()
 
 		m_SceneHeirarchy.Render();
 		m_ContentBrowser.Render();
-		m_ImGuiEditorViewport->Render();
+		m_ImGuiEditorViewport.Render();
 
 		RenderEditorMainMenu();
 		RenderEditorWorldControls();
@@ -172,8 +171,7 @@ void EditorLayer::OnDetach()
 		m_IsScenePlaying = false;
 
 		m_RuntimeScene->Clear();
-		m_RuntimeScene.reset();
-
+		
 		NEXUS_LOG_WARN("Stopped Scene Runtime");
 	}
 
@@ -215,7 +213,7 @@ void EditorLayer::OnWindowResize(int width, int height)
 	m_ImGuiFBspecs.extent = Extent;
 	m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
 
-	m_ImGuiEditorViewport->SetContext(m_GraphicsFramebuffer, 2);
+	m_ImGuiEditorViewport.SetContext(m_GraphicsFramebuffer, 2);
 }
 
 void EditorLayer::CreateRenderpassAndFramebuffers()
@@ -424,6 +422,15 @@ void EditorLayer::RenderEditorWorldControls()
 	
 	if (ImGui::BeginTabBar("World"))
 	{
+		if (ImGui::BeginTabItem("Scene"))
+		{
+			static float camSpeed = 5.f;
+			if (ImGui::DragFloat("Camera Speed", &camSpeed, 1.f, 1.f, 50.f))
+				m_cameraController.SetSpeed(camSpeed);
+
+			ImGui::EndTabItem();
+		}
+
 		if (ImGui::BeginTabItem("Physics"))
 		{
 			static glm::vec3 gravity;

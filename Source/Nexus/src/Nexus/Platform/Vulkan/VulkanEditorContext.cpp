@@ -2,13 +2,15 @@
 #include "VulkanEditorContext.h"
 #include "VkCommandQueue.h"
 
-#include "backends/imgui_impl_vulkan.h"
+#include "backends/imgui_impl_vulkan.cpp"
 #include "backends/imgui_impl_glfw.h"
 
 #include "Core/Application.h"
-#include "Platform/Vulkan/VkContext.h"
-#include "Platform/Vulkan/VkSwapchain.h"
-#include "Platform/Vulkan/VkRenderpass.h"
+#include "VkContext.h"
+#include "VkSwapchain.h"
+#include "VkRenderpass.h"
+#include "VkFramebuffer.h"
+#include "VkTexture.h"
 
 Nexus::VulkanEditorContext::VulkanEditorContext(Ref<Renderpass> renderpass)
 {
@@ -40,7 +42,7 @@ Nexus::VulkanEditorContext::VulkanEditorContext(Ref<Renderpass> renderpass)
 	{
 		auto& colors = style.Colors;
 
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.05f, 0.02f, 0.01f, 1.0f };
+		colors[ImGuiCol_WindowBg] = ImVec4{ 0.09f, 0.09f, 0.09f, 1.0f };
 
 		// Headers
 		colors[ImGuiCol_Header] = ImVec4{ 0.2f, 0.205f, 0.21f, 1.0f };
@@ -118,6 +120,8 @@ Nexus::VulkanEditorContext::VulkanEditorContext(Ref<Renderpass> renderpass)
 
 	ImGui_ImplVulkan_Init(&Info, DynamicPointerCast<VulkanRenderpass>(renderpass)->Get());
 
+	m_PipelineLayout = ImGui_ImplVulkan_GetBackendData()->PipelineLayout;
+
 	{
 		VkCommandPoolCreateInfo p{};
 		p.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -193,4 +197,31 @@ void Nexus::VulkanEditorContext::End()
 		ImGui::UpdatePlatformWindows();
 		ImGui::RenderPlatformWindowsDefault();
 	}
+}
+
+ImTextureID Nexus::VulkanEditorContext::MakeTextureID(Ref<Framebuffer> framebuffer, Ref<Sampler> sampler, uint32_t bufferIndex, uint32_t imageIndex)
+{
+	VkSampler samp = DynamicPointerCast<VulkanSampler>(sampler)->Get();
+	VkImageView view = DynamicPointerCast<VulkanFramebuffer>(framebuffer)->GetAttachmentView(bufferIndex, imageIndex);
+
+	return ImGui_ImplVulkan_AddTexture(samp, view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+}
+
+ImTextureID Nexus::VulkanEditorContext::MakeTextureID(Ref<Texture> texture, Ref<Sampler> sampler)
+{
+	VkSampler samp = DynamicPointerCast<VulkanSampler>(sampler)->Get();
+	VkImageView view = DynamicPointerCast<VulkanTexture>(texture)->Get();
+
+	return ImGui_ImplVulkan_AddTexture(samp, view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+}
+
+void Nexus::VulkanEditorContext::DestroyTextureID(ImTextureID Id)
+{
+	ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)Id);
+}
+
+void Nexus::VulkanEditorContext::BindTextureID(ImTextureID Id)
+{
+	VkDescriptorSet set = (VkDescriptorSet)Id;
+	vkCmdBindDescriptorSets(m_CmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_PipelineLayout, 0, 1, &set, 0, nullptr);
 }

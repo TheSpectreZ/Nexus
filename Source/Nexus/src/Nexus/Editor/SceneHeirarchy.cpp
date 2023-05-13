@@ -299,30 +299,34 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Mesh>("Mesh", en, [&](auto& component)
 		{
-			AssetHandle handle = component.handle;
+
+			ImGui::Button("Mesh", { 100.f,50.f });
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+				{
+					const wchar_t* path = (const wchar_t*)payload->Data;
+
+					std::filesystem::path s = path;
+
+					if (s.extension().string() == ".fbx" || s.extension().string() == ".obj")
+					{
+						UUID handle = AssetManager::LoadFromFile<StaticMeshAsset>(s);
+						component.handle = handle;
+					}
+				}
+				ImGui::EndDragDropTarget();
+			}
+			
+			UUID handle = component.handle;
+			if (handle == NullUUID)
+				return;
+			
 			auto& meshAsset = AssetManager::Get<StaticMeshAsset>(handle);
 			ImGui::LabelText("MeshName", meshAsset.Name.c_str());
 			ImGui::LabelText("MeshPath", meshAsset.Path.string().c_str());
 			ImGui::SameLine();
-			
-			static std::string browsedString;
-			if (ImGui::Button("Browse"))
-			{
-				std::string path = FileDialog::OpenFile("FBX Model (*.fbx)\0*.fbx\0");
-				if (!path.empty())
-				{
-					browsedString = path;
 
-				}
-			}
-
-			if (ImGui::Button("Set Mesh"))
-			{
-				AssetHandle newhandle = AssetManager::LoadFromFile<StaticMeshAsset>(browsedString);
-				browsedString.clear();
-
-				component.handle = newhandle;
-			}
 		});
 
 	DrawComponent<Component::Script>("Script", en, [&](auto& component)
@@ -386,9 +390,9 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 				ImGui::EndCombo();
 			}
-			ImGui::DragFloat("Mass", &component.mass);
-			ImGui::DragFloat("Friction", &component.friction);
-			ImGui::DragFloat("Restitution", &component.restitution);
+			ImGui::DragFloat("Mass", &component.mass, 0.1f, 0.f);
+			ImGui::DragFloat("Friction", &component.friction, 0.1f, 0.f);
+			ImGui::DragFloat("Restitution", &component.restitution, 0.01f, 0.f, 1.f);
 			ImGui::Checkbox("Simulate", &component.Simulate);
 
 		});

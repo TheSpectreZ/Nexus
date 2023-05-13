@@ -3,6 +3,7 @@
 #include "Nexus/Core/Base.h"
 #include "Nexus/Core/Logger.h"
 #include "Nexus/Core/Assert.h"
+#include "Nexus/Core/UUID.h"
 
 #include <vector>
 #include <unordered_map>

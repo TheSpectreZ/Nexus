@@ -55,8 +55,8 @@ void Nexus::JoltPhysicsWorld::OnSceneUpdate(float dt)
 	{
 		JPH::BodyID id(k);
 		auto pos = m_BodyInterface->GetPosition(id);
-		auto rot = m_BodyInterface->GetRotation(id);
-
+		auto rot = m_BodyInterface->GetRotation(id).GetXYZW();
+		
 		auto& Transform = v.GetComponent<Component::Transform>();
 		Transform.Translation = { pos.GetX(),pos.GetY(),pos.GetZ() };
 		Transform.SetRotation({ rot.GetX(),rot.GetY(),rot.GetZ(),rot.GetW() });
