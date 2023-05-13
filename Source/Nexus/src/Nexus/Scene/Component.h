@@ -8,9 +8,6 @@
 
 namespace Nexus
 {
-	typedef uint64_t UUID;
-	UUID CreateUUID();
-
 	namespace Component
 	{
 		struct Tag
@@ -30,7 +27,7 @@ namespace Nexus
 				:uuid(id)
 			{}
 
-			UUID uuid;
+			UUID uuid = NullUUID;
 		};
 
 		struct Transform
@@ -58,9 +55,9 @@ namespace Nexus
 		{
 			Mesh() = default;
 			Mesh(const Mesh&) = default;
-			Mesh(AssetHandle assetHandle);
+			Mesh(UUID UUID);
 
-			AssetHandle handle;
+			UUID handle = NullUUID;
 		};
 
 		struct Script

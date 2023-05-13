@@ -14,50 +14,44 @@ void Nexus::AssetManager::Shutdown()
 	delete s_Instance;
 }
 
-Nexus::AssetHandle Nexus::AssetManager::CreateAssetHandle()
-{
-	static AssetHandle handle = 0;
-	return handle++;
-}
-
 #define GET_ASSET(Type,Member) template<>\
-Type& Nexus::AssetManager::Get<Type>(AssetHandle handle)\
+Type& Nexus::AssetManager::Get<Type>(UUID handle)\
 {\
 	return s_Instance->Member[handle];\
 }\
 
 #define HAS_ASSET(Type,Member) template<>\
-bool Nexus::AssetManager::Has<Type>(AssetHandle handle)\
+bool Nexus::AssetManager::Has<Type>(UUID handle)\
 {\
 	return s_Instance->Member.contains(handle);\
 }\
 
 #define REMOVE_ASSET(Type,Member) template<>\
-void Nexus::AssetManager::Remove<Type>(AssetHandle handle)\
+void Nexus::AssetManager::Remove<Type>(UUID handle)\
 {\
 	s_Instance->Member.erase(handle);\
 }\
 
 
 template<>
-Nexus::AssetHandle Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>(const std::filesystem::path& path)
+Nexus::UUID Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>(const std::filesystem::path& path)
 {
 	if (path.extension().string() != ".fbx")
 		return UINT64_MAX;
 
 	std::string p = path.string();
-	if (s_Instance->m_AssetHandleCache.contains(p))
+	if (s_Instance->m_UUIDCache.contains(p))
 	{
-		return s_Instance->m_AssetHandleCache[p];
+		return s_Instance->m_UUIDCache[p];
 	}
 
-	AssetHandle handle = CreateAssetHandle();
+	UUID handle = CreateUUID();
 
 	s_Instance->m_StaticMeshes[handle].Mesh = StaticMesh::LoadWithAssimp(path.string().c_str());
 	s_Instance->m_StaticMeshes[handle].Name = path.filename().string();
 	s_Instance->m_StaticMeshes[handle].Path = path;
 
-	s_Instance->m_AssetHandleCache[p] = handle;
+	s_Instance->m_UUIDCache[p] = handle;
 
 	return handle;
 }
@@ -68,23 +62,23 @@ HAS_ASSET(Nexus::StaticMeshAsset, m_StaticMeshes)
 REMOVE_ASSET(Nexus::StaticMeshAsset, m_StaticMeshes)
 
 template<>
-Nexus::AssetHandle Nexus::AssetManager::LoadFromFile<Nexus::TextureAsset>(const std::filesystem::path& path)
+Nexus::UUID Nexus::AssetManager::LoadFromFile<Nexus::TextureAsset>(const std::filesystem::path& path)
 {
 	auto extension = path.extension().string();
 	if (extension != ".png" && extension != ".jpg")
 		return UINT64_MAX;
 
 	std::string p = path.string();
-	if (s_Instance->m_AssetHandleCache.contains(p))
-		return s_Instance->m_AssetHandleCache[p];
+	if (s_Instance->m_UUIDCache.contains(p))
+		return s_Instance->m_UUIDCache[p];
 
-	AssetHandle handle = CreateAssetHandle();
+	UUID handle = CreateUUID();
 
 	s_Instance->m_Textures[handle].Texture = Texture::LoadFromFile(p.c_str());
 	s_Instance->m_Textures[handle].Name = path.filename().string();
 	s_Instance->m_Textures[handle].Path = path;
 
-	s_Instance->m_AssetHandleCache[p] = handle;
+	s_Instance->m_UUIDCache[p] = handle;
 
 	return handle;
 }

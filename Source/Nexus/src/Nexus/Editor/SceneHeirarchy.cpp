@@ -299,12 +299,7 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Mesh>("Mesh", en, [&](auto& component)
 		{
-			AssetHandle handle = component.handle;
-			auto& meshAsset = AssetManager::Get<StaticMeshAsset>(handle);
-			ImGui::LabelText("MeshName", meshAsset.Name.c_str());
-			ImGui::LabelText("MeshPath", meshAsset.Path.string().c_str());
-			ImGui::SameLine();
-			
+
 			ImGui::Button("Mesh", { 100.f,50.f });
 			if (ImGui::BeginDragDropTarget())
 			{
@@ -316,12 +311,22 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 					if (s.extension().string() == ".fbx" || s.extension().string() == ".obj")
 					{
-						AssetHandle handle = AssetManager::LoadFromFile<StaticMeshAsset>(s);
+						UUID handle = AssetManager::LoadFromFile<StaticMeshAsset>(s);
 						component.handle = handle;
 					}
 				}
 				ImGui::EndDragDropTarget();
 			}
+			
+			UUID handle = component.handle;
+			if (handle == NullUUID)
+				return;
+			
+			auto& meshAsset = AssetManager::Get<StaticMeshAsset>(handle);
+			ImGui::LabelText("MeshName", meshAsset.Name.c_str());
+			ImGui::LabelText("MeshPath", meshAsset.Path.string().c_str());
+			ImGui::SameLine();
+
 		});
 
 	DrawComponent<Component::Script>("Script", en, [&](auto& component)

@@ -4,6 +4,7 @@
 #include "Core/Layer.h"
 #include "Core/Logger.h"
 #include "Core/Input.h"
+#include "Core/UUID.h"
 #include "Core/Application.h"
 
 #include "Assets/Asset.h"

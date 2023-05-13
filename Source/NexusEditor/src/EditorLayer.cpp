@@ -52,8 +52,7 @@ void EditorLayer::OnAttach()
 		using namespace Nexus;
 
 		m_cameraController.AttachCamera(&m_camera);
-		m_cameraController.SetSpeed(100.f);
-		
+	
 		m_cameraController.SetKeyBindings(CameraBindings::FRONT, Key::W);
 		m_cameraController.SetKeyBindings(CameraBindings::BACK, Key::S);
 		m_cameraController.SetKeyBindings(CameraBindings::DOWN, Key::E);
@@ -68,7 +67,7 @@ void EditorLayer::OnAttach()
 
 	// Scene
 	{
-		Nexus::AssetHandle cube = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("Resources/Assets/Meshes/Cyborg_Weapon.fbx");
+		Nexus::UUID cube = Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>("Resources/Assets/Meshes/Cyborg_Weapon.fbx");
 		
 		m_EditorScene = Nexus::Scene::Create();
 		m_CurrentScene = m_EditorScene;
@@ -77,7 +76,6 @@ void EditorLayer::OnAttach()
 		e1.AddComponent<Nexus::Component::BoxCollider>();
 
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		e2.GetComponent<Nexus::Component::Transform>().Scale = glm::vec3(20.f);
 		e2.AddComponent<Nexus::Component::Mesh>(cube);
 		e2.AddComponent<Nexus::Component::SphereCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
@@ -425,6 +423,15 @@ void EditorLayer::RenderEditorWorldControls()
 	
 	if (ImGui::BeginTabBar("World"))
 	{
+		if (ImGui::BeginTabItem("Scene"))
+		{
+			static float camSpeed;
+			if (ImGui::DragFloat("Camera Speed", &camSpeed, 1.f, 1.f, 50.f))
+				m_cameraController.SetSpeed(camSpeed);
+
+			ImGui::EndTabItem();
+		}
+
 		if (ImGui::BeginTabItem("Physics"))
 		{
 			static glm::vec3 gravity;
