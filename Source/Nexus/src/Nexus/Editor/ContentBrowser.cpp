@@ -35,7 +35,6 @@ void Nexus::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
 
 		if (ImGui::TreeNode(filenameString.c_str()))
 		{
-			m_PreviousDirectory = path;
 			m_CurrentDirectory = p;
 			DrawDirectoryNodes(p);
 			ImGui::TreePop();
