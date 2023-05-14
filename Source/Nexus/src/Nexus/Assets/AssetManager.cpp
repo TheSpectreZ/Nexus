@@ -36,9 +36,6 @@ void Nexus::AssetManager::Remove<Type>(UUID handle)\
 template<>
 Nexus::UUID Nexus::AssetManager::LoadFromFile<Nexus::StaticMeshAsset>(const std::filesystem::path& path)
 {
-	if (path.extension().string() != ".fbx")
-		return UINT64_MAX;
-
 	std::string p = path.string();
 	if (s_Instance->m_UUIDCache.contains(p))
 	{

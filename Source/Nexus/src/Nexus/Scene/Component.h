@@ -48,7 +48,7 @@ namespace Nexus
 			void SetRotationEuler(const glm::vec3& euler);
 		private:
 			glm::vec3 RotationEuler = { 0.0f, 0.0f, 0.0f };
-			glm::quat Rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
+			glm::quat Rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
 		};
 
 		struct Mesh

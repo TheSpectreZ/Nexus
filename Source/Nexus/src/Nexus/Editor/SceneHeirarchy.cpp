@@ -309,7 +309,7 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 					std::filesystem::path s = path;
 
-					if (s.extension().string() == ".fbx" || s.extension().string() == ".obj")
+					if (s.extension().string() == ".gltf" || s.extension().string() == ".glb")
 					{
 						UUID handle = AssetManager::LoadFromFile<StaticMeshAsset>(s);
 						component.handle = handle;

@@ -71,9 +71,6 @@ void EditorLayer::OnAttach()
 		m_EditorScene = Nexus::Scene::Create();
 		m_CurrentScene = m_EditorScene;
 
-		Nexus::Entity e1 = m_EditorScene->CreateEntity("Floor");
-		e1.AddComponent<Nexus::Component::BoxCollider>();
-
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
 		e2.AddComponent<Nexus::Component::Mesh>();
 		e2.AddComponent<Nexus::Component::BoxCollider>();
