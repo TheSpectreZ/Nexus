@@ -72,7 +72,7 @@ void EditorLayer::OnAttach()
 		m_CurrentScene = m_EditorScene;
 
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		e2.AddComponent<Nexus::Component::Mesh>();
+		//e2.AddComponent<Nexus::Component::Mesh>();
 		e2.AddComponent<Nexus::Component::BoxCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
 		

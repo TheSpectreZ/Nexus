@@ -13,10 +13,10 @@ void Nexus::ContentBrowser::Initialize()
 	Ref<Texture> ForwardTexture = Texture::Create("Resources/Icons/Forward.png");
 	Ref<Texture> BackwardTexture = Texture::Create("Resources/Icons/Back.png");
 
-	UUID File = AssetManager::Emplace<Texture>(FileTexture);
-	UUID Folder = AssetManager::Emplace<Texture>(FolderTexture);
-	UUID Forward = AssetManager::Emplace<Texture>(ForwardTexture);
-	UUID Backward = AssetManager::Emplace<Texture>(BackwardTexture);
+	UUID File = AssetManager::Emplace(FileTexture);
+	UUID Folder = AssetManager::Emplace(FolderTexture);
+	UUID Forward = AssetManager::Emplace(ForwardTexture);
+	UUID Backward = AssetManager::Emplace(BackwardTexture);
 
 	m_FileID = EditorContext::s_Instance->MakeTextureID(AssetManager::Get<Texture>(File), m_Sampler);
 	m_FolderID = EditorContext::s_Instance->MakeTextureID(AssetManager::Get<Texture>(Folder), m_Sampler);

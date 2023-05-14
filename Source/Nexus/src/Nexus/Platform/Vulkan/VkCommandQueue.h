@@ -35,6 +35,7 @@ namespace Nexus
 		void TransferBufferToGPU(VulkanStaticBuffer* buffer);
 		void TransferTextureToGPU(VulkanTexture* texture);
 
+		void DrawSubMesh(SubMesh* submesh) override;
 		void DrawMesh(Ref<StaticMesh> mesh) override;
 	private:
 		uint32_t m_FrameIndex, m_ImageIndex, m_ImageCount;

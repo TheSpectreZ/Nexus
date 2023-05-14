@@ -11,7 +11,6 @@ namespace Nexus
 		static void Initialize();
 		static void Shutdown();
 
-		template<typename T>
 		static UUID Emplace(Ref<Asset> asset)
 		{
 			s_Instance->m_Assets[asset->GetID()] = asset;

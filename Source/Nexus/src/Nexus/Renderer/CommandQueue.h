@@ -32,6 +32,7 @@ namespace Nexus
 		virtual void SetScissor(Scissor scissor) = 0;
 		virtual void SetViewport(Viewport viewport) = 0;
 
+		virtual void DrawSubMesh(SubMesh* submesh) = 0;
 		virtual void DrawMesh(Ref<StaticMesh> mesh) = 0;
 	};
 }

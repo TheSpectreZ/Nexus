@@ -1,12 +1,12 @@
 #include "nxpch.h"
 #include "Mesh.h"
-
 #include "Vertex.h"
+#include "Texture.h"
+#include "Scene/Material.h"
 
 #define TINYGLTF_IMPLEMENTATION
 #define TINYGLTF_NO_STB_IMAGE_WRITE
 #include "tiny_gltf.h"
-#include "Renderer.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Assets/AssetManager.h"
@@ -150,7 +150,6 @@ bool LoadGLTF(const std::string& file, MeshData* data)
 	
 			data->materialData[i].AlbedoTextureIndex = texture;
 		}
-
 	}
 
 	return true;
@@ -178,6 +177,33 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::Create(const std::string& filep
 	{
 		mesh->m_SubMeshes[i].vb = StaticBuffer::Create((uint32_t)data.submeshData[i].vertices.size() * sizeof(StaticMeshVertex), BufferType::Vertex, data.submeshData[i].vertices.data());
 		mesh->m_SubMeshes[i].ib = StaticBuffer::Create((uint32_t)data.submeshData[i].indices.size() * sizeof(uint32_t), BufferType::Index, data.submeshData[i].indices.data());
+	}
+
+	std::filesystem::path path = filepath;
+
+	std::unordered_map<uint32_t, UUID> Images;
+	for (auto& [k, v] : data.imageData)
+	{
+		auto j = path.parent_path() / v;
+		Ref<Texture> texture = Texture::Create(j.string());
+		Images[k] = AssetManager::Emplace(texture);
+	}
+
+	std::unordered_map<uint32_t, UUID> mats;
+	for (auto& [k, v] : data.materialData)
+	{
+		Ref<Material> material = CreateRef<Material>();
+		material->SetAlbedo(Images[v.AlbedoTextureIndex]);
+		UUID handle = AssetManager::Emplace(material);
+		mats[k] = handle;
+	}
+
+	for (auto& [k,v] : data.submeshData)
+	{
+		if (mats.contains(v.materialIndex))
+			mesh->m_SubMeshes[k].material = mats.at(v.materialIndex);
+		else
+			mesh->m_SubMeshes[k].material = mats[1];
 	}
 
 	return mesh;

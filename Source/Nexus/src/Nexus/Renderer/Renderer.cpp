@@ -35,6 +35,11 @@ void Nexus::Renderer::DrawMesh(Ref<StaticMesh> mesh)
 	s_Renderer->m_CommandQueue->DrawMesh(mesh);
 }
 
+void Nexus::Renderer::DrawSubMesh(SubMesh* submesh)
+{
+	s_Renderer->m_CommandQueue->DrawSubMesh(submesh);
+}
+
 void Nexus::Renderer::Init(const RendererSpecifications& specs)
 {
 	s_Renderer = CreateRef<Renderer>();

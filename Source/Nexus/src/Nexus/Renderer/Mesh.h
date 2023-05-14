@@ -4,15 +4,10 @@
 
 namespace Nexus
 {
-	struct Material
-	{
-		UUID albedo;
-	};
-
 	struct SubMesh
 	{
 		Ref<StaticBuffer> vb, ib;
-		uint32_t material;
+		UUID material = NullUUID;
 		bool draw = true;
 	};
 
@@ -23,6 +18,5 @@ namespace Nexus
 		std::vector<SubMesh>& GetSubMeshes() { return m_SubMeshes; }
 	private:
 		std::vector<SubMesh> m_SubMeshes;
-		std::vector<Material> m_Materials;
 	};
 }

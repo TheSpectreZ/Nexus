@@ -313,9 +313,14 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 					{
 						Ref<StaticMesh> mesh = StaticMesh::Create(s.string());
 						if (!AssetManager::Has(mesh->GetID()))
-							AssetManager::Emplace<StaticMesh>(mesh);
+							AssetManager::Emplace(mesh);
 
 						component.handle = mesh->GetID();
+
+						for (auto& sm : mesh->GetSubMeshes())
+						{
+							m_SceneData->OnMaterialCreation(sm.material);
+						}
 					}
 				}
 				ImGui::EndDragDropTarget();

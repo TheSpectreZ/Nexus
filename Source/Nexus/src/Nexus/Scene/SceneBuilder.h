@@ -17,18 +17,22 @@ namespace Nexus
 		void Update(Ref<Scene> scene, Camera camera);
 		void Destroy();
 	
+		void OnMaterialCreation(UUID Id);
 		void OnSceneDestruction();
 		void OnEntityCreation(Entity e);
 		void OnEntityDestruction(Entity e);
 	private:
 		Ref<Shader> shader;
+		Ref<Sampler> sampler;
 
 		ResourceHeapHandle PerSceneHeap;
 		UniformBufferHandle PerSceneUniform;
-		CombinedImageSamplerHandle PerSceneTestTexture;
-
+		
 		std::unordered_map<UUID, ResourceHeapHandle> PerEntityHeap;
 		std::unordered_map<UUID, UniformBufferHandle> PerEntityUniform;
+		
+		std::unordered_map<UUID, ResourceHeapHandle> PerMaterialHeap;
+		std::unordered_map<UUID, CombinedImageSamplerHandle> PerMaterialSamplerImage;
 
 		glm::mat4 matrixBuffer[2];
 	};

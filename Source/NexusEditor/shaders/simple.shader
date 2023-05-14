@@ -35,7 +35,7 @@ layout(location = 2) in vec2 FragTexCoord;
 
 layout(location = 0) out vec4 OutColor;
 
-layout(set = 0, binding = 1) uniform sampler2D albedo;
+layout(set = 2, binding = 0) uniform sampler2D albedo;
 
 void main()
 {

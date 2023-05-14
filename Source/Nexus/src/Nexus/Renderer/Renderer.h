@@ -38,6 +38,7 @@ namespace Nexus
 		static void SetViewport(Viewport viewport);
 
 		static void DrawMesh(Ref<StaticMesh> mesh);
+		static void DrawSubMesh(SubMesh* submesh);
 	private:
 		static void Init(const RendererSpecifications& specs);
 		static void Shut();
