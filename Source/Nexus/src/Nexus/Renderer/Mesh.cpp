@@ -28,16 +28,16 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 		NEXUS_ASSERT(true, "Mesh Loading Error");
 	}
 
-	std::vector<StaticMeshVertex> m_Vertices;
-	std::vector<uint32_t> m_Indices;
-
-	for (auto& mesh : input.meshes)
+	std::unordered_map<uint32_t, std::vector<StaticMeshVertex>> m_Vertices;
+	std::unordered_map<uint32_t, std::vector<uint32_t>> m_Indices;
+	
+	for (uint32_t q = 0; q < (uint32_t)input.meshes.size(); q++)
 	{
+		auto& mesh = input.meshes[q];
 		for (auto& primitive : mesh.primitives)
 		{
 			uint32_t vertexStart = (uint32_t)m_Vertices.size();
-			uint32_t indexStart = (uint32_t)m_Indices.size();
-
+	
 			// Vertices
 			{
 				const float* positionBuffer = nullptr;
@@ -54,7 +54,7 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 
 					vertexCount = accessor.count;
 				}
-
+				
 				auto n = primitive.attributes.find("NORMAL");
 				if (n != primitive.attributes.end())
 				{
@@ -73,7 +73,8 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 
 				for (size_t i = 0; i < vertexCount; i++)
 				{
-					StaticMeshVertex vertex{};
+					StaticMeshVertex& vertex = m_Vertices[q].emplace_back();
+
 					vertex.position = glm::make_vec3(&positionBuffer[i * 3]);
 
 					if (normalBuffer)
@@ -84,9 +85,7 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 					if (texCoordBuffer)
 						vertex.texCoord = glm::make_vec2(&texCoordBuffer[i * 2]);
 					else
-						vertex.texCoord = glm::vec2(0.f);
-
-					m_Vertices.push_back(vertex);
+						vertex.texCoord = glm::vec2(0.f);	
 				}
 			}
 
@@ -98,33 +97,14 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 
 				uint32_t indexCount = accessor.count;
 
-				switch (accessor.componentType)
+				NEXUS_ASSERT((accessor.componentType != TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT), "TinyGlTF Error: Mesh Doesnt Have uint32_t Indices");
+				
+				const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+				for (size_t index = 0; index < accessor.count; index++)
 				{
-				case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT: {
-					const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-					for (size_t index = 0; index < accessor.count; index++) {
-						m_Indices.push_back(buf[index] + vertexStart);
-					}
-					break;
+					m_Indices[q].push_back(buf[index] + vertexStart);
 				}
-				case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT: {
-					const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-					for (size_t index = 0; index < accessor.count; index++) {
-						m_Indices.push_back(buf[index] + vertexStart);
-					}
-					break;
-				}
-				case TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE: {
-					const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-					for (size_t index = 0; index < accessor.count; index++) {
-						m_Indices.push_back(buf[index] + vertexStart);
-					}
-					break;
-				}
-				default:
-					std::cerr << "Index component type " << accessor.componentType << " not supported!" << std::endl;
-					break;
-				}
+
 			}
 		}
 	}
@@ -137,12 +117,16 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 		NEXUS_ASSERT(1, s.c_str());
 	}
 
-	NEXUS_LOG_TRACE("Mesh Loaded: {0} | vertices-{1} | indices-{2}", Filepath, m_Vertices.size(), m_Indices.size());
+	NEXUS_LOG_TRACE("Mesh Loaded: {0}", Filepath);
 
 	Ref<StaticMesh> sMesh = CreateRef<StaticMesh>();
 
-	sMesh->m_Vb = StaticBuffer::Create((uint32_t)m_Vertices.size() * sizeof(StaticMeshVertex), BufferType::Vertex, m_Vertices.data());
-	sMesh->m_Ib = StaticBuffer::Create((uint32_t)m_Indices.size() * sizeof(uint32_t), BufferType::Index, m_Indices.data());
+	sMesh->m_SubMeshes.resize(m_Vertices.size());
+	for (uint32_t i = 0; i < m_Vertices.size(); i++)
+	{
+		sMesh->m_SubMeshes[i].vb = StaticBuffer::Create((uint32_t)m_Vertices[i].size() * sizeof(StaticMeshVertex), BufferType::Vertex, m_Vertices[i].data());
+		sMesh->m_SubMeshes[i].ib = StaticBuffer::Create((uint32_t)m_Indices[i].size() * sizeof(uint32_t), BufferType::Index, m_Indices[i].data());
+	}
 
 	Renderer::TransferMeshToGPU(sMesh);
 

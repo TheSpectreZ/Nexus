@@ -3,15 +3,19 @@
 
 namespace Nexus
 {
+	struct SubMesh
+	{
+		Ref<StaticBuffer> vb, ib;
+		bool draw = false;
+	};
+
 	class StaticMesh
 	{
 	public:
 		static Ref<StaticMesh> LoadWithAssimp(const char* Filepath);
 
-		Ref<StaticBuffer> GetVertexBuffer() { return m_Vb; }
-		Ref<StaticBuffer> GetIndexBuffer() { return m_Ib; }
+		std::vector<SubMesh>& GetSubMeshes() { return m_SubMeshes; }
 	private:
-		Ref<StaticBuffer> m_Vb;
-		Ref<StaticBuffer> m_Ib;
+		std::vector<SubMesh> m_SubMeshes;
 	};
 }

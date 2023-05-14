@@ -299,7 +299,6 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Mesh>("Mesh", en, [&](auto& component)
 		{
-
 			ImGui::Button("Mesh", { 100.f,50.f });
 			if (ImGui::BeginDragDropTarget())
 			{
@@ -325,7 +324,16 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			auto& meshAsset = AssetManager::Get<StaticMeshAsset>(handle);
 			ImGui::LabelText("MeshName", meshAsset.Name.c_str());
 			ImGui::LabelText("MeshPath", meshAsset.Path.string().c_str());
-			ImGui::SameLine();
+			
+			if (ImGui::TreeNode("SubMeshes"))
+			{
+				auto& sm = meshAsset.Mesh->GetSubMeshes();
+				for (uint32_t i = 0; i < (uint32_t)sm.size(); i++)
+				{
+					ImGui::Checkbox(std::to_string(i).c_str(), &sm[i].draw);
+				}
+				ImGui::TreePop();
+			}
 
 		});
 
