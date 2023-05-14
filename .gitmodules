@@ -37,3 +37,6 @@
 [submodule "Source/Dependencies/Jolt"]
 	path = Source/Dependencies/Jolt
 	url = https://github.com/jrouwe/JoltPhysics.git
+[submodule "Source/Dependencies/tinygltf"]
+	path = Source/Dependencies/tinygltf
+	url = https://github.com/syoyo/tinygltf.git
