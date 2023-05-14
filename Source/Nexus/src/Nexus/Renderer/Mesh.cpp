@@ -36,8 +36,6 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 		auto& mesh = input.meshes[q];
 		for (auto& primitive : mesh.primitives)
 		{
-			uint32_t vertexStart = (uint32_t)m_Vertices.size();
-	
 			// Vertices
 			{
 				const float* positionBuffer = nullptr;
@@ -102,7 +100,7 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* File
 				const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
 				for (size_t index = 0; index < accessor.count; index++)
 				{
-					m_Indices[q].push_back(buf[index] + vertexStart);
+					m_Indices[q].push_back(buf[index]);
 				}
 
 			}
