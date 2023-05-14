@@ -21,7 +21,7 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
         shader->AllocateUniformBuffer(data->PerSceneUniform);
         shader->BindUniformWithResourceHeap(data->PerSceneHeap, data->PerSceneUniform);
         
-        data->PerSceneTestTexture.texture = Texture::LoadFromFile("D:\\EngineDev\\SandboxProject\\Assets\\Meshes\\textures\\Material.002_baseColor.png");
+        data->PerSceneTestTexture.texture = Texture::Create("D:\\EngineDev\\SandboxProject\\Assets\\Meshes\\textures\\Material.002_baseColor.png");
         data->PerSceneTestTexture.sampler = Sampler::Create(SamplerFilter::Nearest, SamplerFilter::Linear);
         data->PerSceneTestTexture.set = 0;
         data->PerSceneTestTexture.binding = 1;

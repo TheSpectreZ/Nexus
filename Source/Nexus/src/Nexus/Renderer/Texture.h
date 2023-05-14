@@ -1,5 +1,6 @@
 #pragma once
 #include "RenderTypes.h"
+#include "Assets/Asset.h"
 
 namespace Nexus
 {
@@ -10,13 +11,13 @@ namespace Nexus
 		void* pixeldata;
 	};
 
-	class Texture
+	class Texture : public Asset
 	{
 	public:
-		static Ref<Texture> LoadFromFile(const char* filepath);
-		static Ref<Texture> Create(const TextureCreateInfo& Info);
+		static Ref<Texture> Create(const std::string& file);
 
 		Texture() = default;
+		Texture(const Texture&) = default;
 		virtual ~Texture() = default;
 	};
 

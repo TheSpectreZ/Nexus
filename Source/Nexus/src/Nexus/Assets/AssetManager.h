@@ -12,21 +12,32 @@ namespace Nexus
 		static void Shutdown();
 
 		template<typename T>
-		static UUID LoadFromFile(const std::filesystem::path& path);
+		static UUID Emplace(Ref<Asset> asset)
+		{
+			s_Instance->m_Assets[asset->GetID()] = asset;
+			return asset->GetID();
+		}
 
 		template<typename T>
-		static T& Get(UUID handle);
+		static Ref<T> Get(UUID handle)
+		{
+			return DynamicPointerCast<T>(s_Instance->m_Assets[handle]);
+		}
 
-		template<typename T>
-		static bool Has(UUID handle);
+		static bool Has(UUID handle)
+		{
+			return s_Instance->m_Assets.contains(handle);
+		}
 
-		template<typename T>
-		static void Remove(UUID handle);
+		static void Remove(UUID handle)
+		{
+			if (s_Instance->m_Assets.find(handle) != s_Instance->m_Assets.end())
+			{
+				s_Instance->m_Assets.erase(handle);
+			}
+		}
 	private:
-		std::unordered_map<std::string, UUID> m_UUIDCache;
-
-		std::unordered_map<UUID, StaticMeshAsset> m_StaticMeshes;
-		std::unordered_map<UUID, TextureAsset> m_Textures;
+		std::unordered_map<UUID, Ref<Asset>> m_Assets;
 	};
 	
 }

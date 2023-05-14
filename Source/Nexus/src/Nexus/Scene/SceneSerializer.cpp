@@ -69,18 +69,18 @@ void SerializeEntity(YAML::Emitter& out, Nexus::Entity e)
 		out << YAML::EndMap;
 	}
 
-	// Static Mesh
-	if (e.HasComponent<Component::Mesh>())
-	{
-		auto& m = e.GetComponent<Component::Mesh>();
-		auto& asset = Nexus::AssetManager::Get<StaticMeshAsset>(m.handle);
-
-		out << YAML::Key << "MeshComponent";
-		out << YAML::BeginMap;
-		out << YAML::Key << "Name" << YAML::Value << asset.Name;
-		out << YAML::Key << "Source" << YAML::Value << asset.Path.string();
-		out << YAML::EndMap;
-	}
+	//// Static Mesh
+	//if (e.HasComponent<Component::Mesh>())
+	//{
+	//	auto& m = e.GetComponent<Component::Mesh>();
+	//	auto& asset = Nexus::AssetManager::Get<StaticMesh>(m.handle);
+	//
+	//	out << YAML::Key << "MeshComponent";
+	//	out << YAML::BeginMap;
+	//	out << YAML::Key << "Name" << YAML::Value << asset.Name;
+	//	out << YAML::Key << "Source" << YAML::Value << asset.Path.string();
+	//	out << YAML::EndMap;
+	//}
 
 	out << YAML::EndMap;
 }
@@ -149,15 +149,15 @@ bool Nexus::SceneSerializer::Deserialize(Ref<Scene> scene, const std::string& fi
 				transform.SetRotationEuler(r);
 			}
 
-			auto MeshComponent = entity["MeshComponent"];
-			if (MeshComponent)
-			{
-				auto name = MeshComponent["Name"].as<std::string>();
-				auto path = MeshComponent["Source"].as<std::string>();
-
-				auto& mesh = e.GetComponent<Component::Mesh>();
-
-			}
+			//auto MeshComponent = entity["MeshComponent"];
+			//if (MeshComponent)
+			//{
+			//	auto name = MeshComponent["Name"].as<std::string>();
+			//	auto path = MeshComponent["Source"].as<std::string>();
+			//
+			//	auto& mesh = e.GetComponent<Component::Mesh>();
+			//
+			//}
 		}
 	}
 	

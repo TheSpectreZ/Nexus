@@ -28,7 +28,7 @@ void Nexus::SceneRenderer::Render()
 		auto& resourceHeap = m_Data->PerEntityHeap[Identity.uuid];
 		m_Data->shader->BindShaderResourceHeap(resourceHeap);
 
-		auto& meshAsset = AssetManager::Get<StaticMeshAsset>(meshHandle);
-		Renderer::DrawMesh(meshAsset.Mesh);
+		auto meshAsset = AssetManager::Get<StaticMesh>(meshHandle);
+		Renderer::DrawMesh(meshAsset);
 	}
 }

@@ -1,23 +1,15 @@
 #pragma once
-#include <filesystem>
-#include "Renderer/Mesh.h"
-#include "Renderer/Texture.h"
 
 namespace Nexus
 {
-	struct StaticMeshAsset
+	class Asset
 	{
-		std::string Name;
-		std::filesystem::path Path;
+	public:
+		Asset();
+		virtual ~Asset() = default;
 
-		Ref<StaticMesh> Mesh;
-	};
-
-	struct TextureAsset
-	{
-		std::string Name;
-		std::filesystem::path Path;
-
-		Ref<Texture> Texture;
+		UUID GetID() { return m_Id; }
+	protected:
+		UUID m_Id;
 	};
 }

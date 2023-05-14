@@ -5,6 +5,7 @@
 #include "Core/FileDialog.h"
 #include "Assets/AssetManager.h"
 #include "Script/ScriptEngine.h"
+#include "Renderer/Mesh.h"
 
 bool Nexus::ImGuiUtils::DrawVec3Control(const char* label, glm::vec3& vector, float reset , float columnWidth )
 {
@@ -310,8 +311,11 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 					if (s.extension().string() == ".gltf" || s.extension().string() == ".glb")
 					{
-						UUID handle = AssetManager::LoadFromFile<StaticMeshAsset>(s);
-						component.handle = handle;
+						Ref<StaticMesh> mesh = StaticMesh::Create(s.string());
+						if (!AssetManager::Has(mesh->GetID()))
+							AssetManager::Emplace<StaticMesh>(mesh);
+
+						component.handle = mesh->GetID();
 					}
 				}
 				ImGui::EndDragDropTarget();
@@ -321,13 +325,11 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			if (handle == NullUUID)
 				return;
 			
-			auto& meshAsset = AssetManager::Get<StaticMeshAsset>(handle);
-			ImGui::LabelText("MeshName", meshAsset.Name.c_str());
-			ImGui::LabelText("MeshPath", meshAsset.Path.string().c_str());
+			auto meshAsset = AssetManager::Get<StaticMesh>(handle);
 			
 			if (ImGui::TreeNode("SubMeshes"))
 			{
-				auto& sm = meshAsset.Mesh->GetSubMeshes();
+				auto& sm = meshAsset->GetSubMeshes();
 				for (uint32_t i = 0; i < (uint32_t)sm.size(); i++)
 				{
 					ImGui::Checkbox(std::to_string(i).c_str(), &sm[i].draw);
