@@ -20,8 +20,6 @@ Nexus::Ref<Nexus::Texture> Nexus::Texture::LoadFromFile(const char* filepath)
 	Nexus::Ref<Nexus::Texture> ref = Create(Info);
 	stbi_image_free(Info.pixeldata);
 
-	Renderer::TransferTextureToGPU(ref);
-
 	return ref;
 }
 

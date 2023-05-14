@@ -32,8 +32,8 @@ namespace Nexus
 		void SetScissor(Scissor scissor) override;
 		void SetViewport(Viewport viewport) override;
 
-		void TransferMeshToGPU(Ref<StaticMesh> mesh) override;
-		void TransferTextureToGPU(Ref<Texture> texture) override;
+		void TransferBufferToGPU(VulkanStaticBuffer* buffer);
+		void TransferTextureToGPU(VulkanTexture* texture);
 
 		void DrawMesh(Ref<StaticMesh> mesh) override;
 	private:
@@ -64,8 +64,8 @@ namespace Nexus
 	
 		struct Transferdata
 		{
-			std::vector<Ref<VulkanStaticBuffer>> m_StaticBuffer;
-			std::vector<Ref<VulkanTexture>> m_Textures;
+			std::vector<VulkanStaticBuffer*> m_StaticBuffer;
+			std::vector<VulkanTexture*> m_Textures;
 
 			bool Empty()
 			{

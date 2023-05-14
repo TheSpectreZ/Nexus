@@ -1,7 +1,7 @@
 #include "nxpch.h"
 #include "VkBuffer.h"
 #include "VkContext.h"
-#include "Renderer/Renderer.h"
+#include "VkCommandQueue.h"
 
 static VkBufferUsageFlagBits GetVulkanBufferType(Nexus::BufferType Type)
 {
@@ -67,6 +67,8 @@ Nexus::VulkanStaticBuffer::VulkanStaticBuffer(uint32_t size, BufferType Type, vo
 		}
 		
 	}
+
+	VulkanCommandQueue::Get()->TransferBufferToGPU(this);
 
 	NEXUS_LOG_TRACE("Vulkan Static {0} Buffer Created | size: {1}", GetVulkanBufferTypeName(m_Type), m_size);
 }

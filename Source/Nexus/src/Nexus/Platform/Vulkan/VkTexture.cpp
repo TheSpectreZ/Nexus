@@ -2,6 +2,7 @@
 #include "VkTexture.h"
 #include "VkContext.h"
 #include "VkSwapchain.h"
+#include "VkCommandQueue.h"
 
 Nexus::VulkanTexture::VulkanTexture(const TextureCreateInfo& info)
 	:m_Extent(info.extent)
@@ -82,6 +83,8 @@ Nexus::VulkanTexture::VulkanTexture(const TextureCreateInfo& info)
 			memcpy(allocInfo.pMappedData, info.pixeldata, size);
 		}
 	}
+
+	VulkanCommandQueue::Get()->TransferTextureToGPU(this);
 
 	NEXUS_LOG_INFO("Vulkan Texture Created");
 }

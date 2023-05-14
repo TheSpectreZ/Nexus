@@ -37,9 +37,6 @@ namespace Nexus
 		static void SetScissor(Scissor scissor);
 		static void SetViewport(Viewport viewport);
 
-		static void TransferMeshToGPU(Ref<StaticMesh> mesh);
-		static void TransferTextureToGPU(Ref<Texture> texture);
-
 		static void DrawMesh(Ref<StaticMesh> mesh);
 	private:
 		static void Init(const RendererSpecifications& specs);
@@ -52,7 +49,6 @@ namespace Nexus
 		static void FlushTransferCommandQueue();
 
 		static void WaitForDevice();
-
 	private:
 		Ref<Context> m_Context;
 		Ref<Swapchain> m_Swapchain;

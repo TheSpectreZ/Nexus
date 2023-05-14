@@ -357,19 +357,14 @@ void Nexus::VulkanCommandQueue::Transferdata::Clear()
 	m_Textures.clear();
 }
 
-void Nexus::VulkanCommandQueue::TransferMeshToGPU(Ref<StaticMesh> mesh)
+void Nexus::VulkanCommandQueue::TransferBufferToGPU(VulkanStaticBuffer* buf)
 {
-	auto& submeshes = mesh->GetSubMeshes();
-	for (auto& sm : submeshes)
-	{
-		m_TransferData.m_StaticBuffer.push_back(DynamicPointerCast<VulkanStaticBuffer>(sm.vb));
-		m_TransferData.m_StaticBuffer.push_back(DynamicPointerCast<VulkanStaticBuffer>(sm.ib));
-	}
+	m_TransferData.m_StaticBuffer.push_back(buf);
 }
 
-void Nexus::VulkanCommandQueue::TransferTextureToGPU(Ref<Texture> texture)
+void Nexus::VulkanCommandQueue::TransferTextureToGPU(VulkanTexture* texture)
 {
-	m_TransferData.m_Textures.push_back(DynamicPointerCast<VulkanTexture>(texture));
+	m_TransferData.m_Textures.push_back(texture);
 }
 
 void Nexus::VulkanCommandQueue::DrawMesh(Ref<StaticMesh> mesh)
