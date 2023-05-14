@@ -34,6 +34,7 @@ project "Nexus"
         IncludeDir["mono"],
         IncludeDir["joltRoot"],
         IncludeDir["jolt"],
+        IncludeDir["tinygltf"],
 
         "$(VULKAN_SDK)/Include",
     }
