@@ -37,7 +37,20 @@ layout(location = 0) out vec4 OutColor;
 
 layout(set = 2, binding = 0) uniform sampler2D albedo;
 
+layout(set = 2, binding = 1) uniform MaterialBuffer
+{
+	vec3 Color;
+	float UseTexture;
+} m_Material;
+
 void main()
 {
-	OutColor = texture(albedo, FragTexCoord);
+	vec4 color;
+
+	if (m_Material.UseTexture == 1.f)
+		color = texture(albedo, FragTexCoord);
+	else
+		color = vec4(m_Material.Color, 1.f);
+
+	OutColor = color;
 }

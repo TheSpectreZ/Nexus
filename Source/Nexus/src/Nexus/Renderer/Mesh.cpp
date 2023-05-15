@@ -23,6 +23,8 @@ struct MeshData
 	struct MaterialData
 	{
 		uint32_t AlbedoTextureIndex;
+		glm::vec3 AlbedoColor;
+		float UseTexture;
 	};
 
 	std::unordered_map<uint32_t, SubmeshData> submeshData;
@@ -149,6 +151,12 @@ bool LoadGLTF(const std::string& file, MeshData* data)
 			int texture = input.textures[textureIndex].source;
 	
 			data->materialData[i].AlbedoTextureIndex = texture;
+			data->materialData[i].UseTexture = 1.f;
+		}
+		else if (material.values.find("baseColorFactor") != material.values.end()) {
+			data->materialData[i].AlbedoColor = glm::make_vec3(material.values["baseColorFactor"].ColorFactor().data());
+			data->materialData[i].UseTexture = 0.f;
+			data->materialData[i].AlbedoTextureIndex = UINT32_MAX;
 		}
 	}
 
@@ -193,7 +201,19 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::Create(const std::string& filep
 	for (auto& [k, v] : data.materialData)
 	{
 		Ref<Material> material = CreateRef<Material>();
-		material->SetAlbedo(Images[v.AlbedoTextureIndex]);
+
+		if(v.AlbedoTextureIndex != UINT32_MAX)
+		{
+			material->SetAlbedo(Images[v.AlbedoTextureIndex]);
+			material->SetUseTexture(true);
+		}
+		else
+		{
+			material->SetAlbedo(Images[data.materialData[1].AlbedoTextureIndex]);
+			material->SetAlbedoColor(v.AlbedoColor);
+			material->SetUseTexture(false);
+		}
+
 		UUID handle = AssetManager::Emplace(material);
 		mats[k] = handle;
 	}
