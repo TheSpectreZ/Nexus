@@ -15,21 +15,17 @@ namespace Nexus
 	{
 	public:
 		static Ref<Texture> Create(const std::string& file);
+		static Ref<Texture> Create(const TextureCreateInfo& Info);
 
 		Texture() = default;
 		Texture(const Texture&) = default;
 		virtual ~Texture() = default;
 	};
 
-	enum class SamplerFilter
-	{
-		Nearest, Linear
-	};
-
-	class Sampler
+	class Sampler : public Asset
 	{
 	public:
-		static Ref<Sampler> Create(SamplerFilter Near, SamplerFilter Far);
+		static Ref<Sampler> Create(SamplerFilter Near, SamplerFilter Far, SamplerWrapMode U, SamplerWrapMode V, SamplerWrapMode W);
 		
 		Sampler() = default;
 		virtual ~Sampler() = default;

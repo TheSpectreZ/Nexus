@@ -31,11 +31,21 @@ Nexus::Ref<Nexus::Texture> Nexus::Texture::Create(const std::string& filepath)
 	return tex;
 }
 
-Nexus::Ref<Nexus::Sampler> Nexus::Sampler::Create(SamplerFilter Near, SamplerFilter Far)
+Nexus::Ref<Nexus::Texture> Nexus::Texture::Create(const TextureCreateInfo& Info)
 {
 	switch (RenderAPI::GetCurrentAPI())
 	{
-	case RenderAPIType::VULKAN: return CreateRef<VulkanSampler>(Near, Far);
+		case RenderAPIType::VULKAN: return CreateRef<VulkanTexture>(Info); break;
+		case RenderAPIType::NONE: return nullptr;
+		default: return nullptr;
+	}
+}
+
+Nexus::Ref<Nexus::Sampler> Nexus::Sampler::Create(SamplerFilter Near, SamplerFilter Far, SamplerWrapMode U, SamplerWrapMode V, SamplerWrapMode W)
+{
+	switch (RenderAPI::GetCurrentAPI())
+	{
+	case RenderAPIType::VULKAN: return CreateRef<VulkanSampler>(Near, Far, U, V, W);
 	case RenderAPIType::NONE: return  nullptr;
 	default: return nullptr;
 	}
