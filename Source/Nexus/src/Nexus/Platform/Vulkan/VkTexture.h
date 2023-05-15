@@ -26,7 +26,7 @@ namespace Nexus
 	class VulkanSampler : public Sampler
 	{
 	public:
-		VulkanSampler(SamplerFilter Near, SamplerFilter Far);
+		VulkanSampler(SamplerFilter Near, SamplerFilter Far, SamplerWrapMode U, SamplerWrapMode V, SamplerWrapMode W);
 		~VulkanSampler() override;
 
 		VkSampler Get() { return m_Sampler; }
