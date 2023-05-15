@@ -35,7 +35,8 @@ namespace Nexus
 	{
 		glm::vec3 position;
 		glm::vec3 normal;
-		glm::vec2 texCoord;
+		glm::vec2 texCoord0;
+		glm::vec2 texCoord1;
 
 		static std::vector<VertexBindInfo> GetBindings();
 		static std::vector<VertexAttribInfo> GetAttributes();
