@@ -11,10 +11,17 @@ namespace Nexus
 		static void Initialize();
 		static void Shutdown();
 
-		static UUID Emplace(Ref<Asset> asset)
+		template<typename T,typename... Args>
+		static std::pair<Ref<T>, UUID> Load(Args&&... args)
 		{
-			s_Instance->m_Assets[asset->GetID()] = asset;
-			return asset->GetID();
+			// Make Sure that Asset Has a Static Create Function
+			Ref<Asset> asset = T::Create(std::forward<Args>(args)...);
+
+			UUID Id = CreateUUID();
+			asset->m_Id = Id;
+			
+			s_Instance->m_Assets[Id] = asset;
+			return { DynamicPointerCast<T>(asset),Id };
 		}
 
 		template<typename T>

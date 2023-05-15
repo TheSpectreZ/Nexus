@@ -4,12 +4,13 @@ namespace Nexus
 {
 	class Asset
 	{
+		friend class AssetManager;
 	public:
-		Asset();
+		Asset() = default;
 		virtual ~Asset() = default;
 
 		UUID GetID() { return m_Id; }
 	protected:
-		UUID m_Id;
+		UUID m_Id = NullUUID;
 	};
 }
