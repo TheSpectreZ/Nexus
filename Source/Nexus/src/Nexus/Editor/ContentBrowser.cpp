@@ -6,22 +6,17 @@
 
 void Nexus::ContentBrowser::Initialize()
 {
-	m_Sampler = Sampler::Create(SamplerFilter::Linear, SamplerFilter::Linear);
+	m_Sampler = Sampler::Create(SamplerFilter::Linear, SamplerFilter::Linear,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat);
 
-	Ref<Texture> FileTexture = Texture::Create("Resources/Icons/File.png");
-	Ref<Texture> FolderTexture = Texture::Create("Resources/Icons/Folder.png");
-	Ref<Texture> ForwardTexture = Texture::Create("Resources/Icons/Forward.png");
-	Ref<Texture> BackwardTexture = Texture::Create("Resources/Icons/Back.png");
-
-	UUID File = AssetManager::Emplace(FileTexture);
-	UUID Folder = AssetManager::Emplace(FolderTexture);
-	UUID Forward = AssetManager::Emplace(ForwardTexture);
-	UUID Backward = AssetManager::Emplace(BackwardTexture);
-
-	m_FileID = EditorContext::s_Instance->MakeTextureID(AssetManager::Get<Texture>(File), m_Sampler);
-	m_FolderID = EditorContext::s_Instance->MakeTextureID(AssetManager::Get<Texture>(Folder), m_Sampler);
-	m_ForwardID = EditorContext::s_Instance->MakeTextureID(AssetManager::Get<Texture>(Forward), m_Sampler);
-	m_BackwardID = EditorContext::s_Instance->MakeTextureID(AssetManager::Get<Texture>(Backward), m_Sampler);
+	auto [File, FileId] = AssetManager::Load<Texture>("Resources/Icons/File.png");
+	auto [Folder, FolderId] = AssetManager::Load<Texture>("Resources/Icons/Folder.png");
+	auto [Forward, ForwardId] = AssetManager::Load<Texture>("Resources/Icons/Forward.png");
+	auto [Backward, BackwardId] = AssetManager::Load<Texture>("Resources/Icons/Back.png");
+	
+	m_FileID = EditorContext::s_Instance->MakeTextureID(File, m_Sampler);
+	m_FolderID = EditorContext::s_Instance->MakeTextureID(Folder, m_Sampler);
+	m_ForwardID = EditorContext::s_Instance->MakeTextureID(Forward, m_Sampler);
+	m_BackwardID = EditorContext::s_Instance->MakeTextureID(Backward, m_Sampler);
 }
 
 void Nexus::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)

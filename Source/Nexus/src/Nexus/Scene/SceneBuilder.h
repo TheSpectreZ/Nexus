@@ -32,7 +32,6 @@ namespace Nexus
 		std::unordered_map<UUID, UniformBufferHandle> PerEntityUniform;
 		
 		std::unordered_map<UUID, ResourceHeapHandle> PerMaterialHeap;
-		std::unordered_map<UUID, UniformBufferHandle> PerMaterialUniform;
 		std::unordered_map<UUID, CombinedImageSamplerHandle> PerMaterialSamplerImage;
 
 		glm::vec4 materialBuffer;

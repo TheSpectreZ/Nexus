@@ -9,7 +9,7 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
     Ref<SceneBuildData> data = CreateRef<SceneBuildData>();
     data->shader = shader;
 
-    data->sampler = Sampler::Create(SamplerFilter::Nearest, SamplerFilter::Linear);
+    data->sampler = Sampler::Create(SamplerFilter::Nearest, SamplerFilter::Linear,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat);
 
     // Per Scene
     {
@@ -91,7 +91,6 @@ void Nexus::SceneBuildData::Destroy()
     for (auto& [k, v] : PerMaterialHeap)
     {
         shader->DeallocateShaderResourceHeap(v);
-        shader->DeallocateUniformBuffer(PerMaterialUniform[k]);
     }
 
     for (auto& [k, v] : PerEntityHeap)
@@ -102,7 +101,6 @@ void Nexus::SceneBuildData::Destroy()
     PerEntityHeap.clear();
     PerEntityUniform.clear();
     PerMaterialHeap.clear();
-    PerMaterialUniform.clear();
     PerMaterialSamplerImage.clear();
 
     NEXUS_LOG_WARN("Scene Data Destroyed");
@@ -119,30 +117,14 @@ void Nexus::SceneBuildData::OnMaterialCreation(UUID Id)
 
     PerMaterialHeap[material->GetID()] = rh;
 
-    UniformBufferHandle uniform{};
-    uniform.hashId = CreateUUID();
-    uniform.set = 2;
-    uniform.binding = 1;
-    shader->AllocateUniformBuffer(uniform);
+    CombinedImageSamplerHandle handle{};
+    handle.texture = AssetManager::Get<Texture>(material->GetAlbedo());
+    handle.sampler = sampler;
+    handle.set = 2;
+    handle.binding = 0;
 
-    PerMaterialUniform[material->GetID()] = uniform;
-
-    shader->BindUniformWithResourceHeap(rh, uniform);
-
-    materialBuffer = glm::vec4(material->GetAlbedoColor(), material->IsTextureUsed());
-    shader->SetUniformData(uniform, glm::value_ptr(materialBuffer));
-
-    //if (material->GetAlbedo() != NullUUID)
-    //{
-        CombinedImageSamplerHandle handle{};
-        handle.texture = AssetManager::Get<Texture>(material->GetAlbedo());
-        handle.sampler = sampler;
-        handle.set = 2;
-        handle.binding = 0;
-
-        shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle);
-        PerMaterialSamplerImage[material->GetID()] = handle;
-   // }
+    shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle);
+    PerMaterialSamplerImage[material->GetID()] = handle;
 }
 
 void Nexus::SceneBuildData::OnSceneDestruction()

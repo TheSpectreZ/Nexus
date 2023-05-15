@@ -5,7 +5,7 @@
 
 void Nexus::EditorViewport::Initialize()
 {
-	m_Sampler = Sampler::Create(SamplerFilter::Linear, SamplerFilter::Linear);
+	m_Sampler = Sampler::Create(SamplerFilter::Linear, SamplerFilter::Linear,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat);
 	m_TextureIDs.resize(Renderer::GetSwapchain()->GetImageCount());
 }
 

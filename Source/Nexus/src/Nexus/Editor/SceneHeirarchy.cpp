@@ -311,11 +311,9 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 					if (s.extension().string() == ".gltf" || s.extension().string() == ".glb")
 					{
-						Ref<StaticMesh> mesh = StaticMesh::Create(s.string());
-						if (!AssetManager::Has(mesh->GetID()))
-							AssetManager::Emplace(mesh);
+						auto [mesh, handle] = AssetManager::Load<StaticMesh>(s.string());
 
-						component.handle = mesh->GetID();
+						component.handle = handle;
 
 						for (auto& sm : mesh->GetSubMeshes())
 						{

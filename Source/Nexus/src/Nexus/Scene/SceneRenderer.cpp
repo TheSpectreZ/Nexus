@@ -17,44 +17,32 @@ void Nexus::SceneRenderer::Render()
 	Entity entity;
 	auto meshView = m_Scene->GetAllEntitiesWith<Component::Mesh>();
 
-	std::unordered_map<UUID, std::vector<std::pair<SubMesh*, Entity>>> meshes;
+	auto& materialView = m_Data->PerMaterialHeap;
 
-	for (auto& e : meshView)
+	for (auto& [k, m] : materialView)
 	{
-		entity = Entity(e, m_Scene.get());
+		m_Data->shader->BindShaderResourceHeap(m);
 
-		auto& meshc = entity.GetComponent<Component::Mesh>();
-		if (meshc.handle == NullUUID)
-			continue;
-
-		auto mesh = AssetManager::Get<StaticMesh>(meshc.handle);
-		auto& sb = mesh->GetSubMeshes();
-
-		for (size_t i = 0; i < sb.size(); i++)
+		for (auto& e : meshView)
 		{
-			if (sb[i].material == NullUUID)
-			{
-				NEXUS_LOG_ERROR("Null Material: {0}", i);
+			entity = Entity(e, m_Scene.get());
+
+			auto& meshc = entity.GetComponent<Component::Mesh>();
+			if (meshc.handle == NullUUID)
 				continue;
-			}
 
-			meshes[mesh->GetSubMeshes()[i].material].emplace_back(std::make_pair(&sb[i], entity));
-		}
-	}
-
-	for (auto& [k, v] : meshes)
-	{
-		m_Data->shader->BindShaderResourceHeap(m_Data->PerMaterialHeap[k]);
-
-		for (auto& m : v)
-		{
-			auto sb = m.first;
-			auto en = m.second;
-
-			auto& Identity = en.GetComponent<Component::Identity>();
+			auto mesh = AssetManager::Get<StaticMesh>(meshc.handle);
+			auto& Identity = entity.GetComponent<Component::Identity>();
 			m_Data->shader->BindShaderResourceHeap(m_Data->PerEntityHeap[Identity.uuid]);
 
-			Renderer::DrawSubMesh(sb);
+			for (auto& submesh : mesh->GetSubMeshes())
+			{
+				if (submesh.material == k)
+				{
+					Renderer::DrawSubMesh(&submesh);
+				}
+			}
 		}
 	}
+
 }
