@@ -37,10 +37,6 @@ void main()
 #shader FRAGMENT
 #version 450 core
 
-const float PI = 3.141592;
-const float Epsilon = 0.00001;
-const vec3 Fdielectrics = vec3(0.01); // Constant normal Incidence Frensel Factor for all Dielectrics
-
 layout(location = 0) in vec3 FragPos;
 layout(location = 1) in vec3 FragNorm;
 layout(location = 2) in vec2 FragTexC0;
@@ -94,30 +90,40 @@ vec3 GetMaterialColor()
 		return m_MaterialBuffer.AlbedoColor.rgb;
 }
 
-vec3 CalculateAmbientColor(vec3 lightCol, float ambientStrength)
+vec2 GetMetallicRoughness()
 {
-	return ambientStrength * lightCol;
+	if (m_MaterialBuffer.useMR == 1.0)
+	{
+		vec2 texCoord = (m_MaterialBuffer.mrTexCoord == 0.0) ? FragTexC0 : FragTexC1;
+		return texture(metallicRoughnessMap, texCoord).rg;
+	}
+	else
+		return vec2(m_MaterialBuffer.metalness, m_MaterialBuffer.roughness);
 }
 
-vec3 CalculateDiffuseColor(vec3 lightCol, vec3 lightDir, vec3 normal)
+const float PI = 3.141592;
+const float Epsilon = 0.00001;
+const vec3 Fdielectric = vec3(0.01); // Constant normal Incidence Frensel Factor for all Dielectrics
+
+vec3 Calculate_Lambertian_Diffuse(vec3 materialColor)
 {
-	float diff = max(dot(normal, lightDir), 0.0);
-	return diff * lightCol;
+	return materialColor / PI;
 }
 
-vec3 CalculateSpecularColor(vec3 lightCol, vec3 lightDir, vec3 normal,vec3 view,float specular,float shine)
+vec3 Calculate_Fresnel(vec3 F0, vec3 viewDir, vec3 halfDir)
 {
-	vec3 ref = reflect(-lightDir, normal);
-
-	float spec = pow(max(dot(view, ref), 0.0), shine);
-	return specular * spec * lightCol;
+	return F0 + (vec3(1) - F0) * pow((1 - max(dot(viewDir, halfDir), 0.0)), 5.0);
 }
 
 void main()
 {
 	vec3 albedo = GetMaterialColor();
+	vec2 metallicRoughness = GetMetallicRoughness();
+
 	vec3 viewDir = normalize(m_sceneBuffer.position - FragPos);
 	vec3 norm = normalize(FragNorm);
+	
+	vec3 F0 = mix(Fdielectric, albedo, metallicRoughness.r);
 
 	vec3 result = vec3(0.0);
 
@@ -126,21 +132,26 @@ void main()
 	for (int i = 0; i < m_sceneBuffer.pointLightCount; i++)
 	{
 		vec3 lightDir = m_sceneBuffer.lights[i].position - FragPos;
-	
-		vec3 ambient = CalculateAmbientColor(m_sceneBuffer.lights[i].color, 0.1);
-		vec3 diffuse = CalculateDiffuseColor(m_sceneBuffer.lights[i].color, lightDir, norm);
-		vec3 specular = CalculateSpecularColor(m_sceneBuffer.lights[i].color, lightDir, norm, viewDir, 0.5, 32);
-	
-		result += (ambient + diffuse + specular) * albedo;
+		vec3 halfDir = normalize(lightDir + viewDir);
+		
+		vec3 Fresnel = Calculate_Fresnel(F0, viewDir, halfDir);
+		vec3 diffuse = Calculate_Lambertian_Diffuse(albedo);
+
+		vec3 lightingResult = (vec3(1.0) - Fresnel) * diffuse;
+
+		result += lightingResult * m_sceneBuffer.lights[i].color * max(dot(lightDir, norm), 0.0);
 	}
 
 	// Directional Light
 	{
-		vec3 ambient = CalculateAmbientColor(m_sceneBuffer.SceneLightColor.rgb, 0.1);
-		vec3 diffuse = CalculateDiffuseColor(m_sceneBuffer.SceneLightColor.rgb, m_sceneBuffer.SceneLightDirection.rgb, norm);
-		vec3 specular = CalculateSpecularColor(m_sceneBuffer.SceneLightColor.rgb, m_sceneBuffer.SceneLightDirection.rgb, norm, viewDir, 0.5, 32.0);
+		vec3 halfDir = normalize(m_sceneBuffer.SceneLightDirection.rgb + viewDir);
 
-		result += (ambient + diffuse + specular) * albedo;
+		vec3 Fresnel = Calculate_Fresnel(F0, viewDir, halfDir);
+		vec3 diffuse = Calculate_Lambertian_Diffuse(albedo);
+
+		vec3 lightingResult = (vec3(1.0) - Fresnel) * diffuse;
+
+		result += lightingResult * m_sceneBuffer.SceneLightColor.rgb * max(dot(m_sceneBuffer.SceneLightDirection.rgb, norm), 0.0);
 	}
 
 	OutColor = vec4(result, 1.0);
