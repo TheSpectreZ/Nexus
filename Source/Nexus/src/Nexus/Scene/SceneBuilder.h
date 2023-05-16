@@ -25,7 +25,8 @@ namespace Nexus
 		Ref<Shader> shader;
 		
 		ResourceHeapHandle PerSceneHeap;
-		UniformBufferHandle PerSceneUniform;
+		UniformBufferHandle PerSceneUniform0;
+		UniformBufferHandle PerSceneUniform1;
 		
 		std::unordered_map<UUID, ResourceHeapHandle> PerEntityHeap;
 		std::unordered_map<UUID, UniformBufferHandle> PerEntityUniform;
@@ -33,8 +34,10 @@ namespace Nexus
 		std::unordered_map<UUID, ResourceHeapHandle> PerMaterialHeap;
 		std::unordered_map<UUID, UniformBufferHandle> PerMaterialUniform;
 
-		glm::vec4 materialBuffer;
+
 		glm::mat4 matrixBuffer[2];
+		glm::vec4 materialBuffer[3];
+		glm::vec4 CameraBuffer;
 	};
 }
 

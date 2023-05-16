@@ -31,7 +31,8 @@ void main()
 #version 450 core
 
 layout(location = 1) in vec3 FragNormal;
-layout(location = 2) in vec2 FragTexCoord;
+layout(location = 2) in vec2 FragTexCoord0;
+layout(location = 2) in vec2 FragTexCoord1;
 
 layout(location = 0) out vec4 OutColor;
 

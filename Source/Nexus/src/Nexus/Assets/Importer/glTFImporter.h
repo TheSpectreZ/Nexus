@@ -50,8 +50,8 @@ namespace Nexus::Importer::glTF
 		uint32_t normalTexture = UINT32_MAX;
 
 		glm::vec4 albedoColor = glm::vec4(1.f);
-		float roughness;
-		float metallic;
+		float roughness = 0.5f;
+		float metallic = 0.5f;
 	};
 
 	struct glTFSceneData

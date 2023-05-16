@@ -9,12 +9,16 @@ namespace Nexus
 	{
 		UUID Image;
 		UUID Sampler;
+		uint8_t TexCoord;
 	};
 
 	struct MaterialCreateInfo
 	{
 		CombinedImageSampler albedo;
+		CombinedImageSampler metallicRoughness;
 		glm::vec4 albedoColor;
+		float roughness, metalness;
+		float useMR, useAlb;
 	};
 
 	class Material : public Asset
@@ -27,6 +31,13 @@ namespace Nexus
 		~Material() override = default;
 	private:
 		CombinedImageSampler m_AlbedoMap;
+		CombinedImageSampler m_MetallicRoughnessMap;
+
+		float useAlbedo;
+		float useMR;
+
 		glm::vec4 m_AlbedoColor;
+		float m_metalness;
+		float m_roughness;
 	};
 }

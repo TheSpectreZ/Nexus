@@ -120,12 +120,29 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 			{
 				m.albedoTexture = material.values["baseColorTexture"].TextureIndex();
 				m.textureCoords.albedo = material.values["baseColorTexture"].TextureTexCoord();
+
+				m.albedoColor = glm::vec4(1.f);
 			}
 
 			if (FIND_VALUE_BY_NAME(material, "metallicRoughnessTexture"))
 			{
 				m.metallicRoughnessTexture = material.values["metallicRoughnessTexture"].TextureIndex();
 				m.textureCoords.metallicRoughness = material.values["metallicRoughnessTexture"].TextureTexCoord();
+
+				m.roughness = 1.f;
+				m.metallic = 1.f;
+			}
+			else
+			{
+				if (FIND_VALUE_BY_NAME(material, "roughnessFactor"))
+				{
+					m.roughness = (float)material.values["roughnessFactor"].Factor();
+				}
+
+				if (FIND_VALUE_BY_NAME(material, "metallicFactor"))
+				{
+					m.metallic = (float)material.values["metallicFactor"].Factor();
+				}
 			}
 
 			if (FIND_VALUE_BY_NAME(material, "normalTexture"))
@@ -137,16 +154,6 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 			if (FIND_VALUE_BY_NAME(material, "baseColorFactor"))
 			{
 				m.albedoColor = glm::make_vec4(material.values["baseColorFactor"].ColorFactor().data());
-			}
-
-			if (FIND_VALUE_BY_NAME(material, "roughnessFactor"))
-			{
-				m.roughness = (float)material.values["roughnessFactor"].Factor();
-			}
-
-			if (FIND_VALUE_BY_NAME(material, "metallicFactor"))
-			{
-				m.metallic = (float)material.values["metallicFactor"].Factor();
 			}
 		}
 	}

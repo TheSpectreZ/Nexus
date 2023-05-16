@@ -40,15 +40,33 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::Create(const std::string& filep
 
 		MaterialCreateInfo Info{};
 		Info.albedoColor = material.albedoColor;
+		Info.metalness = material.metallic;
+		Info.roughness = material.roughness;
 
 		if(material.albedoTexture != UINT32_MAX)
 		{
 			Info.albedo.Image = ImageIDs[data.textures[material.albedoTexture].Image];
 			Info.albedo.Sampler = SamplerIDs[data.textures[material.albedoTexture].Sampler];
+			Info.albedo.TexCoord = material.textureCoords.albedo;
+			Info.useAlb = 1.f;
 		}
 		else
 		{
+			Info.useAlb = 0.f;
 			Info.albedo = { 0,1 };
+		}
+		
+		if(material.metallicRoughnessTexture != UINT32_MAX)
+		{
+			Info.metallicRoughness.Image = ImageIDs[data.textures[material.metallicRoughnessTexture].Image];
+			Info.metallicRoughness.Sampler = SamplerIDs[data.textures[material.metallicRoughnessTexture].Sampler];
+			Info.metallicRoughness.TexCoord = material.textureCoords.metallicRoughness;
+			Info.useMR = 1.f;
+		}
+		else
+		{
+			Info.useMR = 0.f;
+			Info.metallicRoughness = { 0,1 };
 		}
 
 		auto [Mat, Id] = AssetManager::Load<Material>(Info);

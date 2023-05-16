@@ -21,7 +21,7 @@ void EditorLayer::OnAttach()
 		m_scissor.Extent = { Extent.width, Extent.height };
 	}
 
-	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/simple.shader");
+	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/pbr.shader");
 	
 	// Pipeline
 	{
