@@ -265,6 +265,8 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			DisplayAddComponentEntry<Component::SphereCollider>("SphereCollider", en);
 			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
 			DisplayAddComponentEntry<Component::CapsuleCollider>("CapsuleCollider", en);
+			DisplayAddComponentEntry<Component::DirectionalLight>("DirectionalLight", en);
+			DisplayAddComponentEntry<Component::PointLight>("PointLight", en);
 			ImGui::EndPopup();
 		}
 
@@ -431,5 +433,16 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			ImGui::DragFloat("Top-Radius", &component.TopRadius);
 			ImGui::DragFloat("Bottom-Radius", &component.BottomRadius);
 			ImGui::DragFloat("Half-Height", &component.HalfHeight);
+		});
+
+	DrawComponent<Component::DirectionalLight>("Directional Light", en, [&](auto& component)
+		{
+			ImGuiUtils::DrawVec3Control("Direction", component.direction, 1.f);
+			ImGuiUtils::DrawVec3Control("Color", component.color, 1.f);
+		});
+	
+	DrawComponent<Component::PointLight>("Point Light", en, [&](auto& component)
+		{
+			ImGuiUtils::DrawVec3Control("Color", component.color, 1.f);
 		});
 }

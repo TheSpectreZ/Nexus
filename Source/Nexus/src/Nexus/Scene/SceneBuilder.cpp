@@ -68,13 +68,57 @@ void Nexus::SceneBuildData::Update(Ref<Scene> scene, Camera camera)
     // make this frequency based
     matrixBuffer[0] = camera.projection;
     matrixBuffer[1] = camera.view;
-
     shader->SetUniformData(PerSceneUniform0, &matrixBuffer);
-    
-    CameraBuffer = glm::vec4(camera.position, 1.f);
-    
-    shader->SetUniformData(PerSceneUniform1, glm::value_ptr(CameraBuffer));
 
+    m_SceneBuffer.camPos = camera.position;
+    
+    {
+        Entity entity;
+     
+        // PointLight
+        auto pview = scene->GetAllEntitiesWith<Component::PointLight>();
+        for (uint32_t i = 0; i < pview.size(); i++)
+        {
+            if (i >= PointLightLimit)
+                break;
+
+            entity = Entity(pview[i], scene.get());
+            auto& tf = entity.GetComponent<Component::Transform>();
+            auto& pl = entity.GetComponent<Component::PointLight>();
+
+            m_SceneBuffer.pointLights[i].pos = tf.Translation;
+            m_SceneBuffer.pointLights[i].col = pl.color;
+        }
+
+        for (uint32_t i = pview.size(); i < PointLightLimit; i++)
+        {
+            m_SceneBuffer.pointLights[i].pos = glm::vec3(0.f);
+            m_SceneBuffer.pointLights[i].col = glm::vec3(0.f);
+        }
+
+        m_SceneBuffer.pLightCount = (float)pview.size();
+
+        //[Note] Think about Multiple Directional Lights.. 
+        // DirectionalLight
+        auto dview = scene->GetAllEntitiesWith<Component::DirectionalLight>();
+        for (auto& e : dview)
+        {
+            entity = Entity(e, scene.get());
+            auto& dl = entity.GetComponent<Component::DirectionalLight>();
+
+            m_SceneBuffer.lightDir = glm::vec4(dl.direction, 0.0);
+            m_SceneBuffer.lightCol = glm::vec4(dl.color, 0.0);
+        }
+
+        if (dview.empty())
+        {
+            m_SceneBuffer.lightDir = glm::vec4(0.0);
+            m_SceneBuffer.lightCol = glm::vec4(0.0);
+        }
+    }
+
+    shader->SetUniformData(PerSceneUniform1, &m_SceneBuffer);
+    
     // Per Entity Transforms
     {
         Entity entity;

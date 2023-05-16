@@ -120,5 +120,22 @@ namespace Nexus
 			float HalfHeight = 0.5f;
 			float Radius = 0.5f;
 		};
+
+		struct DirectionalLight
+		{
+			DirectionalLight() = default;
+			DirectionalLight(const DirectionalLight&) = default;
+
+			glm::vec3 direction = glm::vec3(1.f);
+			glm::vec3 color = glm::vec3(1.f);
+		};
+
+		struct PointLight
+		{
+			PointLight() = default;
+			PointLight(const PointLight&) = default;
+
+			glm::vec3 color = glm::vec3(1.f);
+		};
 	}
 }
