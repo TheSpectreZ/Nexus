@@ -222,6 +222,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& color = attachments.emplace_back();
 			color.type = Nexus::ImageType::Color;
 			color.multiSampled = true;
+			color.hdr = true;
 			color.load = Nexus::ImageOperation::Clear;
 			color.store = Nexus::ImageOperation::Store;
 			color.initialLayout = Nexus::ImageLayout::Undefined;
@@ -230,6 +231,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& depth = attachments.emplace_back();
 			depth.type = Nexus::ImageType::Depth;
 			depth.multiSampled = true;
+			depth.hdr = false;
 			depth.load = Nexus::ImageOperation::Clear;
 			depth.store = Nexus::ImageOperation::DontCare;
 			depth.initialLayout = Nexus::ImageLayout::Undefined;
@@ -238,6 +240,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& resolve = attachments.emplace_back();
 			resolve.type = Nexus::ImageType::Resolve;
 			resolve.multiSampled = false;
+			resolve.hdr = true;
 			resolve.load = Nexus::ImageOperation::DontCare;
 			resolve.store = Nexus::ImageOperation::Store;
 			resolve.initialLayout = Nexus::ImageLayout::Undefined;
@@ -278,6 +281,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& color = attachments.emplace_back();
 			color.type = Nexus::ImageType::Color;
 			color.multiSampled = false;
+			color.hdr = false;
 			color.load = Nexus::ImageOperation::Clear;
 			color.store = Nexus::ImageOperation::Store;
 			color.initialLayout = Nexus::ImageLayout::Undefined;
@@ -316,14 +320,17 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 		auto& a1 = m_GraphicsFBspecs.attachments.emplace_back();
 		a1.Type = Nexus::FramebufferAttachmentType::Color;
 		a1.multisampled = true;
+		a1.hdr = true;
 
 		auto& a2 = m_GraphicsFBspecs.attachments.emplace_back();
 		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
 		a2.multisampled = true;
+		a2.hdr = false;
 
 		auto& a3 = m_GraphicsFBspecs.attachments.emplace_back();
 		a3.Type = Nexus::FramebufferAttachmentType::ShaderReadOnly_Color;
 		a3.multisampled = false;
+		a3.hdr = true;
 
 		m_GraphicsFBspecs.extent = extent;
 		m_GraphicsFBspecs.renderpass = m_GraphicsPass;
@@ -338,6 +345,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 		auto& a1 = m_ImGuiFBspecs.attachments.emplace_back();
 		a1.Type = Nexus::FramebufferAttachmentType::PresentSrc;
 		a1.multisampled = false;
+		a1.hdr = false;
 
 		m_ImGuiFBspecs.extent = extent;
 		m_ImGuiFBspecs.renderpass = m_ImGuiPass;

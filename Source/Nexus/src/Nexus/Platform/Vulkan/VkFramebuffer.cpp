@@ -117,7 +117,7 @@ void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDes
 		switch (desc.Type)
 		{
 			case FramebufferAttachmentType::Color: 
-				Info.format = swapchain->GetImageFormat();
+				Info.format = desc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : VK_FORMAT_R8G8B8A8_UNORM;
 				Info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
 				break;
 			case FramebufferAttachmentType::DepthStencil: 
@@ -125,7 +125,7 @@ void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDes
 				Info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT; 
 				break;
 			case FramebufferAttachmentType::ShaderReadOnly_Color:
-				Info.format = swapchain->GetImageFormat();
+				Info.format = desc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : VK_FORMAT_R8G8B8A8_UNORM;
 				Info.usage = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 				break;
 			default:
@@ -160,7 +160,7 @@ void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDes
 		switch (desc.Type)
 		{
 		case FramebufferAttachmentType::Color:
-			Info.format = swapchain->GetImageFormat();
+			Info.format = desc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : swapchain->GetImageFormat();
 			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			break;
 		case FramebufferAttachmentType::DepthStencil:
@@ -168,7 +168,7 @@ void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDes
 			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 			break;
 		case FramebufferAttachmentType::ShaderReadOnly_Color:
-			Info.format = swapchain->GetImageFormat();
+			Info.format = desc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : swapchain->GetImageFormat();
 			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			break;
 		default:

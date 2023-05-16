@@ -27,6 +27,7 @@ namespace Nexus
 		ImageLayout initialLayout;
 		ImageLayout finalLayout;
 		bool multiSampled;
+		bool hdr;
 	};
 
 	struct SubpassDescription

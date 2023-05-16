@@ -138,13 +138,16 @@ Nexus::VulkanRenderpass::VulkanRenderpass(const RenderpassSpecification& specs)
 			switch (atc.type)
 			{
 			case ImageType::Color:
-				d.format = swapchain->GetImageFormat();
+				if (atc.finalLayout == ImageLayout::PresentSrc)
+					d.format = swapchain->GetImageFormat();
+				else
+					d.format = atc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : swapchain->GetImageFormat();
 				break;
 			case ImageType::Depth:
 				d.format = gpu->GetDepthFormat();
 				break;
 			case ImageType::Resolve:
-				d.format = swapchain->GetImageFormat();
+				d.format = atc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : swapchain->GetImageFormat();
 				break;
 			default:
 				d.format = VK_FORMAT_MAX_ENUM;
