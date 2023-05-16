@@ -2,6 +2,9 @@
 
 Nexus is primarily a hobby project, a Game-Engine / Rendering-Framework for Windows. Note that Currently it's still in developement.
 
+![Screenshot 2023-05-16 162725](https://github.com/TheSpectreZ/Nexus/assets/122666662/1b35cc4a-ed56-472c-9365-309513ac0879)
+
+
 ***
 
 ## Getting Started
