@@ -1,7 +1,12 @@
 #include "nxpch.h"
 #include "Material.h"
 
-Nexus::Ref<Nexus::Material> Nexus::Material::Create()
+Nexus::Ref<Nexus::Material> Nexus::Material::Create(const MaterialCreateInfo& Info)
 {
-    return CreateRef<Material>();
+    Ref<Material> mat = CreateRef<Material>();
+    
+    mat->m_AlbedoMap = Info.albedo;
+    mat->m_AlbedoColor = Info.albedoColor;
+
+    return mat;
 }

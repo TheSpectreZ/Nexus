@@ -35,22 +35,29 @@ layout(location = 2) in vec2 FragTexCoord;
 
 layout(location = 0) out vec4 OutColor;
 
-layout(set = 2, binding = 0) uniform sampler2D albedo;
-
-layout(set = 2, binding = 1) uniform MaterialBuffer
+layout(set = 2, binding = 0) uniform MaterialBuffer
 {
-	vec3 Color;
-	float UseTexture;
-} m_Material;
+	vec4 AlbedoColor;
+	float roughness;
+	float metalness;
+
+	vec2 nul;
+	vec4 nul2;
+	vec4 nul3;
+} m_MaterialBuffer;
+
+layout(set = 2, binding = 1) uniform sampler2D albedo;
+
+const vec3 LightDir = vec3(1.0, 1.0, 1.0);
 
 void main()
 {
-	vec4 color;
+	vec3 albedoColor = texture(albedo, FragTexCoord).rgb * m_MaterialBuffer.AlbedoColor.rgb;
 
-	if (m_Material.UseTexture == 1.f)
-		color = texture(albedo, FragTexCoord);
-	else
-		color = vec4(m_Material.Color, 1.f);
+	vec3 norm = normalize(FragNormal);
+	vec3 dir = normalize(LightDir);
 
-	OutColor = color;
+	float diff = max(dot(norm, dir), 0.0);
+
+	OutColor = vec4(albedoColor * diff, 1.0);
 }

@@ -14,7 +14,7 @@ namespace Nexus
 	class StaticMesh : public Asset
 	{
 	public:
-		static Ref<StaticMesh> Create(const std::string& filepath);
+		static Ref<StaticMesh> Create(const std::string& filepath, std::vector<UUID>* MaterialIds);
 		std::vector<SubMesh>& GetSubMeshes() { return m_SubMeshes; }
 	private:
 		std::vector<SubMesh> m_SubMeshes;
