@@ -311,13 +311,13 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 					if (s.extension().string() == ".gltf" || s.extension().string() == ".glb")
 					{
-						auto [mesh, handle] = AssetManager::Load<StaticMesh>(s.string());
-
+						std::vector<UUID> MaterialIds;
+						auto [mesh, handle] = AssetManager::Load<StaticMesh>(s.string(), &MaterialIds);
 						component.handle = handle;
 
-						for (auto& sm : mesh->GetSubMeshes())
+						for (auto& Id : MaterialIds)
 						{
-							m_SceneData->OnMaterialCreation(sm.material);
+							m_SceneData->OnMaterialCreation(Id);
 						}
 					}
 				}
