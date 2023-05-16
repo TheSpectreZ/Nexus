@@ -90,13 +90,16 @@ void Nexus::SceneBuildData::Update(Ref<Scene> scene, Camera camera)
             m_SceneBuffer.pointLights[i].col = pl.color;
         }
 
-        for (uint32_t i = pview.size(); i < PointLightLimit; i++)
+        for (uint32_t i = (uint32_t)pview.size(); i < PointLightLimit; i++)
         {
             m_SceneBuffer.pointLights[i].pos = glm::vec3(0.f);
             m_SceneBuffer.pointLights[i].col = glm::vec3(0.f);
         }
 
-        m_SceneBuffer.pLightCount = (float)pview.size();
+        if ((uint32_t)pview.size() < PointLightLimit)
+            m_SceneBuffer.pLightCount = (float)pview.size();
+        else
+            m_SceneBuffer.pLightCount = PointLightLimit;
 
         //[Note] Think about Multiple Directional Lights.. 
         // DirectionalLight
@@ -198,13 +201,13 @@ void Nexus::SceneBuildData::OnMaterialCreation(UUID Id)
 
     shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle1);
 
-    //CombinedImageSamplerHandle handle2{};
-    //handle2.texture = AssetManager::Get<Texture>(material->m_MetallicRoughnessMap.Image);
-    //handle2.sampler = AssetManager::Get<Sampler>(material->m_MetallicRoughnessMap.Sampler);
-    //handle2.set = 2;
-    //handle2.binding = 2;
-    //
-    //shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle2);
+    CombinedImageSamplerHandle handle2{};
+    handle2.texture = AssetManager::Get<Texture>(material->m_MetallicRoughnessMap.Image);
+    handle2.sampler = AssetManager::Get<Sampler>(material->m_MetallicRoughnessMap.Sampler);
+    handle2.set = 2;
+    handle2.binding = 2;
+    
+    shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle2);
 }
 
 void Nexus::SceneBuildData::OnSceneDestruction()
