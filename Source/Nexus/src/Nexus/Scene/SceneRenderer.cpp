@@ -16,19 +16,33 @@ void Nexus::SceneRenderer::Render()
 
 	Entity entity;
 	auto meshView = m_Scene->GetAllEntitiesWith<Component::Mesh>();
-	for (auto& e : meshView)
+
+	auto& materialView = m_Data->PerMaterialHeap;
+
+	for (auto& [k, m] : materialView)
 	{
-		entity = Entity(e, m_Scene.get());
+		m_Data->shader->BindShaderResourceHeap(m);
 
-		auto& meshHandle = entity.GetComponent<Component::Mesh>().handle;
-		if (meshHandle == NullUUID)
-			continue;
+		for (auto& e : meshView)
+		{
+			entity = Entity(e, m_Scene.get());
 
-		auto& Identity = entity.GetComponent<Component::Identity>();
-		auto& resourceHeap = m_Data->PerEntityHeap[Identity.uuid];
-		m_Data->shader->BindShaderResourceHeap(resourceHeap);
+			auto& meshc = entity.GetComponent<Component::Mesh>();
+			if (meshc.handle == NullUUID)
+				continue;
 
-		auto& meshAsset = AssetManager::Get<StaticMeshAsset>(meshHandle);
-		Renderer::DrawMesh(meshAsset.Mesh);
+			auto mesh = AssetManager::Get<StaticMesh>(meshc.handle);
+			auto& Identity = entity.GetComponent<Component::Identity>();
+			m_Data->shader->BindShaderResourceHeap(m_Data->PerEntityHeap[Identity.uuid]);
+
+			for (auto& submesh : mesh->GetSubMeshes())
+			{
+				if (submesh.material == k)
+				{
+					Renderer::DrawSubMesh(&submesh);
+				}
+			}
+		}
 	}
+
 }

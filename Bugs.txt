@@ -4,3 +4,4 @@ This File Contains list of all Problems/Bugs to be Fixed in Nexus.
 - Entities get Rotated About an Axis while clicking Scene Play
 - Meshes with multiple Submesh dont work as Intended
 - Content Browser has some Issues with File Navigation (Check it Out)
+- There is no path cache kinda thing so multiple loading of same asset is possible - causes memory issues

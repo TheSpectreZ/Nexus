@@ -1,85 +1,91 @@
 #include "nxpch.h"
 #include "Mesh.h"
-
 #include "Vertex.h"
+#include "Texture.h"
+#include "Scene/Material.h"
 
-#include "assimp/Importer.hpp"
-#include "assimp/scene.h"
-#include "assimp/postprocess.h"
+#include "Assets/Importer/glTFImporter.h"
+#include "Assets/AssetManager.h"
 
-#include "Renderer.h"
-
-Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::LoadWithAssimp(const char* Filepath)
+Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::Create(const std::string& filepath, std::vector<UUID>* Materials)
 {
-	static Assimp::Importer importer;
+	Importer::glTF::glTFSceneData data{};
+	std::filesystem::path path = filepath;
 
-	uint32_t flags = aiProcess_Triangulate | aiProcess_FlipUVs |
-		aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes;
-	const aiScene* scene = importer.ReadFile(Filepath, flags);
+	NEXUS_ASSERT((!Importer::glTF::Load(path, &data)), "Failed To Load glTF Static Mesh");
+	
+	Ref<StaticMesh> mesh = CreateRef<StaticMesh>();
 
-	if (!scene)
+	std::unordered_map<uint32_t, UUID> ImageIDs;
+	for (uint32_t i = 0; i < (uint32_t)data.images.size(); i++)
 	{
-		std::string err = "Failed To Load File with Assimp: " + std::string(Filepath) + " L " + importer.GetErrorString();
-		NEXUS_ASSERT(1, err.c_str());
+		std::filesystem::path imagePath = path.parent_path() / data.images[i].sourcePath;
+		auto [Tex, Id] = AssetManager::Load<Texture>(imagePath.string());
+		ImageIDs[i] = Id;
 	}
 
-	std::vector<StaticMeshVertex> m_Vertices;
-	std::vector<uint32_t> m_Indices;
-
-	for (uint32_t i = 0; i < scene->mNumMeshes; i++)
+	std::unordered_map<uint32_t, UUID> SamplerIDs;
+	for (uint32_t i = 0; i < (uint32_t)data.samplers.size(); i++)
 	{
-		aiMesh* mesh = scene->mMeshes[i];
+		auto& sampler = data.samplers[i];
 
-		for (uint32_t j = 0; j < mesh->mNumVertices; j++)
+		auto [Samp, Id] = AssetManager::Load<Sampler>(sampler.Near, sampler.Far, sampler.U, sampler.V, sampler.W);
+		SamplerIDs[i] = Id;
+	}
+
+	std::unordered_map<uint32_t, UUID> MaterialIDs;
+	for (uint32_t i = 0; i < (uint32_t)data.materials.size(); i++)
+	{
+		auto& material = data.materials[i];
+
+		MaterialCreateInfo Info{};
+		Info.albedoColor = material.albedoColor;
+		Info.metalness = material.metallic;
+		Info.roughness = material.roughness;
+
+		if(material.albedoTexture != UINT32_MAX)
 		{
-			auto& vertex = m_Vertices.emplace_back();
-
-			vertex.position.x = mesh->mVertices[j].x;
-			vertex.position.y = mesh->mVertices[j].y;
-			vertex.position.z = mesh->mVertices[j].z;
-
-			vertex.normal.x = mesh->mNormals[j].x;
-			vertex.normal.y = mesh->mNormals[j].y;
-			vertex.normal.z = mesh->mNormals[j].z;
-
-			if (mesh->HasTextureCoords(0))
-			{
-				vertex.texCoord.x = mesh->mTextureCoords[0][j].x;
-				vertex.texCoord.y = mesh->mTextureCoords[0][j].y;
-			}
-			else
-			{
-				vertex.texCoord = { 0.f ,0.f };
-			}
+			Info.albedo.Image = ImageIDs[data.textures[material.albedoTexture].Image];
+			Info.albedo.Sampler = SamplerIDs[data.textures[material.albedoTexture].Sampler];
+			Info.albedo.TexCoord = material.textureCoords.albedo;
+			Info.useAlb = 1.f;
+		}
+		else
+		{
+			Info.useAlb = 0.f;
+			Info.albedo = { 0,1 };
+		}
+		
+		if(material.metallicRoughnessTexture != UINT32_MAX)
+		{
+			Info.metallicRoughness.Image = ImageIDs[data.textures[material.metallicRoughnessTexture].Image];
+			Info.metallicRoughness.Sampler = SamplerIDs[data.textures[material.metallicRoughnessTexture].Sampler];
+			Info.metallicRoughness.TexCoord = material.textureCoords.metallicRoughness;
+			Info.useMR = 1.f;
+		}
+		else
+		{
+			Info.useMR = 0.f;
+			Info.metallicRoughness = { 0,1 };
 		}
 
-		for (uint32_t k = 0; k < mesh->mNumFaces; k++)
-		{
-			aiFace face = mesh->mFaces[k];
-			for (uint32_t j = 0; j < face.mNumIndices; j++)
-			{
-				m_Indices.push_back(face.mIndices[j]);
-			}
-		}
+		auto [Mat, Id] = AssetManager::Load<Material>(Info);
+		MaterialIDs[i] = Id;
 
+		Materials->push_back(Id);
 	}
 
-	if (m_Vertices.empty() || m_Indices.empty())
+	for (auto& meshes : data.meshes)
 	{
-		std::string s = Filepath;
-		s += " :: Is Empty";
+		for (auto& sb : meshes.submeshes)
+		{
+			auto& submesh = mesh->m_SubMeshes.emplace_back();
 
-		NEXUS_ASSERT(1, s.c_str());
+			submesh.material = MaterialIDs[sb.materialIndex];
+			submesh.vb = StaticBuffer::Create((uint32_t)sb.vertices.size() * sizeof(StaticMeshVertex), BufferType::Vertex, sb.vertices.data());
+			submesh.ib = StaticBuffer::Create((uint32_t)sb.indices.size() * sizeof(uint32_t), BufferType::Index, sb.indices.data());
+		}
 	}
 
-	NEXUS_LOG_TRACE("Mesh Loaded: {0} | vertices-{1} | indices-{2}", Filepath, m_Vertices.size(), m_Indices.size());
-
-	Ref<StaticMesh> sMesh = CreateRef<StaticMesh>();
-
-	sMesh->m_Vb = StaticBuffer::Create((uint32_t)m_Vertices.size() * sizeof(StaticMeshVertex), BufferType::Vertex, m_Vertices.data());
-	sMesh->m_Ib = StaticBuffer::Create((uint32_t)m_Indices.size() * sizeof(uint32_t), BufferType::Index, m_Indices.data());
-
-	Renderer::TransferMeshToGPU(sMesh);
-
-	return sMesh;
+	return mesh;
 }

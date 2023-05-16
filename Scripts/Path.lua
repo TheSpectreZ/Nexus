@@ -26,6 +26,7 @@ IncludeDir["openALsoft"] = (DepDir.."openALsoft/include")
 IncludeDir["mono"] = (VenDir.."Mono/include")
 IncludeDir["joltRoot"] = (DepDir.."Jolt")
 IncludeDir["jolt"] = (DepDir.."Jolt/Jolt")
+IncludeDir["tinygltf"] = (DepDir.."tinygltf")
 IncludeDir["Nexus"] = (SrcDir.."Nexus/src/Nexus")
 
 LibDir = {}

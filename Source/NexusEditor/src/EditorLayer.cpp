@@ -21,7 +21,7 @@ void EditorLayer::OnAttach()
 		m_scissor.Extent = { Extent.width, Extent.height };
 	}
 
-	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/simple.shader");
+	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/pbr.shader");
 	
 	// Pipeline
 	{
@@ -71,11 +71,8 @@ void EditorLayer::OnAttach()
 		m_EditorScene = Nexus::Scene::Create();
 		m_CurrentScene = m_EditorScene;
 
-		Nexus::Entity e1 = m_EditorScene->CreateEntity("Floor");
-		e1.AddComponent<Nexus::Component::BoxCollider>();
-
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		e2.AddComponent<Nexus::Component::Mesh>();
+		//e2.AddComponent<Nexus::Component::Mesh>();
 		e2.AddComponent<Nexus::Component::BoxCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
 		

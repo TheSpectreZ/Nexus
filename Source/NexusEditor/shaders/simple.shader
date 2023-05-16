@@ -31,13 +31,34 @@ void main()
 #version 450 core
 
 layout(location = 1) in vec3 FragNormal;
-layout(location = 2) in vec2 FragTexCoord;
+layout(location = 2) in vec2 FragTexCoord0;
+layout(location = 2) in vec2 FragTexCoord1;
 
 layout(location = 0) out vec4 OutColor;
 
-layout(set = 0, binding = 1) uniform sampler2D albedo;
+layout(set = 2, binding = 0) uniform MaterialBuffer
+{
+	vec4 AlbedoColor;
+	float roughness;
+	float metalness;
+
+	vec2 nul;
+	vec4 nul2;
+	vec4 nul3;
+} m_MaterialBuffer;
+
+layout(set = 2, binding = 1) uniform sampler2D albedo;
+
+const vec3 LightDir = vec3(1.0, 1.0, 1.0);
 
 void main()
 {
-	OutColor = texture(albedo, FragTexCoord);
+	vec3 albedoColor = texture(albedo, FragTexCoord).rgb * m_MaterialBuffer.AlbedoColor.rgb;
+
+	vec3 norm = normalize(FragNormal);
+	vec3 dir = normalize(LightDir);
+
+	float diff = max(dot(norm, dir), 0.0);
+
+	OutColor = vec4(albedoColor * diff, 1.0);
 }

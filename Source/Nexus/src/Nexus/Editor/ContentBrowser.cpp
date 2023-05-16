@@ -1,20 +1,22 @@
 #include "nxpch.h"
 #include "EditorContext.h"
 #include "ContentBrowser.h"
+#include "Assets/AssetManager.h"
+#include "Renderer/Texture.h"
 
 void Nexus::ContentBrowser::Initialize()
 {
-	m_Sampler = Sampler::Create(SamplerFilter::Linear, SamplerFilter::Linear);
+	m_Sampler = Sampler::Create(SamplerFilter::Linear, SamplerFilter::Linear,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat);
 
-	m_FileTexture = Texture::LoadFromFile("Resources/Icons/File.png");
-	m_FolderTexture = Texture::LoadFromFile("Resources/Icons/Folder.png");
-	m_ForwardTexture = Texture::LoadFromFile("Resources/Icons/Forward.png");
-	m_BackwardTexture = Texture::LoadFromFile("Resources/Icons/Back.png");
-
-	m_FileID = EditorContext::s_Instance->MakeTextureID(m_FileTexture, m_Sampler);
-	m_FolderID = EditorContext::s_Instance->MakeTextureID(m_FolderTexture, m_Sampler);
-	m_ForwardID = EditorContext::s_Instance->MakeTextureID(m_ForwardTexture, m_Sampler);
-	m_BackwardID = EditorContext::s_Instance->MakeTextureID(m_BackwardTexture, m_Sampler);
+	auto [File, FileId] = AssetManager::Load<Texture>("Resources/Icons/File.png");
+	auto [Folder, FolderId] = AssetManager::Load<Texture>("Resources/Icons/Folder.png");
+	auto [Forward, ForwardId] = AssetManager::Load<Texture>("Resources/Icons/Forward.png");
+	auto [Backward, BackwardId] = AssetManager::Load<Texture>("Resources/Icons/Back.png");
+	
+	m_FileID = EditorContext::s_Instance->MakeTextureID(File, m_Sampler);
+	m_FolderID = EditorContext::s_Instance->MakeTextureID(Folder, m_Sampler);
+	m_ForwardID = EditorContext::s_Instance->MakeTextureID(Forward, m_Sampler);
+	m_BackwardID = EditorContext::s_Instance->MakeTextureID(Backward, m_Sampler);
 }
 
 void Nexus::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)

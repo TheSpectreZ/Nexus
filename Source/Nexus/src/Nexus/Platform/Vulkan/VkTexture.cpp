@@ -2,6 +2,7 @@
 #include "VkTexture.h"
 #include "VkContext.h"
 #include "VkSwapchain.h"
+#include "VkCommandQueue.h"
 
 Nexus::VulkanTexture::VulkanTexture(const TextureCreateInfo& info)
 	:m_Extent(info.extent)
@@ -83,6 +84,8 @@ Nexus::VulkanTexture::VulkanTexture(const TextureCreateInfo& info)
 		}
 	}
 
+	VulkanCommandQueue::Get()->TransferTextureToGPU(this);
+
 	NEXUS_LOG_INFO("Vulkan Texture Created");
 }
 
@@ -112,15 +115,30 @@ VkFilter GetVulkanSamplerFilter(Nexus::SamplerFilter filter)
 	}
 }
 
-Nexus::VulkanSampler::VulkanSampler(SamplerFilter Near, SamplerFilter Far)
+VkSamplerAddressMode GetVulkanSamplerWrapMode(Nexus::SamplerWrapMode mode)
+{
+	switch (mode)
+	{
+	case Nexus::SamplerWrapMode::Repeat:
+		return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	case Nexus::SamplerWrapMode::Mirrored_Repeat:
+		return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+	case Nexus::SamplerWrapMode::Clamped_To_Edge:
+		return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+	default:
+		return VK_SAMPLER_ADDRESS_MODE_MAX_ENUM;
+	}
+}
+
+Nexus::VulkanSampler::VulkanSampler(SamplerFilter Near, SamplerFilter Far, SamplerWrapMode U, SamplerWrapMode V, SamplerWrapMode W)
 {
 	VkSamplerCreateInfo info{};
 	info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 	info.magFilter = GetVulkanSamplerFilter(Near);
 	info.minFilter = GetVulkanSamplerFilter(Far);
-	info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+	info.addressModeU = GetVulkanSamplerWrapMode(U);
+	info.addressModeV = GetVulkanSamplerWrapMode(V);
+	info.addressModeW = GetVulkanSamplerWrapMode(W);
 	info.anisotropyEnable = VK_TRUE;
 
 	VkPhysicalDeviceProperties Props;

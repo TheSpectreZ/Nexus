@@ -11,22 +11,39 @@ namespace Nexus
 		static void Initialize();
 		static void Shutdown();
 
-		template<typename T>
-		static UUID LoadFromFile(const std::filesystem::path& path);
+		template<typename T,typename... Args>
+		static std::pair<Ref<T>, UUID> Load(Args&&... args)
+		{
+			// Make Sure that Asset Has a Static Create Function
+			Ref<Asset> asset = T::Create(std::forward<Args>(args)...);
+
+			UUID Id = CreateUUID();
+			asset->m_Id = Id;
+			
+			s_Instance->m_Assets[Id] = asset;
+			return { DynamicPointerCast<T>(asset),Id };
+		}
 
 		template<typename T>
-		static T& Get(UUID handle);
+		static Ref<T> Get(UUID handle)
+		{
+			return DynamicPointerCast<T>(s_Instance->m_Assets[handle]);
+		}
 
-		template<typename T>
-		static bool Has(UUID handle);
+		static bool Has(UUID handle)
+		{
+			return s_Instance->m_Assets.contains(handle);
+		}
 
-		template<typename T>
-		static void Remove(UUID handle);
+		static void Remove(UUID handle)
+		{
+			if (s_Instance->m_Assets.find(handle) != s_Instance->m_Assets.end())
+			{
+				s_Instance->m_Assets.erase(handle);
+			}
+		}
 	private:
-		std::unordered_map<std::string, UUID> m_UUIDCache;
-
-		std::unordered_map<UUID, StaticMeshAsset> m_StaticMeshes;
-		std::unordered_map<UUID, TextureAsset> m_Textures;
+		std::unordered_map<UUID, Ref<Asset>> m_Assets;
 	};
 	
 }

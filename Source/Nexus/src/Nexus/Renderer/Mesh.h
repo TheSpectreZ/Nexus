@@ -1,17 +1,22 @@
 #pragma once
+#include "Assets/Asset.h"
 #include "Buffer.h"
 
 namespace Nexus
 {
-	class StaticMesh
+	struct SubMesh
+	{
+		Ref<StaticBuffer> vb, ib;
+		UUID material = NullUUID;
+		bool draw = true;
+	};
+
+	class StaticMesh : public Asset
 	{
 	public:
-		static Ref<StaticMesh> LoadWithAssimp(const char* Filepath);
-
-		Ref<StaticBuffer> GetVertexBuffer() { return m_Vb; }
-		Ref<StaticBuffer> GetIndexBuffer() { return m_Ib; }
+		static Ref<StaticMesh> Create(const std::string& filepath, std::vector<UUID>* MaterialIds);
+		std::vector<SubMesh>& GetSubMeshes() { return m_SubMeshes; }
 	private:
-		Ref<StaticBuffer> m_Vb;
-		Ref<StaticBuffer> m_Ib;
+		std::vector<SubMesh> m_SubMeshes;
 	};
 }

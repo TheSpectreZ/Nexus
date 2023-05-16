@@ -48,7 +48,7 @@ namespace Nexus
 			void SetRotationEuler(const glm::vec3& euler);
 		private:
 			glm::vec3 RotationEuler = { 0.0f, 0.0f, 0.0f };
-			glm::quat Rotation = { 0.0f, 0.0f, 0.0f, 1.0f };
+			glm::quat Rotation = { 1.0f, 0.0f, 0.0f, 0.0f };
 		};
 
 		struct Mesh
@@ -119,6 +119,23 @@ namespace Nexus
 
 			float HalfHeight = 0.5f;
 			float Radius = 0.5f;
+		};
+
+		struct DirectionalLight
+		{
+			DirectionalLight() = default;
+			DirectionalLight(const DirectionalLight&) = default;
+
+			glm::vec3 direction = glm::vec3(1.f);
+			glm::vec3 color = glm::vec3(1.f);
+		};
+
+		struct PointLight
+		{
+			PointLight() = default;
+			PointLight(const PointLight&) = default;
+
+			glm::vec3 color = glm::vec3(1.f);
 		};
 	}
 }

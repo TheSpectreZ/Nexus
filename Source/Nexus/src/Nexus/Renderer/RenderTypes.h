@@ -40,6 +40,17 @@ namespace Nexus
 		Uniform, SampledImage
 	};
 
+	enum class SamplerFilter
+	{
+		Nearest, Linear
+	};
+
+	enum class SamplerWrapMode
+	{
+		Repeat, Mirrored_Repeat, Clamped_To_Edge
+	};
+
+
 	std::string GetShaderStageTypeStringName(ShaderStage stage);
 
 	std::string GetBufferTypeStringName(BufferType Type);

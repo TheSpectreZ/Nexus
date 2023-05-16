@@ -357,27 +357,37 @@ void Nexus::VulkanCommandQueue::Transferdata::Clear()
 	m_Textures.clear();
 }
 
-void Nexus::VulkanCommandQueue::TransferMeshToGPU(Ref<StaticMesh> mesh)
+void Nexus::VulkanCommandQueue::TransferBufferToGPU(VulkanStaticBuffer* buf)
 {
-	m_TransferData.m_StaticBuffer.push_back(DynamicPointerCast<VulkanStaticBuffer>(mesh->GetVertexBuffer()));
-	m_TransferData.m_StaticBuffer.push_back(DynamicPointerCast<VulkanStaticBuffer>(mesh->GetIndexBuffer()));
+	m_TransferData.m_StaticBuffer.push_back(buf);
 }
 
-void Nexus::VulkanCommandQueue::TransferTextureToGPU(Ref<Texture> texture)
+void Nexus::VulkanCommandQueue::TransferTextureToGPU(VulkanTexture* texture)
 {
-	m_TransferData.m_Textures.push_back(DynamicPointerCast<VulkanTexture>(texture));
+	m_TransferData.m_Textures.push_back(texture);
 }
 
-void Nexus::VulkanCommandQueue::DrawMesh(Ref<StaticMesh> mesh)
+void Nexus::VulkanCommandQueue::DrawSubMesh(SubMesh* submesh)
 {
-	Ref<VulkanStaticBuffer> vb = DynamicPointerCast<VulkanStaticBuffer>(mesh->GetVertexBuffer());
-	Ref<VulkanStaticBuffer> ib = DynamicPointerCast<VulkanStaticBuffer>(mesh->GetIndexBuffer());
+	Ref<VulkanStaticBuffer> vb = DynamicPointerCast<VulkanStaticBuffer>(submesh->vb);
+	Ref<VulkanStaticBuffer> ib = DynamicPointerCast<VulkanStaticBuffer>(submesh->ib);
 
 	VkBuffer buf[] = { vb->Get() };
 	VkDeviceSize off[] = { 0 };
 
 	vkCmdBindVertexBuffers(m_RenderCommandBuffer[m_FrameIndex], 0, 1, buf, off);
 	vkCmdBindIndexBuffer(m_RenderCommandBuffer[m_FrameIndex], ib->Get(), 0, VK_INDEX_TYPE_UINT32);
-
 	vkCmdDrawIndexed(m_RenderCommandBuffer[m_FrameIndex], ib->m_size / sizeof(uint32_t), 1, 0, 0, 0);
+}
+
+void Nexus::VulkanCommandQueue::DrawMesh(Ref<StaticMesh> mesh)
+{
+	auto& submeshes = mesh->GetSubMeshes();
+	for (auto& sm : submeshes)
+	{
+		if (!sm.draw)
+			continue;
+	
+		DrawSubMesh(&sm);
+	}
 }

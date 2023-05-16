@@ -5,6 +5,7 @@
 #include "Core/FileDialog.h"
 #include "Assets/AssetManager.h"
 #include "Script/ScriptEngine.h"
+#include "Renderer/Mesh.h"
 
 bool Nexus::ImGuiUtils::DrawVec3Control(const char* label, glm::vec3& vector, float reset , float columnWidth )
 {
@@ -264,6 +265,8 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			DisplayAddComponentEntry<Component::SphereCollider>("SphereCollider", en);
 			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
 			DisplayAddComponentEntry<Component::CapsuleCollider>("CapsuleCollider", en);
+			DisplayAddComponentEntry<Component::DirectionalLight>("DirectionalLight", en);
+			DisplayAddComponentEntry<Component::PointLight>("PointLight", en);
 			ImGui::EndPopup();
 		}
 
@@ -299,7 +302,6 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Mesh>("Mesh", en, [&](auto& component)
 		{
-
 			ImGui::Button("Mesh", { 100.f,50.f });
 			if (ImGui::BeginDragDropTarget())
 			{
@@ -309,10 +311,16 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 					std::filesystem::path s = path;
 
-					if (s.extension().string() == ".fbx" || s.extension().string() == ".obj")
+					if (s.extension().string() == ".gltf" || s.extension().string() == ".glb")
 					{
-						UUID handle = AssetManager::LoadFromFile<StaticMeshAsset>(s);
+						std::vector<UUID> MaterialIds;
+						auto [mesh, handle] = AssetManager::Load<StaticMesh>(s.string(), &MaterialIds);
 						component.handle = handle;
+
+						for (auto& Id : MaterialIds)
+						{
+							m_SceneData->OnMaterialCreation(Id);
+						}
 					}
 				}
 				ImGui::EndDragDropTarget();
@@ -322,10 +330,17 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			if (handle == NullUUID)
 				return;
 			
-			auto& meshAsset = AssetManager::Get<StaticMeshAsset>(handle);
-			ImGui::LabelText("MeshName", meshAsset.Name.c_str());
-			ImGui::LabelText("MeshPath", meshAsset.Path.string().c_str());
-			ImGui::SameLine();
+			auto meshAsset = AssetManager::Get<StaticMesh>(handle);
+			
+			if (ImGui::TreeNode("SubMeshes"))
+			{
+				auto& sm = meshAsset->GetSubMeshes();
+				for (uint32_t i = 0; i < (uint32_t)sm.size(); i++)
+				{
+					ImGui::Checkbox(std::to_string(i).c_str(), &sm[i].draw);
+				}
+				ImGui::TreePop();
+			}
 
 		});
 
@@ -418,5 +433,16 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			ImGui::DragFloat("Top-Radius", &component.TopRadius);
 			ImGui::DragFloat("Bottom-Radius", &component.BottomRadius);
 			ImGui::DragFloat("Half-Height", &component.HalfHeight);
+		});
+
+	DrawComponent<Component::DirectionalLight>("Directional Light", en, [&](auto& component)
+		{
+			ImGuiUtils::DrawVec3Control("Direction", component.direction, 1.f);
+			ImGuiUtils::DrawVec3Control("Color", component.color, 1.f);
+		});
+	
+	DrawComponent<Component::PointLight>("Point Light", en, [&](auto& component)
+		{
+			ImGuiUtils::DrawVec3Control("Color", component.color, 1.f);
 		});
 }
