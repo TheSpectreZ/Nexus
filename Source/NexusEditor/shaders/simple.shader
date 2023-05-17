@@ -3,13 +3,11 @@
 
 layout(location = 0) in vec3 InPos;
 layout(location = 1) in vec3 InNorm;
-layout(location = 2) in vec2 InTexC0;
-layout(location = 3) in vec2 InTexC1;
+layout(location = 2) in vec2 InTexC;
 
 layout(location = 0) out vec3 FragPos;
 layout(location = 1) out vec3 FragNorm;
-layout(location = 2) out vec2 FragTexC0;
-layout(location = 3) out vec2 FragTexC1;
+layout(location = 2) out vec2 FragTexC;
 
 layout(set = 0, binding = 0) uniform SceneBuffer
 {
@@ -28,9 +26,8 @@ void main()
 
 	FragPos = vec3(Pos);
 	FragNorm = mat3(transpose(inverse(u_InstanceBuffer.Transform))) * InNorm;
-	FragTexC0 = InTexC0;
-	FragTexC1 = InTexC1;
-
+	FragTexC = InTexC;
+	
 	gl_Position = u_SceneBuffer.projection * u_SceneBuffer.view * Pos;
 }
 
@@ -43,8 +40,7 @@ const vec3 Fdielectrics = vec3(0.01); // Constant normal Incidence Frensel Facto
 
 layout(location = 0) in vec3 FragPos;
 layout(location = 1) in vec3 FragNorm;
-layout(location = 2) in vec2 FragTexC0;
-layout(location = 3) in vec2 FragTexC1;
+layout(location = 2) in vec2 FragTexC;
 
 layout(location = 0) out vec4 OutColor;
 
@@ -86,10 +82,7 @@ layout(set = 2, binding = 2) uniform sampler2D metallicRoughnessMap;
 vec3 GetMaterialColor()
 {
 	if (m_MaterialBuffer.useAlbedo == 1.0)
-	{
-		vec2 texCoord = (m_MaterialBuffer.albedoTexCoord == 0.0) ? FragTexC0 : FragTexC1;
-		return texture(albedoMap, texCoord).rgb;
-	}
+		return texture(albedoMap, FragTexC).rgb;
 	else
 		return m_MaterialBuffer.AlbedoColor.rgb;
 }
