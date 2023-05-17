@@ -7,9 +7,11 @@ Nexus::Ref<Nexus::Material> Nexus::Material::Create(const MaterialCreateInfo& In
     
     mat->m_AlbedoMap = Info.albedo;
     mat->m_MetallicRoughnessMap = Info.metallicRoughness;
+    mat->m_Normal = Info.normal;
 
     mat->useMR = Info.useMR;
     mat->useAlbedo = Info.useAlb;
+    mat->useNormal = Info.useNormal;
     mat->m_AlbedoColor = Info.albedoColor;
     mat->m_roughness = Info.roughness;
     mat->m_metalness = Info.metalness;

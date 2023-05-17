@@ -16,9 +16,10 @@ namespace Nexus
 	{
 		CombinedImageSampler albedo;
 		CombinedImageSampler metallicRoughness;
+		CombinedImageSampler normal;
 		glm::vec4 albedoColor;
 		float roughness, metalness;
-		float useMR, useAlb;
+		float useMR, useAlb, useNormal;
 	};
 
 	class Material : public Asset
@@ -32,9 +33,11 @@ namespace Nexus
 	private:
 		CombinedImageSampler m_AlbedoMap;
 		CombinedImageSampler m_MetallicRoughnessMap;
+		CombinedImageSampler m_Normal;
 
 		float useAlbedo;
 		float useMR;
+		float useNormal;
 
 		glm::vec4 m_AlbedoColor;
 		float m_metalness;

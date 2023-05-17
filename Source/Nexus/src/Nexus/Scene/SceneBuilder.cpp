@@ -189,7 +189,7 @@ void Nexus::SceneBuildData::OnMaterialCreation(UUID Id)
 
     materialBuffer[0] = material->m_AlbedoColor;
     materialBuffer[1] = { material->m_roughness,material->m_metalness,(float)material->m_AlbedoMap.TexCoord,(float)material->m_MetallicRoughnessMap.TexCoord };
-    materialBuffer[2] = { material->useMR,material->useAlbedo,0.f,0.f };
+    materialBuffer[2] = { material->useMR,material->useAlbedo,material->useNormal,0.f };
 
     shader->SetUniformData(buf, &materialBuffer);
 
@@ -208,6 +208,14 @@ void Nexus::SceneBuildData::OnMaterialCreation(UUID Id)
     handle2.binding = 2;
     
     shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle2);
+    
+    CombinedImageSamplerHandle handle3{};
+    handle3.texture = AssetManager::Get<Texture>(material->m_Normal.Image);
+    handle3.sampler = AssetManager::Get<Sampler>(material->m_Normal.Sampler);
+    handle3.set = 2;
+    handle3.binding = 3;
+    
+    shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle3);
 }
 
 void Nexus::SceneBuildData::OnSceneDestruction()

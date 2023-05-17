@@ -3,13 +3,14 @@
 
 layout(location = 0) in vec3 InPos;
 layout(location = 1) in vec3 InNorm;
-layout(location = 2) in vec2 InTexC0;
-layout(location = 3) in vec2 InTexC1;
+layout(location = 2) in vec3 InTang;
+layout(location = 3) in vec3 InBiTang;
+layout(location = 4) in vec2 InTexC;
 
 layout(location = 0) out vec3 FragPos;
 layout(location = 1) out vec3 FragNorm;
-layout(location = 2) out vec2 FragTexC0;
-layout(location = 3) out vec2 FragTexC1;
+layout(location = 2) out vec2 FragTexC;
+layout(location = 3) out mat3 FragTBN;
 
 layout(set = 0, binding = 0) uniform SceneBuffer
 {
@@ -24,13 +25,17 @@ layout(set = 1, binding = 0) uniform InstanceBuffer
 
 void main()
 {
-	vec4 Pos = u_InstanceBuffer.Transform * vec4(InPos, 1.0);
+	vec3 T = normalize(vec3(u_InstanceBuffer.Transform * vec4(InTang, 0.0)));
+	vec3 B = normalize(vec3(u_InstanceBuffer.Transform * vec4(InBiTang, 0.0)));
+	vec3 N = normalize(vec3(u_InstanceBuffer.Transform * vec4(InNorm, 0.0)));
 
-	FragPos = vec3(Pos);
+	FragTBN = mat3(T, B, N);
+
 	FragNorm = mat3(transpose(inverse(u_InstanceBuffer.Transform))) * InNorm;
-	FragTexC0 = InTexC0;
-	FragTexC1 = InTexC1;
-
+	FragTexC = InTexC;
+	
+	vec4 Pos = u_InstanceBuffer.Transform * vec4(InPos, 1.0);
+	FragPos = vec3(Pos);
 	gl_Position = u_SceneBuffer.projection * u_SceneBuffer.view * Pos;
 }
 
@@ -39,8 +44,8 @@ void main()
 
 layout(location = 0) in vec3 FragPos;
 layout(location = 1) in vec3 FragNorm;
-layout(location = 2) in vec2 FragTexC0;
-layout(location = 3) in vec2 FragTexC1;
+layout(location = 2) in vec2 FragTexC;
+layout(location = 3) in mat3 FragTBN;
 
 layout(location = 0) out vec4 OutColor;
 
@@ -70,22 +75,21 @@ layout(set = 2, binding = 0) uniform MaterialBuffer
 
 	float useMR;
 	float useAlbedo;
+	float useNormal;
 
-	vec2 null1;
+	float null;
 	vec4 null2;
 
 } m_MaterialBuffer;
 
 layout(set = 2, binding = 1) uniform sampler2D albedoMap;
 layout(set = 2, binding = 2) uniform sampler2D metallicRoughnessMap;
+layout(set = 2, binding = 3) uniform sampler2D normalMap;
 
 vec3 GetMaterialColor()
 {
 	if (m_MaterialBuffer.useAlbedo == 1.0)
-	{
-		vec2 texCoord = (m_MaterialBuffer.albedoTexCoord == 0.0) ? FragTexC0 : FragTexC1;
-		return texture(albedoMap, texCoord).rgb;
-	}
+		return texture(albedoMap, FragTexC).rgb;
 	else
 		return m_MaterialBuffer.AlbedoColor.rgb;
 }
@@ -93,12 +97,22 @@ vec3 GetMaterialColor()
 vec2 GetMetallicRoughness()
 {
 	if (m_MaterialBuffer.useMR == 1.0)
-	{
-		vec2 texCoord = (m_MaterialBuffer.mrTexCoord == 0.0) ? FragTexC0 : FragTexC1;
-		return texture(metallicRoughnessMap, texCoord).rg;
-	}
+		return texture(metallicRoughnessMap, FragTexC).rg;
 	else
 		return vec2(m_MaterialBuffer.metalness, m_MaterialBuffer.roughness);
+}
+
+vec3 GetNormal()
+{
+	if (m_MaterialBuffer.useNormal == 1.0)
+	{
+		vec3 normal = texture(normalMap, FragTexC).rgb;
+		normal = normal * 2.0 - 1.0;
+		normal = normalize(FragTBN * normal);
+		return normal;
+	}
+	else
+		return normalize(FragNorm);
 }
 
 const float Gamma = 2.2;
@@ -161,9 +175,9 @@ void main()
 {
 	vec3 albedo = GetMaterialColor();
 	vec2 metallicRoughness = GetMetallicRoughness();
+	vec3 norm = GetNormal();
 
 	vec3 viewDir = normalize(m_sceneBuffer.position - FragPos);
-	vec3 norm = normalize(FragNorm);
 	
 	vec3 F0 = mix(Fdielectric, albedo, metallicRoughness.r);
 

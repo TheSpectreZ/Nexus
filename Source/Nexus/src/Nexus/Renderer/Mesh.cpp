@@ -69,6 +69,19 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::Create(const std::string& filep
 			Info.metallicRoughness = { 0,1 };
 		}
 
+		if (material.normalTexture != UINT32_MAX)
+		{
+			Info.normal.Image = ImageIDs[data.textures[material.normalTexture].Image];
+			Info.normal.Sampler = ImageIDs[data.textures[material.normalTexture].Sampler];
+			Info.normal.TexCoord = material.textureCoords.normal;
+			Info.useNormal = 1.f;
+		}
+		else
+		{
+			Info.useNormal = 0.f;
+			Info.normal = { 0,1 };
+		}
+
 		auto [Mat, Id] = AssetManager::Load<Material>(Info);
 		MaterialIDs[i] = Id;
 
