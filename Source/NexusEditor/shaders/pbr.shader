@@ -102,6 +102,7 @@ vec2 GetMetallicRoughness()
 }
 
 const float Gamma = 2.2;
+const float Exposure = 1.0;
 const float PI = 3.141592;
 const float Epsilon = 0.00001;
 const vec3 Fdielectric = vec3(0.01); // Constant normal Incidence Frensel Factor for all Dielectrics
@@ -194,6 +195,9 @@ void main()
 
 		result += (diffuse + specular) * m_sceneBuffer.SceneLightColor.rgb * max(dot(m_sceneBuffer.SceneLightDirection.rgb, norm), 0.0);
 	}
+
+	// Tone Mapping
+	result = vec3(1.0) - exp(-result * Exposure);
 
 	// Gamma Correction
 	result = pow(result, vec3(1.0 / Gamma));
