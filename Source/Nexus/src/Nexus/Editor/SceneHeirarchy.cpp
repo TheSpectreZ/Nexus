@@ -6,6 +6,7 @@
 #include "Assets/AssetManager.h"
 #include "Script/ScriptEngine.h"
 #include "Renderer/Mesh.h"
+#include "Scene/Material.h"
 
 bool Nexus::ImGuiUtils::DrawVec3Control(const char* label, glm::vec3& vector, float reset , float columnWidth )
 {
@@ -337,7 +338,34 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 				auto& sm = meshAsset->GetSubMeshes();
 				for (uint32_t i = 0; i < (uint32_t)sm.size(); i++)
 				{
-					ImGui::Checkbox(std::to_string(i).c_str(), &sm[i].draw);
+					if (ImGui::TreeNodeEx((void*)i, ImGuiTreeNodeFlags_None,std::to_string(i).c_str()))
+					{
+						auto material = AssetManager::Get<Material>(sm[i].material);
+
+						static bool useAlbedo = material->IsUsingAlbedo();
+						if (ImGui::Checkbox("Use Albedo", &useAlbedo))
+						{
+							material->SetUseAlbedo(useAlbedo);
+						}
+
+						static bool useMR = material->IsUsingMetallicRoughness();
+						if (ImGui::Checkbox("Use MetallicRoughness", &useMR))
+						{
+							material->SetUseMetallicRoughness(useMR);
+						}
+
+						static bool useNormal = material->IsUsingNormal();
+						if (ImGui::Checkbox("Use Normal", &useNormal))
+						{
+							material->SetUseNormal(useNormal);
+						}
+
+						ImGui::SliderFloat("Roughness", &material->GetRoughness(), 0.f, 1.f);
+						ImGui::SliderFloat("Metalness", &material->GetMetalness(), 0.f, 1.f);
+						ImGui::ColorEdit4("Albedo Color", glm::value_ptr(material->GetAlbedoColor()));
+
+						ImGui::TreePop();
+					}
 				}
 				ImGui::TreePop();
 			}
@@ -437,12 +465,12 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::DirectionalLight>("Directional Light", en, [&](auto& component)
 		{
+			ImGui ::ColorEdit3("Color", glm::value_ptr(component.color), ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
 			ImGuiUtils::DrawVec3Control("Direction", component.direction, 1.f);
-			ImGuiUtils::DrawVec3Control("Color", component.color, 1.f);
 		});
 	
 	DrawComponent<Component::PointLight>("Point Light", en, [&](auto& component)
 		{
-			ImGuiUtils::DrawVec3Control("Color", component.color, 1.f);
+			ImGui::ColorEdit3("Color", glm::value_ptr(component.color),ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
 		});
 }

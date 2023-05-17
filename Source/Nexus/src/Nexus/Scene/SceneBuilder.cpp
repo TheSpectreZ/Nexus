@@ -70,9 +70,9 @@ void Nexus::SceneBuildData::Update(Ref<Scene> scene, Camera camera)
     matrixBuffer[1] = camera.view;
     shader->SetUniformData(PerSceneUniform0, &matrixBuffer);
 
-    m_SceneBuffer.camPos = camera.position;
-    
     {
+        m_SceneBuffer.camPos = camera.position;
+        
         Entity entity;
      
         // PointLight
@@ -118,9 +118,23 @@ void Nexus::SceneBuildData::Update(Ref<Scene> scene, Camera camera)
             m_SceneBuffer.lightDir = glm::vec4(0.0);
             m_SceneBuffer.lightCol = glm::vec4(0.0);
         }
+        
+        shader->SetUniformData(PerSceneUniform1, &m_SceneBuffer);
     }
 
-    shader->SetUniformData(PerSceneUniform1, &m_SceneBuffer);
+    // Uniform
+    {
+        for (auto& u : PerMaterialUniform)
+        {
+            auto material = AssetManager::Get<Material>(u.first);
+
+            materialBuffer[0] = material->m_AlbedoColor;
+            materialBuffer[1] = { material->m_roughness,material->m_metalness,(float)material->m_AlbedoMap.TexCoord,(float)material->m_MetallicRoughnessMap.TexCoord };
+            materialBuffer[2] = { material->useMR,material->useAlbedo,material->useNormal,0.f };
+
+            shader->SetUniformData(u.second, &materialBuffer);
+        }
+    }
     
     // Per Entity Transforms
     {
@@ -186,12 +200,6 @@ void Nexus::SceneBuildData::OnMaterialCreation(UUID Id)
 
     PerMaterialUniform[material->GetID()] = buf;
     shader->BindUniformWithResourceHeap(rh, buf);
-
-    materialBuffer[0] = material->m_AlbedoColor;
-    materialBuffer[1] = { material->m_roughness,material->m_metalness,(float)material->m_AlbedoMap.TexCoord,(float)material->m_MetallicRoughnessMap.TexCoord };
-    materialBuffer[2] = { material->useMR,material->useAlbedo,material->useNormal,0.f };
-
-    shader->SetUniformData(buf, &materialBuffer);
 
     CombinedImageSamplerHandle handle1{};
     handle1.texture = AssetManager::Get<Texture>(material->m_AlbedoMap.Image);

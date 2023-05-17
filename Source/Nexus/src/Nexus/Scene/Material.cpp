@@ -18,3 +18,34 @@ Nexus::Ref<Nexus::Material> Nexus::Material::Create(const MaterialCreateInfo& In
 
     return mat;
 }
+
+void Nexus::Material::SetUseAlbedo(bool use)
+{
+    useAlbedo = use ? 1.f : 0.f;
+}
+
+
+void Nexus::Material::SetUseNormal(bool use)
+{
+    useNormal = use ? 1.f : 0.f;
+}
+
+void Nexus::Material::SetUseMetallicRoughness(bool use)
+{
+    useMR = use ? 1.f : 0.f;
+}
+
+void Nexus::Material::SetRoughness(float roughness)
+{
+    m_roughness = roughness;
+}
+
+void Nexus::Material::SetMetalness(float metalness)
+{
+    m_metalness = metalness;
+}
+
+void Nexus::Material::SetAlbedoColor(const glm::vec4 color)
+{
+    m_AlbedoColor = color;
+}

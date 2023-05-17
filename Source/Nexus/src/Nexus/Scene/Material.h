@@ -30,6 +30,22 @@ namespace Nexus
 
 		Material() = default;
 		~Material() override = default;
+
+		bool IsUsingAlbedo() { return (useAlbedo == 1.f); }
+		bool IsUsingMetallicRoughness() { return (useMR == 1.f); }
+		bool IsUsingNormal() { return (useNormal == 1.f); }
+
+		glm::vec4& GetAlbedoColor() { return m_AlbedoColor; }
+		float& GetMetalness() { return m_metalness; }
+		float& GetRoughness() { return m_roughness; }
+
+		void SetUseAlbedo(bool use);
+		void SetUseMetallicRoughness(bool use);
+		void SetUseNormal(bool use);
+
+		void SetAlbedoColor(const glm::vec4 color);
+		void SetMetalness(float metalness);
+		void SetRoughness(float roughness);
 	private:
 		CombinedImageSampler m_AlbedoMap;
 		CombinedImageSampler m_MetallicRoughnessMap;
