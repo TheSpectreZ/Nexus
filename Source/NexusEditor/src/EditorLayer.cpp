@@ -4,6 +4,11 @@ void EditorLayer::OnAttach()
 {
 	NEXUS_LOG_DEBUG("Editor Layer Attached");
 
+	// Default Sandbox Project
+	{
+		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxProject\\SandboxProject.nxProject", m_ProjectSpecs);
+	}
+
 	CreateRenderpassAndFramebuffers();
 
 	// Screen
@@ -29,7 +34,7 @@ void EditorLayer::OnAttach()
 		Info.shader = simpleShader;
 		Info.subpass = 0;
 		Info.renderpass = m_GraphicsPass;
-		Info.multisampled = true;
+		Info.multisampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
 
 		Info.vertexBindInfo = Nexus::StaticMeshVertex::GetBindings();
 		Info.vertexAttribInfo = Nexus::StaticMeshVertex::GetAttributes();
@@ -82,11 +87,6 @@ void EditorLayer::OnAttach()
 		m_PhysicsWorld = Nexus::PhysicsWorld::Create();
 	}
 	
-	// Default Sandbox Project
-	{
-		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxProject\\SandboxProject.nxProject", m_ProjectSpecs);
-	}
-
 	// Editor
 	{
 		Nexus::EditorContext::Initialize(m_ImGuiPass);
@@ -221,8 +221,8 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 		{
 			auto& color = attachments.emplace_back();
 			color.type = Nexus::ImageType::Color;
-			color.multiSampled = true;
-			color.hdr = true;
+			color.multiSampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
+			color.hdr = m_ProjectSpecs.renderSettings.EnableHDR;
 			color.load = Nexus::ImageOperation::Clear;
 			color.store = Nexus::ImageOperation::Store;
 			color.initialLayout = Nexus::ImageLayout::Undefined;
@@ -230,7 +230,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 
 			auto& depth = attachments.emplace_back();
 			depth.type = Nexus::ImageType::Depth;
-			depth.multiSampled = true;
+			depth.multiSampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
 			depth.hdr = false;
 			depth.load = Nexus::ImageOperation::Clear;
 			depth.store = Nexus::ImageOperation::DontCare;
@@ -240,7 +240,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& resolve = attachments.emplace_back();
 			resolve.type = Nexus::ImageType::Resolve;
 			resolve.multiSampled = false;
-			resolve.hdr = true;
+			resolve.hdr = m_ProjectSpecs.renderSettings.EnableHDR;
 			resolve.load = Nexus::ImageOperation::DontCare;
 			resolve.store = Nexus::ImageOperation::Store;
 			resolve.initialLayout = Nexus::ImageLayout::Undefined;
@@ -319,18 +319,18 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 
 		auto& a1 = m_GraphicsFBspecs.attachments.emplace_back();
 		a1.Type = Nexus::FramebufferAttachmentType::Color;
-		a1.multisampled = true;
-		a1.hdr = true;
+		a1.multisampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
+		a1.hdr = m_ProjectSpecs.renderSettings.EnableHDR;
 
 		auto& a2 = m_GraphicsFBspecs.attachments.emplace_back();
 		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
-		a2.multisampled = true;
+		a2.multisampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
 		a2.hdr = false;
 
 		auto& a3 = m_GraphicsFBspecs.attachments.emplace_back();
 		a3.Type = Nexus::FramebufferAttachmentType::ShaderReadOnly_Color;
 		a3.multisampled = false;
-		a3.hdr = true;
+		a3.hdr = m_ProjectSpecs.renderSettings.EnableHDR;
 
 		m_GraphicsFBspecs.extent = extent;
 		m_GraphicsFBspecs.renderpass = m_GraphicsPass;
