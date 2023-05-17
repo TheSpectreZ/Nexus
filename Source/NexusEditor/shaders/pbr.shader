@@ -51,8 +51,8 @@ layout(location = 0) out vec4 OutColor;
 
 struct PointLight
 {
-	vec3 position; float nul1;
-	vec3 color; float nul2;
+	vec3 position; float size;
+	vec3 color; float intensity;
 };
 
 layout(set = 0, binding = 1) uniform sceneBuffer
@@ -188,14 +188,20 @@ void main()
 	for (int i = 0; i < m_sceneBuffer.pointLightCount; i++)
 	{
 		vec3 lightDir = m_sceneBuffer.lights[i].position - FragPos;
-		vec3 halfDir = normalize(lightDir + viewDir);
+		vec3 lightVector = normalize(lightDir);
+
+		vec3 halfDir = normalize(lightVector + viewDir);
 		
 		vec3 Fresnel = Calculate_Fresnel(F0, viewDir, halfDir);
 
 		vec3 diffuse = Calculate_Lambertian_DiffuseComponent(albedo, Fresnel);
-		vec3 specular = Calculate_CookTorrance_SpecularComponent(viewDir, halfDir, lightDir,norm, Fresnel, metallicRoughness.g);
+		vec3 specular = Calculate_CookTorrance_SpecularComponent(viewDir, halfDir, lightVector,norm, Fresnel, metallicRoughness.g);
 
-		result += (diffuse + specular) * m_sceneBuffer.lights[i].color * max(dot(lightDir, norm), 0.0);
+		float attenuation = max(0.0, 1.0 - (length(lightDir) / m_sceneBuffer.lights[i].size));
+
+		vec3 lightColor = m_sceneBuffer.lights[i].color * m_sceneBuffer.lights[i].intensity * attenuation;
+
+		result += (diffuse + specular) * lightColor * max(dot(lightDir, norm), 0.0);
 	}
 
 	// Directional Light

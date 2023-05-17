@@ -48,8 +48,8 @@ namespace Nexus
 
 			struct pointLightBuffer
 			{
-				glm::vec3 pos; float nul1;
-				glm::vec3 col; float nul2;
+				glm::vec3 pos; float size;
+				glm::vec3 col; float intensity;
 			};
 
 			pointLightBuffer pointLights[PointLightLimit];

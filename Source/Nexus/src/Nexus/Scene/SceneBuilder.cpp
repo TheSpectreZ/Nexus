@@ -88,6 +88,8 @@ void Nexus::SceneBuildData::Update(Ref<Scene> scene, Camera camera)
 
             m_SceneBuffer.pointLights[i].pos = tf.Translation;
             m_SceneBuffer.pointLights[i].col = pl.color;
+            m_SceneBuffer.pointLights[i].size = pl.size;
+            m_SceneBuffer.pointLights[i].intensity = pl.intensity;
         }
 
         for (uint32_t i = (uint32_t)pview.size(); i < PointLightLimit; i++)
