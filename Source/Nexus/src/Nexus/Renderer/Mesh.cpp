@@ -12,7 +12,8 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::Create(const std::string& filep
 	Importer::glTF::glTFSceneData data{};
 	std::filesystem::path path = filepath;
 
-	NEXUS_ASSERT((!Importer::glTF::Load(path, &data)), "Failed To Load glTF Static Mesh");
+	bool success = Importer::glTF::Load(path, &data);
+	NEXUS_ASSERT((!success), "Failed To Load glTF Static Mesh");
 	
 	Ref<StaticMesh> mesh = CreateRef<StaticMesh>();
 
