@@ -27,8 +27,9 @@ namespace Nexus
 
 	enum class ShaderStage
 	{
-		Vertex, Fragment
+		Vertex = 0, Fragment = 1
 	};
+	ENUM_FLAG_OPERATORS(ShaderStage)
 	
 	enum class BufferType
 	{

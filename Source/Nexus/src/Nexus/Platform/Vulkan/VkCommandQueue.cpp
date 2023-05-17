@@ -162,14 +162,24 @@ void Nexus::VulkanCommandQueue::FlushRenderQueue()
 	m_RenderSubmitInfo.pWaitSemaphores = &m_ImageAvailableSemaphore[m_FrameIndex];
 	m_RenderSubmitInfo.pSignalSemaphores = &m_RenderFinishedSemaphore[m_FrameIndex];
 
-	vkQueueSubmit(m_RenderQueue, 1, &m_RenderSubmitInfo, m_RenderFences[m_FrameIndex]);
+	{
+		NEXUS_SCOPED_PROFILE("Render Queue");
+
+		vkQueueSubmit(m_RenderQueue, 1, &m_RenderSubmitInfo, m_RenderFences[m_FrameIndex]);
+		vkQueueWaitIdle(m_RenderQueue);
+	}
 
 	m_PresentInfo.pSwapchains = &m_Swapchain;
 	m_PresentInfo.pImageIndices = &m_ImageIndex;
 	m_PresentInfo.pWaitSemaphores = &m_RenderFinishedSemaphore[m_FrameIndex];
 	m_PresentInfo.waitSemaphoreCount = 1;
 
-	_VKR = vkQueuePresentKHR(m_PresentQueue, &m_PresentInfo);
+	{
+		NEXUS_SCOPED_PROFILE("Present Queue");
+
+		_VKR = vkQueuePresentKHR(m_PresentQueue, &m_PresentInfo);
+		vkQueueWaitIdle(m_PresentQueue);
+	}
 
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR || _VKR == VK_SUBOPTIMAL_KHR)
 	{
@@ -189,6 +199,8 @@ void Nexus::VulkanCommandQueue::FlushRenderQueue()
 
 void Nexus::VulkanCommandQueue::FlushTransferQueue()
 {
+	NEXUS_SCOPED_PROFILE("Entire Transfer Queue");
+
 	if (m_TransferData.Empty())
 		return;
 
@@ -287,6 +299,8 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 	m_TransferSubmitInfo.pCommandBuffers = &m_RenderCommandBuffer[m_FrameIndex];
 	_VKR = vkQueueSubmit(m_RenderQueue, 1, &m_TransferSubmitInfo, nullptr);
 	vkQueueWaitIdle(m_RenderQueue);
+
+	m_TransferData.Clear();
 }
 
 void Nexus::VulkanCommandQueue::BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer)

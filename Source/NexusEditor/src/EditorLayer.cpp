@@ -26,12 +26,12 @@ void EditorLayer::OnAttach()
 		m_scissor.Extent = { Extent.width, Extent.height };
 	}
 
-	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/pbr.shader");
+	Nexus::Ref<Nexus::Shader> pbr = Nexus::ShaderLib::Get("shaders/pbr.shader");
 	
 	// Pipeline
 	{
 		Nexus::PipelineCreateInfo Info{};
-		Info.shader = simpleShader;
+		Info.shader = pbr;
 		Info.subpass = 0;
 		Info.renderpass = m_GraphicsPass;
 		Info.multisampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
@@ -77,11 +77,11 @@ void EditorLayer::OnAttach()
 		m_CurrentScene = m_EditorScene;
 
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		//e2.AddComponent<Nexus::Component::Mesh>();
+		e2.AddComponent<Nexus::Component::Mesh>();
 		e2.AddComponent<Nexus::Component::BoxCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
 		
-		m_SceneData = Nexus::SceneBuildData::Build(m_EditorScene, simpleShader);
+		m_SceneData = Nexus::SceneBuildData::Build(m_EditorScene, pbr);
 		m_SceneRenderer.SetContext(m_EditorScene, m_SceneData);
 		
 		m_PhysicsWorld = Nexus::PhysicsWorld::Create();
@@ -147,9 +147,10 @@ void EditorLayer::OnRender()
 		m_SceneHeirarchy.Render();
 		m_ContentBrowser.Render();
 		m_ImGuiEditorViewport.Render();
-
+		
 		RenderEditorMainMenu();
 		RenderEditorWorldControls();
+		RenderProfileStats();
 
 		Nexus::EditorContext::Render();
 		Nexus::Renderer::EndRenderPass();
@@ -352,6 +353,25 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 
 		m_ImGuiFramebuffer = Nexus::Framebuffer::Create(m_ImGuiFBspecs);
 	}
+}
+
+void EditorLayer::RenderProfileStats()
+{
+	ImGui::Begin("Stats");
+
+	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+	for (auto& [k, v] : Nexus::Timer::Profiles)
+	{
+		char buffer[50];
+		strcpy(buffer, k);
+		strcat(buffer, " %.3fms");
+
+		ImGui::Text(buffer, v);
+	}
+	Nexus::Timer::Profiles.clear();
+
+	ImGui::End();
 }
 
 void EditorLayer::RenderEditorMainMenu()

@@ -7,6 +7,8 @@
 #include "Core/UUID.h"
 #include "Core/Application.h"
 
+#include "Profiler/Timer.h"
+
 #include "Assets/Asset.h"
 #include "Assets/AssetManager.h"
 

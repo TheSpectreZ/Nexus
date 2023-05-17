@@ -12,6 +12,7 @@ public:
 private:
 	void CreateRenderpassAndFramebuffers();
 
+	void RenderProfileStats();
 	void RenderEditorMainMenu();
 	void RenderEditorWorldControls();
 private:

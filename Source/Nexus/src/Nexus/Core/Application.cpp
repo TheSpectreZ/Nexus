@@ -115,6 +115,8 @@ void Nexus::Application::Run()
 	glfwShowWindow(m_Window.handle);
 	while (!glfwWindowShouldClose(m_Window.handle))
 	{
+		NEXUS_SCOPED_PROFILE("Application Loop");
+
 		glfwPollEvents();
 
 		// TimeStep
@@ -127,14 +129,19 @@ void Nexus::Application::Run()
 		}
 
 		// Update
-		for (auto& l : m_layerStack)
 		{
-			l->OnUpdate(m_TimeStep);
+			NEXUS_SCOPED_PROFILE("On Update");
+
+			for (auto& l : m_layerStack)
+			{
+				l->OnUpdate(m_TimeStep);
+			}
+			Renderer::FlushTransferCommandQueue();
 		}
-		Renderer::FlushTransferCommandQueue();
-		
 		// Rendering
 		{
+			NEXUS_SCOPED_PROFILE("On Render");
+
 			Renderer::BeginRenderCommandQueue();
 
 			for (auto& l : m_layerStack)
