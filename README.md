@@ -26,3 +26,51 @@ If the repository was cloned non-recursively previously, use `git submodule upda
 If changes are made, or if you want to regenerate project files, rerun the `GenerateProjects.bat` script file found in `Build` folder.
 
 ***
+## Goals
+- Renderer
+  - [x] Vulkan Backend
+  - [x] Shader and Descriptor Management
+  - [x] Scene System
+  - [x] glTF Mesh Loading with Materials
+  - [x] PBR with Point and Directional Lights
+  - [ ] Image based Lighting
+  - [ ] Shadows  
+  - [ ] Bloom
+  - [ ] Frustrum Culling
+  - [ ] Rendering Billboards
+  - [ ] Text Rendering
+  - [ ] Instanced Rendering
+  - [ ] External Materials
+  - [ ] Animation
+  - [ ] Terrain Generation
+  - [ ] Water Rendering
+- Physics
+  - [x] Jolt Physics Backend
+  - [x] Simple Collider and RigidBody
+  - [ ] More Colliders Types
+  - [ ] Debug Renderer to Visualize Colliders
+  - [ ] Physics Materials
+  - [ ] Height-Fields
+- Scripting
+  - [x] Mono Backend
+  - [x] Scriptclass and Instances
+  - [x] Calling C# from C++ and Vice-Versa
+  - [x] Fields and Properties
+  - [ ] Serialzing Field Data
+  - [ ] Seperating App and Core DLLs
+  - [ ] Reloading Assembly With Filewatcher
+  - [ ] Debugging Scripts
+- Editor
+  - [x] ImGui Backend
+  - [x] Scene Heirarchy and Properties
+  - [x] Content Browser
+  - [x] Editor Viewport
+  - [ ] Editor Console/Log
+  - [ ] Material Asset Creator
+  - [ ] Launcher
+- Misc
+  - [x] Profile Timer
+  - [ ] Custom Asset Formats
+  - [ ] Multi-Threading Support
+  - [ ] Instrumentation
+  - [ ] Runtime
