@@ -16,6 +16,8 @@ Nexus::Ref<Nexus::Material> Nexus::Material::Create(const MaterialCreateInfo& In
     mat->m_roughness = Info.roughness;
     mat->m_metalness = Info.metalness;
 
+    mat->m_Id = CreateUUID();
+
     return mat;
 }
 

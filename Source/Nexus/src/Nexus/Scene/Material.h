@@ -7,8 +7,8 @@ namespace Nexus
 { 
 	struct CombinedImageSampler
 	{
-		UUID Image;
-		UUID Sampler;
+		UUID Image = 0;
+		UUID Sampler = 1;
 		uint8_t TexCoord;
 	};
 
@@ -51,12 +51,12 @@ namespace Nexus
 		CombinedImageSampler m_MetallicRoughnessMap;
 		CombinedImageSampler m_Normal;
 
-		float useAlbedo;
-		float useMR;
-		float useNormal;
+		float useAlbedo = 0.f;
+		float useMR = 0.f;
+		float useNormal = 0.f;
 
-		glm::vec4 m_AlbedoColor;
-		float m_metalness;
-		float m_roughness;
+		glm::vec4 m_AlbedoColor = glm::vec4(1.f);
+		float m_metalness = 0.5f;
+		float m_roughness = 0.5f;
 	};
 }
