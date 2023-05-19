@@ -46,6 +46,39 @@ Nexus::SamplerWrapMode GetWrapMode(int32_t mode)
 
 #define FIND_VALUE_BY_NAME(data,name) data.values.find(name) != data.values.end()
 
+void CalculateTangentAndBiTangent(Nexus::StaticMeshVertex& v0, Nexus::StaticMeshVertex& v1, Nexus::StaticMeshVertex& v2, bool foundTangent, bool foundBiTangent)
+{
+	glm::vec3 deltaPos1 = v1.position - v0.position;
+	glm::vec3 deltaPos2 = v2.position - v0.position;
+
+	glm::vec2 deltaUV1 = v1.texCoord - v0.texCoord;
+	glm::vec2 deltaUV2 = v2.texCoord - v0.texCoord;
+
+	glm::vec3 tangent{}, bitangent{};
+
+	float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+	if (!foundTangent)
+	{
+		tangent.x = f * (deltaUV2.y * deltaPos1.x - deltaUV1.y * deltaPos2.x);
+		tangent.y = f * (deltaUV2.y * deltaPos1.y - deltaUV1.y * deltaPos2.y);
+		tangent.z = f * (deltaUV2.y * deltaPos1.z - deltaUV1.y * deltaPos2.z);
+		tangent = glm::normalize(tangent);
+
+		v0.tangent = tangent; v1.tangent = tangent; v2.tangent = tangent;
+	}
+
+	if (!foundBiTangent)
+	{
+		bitangent.x = f * (-deltaUV2.x * deltaPos1.x + deltaUV1.x * deltaPos2.x);
+		bitangent.y = f * (-deltaUV2.x * deltaPos1.y + deltaUV1.x * deltaPos2.y);
+		bitangent.z = f * (-deltaUV2.x * deltaPos1.z + deltaUV1.x * deltaPos2.z);
+		bitangent = glm::normalize(bitangent);
+
+		v0.bitangent = bitangent; v1.bitangent = bitangent; v2.bitangent = bitangent;
+	}
+}
+
 bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFSceneData* data)
 {
 	tinygltf::Model scene;
@@ -67,7 +100,7 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 		}
 
 		bool success = glbFile ? Importer.LoadBinaryFromFile(&scene, &error, &warning, Filepath.string()) : Importer.LoadASCIIFromFile(&scene, &error, &warning, Filepath.string());
-
+		
 		if (!warning.empty())
 		{
 			NEXUS_LOG_ERROR("AssetImporter::glTF Warning - {0}", warning);
@@ -158,6 +191,11 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 		}
 	}
 
+	if (scene.materials.empty())
+	{
+		auto& mat = data->materials.emplace_back();
+	}
+
 	// Mesh
 	{
 		for (auto& mesh : scene.meshes)
@@ -168,14 +206,22 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 			{
 				auto& submesh = myMesh.submeshes.emplace_back();
 				
-				submesh.materialIndex = primitive.material;
+				if (scene.materials.empty())
+					submesh.materialIndex = 0;
+				else
+					submesh.materialIndex = primitive.material;
+
+				bool foundTangent = false;
+				bool foundBiTangent = false;
 
 				// Vertices
 				{
 					const float* positionBuffer = nullptr;
 					const float* normalBuffer = nullptr;
-					const float* texCoord0Buffer = nullptr;
-					const float* texCoord1Buffer = nullptr;
+					const float* texCoordBuffer = nullptr;
+					const float* tangentBuffer = nullptr;
+					const float* bitangentBuffer = nullptr;
+
 					size_t vertexCount = 0;
 
 					auto p = primitive.attributes.find("POSITION");
@@ -196,20 +242,28 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 						normalBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
 					}
 
-					auto t0 = primitive.attributes.find("TEXCOORD_0");
-					if (t0 != primitive.attributes.end())
+					auto t = primitive.attributes.find("TEXCOORD_0");
+					if (t != primitive.attributes.end())
 					{
-						auto& accessor = scene.accessors[t0->second];
+						auto& accessor = scene.accessors[t->second];
 						auto& view = scene.bufferViews[accessor.bufferView];
-						texCoord0Buffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+						texCoordBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
 					}
 
-					auto t1 = primitive.attributes.find("TEXCOORD_1");
-					if (t1 != primitive.attributes.end())
+					auto a = primitive.attributes.find("TANGENT");
+					if (a != primitive.attributes.end())
 					{
-						auto& accessor = scene.accessors[t1->second];
+						auto& accessor = scene.accessors[a->second];
 						auto& view = scene.bufferViews[accessor.bufferView];
-						texCoord1Buffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+						tangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+					}
+					
+					auto b = primitive.attributes.find("BITANGENT");
+					if (b != primitive.attributes.end())
+					{
+						auto& accessor = scene.accessors[b->second];
+						auto& view = scene.bufferViews[accessor.bufferView];
+						bitangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
 					}
 
 					submesh.vertices.resize(vertexCount);
@@ -224,15 +278,16 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 						else
 							vertex.normal = glm::vec3(0.f);
 
-						if (texCoord0Buffer)
-							vertex.texCoord0 = glm::make_vec2(&texCoord0Buffer[i * 2]);
+						if (texCoordBuffer)
+							vertex.texCoord = glm::make_vec2(&texCoordBuffer[i * 2]);
 						else
-							vertex.texCoord0 = glm::vec2(0.f);
+							vertex.texCoord = glm::vec2(0.f);
 
-						if (texCoord1Buffer)
-							vertex.texCoord1 = glm::make_vec2(&texCoord1Buffer[i * 2]);
-						else
-							vertex.texCoord1 = glm::vec2(0.f);
+						if (tangentBuffer)
+							vertex.tangent = glm::make_vec3(&tangentBuffer[i * 3]);
+						
+						if (bitangentBuffer)
+							vertex.bitangent = glm::make_vec3(&bitangentBuffer[i * 3]);
 					}
 				}
 
@@ -242,30 +297,66 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 					auto& view = scene.bufferViews[accessor.bufferView];
 					auto& buffer = scene.buffers[view.buffer];
 
+					uint32_t* indexbuffer = nullptr;
 					uint32_t indexCount = (uint32_t)accessor.count;
 
 					if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
 					{
 						const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t index = 0; index < accessor.count; index++)
+						for (size_t index = 0; index < accessor.count; index += 3)
 						{
-							submesh.indices.push_back(buf[index]);
+							int a = buf[index];
+							int b = buf[index + 1];
+							int c = buf[index + 2];
+
+							submesh.indices.push_back(a);
+							submesh.indices.push_back(b);
+							submesh.indices.push_back(c);
+
+							if (!foundTangent || !foundBiTangent)
+							{
+								CalculateTangentAndBiTangent(submesh.vertices[a], submesh.vertices[b], submesh.vertices[c], foundTangent, foundBiTangent);
+							}
 						}
 					}
 					else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT)
 					{
 						const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t index = 0; index < accessor.count; index++)
+						for (size_t index = 0; index < accessor.count; index += 3)
 						{
-							submesh.indices.push_back(buf[index]);
+							int a = buf[index];
+							int b = buf[index + 1];
+							int c = buf[index + 2];
+
+							submesh.indices.push_back(a);
+							submesh.indices.push_back(b);
+							submesh.indices.push_back(c);
+
+
+							if (!foundTangent || !foundBiTangent)
+							{
+								CalculateTangentAndBiTangent(submesh.vertices[a], submesh.vertices[b], submesh.vertices[c], foundTangent, foundBiTangent);
+							}
 						}
 					}
 					else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE)
 					{
 						const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-						for (size_t index = 0; index < accessor.count; index++)
+						for (size_t index = 0; index < accessor.count; index += 3)
 						{
-							submesh.indices.push_back(buf[index]);
+							int a = buf[index];
+							int b = buf[index + 1];
+							int c = buf[index + 2];
+
+							submesh.indices.push_back(a);
+							submesh.indices.push_back(b);
+							submesh.indices.push_back(c);
+
+
+							if (!foundTangent || !foundBiTangent)
+							{
+								CalculateTangentAndBiTangent(submesh.vertices[a], submesh.vertices[b], submesh.vertices[c], foundTangent, foundBiTangent);
+							}
 						}
 					}
 					else

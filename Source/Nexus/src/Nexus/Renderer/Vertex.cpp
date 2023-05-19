@@ -14,7 +14,7 @@ std::vector<Nexus::VertexBindInfo> Nexus::StaticMeshVertex::GetBindings()
 
 std::vector<Nexus::VertexAttribInfo> Nexus::StaticMeshVertex::GetAttributes()
 {
-	std::vector<Nexus::VertexAttribInfo> Info(4);
+	std::vector<Nexus::VertexAttribInfo> Info(5);
 
 	Info[0].binding = 0;
 	Info[0].location = 0;
@@ -29,12 +29,17 @@ std::vector<Nexus::VertexAttribInfo> Nexus::StaticMeshVertex::GetAttributes()
 	Info[2].binding = 0;
 	Info[2].location = 2;
 	Info[2].offset = sizeof(glm::vec3) * 2;
-	Info[2].format = VertexAttribInfo::ATTRIB_FORMAT_VEC2;
+	Info[2].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
 	
 	Info[3].binding = 0;
 	Info[3].location = 3;
-	Info[3].offset = sizeof(glm::vec3) * 2 + sizeof(glm::vec2);
-	Info[3].format = VertexAttribInfo::ATTRIB_FORMAT_VEC2;
+	Info[3].offset = sizeof(glm::vec3) * 3;
+	Info[3].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
+	
+	Info[4].binding = 0;
+	Info[4].location = 4;
+	Info[4].offset = sizeof(glm::vec3) * 4;
+	Info[4].format = VertexAttribInfo::ATTRIB_FORMAT_VEC2;
 
 	return Info;
 }

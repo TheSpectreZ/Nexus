@@ -13,7 +13,8 @@ namespace Nexus
 	{
 		friend class SceneRenderer;
 	public:
-		static Ref<SceneBuildData> Build(Ref<Scene> scene, Ref<Shader> shader);
+		static Ref<SceneBuildData> Create(Ref<Scene> scene, Ref<Shader> shader);
+		void Build(Ref<Scene> scene, Ref<Shader> shader);
 		void Update(Ref<Scene> scene, Camera camera);
 		void Destroy();
 	
@@ -48,8 +49,9 @@ namespace Nexus
 
 			struct pointLightBuffer
 			{
-				glm::vec3 pos; float nul1;
-				glm::vec3 col; float nul2;
+				glm::vec3 pos; float size;
+				glm::vec3 col; float intensity;
+				glm::vec3 null; float faloff;
 			};
 
 			pointLightBuffer pointLights[PointLightLimit];

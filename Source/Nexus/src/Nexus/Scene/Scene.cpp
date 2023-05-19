@@ -14,6 +14,7 @@ void Nexus::Scene::Clear()
 		});
 	
 	m_registry.clear();
+	m_EntityMap.clear();
 	NEXUS_LOG_TRACE("Scene Cleared");
 }
 

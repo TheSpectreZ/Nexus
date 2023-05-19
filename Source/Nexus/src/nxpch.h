@@ -5,11 +5,13 @@
 #include "Nexus/Core/Assert.h"
 #include "Nexus/Core/UUID.h"
 
+#include "Nexus/Profiler/Timer.h"
+
 #include <vector>
 #include <unordered_map>
 #include <set>
 #include <bitset>
-
+#include <chrono>
 #include <string>
 #include <sstream>
 #include <fstream>

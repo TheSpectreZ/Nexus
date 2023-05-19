@@ -189,6 +189,8 @@ void Nexus::VulkanCommandQueue::FlushRenderQueue()
 
 void Nexus::VulkanCommandQueue::FlushTransferQueue()
 {
+	NEXUS_SCOPED_PROFILE("Entire Transfer Queue");
+
 	if (m_TransferData.Empty())
 		return;
 
@@ -287,6 +289,8 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 	m_TransferSubmitInfo.pCommandBuffers = &m_RenderCommandBuffer[m_FrameIndex];
 	_VKR = vkQueueSubmit(m_RenderQueue, 1, &m_TransferSubmitInfo, nullptr);
 	vkQueueWaitIdle(m_RenderQueue);
+
+	m_TransferData.Clear();
 }
 
 void Nexus::VulkanCommandQueue::BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer)

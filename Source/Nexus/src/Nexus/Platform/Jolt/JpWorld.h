@@ -20,8 +20,8 @@ namespace Nexus
 		void OnSceneUpdate(float dt) override;
 		void OnSceneStop() override;
 
-		void SetGravity(const glm::vec3& gravity) override;
 	private:
+		void SetGravityImpl(const glm::vec3& gravity) override;
 		void CreateBodyWithEntity(Entity e);
 
 		JPH::PhysicsSystem* m_PhysicsSystem;

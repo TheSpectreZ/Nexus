@@ -72,7 +72,7 @@ void Nexus::JoltPhysicsWorld::OnSceneStop()
 	m_BodyInterface->DestroyBodies(m_Bodies.data(), (int)m_Bodies.size());
 }
 
-void Nexus::JoltPhysicsWorld::SetGravity(const glm::vec3& gravity)
+void Nexus::JoltPhysicsWorld::SetGravityImpl(const glm::vec3& gravity)
 {
 	m_PhysicsSystem->SetGravity(JoltUtils::ToJoltVector3(gravity));
 }

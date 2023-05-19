@@ -1,11 +1,13 @@
 #include "nxpch.h"
 #include "EditorContext.h"
 #include "EditorViewport.h"
+#include "Assets/AssetManager.h"
 #include "Renderer/Renderer.h"
 
 void Nexus::EditorViewport::Initialize()
 {
-	m_Sampler = Sampler::Create(SamplerFilter::Linear, SamplerFilter::Linear,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat);
+	auto[s,Id] = AssetManager::Load<Sampler>(SamplerFilter::Linear, SamplerFilter::Linear,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat,SamplerWrapMode::Repeat);
+	m_Sampler = s;
 	m_TextureIDs.resize(Renderer::GetSwapchain()->GetImageCount());
 }
 

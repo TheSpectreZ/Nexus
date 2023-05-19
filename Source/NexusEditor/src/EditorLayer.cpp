@@ -4,6 +4,11 @@ void EditorLayer::OnAttach()
 {
 	NEXUS_LOG_DEBUG("Editor Layer Attached");
 
+	// Default Sandbox Project
+	{
+		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxProject\\SandboxProject.nxProject", m_ProjectSpecs);
+	}
+
 	CreateRenderpassAndFramebuffers();
 
 	// Screen
@@ -21,15 +26,15 @@ void EditorLayer::OnAttach()
 		m_scissor.Extent = { Extent.width, Extent.height };
 	}
 
-	Nexus::Ref<Nexus::Shader> simpleShader = Nexus::ShaderLib::Get("shaders/pbr.shader");
+	Nexus::Ref<Nexus::Shader> pbr = Nexus::ShaderLib::Get("shaders/pbr.shader");
 	
 	// Pipeline
 	{
 		Nexus::PipelineCreateInfo Info{};
-		Info.shader = simpleShader;
+		Info.shader = pbr;
 		Info.subpass = 0;
 		Info.renderpass = m_GraphicsPass;
-		Info.multisampled = true;
+		Info.multisampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
 
 		Info.vertexBindInfo = Nexus::StaticMeshVertex::GetBindings();
 		Info.vertexAttribInfo = Nexus::StaticMeshVertex::GetAttributes();
@@ -72,21 +77,16 @@ void EditorLayer::OnAttach()
 		m_CurrentScene = m_EditorScene;
 
 		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		//e2.AddComponent<Nexus::Component::Mesh>();
+		e2.AddComponent<Nexus::Component::Mesh>();
 		e2.AddComponent<Nexus::Component::BoxCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
 		
-		m_SceneData = Nexus::SceneBuildData::Build(m_EditorScene, simpleShader);
+		m_SceneData = Nexus::SceneBuildData::Create(m_EditorScene, pbr);
 		m_SceneRenderer.SetContext(m_EditorScene, m_SceneData);
 		
 		m_PhysicsWorld = Nexus::PhysicsWorld::Create();
 	}
 	
-	// Default Sandbox Project
-	{
-		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxProject\\SandboxProject.nxProject", m_ProjectSpecs);
-	}
-
 	// Editor
 	{
 		Nexus::EditorContext::Initialize(m_ImGuiPass);
@@ -147,9 +147,10 @@ void EditorLayer::OnRender()
 		m_SceneHeirarchy.Render();
 		m_ContentBrowser.Render();
 		m_ImGuiEditorViewport.Render();
-
+		
 		RenderEditorMainMenu();
 		RenderEditorWorldControls();
+		RenderProfileStats();
 
 		Nexus::EditorContext::Render();
 		Nexus::Renderer::EndRenderPass();
@@ -221,7 +222,8 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 		{
 			auto& color = attachments.emplace_back();
 			color.type = Nexus::ImageType::Color;
-			color.multiSampled = true;
+			color.multiSampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
+			color.hdr = m_ProjectSpecs.renderSettings.EnableHDR;
 			color.load = Nexus::ImageOperation::Clear;
 			color.store = Nexus::ImageOperation::Store;
 			color.initialLayout = Nexus::ImageLayout::Undefined;
@@ -229,7 +231,8 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 
 			auto& depth = attachments.emplace_back();
 			depth.type = Nexus::ImageType::Depth;
-			depth.multiSampled = true;
+			depth.multiSampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
+			depth.hdr = false;
 			depth.load = Nexus::ImageOperation::Clear;
 			depth.store = Nexus::ImageOperation::DontCare;
 			depth.initialLayout = Nexus::ImageLayout::Undefined;
@@ -238,6 +241,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& resolve = attachments.emplace_back();
 			resolve.type = Nexus::ImageType::Resolve;
 			resolve.multiSampled = false;
+			resolve.hdr = m_ProjectSpecs.renderSettings.EnableHDR;
 			resolve.load = Nexus::ImageOperation::DontCare;
 			resolve.store = Nexus::ImageOperation::Store;
 			resolve.initialLayout = Nexus::ImageLayout::Undefined;
@@ -257,10 +261,10 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& dep = subpassDependencies.emplace_back();
 			dep.srcSubpass = Nexus::SubpassDependency::ExternalSubpass;
 			dep.dstSubpass = 0;
-			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
-			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput | Nexus::PipelineStageFlag::EarlyFragmentTest;
+			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput | Nexus::PipelineStageFlag::EarlyFragmentTest;
 			dep.srcAccessFlags = Nexus::AccessFlag::None;
-			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite;
+			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite | Nexus::AccessFlag::DepthStencilAttachmentWrite;
 		}
 
 		Nexus::RenderpassSpecification specs{};
@@ -278,6 +282,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& color = attachments.emplace_back();
 			color.type = Nexus::ImageType::Color;
 			color.multiSampled = false;
+			color.hdr = false;
 			color.load = Nexus::ImageOperation::Clear;
 			color.store = Nexus::ImageOperation::Store;
 			color.initialLayout = Nexus::ImageLayout::Undefined;
@@ -315,15 +320,18 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 
 		auto& a1 = m_GraphicsFBspecs.attachments.emplace_back();
 		a1.Type = Nexus::FramebufferAttachmentType::Color;
-		a1.multisampled = true;
+		a1.multisampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
+		a1.hdr = m_ProjectSpecs.renderSettings.EnableHDR;
 
 		auto& a2 = m_GraphicsFBspecs.attachments.emplace_back();
 		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
-		a2.multisampled = true;
+		a2.multisampled = m_ProjectSpecs.renderSettings.EnableMultiSampling;
+		a2.hdr = false;
 
 		auto& a3 = m_GraphicsFBspecs.attachments.emplace_back();
 		a3.Type = Nexus::FramebufferAttachmentType::ShaderReadOnly_Color;
 		a3.multisampled = false;
+		a3.hdr = m_ProjectSpecs.renderSettings.EnableHDR;
 
 		m_GraphicsFBspecs.extent = extent;
 		m_GraphicsFBspecs.renderpass = m_GraphicsPass;
@@ -338,6 +346,7 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 		auto& a1 = m_ImGuiFBspecs.attachments.emplace_back();
 		a1.Type = Nexus::FramebufferAttachmentType::PresentSrc;
 		a1.multisampled = false;
+		a1.hdr = false;
 
 		m_ImGuiFBspecs.extent = extent;
 		m_ImGuiFBspecs.renderpass = m_ImGuiPass;
@@ -346,15 +355,76 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 	}
 }
 
+void EditorLayer::RenderProfileStats()
+{
+	ImGui::Begin("Stats");
+
+	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+	for (auto& [k, v] : Nexus::Timer::Profiles)
+	{
+		char buffer[50];
+		strcpy(buffer, k);
+		strcat(buffer, " %.3fms");
+
+		ImGui::Text(buffer, v);
+	}
+	Nexus::Timer::Profiles.clear();
+
+	ImGui::End();
+}
+
 void EditorLayer::RenderEditorMainMenu()
 {
 	ImGui::BeginMainMenuBar();
 	
 	if(ImGui::BeginMenu("File"))
 	{
-		ImGui::MenuItem("New Scene");
-		ImGui::MenuItem("Open Scene");
-		ImGui::MenuItem("Save Scene");
+		if (ImGui::MenuItem("New Scene"))
+		{
+			m_EditorScene->Clear();
+			m_SceneData->Destroy();
+		}
+		
+		if (ImGui::MenuItem("Open Scene"))
+		{
+			std::string path = Nexus::FileDialog::OpenFile("Nexus Scene (*.nxScene)\0*.nxScene\0");
+			if (!path.empty())
+			{
+				std::filesystem::path s = path;
+
+				if (s.extension().string() == ".nxScene")
+				{
+					m_EditorScene->Clear();
+					Nexus::SceneSerializer::Deserialize(m_EditorScene.get(), m_PhysicsWorld.get(), path);
+					m_SceneData->Build(m_EditorScene, Nexus::ShaderLib::Get("shaders/pbr.shader"));
+					NEXUS_LOG_WARN("Scene Deserialized: {0}", path);
+				}
+				else
+				{
+					NEXUS_LOG_ERROR("Scene DeSerialization Failed: Invalid FIle {0}", path);
+				}
+			}
+		}
+
+		if (ImGui::MenuItem("Save Scene"))
+		{
+			std::string path = Nexus::FileDialog::SaveFile("Nexus Scene (*.nxScene)\0*.nxScene\0");
+			if (!path.empty())
+			{
+				std::filesystem::path s = path;
+
+				if(s.extension().string() == ".nxScene")
+				{
+					Nexus::SceneSerializer::Serialize(m_EditorScene, m_PhysicsWorld, path);
+					NEXUS_LOG_WARN("Scene Serialized: {0}", path);
+				}
+				else
+				{
+					NEXUS_LOG_ERROR("Scene Serialization Failed: Invalid FIleType {0}", path);
+				}
+			}
+		}
 		
 		ImGui::EndMenu();
 	}

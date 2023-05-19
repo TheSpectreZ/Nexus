@@ -13,6 +13,7 @@ namespace Nexus
 	{
 		FramebufferAttachmentType Type;
 		bool multisampled;
+		bool hdr;
 	};
 
 	struct FramebufferSpecification

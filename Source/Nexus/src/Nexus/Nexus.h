@@ -6,6 +6,9 @@
 #include "Core/Input.h"
 #include "Core/UUID.h"
 #include "Core/Application.h"
+#include "Core/FileDialog.h"
+
+#include "Profiler/Timer.h"
 
 #include "Assets/Asset.h"
 #include "Assets/AssetManager.h"
@@ -27,6 +30,7 @@
 #include "Scene/Scene.h"
 #include "Scene/SceneBuilder.h"
 #include "Scene/SceneRenderer.h"
+#include "Scene/SceneSerializer.h"
 
 #include "Script/ScriptEngine.h"
 

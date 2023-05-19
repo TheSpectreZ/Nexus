@@ -12,6 +12,7 @@ public:
 private:
 	void CreateRenderpassAndFramebuffers();
 
+	void RenderProfileStats();
 	void RenderEditorMainMenu();
 	void RenderEditorWorldControls();
 private:
@@ -43,7 +44,6 @@ private:
 	Nexus::Ref<Nexus::PhysicsWorld> m_PhysicsWorld;
 
 	Nexus::SceneRenderer m_SceneRenderer;
-
 
 	Nexus::Viewport m_viewport;
 	Nexus::Scissor m_scissor;

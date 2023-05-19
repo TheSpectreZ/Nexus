@@ -6,6 +6,7 @@
 #include "Assets/AssetManager.h"
 #include "Script/ScriptEngine.h"
 #include "Renderer/Mesh.h"
+#include "Scene/Material.h"
 
 bool Nexus::ImGuiUtils::DrawVec3Control(const char* label, glm::vec3& vector, float reset , float columnWidth )
 {
@@ -238,7 +239,9 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 {
 	Entity en(e, m_Scene.get());
 
+	if (en.HasComponent<Component::Tag>())
 	{
+
 		auto& Tag = en.GetComponent<Component::Tag>();
 
 		char buffer[256];
@@ -302,7 +305,9 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Mesh>("Mesh", en, [&](auto& component)
 		{
-			ImGui::Button("Mesh", { 100.f,50.f });
+			if (ImGui::Button("Load Mesh", { 100.f,50.f }))
+				ImGui::OpenPopup("DefaultMeshes");
+
 			if (ImGui::BeginDragDropTarget())
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
@@ -325,21 +330,75 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 				}
 				ImGui::EndDragDropTarget();
 			}
-			
-			UUID handle = component.handle;
-			if (handle == NullUUID)
-				return;
-			
-			auto meshAsset = AssetManager::Get<StaticMesh>(handle);
-			
-			if (ImGui::TreeNode("SubMeshes"))
+
+			if (ImGui::BeginPopup("DefaultMeshes"))
 			{
-				auto& sm = meshAsset->GetSubMeshes();
-				for (uint32_t i = 0; i < (uint32_t)sm.size(); i++)
+				if (ImGui::MenuItem("Cube"))
 				{
-					ImGui::Checkbox(std::to_string(i).c_str(), &sm[i].draw);
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/cube.gltf", &MaterialIds);
+					component.handle = handle;
+					
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
 				}
-				ImGui::TreePop();
+				
+				if (ImGui::MenuItem("Sphere"))
+				{
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/sphere.gltf", &MaterialIds);
+					component.handle = handle;
+					
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("IcoSphere"))
+				{
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/IcoSphere.gltf", &MaterialIds);
+					component.handle = handle;
+
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Cylinder"))
+				{
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/cylinder.gltf", &MaterialIds);
+					component.handle = handle;
+
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Torus"))
+				{
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/torus.gltf", &MaterialIds);
+					component.handle = handle;
+
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::EndPopup();
 			}
 
 		});
@@ -437,12 +496,15 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::DirectionalLight>("Directional Light", en, [&](auto& component)
 		{
+			ImGui::ColorEdit3("Color", glm::value_ptr(component.color), ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
 			ImGuiUtils::DrawVec3Control("Direction", component.direction, 1.f);
-			ImGuiUtils::DrawVec3Control("Color", component.color, 1.f);
 		});
 	
 	DrawComponent<Component::PointLight>("Point Light", en, [&](auto& component)
 		{
-			ImGuiUtils::DrawVec3Control("Color", component.color, 1.f);
+			ImGui::ColorEdit3("Color", glm::value_ptr(component.color),ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
+			ImGui::DragFloat("Size", &component.size, 0.1f, 0.1f);
+			ImGui::DragFloat("Intensity", &component.intensity, 0.1f, 0.1f);
+			ImGui::DragFloat("Falloff", &component.falloff, 0.1f, 0.1f);
 		});
 }

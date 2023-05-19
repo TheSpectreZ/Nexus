@@ -12,6 +12,14 @@ bool Nexus::ProjectSerializer::Serialize(const ProjectSpecifications& specs)
     out << YAML::Key << "Name" << YAML::Value << specs.Name;
     out << YAML::Key << "Rootpath" << YAML::Value << specs.RootPath;
 
+    out << YAML::Key << "Render Settings";
+    out << YAML::BeginMap;
+    out << YAML::Key << "Enable MultiSampling" << YAML::Value << specs.renderSettings.EnableMultiSampling;
+    out << YAML::Key << "Enable HDR" << YAML::Value << specs.renderSettings.EnableHDR;
+    out << YAML::EndMap;
+
+    out << YAML::EndMap;
+
     std::string filepath = specs.RootPath + "\\" + specs.Name + ".nxProject";
 
     if (!std::filesystem::is_directory(specs.RootPath))
@@ -40,6 +48,14 @@ bool Nexus::ProjectSerializer::DeSerialize(const std::string& path, ProjectSpeci
     specs.Version = data["Project"].as<std::string>();
     specs.Name = data["Name"].as<std::string>();
     specs.RootPath = data["Rootpath"].as<std::string>();
+
+    auto renderSettings = data["Render Settings"];
+
+    if (!renderSettings)
+        return false;
+
+    specs.renderSettings.EnableMultiSampling = renderSettings["Enable MultiSampling"].as<bool>();
+    specs.renderSettings.EnableHDR = renderSettings["Enable HDR"].as<bool>();
 
     return true;
 }
