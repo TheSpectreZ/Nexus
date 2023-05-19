@@ -239,7 +239,9 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 {
 	Entity en(e, m_Scene.get());
 
+	if (en.HasComponent<Component::Tag>())
 	{
+
 		auto& Tag = en.GetComponent<Component::Tag>();
 
 		char buffer[256];
@@ -303,7 +305,9 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Mesh>("Mesh", en, [&](auto& component)
 		{
-			ImGui::Button("Mesh", { 100.f,50.f });
+			if (ImGui::Button("Load Mesh", { 100.f,50.f }))
+				ImGui::OpenPopup("DefaultMeshes");
+
 			if (ImGui::BeginDragDropTarget())
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
@@ -326,48 +330,75 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 				}
 				ImGui::EndDragDropTarget();
 			}
-			
-			UUID handle = component.handle;
-			if (handle == NullUUID)
-				return;
-			
-			auto meshAsset = AssetManager::Get<StaticMesh>(handle);
-			
-			if (ImGui::TreeNode("SubMeshes"))
+
+			if (ImGui::BeginPopup("DefaultMeshes"))
 			{
-				auto& sm = meshAsset->GetSubMeshes();
-				for (uint32_t i = 0; i < (uint32_t)sm.size(); i++)
+				if (ImGui::MenuItem("Cube"))
 				{
-					if (ImGui::TreeNodeEx((void*)i, ImGuiTreeNodeFlags_None,std::to_string(i).c_str()))
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/cube.gltf", &MaterialIds);
+					component.handle = handle;
+					
+					for (auto& Id : MaterialIds)
 					{
-						auto material = AssetManager::Get<Material>(sm[i].material);
-
-						static bool useAlbedo = material->IsUsingAlbedo();
-						if (ImGui::Checkbox("Use Albedo", &useAlbedo))
-						{
-							material->SetUseAlbedo(useAlbedo);
-						}
-
-						static bool useMR = material->IsUsingMetallicRoughness();
-						if (ImGui::Checkbox("Use MetallicRoughness", &useMR))
-						{
-							material->SetUseMetallicRoughness(useMR);
-						}
-
-						static bool useNormal = material->IsUsingNormal();
-						if (ImGui::Checkbox("Use Normal", &useNormal))
-						{
-							material->SetUseNormal(useNormal);
-						}
-
-						ImGui::SliderFloat("Roughness", &material->GetRoughness(), 0.f, 1.f);
-						ImGui::SliderFloat("Metalness", &material->GetMetalness(), 0.f, 1.f);
-						ImGui::ColorEdit4("Albedo Color", glm::value_ptr(material->GetAlbedoColor()));
-
-						ImGui::TreePop();
+						m_SceneData->OnMaterialCreation(Id);
 					}
+					ImGui::CloseCurrentPopup();
 				}
-				ImGui::TreePop();
+				
+				if (ImGui::MenuItem("Sphere"))
+				{
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/sphere.gltf", &MaterialIds);
+					component.handle = handle;
+					
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("IcoSphere"))
+				{
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/IcoSphere.gltf", &MaterialIds);
+					component.handle = handle;
+
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Cylinder"))
+				{
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/cylinder.gltf", &MaterialIds);
+					component.handle = handle;
+
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Torus"))
+				{
+					std::vector<UUID> MaterialIds;
+					auto [mesh, handle] = AssetManager::Load<StaticMesh>("Resources/Meshes/torus.gltf", &MaterialIds);
+					component.handle = handle;
+
+					for (auto& Id : MaterialIds)
+					{
+						m_SceneData->OnMaterialCreation(Id);
+					}
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::EndPopup();
 			}
 
 		});
@@ -465,7 +496,7 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::DirectionalLight>("Directional Light", en, [&](auto& component)
 		{
-			ImGui ::ColorEdit3("Color", glm::value_ptr(component.color), ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
+			ImGui::ColorEdit3("Color", glm::value_ptr(component.color), ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
 			ImGuiUtils::DrawVec3Control("Direction", component.direction, 1.f);
 		});
 	
