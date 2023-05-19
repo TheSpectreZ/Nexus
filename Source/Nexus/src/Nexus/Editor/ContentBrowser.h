@@ -21,8 +21,6 @@ namespace Nexus
 		void DrawDirectoryFilesTopBar();
 
 		ImTextureID m_FileID, m_FolderID, m_ForwardID, m_BackwardID;
-
-		Ref<Sampler> m_Sampler;
 	};
 }
 
