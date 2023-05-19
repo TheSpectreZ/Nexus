@@ -100,7 +100,7 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 		}
 
 		bool success = glbFile ? Importer.LoadBinaryFromFile(&scene, &error, &warning, Filepath.string()) : Importer.LoadASCIIFromFile(&scene, &error, &warning, Filepath.string());
-
+		
 		if (!warning.empty())
 		{
 			NEXUS_LOG_ERROR("AssetImporter::glTF Warning - {0}", warning);
@@ -191,6 +191,11 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 		}
 	}
 
+	if (scene.materials.empty())
+	{
+		auto& mat = data->materials.emplace_back();
+	}
+
 	// Mesh
 	{
 		for (auto& mesh : scene.meshes)
@@ -201,7 +206,10 @@ bool Nexus::Importer::glTF::Load(const std::filesystem::path& Filepath, glTFScen
 			{
 				auto& submesh = myMesh.submeshes.emplace_back();
 				
-				submesh.materialIndex = primitive.material;
+				if (scene.materials.empty())
+					submesh.materialIndex = 0;
+				else
+					submesh.materialIndex = primitive.material;
 
 				bool foundTangent = false;
 				bool foundBiTangent = false;
