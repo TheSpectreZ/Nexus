@@ -2,33 +2,105 @@
 #include "SceneBuilder.h"
 #include "Entity.h"
 #include "Material.h"
+#include "Renderer/Mesh.h"
 #include "Assets/AssetManager.h"
 
-Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene, Ref<Shader> shader)
+Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Create(Ref<Scene> scene, Ref<Shader> shader)
 {
-    Ref<SceneBuildData> data = CreateRef<SceneBuildData>();
-    data->shader = shader;
+    auto ref = CreateRef<SceneBuildData>();
+    ref->Build(scene, shader);
+    return ref;
+}
+
+void Nexus::SceneBuildData::Build(Ref<Scene> scene, Ref<Shader> shader)
+{
+    this->shader = shader;
 
     // Per Scene
     {
-        data->PerSceneHeap.hashId = CreateUUID();
-        data->PerSceneHeap.set = 0;
+        PerSceneHeap.hashId = CreateUUID();
+        PerSceneHeap.set = 0;
 
-        shader->AllocateShaderResourceHeap(data->PerSceneHeap);
+        shader->AllocateShaderResourceHeap(PerSceneHeap);
 
-        data->PerSceneUniform0.hashId = CreateUUID();
-        data->PerSceneUniform0.set = 0;
-        data->PerSceneUniform0.binding = 0;
+        PerSceneUniform0.hashId = CreateUUID();
+        PerSceneUniform0.set = 0;
+        PerSceneUniform0.binding = 0;
 
-        shader->AllocateUniformBuffer(data->PerSceneUniform0);
-        shader->BindUniformWithResourceHeap(data->PerSceneHeap, data->PerSceneUniform0);
+        shader->AllocateUniformBuffer(PerSceneUniform0);
+        shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0);
 
-        data->PerSceneUniform1.hashId = CreateUUID();
-        data->PerSceneUniform1.set = 0;
-        data->PerSceneUniform1.binding = 1;
+        PerSceneUniform1.hashId = CreateUUID();
+        PerSceneUniform1.set = 0;
+        PerSceneUniform1.binding = 1;
         
-        shader->AllocateUniformBuffer(data->PerSceneUniform1);
-        shader->BindUniformWithResourceHeap(data->PerSceneHeap, data->PerSceneUniform1);
+        shader->AllocateUniformBuffer(PerSceneUniform1);
+        shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform1);
+    }
+
+    // Per Material Heaps
+    {
+        Entity entity;
+        auto view = scene->GetAllEntitiesWith<Component::Mesh>();
+        for (auto& e : view)
+        {
+            entity = { e,scene.get() };
+
+            auto& mesh = entity.GetComponent<Component::Mesh>();
+            
+            if (mesh.handle == NullUUID)
+                continue;
+        
+            auto MeshAsset = AssetManager::Get<StaticMesh>(mesh.handle);
+            auto& submeshes = MeshAsset->GetSubMeshes();
+            for (auto& s : submeshes)
+            {
+                Ref<Material> material = AssetManager::Get<Material>(s.material);
+
+                if (PerMaterialHeap.contains(material->GetID()))
+                    continue;
+
+                ResourceHeapHandle rh{};
+                rh.hashId = CreateUUID();
+                rh.set = 2;
+                shader->AllocateShaderResourceHeap(rh);
+
+                PerMaterialHeap[material->GetID()] = rh;
+
+                UniformBufferHandle buf{};
+                buf.hashId = CreateUUID();
+                buf.set = 2;
+                buf.binding = 0;
+                shader->AllocateUniformBuffer(buf);
+
+                PerMaterialUniform[material->GetID()] = buf;
+                shader->BindUniformWithResourceHeap(rh, buf);
+
+                CombinedImageSamplerHandle handle1{};
+                handle1.texture = AssetManager::Get<Texture>(material->m_AlbedoMap.Image);
+                handle1.sampler = AssetManager::Get<Sampler>(material->m_AlbedoMap.Sampler);
+                handle1.set = 2;
+                handle1.binding = 1;
+
+                shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle1);
+
+                CombinedImageSamplerHandle handle2{};
+                handle2.texture = AssetManager::Get<Texture>(material->m_MetallicRoughnessMap.Image);
+                handle2.sampler = AssetManager::Get<Sampler>(material->m_MetallicRoughnessMap.Sampler);
+                handle2.set = 2;
+                handle2.binding = 2;
+
+                shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle2);
+
+                CombinedImageSamplerHandle handle3{};
+                handle3.texture = AssetManager::Get<Texture>(material->m_Normal.Image);
+                handle3.sampler = AssetManager::Get<Sampler>(material->m_Normal.Sampler);
+                handle3.set = 2;
+                handle3.binding = 3;
+
+                shader->BindTextureWithResourceHeap(PerMaterialHeap[material->GetID()], handle3);
+            }
+        }
     }
 
     // Per Entity Heaps
@@ -45,7 +117,7 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
             heapHandle.set = 1;
 
             shader->AllocateShaderResourceHeap(heapHandle);
-            data->PerEntityHeap[Identity.uuid] = heapHandle;
+            PerEntityHeap[Identity.uuid] = heapHandle;
 
             UniformBufferHandle uniformHandle{};
             uniformHandle.hashId = CreateUUID();
@@ -53,14 +125,12 @@ Nexus::Ref<Nexus::SceneBuildData> Nexus::SceneBuildData::Build(Ref<Scene> scene,
             uniformHandle.binding = 0;
             
             shader->AllocateUniformBuffer(uniformHandle);
-            data->PerEntityUniform[Identity.uuid] = uniformHandle;
+            PerEntityUniform[Identity.uuid] = uniformHandle;
 
             shader->BindUniformWithResourceHeap(heapHandle, uniformHandle);
         }
     }
     NEXUS_LOG_WARN("Scene Data Built");
-
-    return data;
 }
 
 void Nexus::SceneBuildData::Update(Ref<Scene> scene, Camera camera)

@@ -13,7 +13,8 @@ namespace Nexus
 	{
 		friend class SceneRenderer;
 	public:
-		static Ref<SceneBuildData> Build(Ref<Scene> scene, Ref<Shader> shader);
+		static Ref<SceneBuildData> Create(Ref<Scene> scene, Ref<Shader> shader);
+		void Build(Ref<Scene> scene, Ref<Shader> shader);
 		void Update(Ref<Scene> scene, Camera camera);
 		void Destroy();
 	
