@@ -45,7 +45,6 @@ private:
 
 	Nexus::SceneRenderer m_SceneRenderer;
 
-
 	Nexus::Viewport m_viewport;
 	Nexus::Scissor m_scissor;
 

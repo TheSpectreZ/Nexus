@@ -81,7 +81,7 @@ void EditorLayer::OnAttach()
 		e2.AddComponent<Nexus::Component::BoxCollider>();
 		e2.AddComponent<Nexus::Component::RigidBody>();
 		
-		m_SceneData = Nexus::SceneBuildData::Build(m_EditorScene, pbr);
+		m_SceneData = Nexus::SceneBuildData::Create(m_EditorScene, pbr);
 		m_SceneRenderer.SetContext(m_EditorScene, m_SceneData);
 		
 		m_PhysicsWorld = Nexus::PhysicsWorld::Create();
@@ -380,9 +380,51 @@ void EditorLayer::RenderEditorMainMenu()
 	
 	if(ImGui::BeginMenu("File"))
 	{
-		ImGui::MenuItem("New Scene");
-		ImGui::MenuItem("Open Scene");
-		ImGui::MenuItem("Save Scene");
+		if (ImGui::MenuItem("New Scene"))
+		{
+			m_EditorScene->Clear();
+			m_SceneData->Destroy();
+		}
+		
+		if (ImGui::MenuItem("Open Scene"))
+		{
+			std::string path = Nexus::FileDialog::OpenFile("Nexus Scene (*.nxScene)\0*.nxScene\0");
+			if (!path.empty())
+			{
+				std::filesystem::path s = path;
+
+				if (s.extension().string() == ".nxScene")
+				{
+					m_EditorScene->Clear();
+					Nexus::SceneSerializer::Deserialize(m_EditorScene.get(), m_PhysicsWorld.get(), path);
+					m_SceneData->Build(m_EditorScene, Nexus::ShaderLib::Get("shaders/pbr.shader"));
+					NEXUS_LOG_WARN("Scene Deserialized: {0}", path);
+				}
+				else
+				{
+					NEXUS_LOG_ERROR("Scene DeSerialization Failed: Invalid FIle {0}", path);
+				}
+			}
+		}
+
+		if (ImGui::MenuItem("Save Scene"))
+		{
+			std::string path = Nexus::FileDialog::SaveFile("Nexus Scene (*.nxScene)\0*.nxScene\0");
+			if (!path.empty())
+			{
+				std::filesystem::path s = path;
+
+				if(s.extension().string() == ".nxScene")
+				{
+					Nexus::SceneSerializer::Serialize(m_EditorScene, m_PhysicsWorld, path);
+					NEXUS_LOG_WARN("Scene Serialized: {0}", path);
+				}
+				else
+				{
+					NEXUS_LOG_ERROR("Scene Serialization Failed: Invalid FIleType {0}", path);
+				}
+			}
+		}
 		
 		ImGui::EndMenu();
 	}
