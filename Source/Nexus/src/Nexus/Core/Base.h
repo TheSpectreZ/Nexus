@@ -15,6 +15,12 @@
 namespace Nexus
 {
 	template<typename T>
+	bool IsFlagSet(T flag, T value)
+	{
+		return (flag & value) == value;
+	}
+
+	template<typename T>
 	using Ref = std::shared_ptr<T>;
 
 	template<typename T>
