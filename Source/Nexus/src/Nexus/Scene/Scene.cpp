@@ -26,6 +26,8 @@ Nexus::Ref<Nexus::Scene> Nexus::Scene::Create()
 	return scene;
 }
 
+#define COPY_ENTITY_COMPONENT(en,newEn,Name) if(en.HasComponent<Name>()) newEn.AddComponent<Name>(en.GetComponent<Name>())
+
 Nexus::Ref<Nexus::Scene> Nexus::Scene::Duplicate()
 {
 	Ref<Scene> newScene = CreateRef<Scene>();
@@ -43,25 +45,15 @@ Nexus::Ref<Nexus::Scene> Nexus::Scene::Duplicate()
 		newEntity.AddComponent<Component::Tag>(entity.GetComponent<Component::Tag>());
 		newEntity.AddComponent<Component::Transform>(entity.GetComponent<Component::Transform>());
 
-		if (entity.HasComponent<Component::Mesh>())
-		{
-			newEntity.AddComponent<Component::Mesh>(entity.GetComponent<Component::Mesh>());
-		}
-
-		if (entity.HasComponent<Component::Script>())
-		{
-			newEntity.AddComponent<Component::Script>(entity.GetComponent<Component::Script>());
-		}
-
-		if (entity.HasComponent<Component::BoxCollider>())
-		{
-			newEntity.AddComponent<Component::BoxCollider>(entity.GetComponent<Component::BoxCollider>());
-		}
-
-		if (entity.HasComponent<Component::RigidBody>())
-		{
-			newEntity.AddComponent<Component::RigidBody>(entity.GetComponent<Component::RigidBody>());
-		}
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::Mesh);
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::Script);
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::BoxCollider);
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::SphereCollider);
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::CapsuleCollider);
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::CylinderCollider);
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::RigidBody);
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::DirectionalLight);
+		COPY_ENTITY_COMPONENT(entity, newEntity, Component::PointLight);
 	}
 	return newScene;
 }
@@ -99,6 +91,7 @@ Nexus::Entity Nexus::Scene::CreateEntity(const std::string& name, UUID uuid)
 
 void Nexus::Scene::DestroyEntity(Entity entity)
 {
+	m_EntityMap.erase(entity.GetComponent<Component::Identity>().uuid);
 	m_registry.destroy(entity);
 }
 
@@ -112,25 +105,15 @@ Nexus::Entity Nexus::Scene::DuplicateEntity(Entity entity)
 	newEntity.AddComponent<Component::Tag>(entity.GetComponent<Component::Tag>());
 	newEntity.AddComponent<Component::Transform>(entity.GetComponent<Component::Transform>());
 
-	if (entity.HasComponent<Component::Mesh>())
-	{
-		newEntity.AddComponent<Component::Mesh>(entity.GetComponent<Component::Mesh>());
-	}
-	
-	if (entity.HasComponent<Component::Script>())
-	{
-		newEntity.AddComponent<Component::Script>(entity.GetComponent<Component::Script>());
-	}
-	
-	if (entity.HasComponent<Component::BoxCollider>())
-	{
-		newEntity.AddComponent<Component::BoxCollider>(entity.GetComponent<Component::BoxCollider>());
-	}
-	
-	if (entity.HasComponent<Component::RigidBody>())
-	{
-		newEntity.AddComponent<Component::RigidBody>(entity.GetComponent<Component::RigidBody>());
-	}
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::Mesh);
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::Script);
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::BoxCollider);
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::SphereCollider);
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::CapsuleCollider);
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::CylinderCollider);
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::RigidBody);
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::DirectionalLight);
+	COPY_ENTITY_COMPONENT(entity, newEntity, Component::PointLight);
 
 	return newEntity;
 }
