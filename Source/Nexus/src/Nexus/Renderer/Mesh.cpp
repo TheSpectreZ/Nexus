@@ -4,18 +4,28 @@
 #include "Texture.h"
 #include "Scene/Material.h"
 
-#include "Assets/Importer/glTFImporter.h"
 #include "Assets/AssetManager.h"
+
+std::unordered_map<std::string, Nexus::UUID> Nexus::StaticMesh::s_LoadedMeshes;
 
 Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::Create(const std::string& filepath, std::vector<UUID>* Materials)
 {
+	if (s_LoadedMeshes.contains(filepath))
+	{
+		return AssetManager::Get<StaticMesh>(s_LoadedMeshes[filepath]);
+	}
+
 	Importer::glTF::glTFSceneData data{};
 	std::filesystem::path path = filepath;
 
 	bool success = Importer::glTF::Load(path, &data);
 	NEXUS_ASSERT((!success), "Failed To Load glTF Static Mesh");
-	
+
 	Ref<StaticMesh> mesh = CreateRef<StaticMesh>();
+	mesh->m_Id = CreateUUID();
+	mesh->m_Path = filepath;
+
+	s_LoadedMeshes[filepath] = mesh->m_Id;
 
 	std::unordered_map<uint32_t, UUID> ImageIDs;
 	for (uint32_t i = 0; i < (uint32_t)data.images.size(); i++)
@@ -86,7 +96,8 @@ Nexus::Ref<Nexus::StaticMesh> Nexus::StaticMesh::Create(const std::string& filep
 		auto [Mat, Id] = AssetManager::Load<Material>(Info);
 		MaterialIDs[i] = Id;
 
-		Materials->push_back(Id);
+		if (Materials)
+			Materials->push_back(Id);
 	}
 
 	for (auto& meshes : data.meshes)
