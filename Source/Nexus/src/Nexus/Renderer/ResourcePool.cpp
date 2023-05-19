@@ -24,6 +24,7 @@ void Nexus::ResourcePool::AllocateUniformBuffer(uint64_t hashId,uint32_t size)
 		m_UniformBuffers.insert(std::move(nh));
 
 		NEXUS_LOG_TRACE("Vulkan Uniform Buffer Allocated: {0}|{1}", size, hashId);
+		return;
 	}
 
 	m_UniformBuffers[hashId] = UniformBuffer::Create(size);
