@@ -137,6 +137,7 @@ namespace Nexus
 
 			glm::vec3 color = glm::vec3(1.f);
 			float size = 0.1f; float intensity = 1.f;
+			float falloff = 1.f;
 		};
 	}
 }

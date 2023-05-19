@@ -51,6 +51,7 @@ namespace Nexus
 			{
 				glm::vec3 pos; float size;
 				glm::vec3 col; float intensity;
+				glm::vec3 null; float faloff;
 			};
 
 			pointLightBuffer pointLights[PointLightLimit];

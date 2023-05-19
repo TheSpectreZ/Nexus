@@ -505,5 +505,6 @@ void Nexus::SceneHeirarchy::DrawComponents(entt::entity e)
 			ImGui::ColorEdit3("Color", glm::value_ptr(component.color),ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
 			ImGui::DragFloat("Size", &component.size, 0.1f, 0.1f);
 			ImGui::DragFloat("Intensity", &component.intensity, 0.1f, 0.1f);
+			ImGui::DragFloat("Falloff", &component.falloff, 0.1f, 0.1f);
 		});
 }
