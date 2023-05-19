@@ -99,7 +99,7 @@ Nexus::Entity Nexus::Scene::DuplicateEntity(Entity entity)
 {
 	Entity newEntity = { m_registry.create(),this };
 
-	auto& i = newEntity.AddComponent<Component::Identity>(entity.GetComponent<Component::Identity>());
+	auto& i = newEntity.AddComponent<Component::Identity>();
 	m_EntityMap[i.uuid] = newEntity;
 
 	newEntity.AddComponent<Component::Tag>(entity.GetComponent<Component::Tag>());
