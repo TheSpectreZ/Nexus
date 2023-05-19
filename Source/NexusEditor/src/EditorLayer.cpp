@@ -261,10 +261,10 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 			auto& dep = subpassDependencies.emplace_back();
 			dep.srcSubpass = Nexus::SubpassDependency::ExternalSubpass;
 			dep.dstSubpass = 0;
-			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
-			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput;
+			dep.srcStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput | Nexus::PipelineStageFlag::EarlyFragmentTest;
+			dep.dstStageFlags = Nexus::PipelineStageFlag::ColorAttachmentOutput | Nexus::PipelineStageFlag::EarlyFragmentTest;
 			dep.srcAccessFlags = Nexus::AccessFlag::None;
-			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite;
+			dep.dstAccessFlags = Nexus::AccessFlag::ColorAttachmentWrite | Nexus::AccessFlag::DepthStencilAttachmentWrite;
 		}
 
 		Nexus::RenderpassSpecification specs{};

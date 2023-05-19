@@ -40,17 +40,36 @@ namespace Nexus
 
 	enum class PipelineStageFlag
 	{
-		TopOfPipe,BottomOfPipe,VertexInput,VertexShader,
-		FragmentShader,EarlyFragmentTest,LateFragmentTest,
-		ColorAttachmentOutput,TransferBit,ComputeBit,
+		None = 0,
+		TopOfPipe = 1,
+		BottomOfPipe = 2,
+		VertexInput = 4,
+		VertexShader = 8,
+		FragmentShader = 16,
+		EarlyFragmentTest = 32,
+		LateFragmentTest = 64,
+		ColorAttachmentOutput = 128,
+		TransferBit = 256,
+		ComputeBit = 512,
 	};
+	ENUM_FLAG_OPERATORS(PipelineStageFlag)
 
 	enum class AccessFlag
 	{
-		None,IndexRead,UniformRead,InputAttachmentRead,ShaderRead,ShaderWrite,
-		ColorAttachmentRead,ColorAttachmentWrite,DepthStencilAttachmentRead,DepthStencilAttachmentWrite,
-		TransferRead,TransferWrite,
+		None = 0,
+		IndexRead = 1,
+		UniformRead = 2,
+		InputAttachmentRead = 4,
+		ShaderRead = 8,
+		ShaderWrite = 16,
+		ColorAttachmentRead = 32,
+		ColorAttachmentWrite = 64,
+		DepthStencilAttachmentRead = 128,
+		DepthStencilAttachmentWrite = 256,
+		TransferRead = 512,
+		TransferWrite = 1024,
 	};
+	ENUM_FLAG_OPERATORS(AccessFlag)
 
 	struct SubpassDependency
 	{

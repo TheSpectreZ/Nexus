@@ -56,66 +56,66 @@ static VkImageLayout GetVulkanImageLayout(Nexus::ImageLayout layout)
 	}
 }
 
-static VkPipelineStageFlagBits GetVulkanPipelineStageFlag(Nexus::PipelineStageFlag flag)
+static VkPipelineStageFlags GetVulkanPipelineStageFlag(Nexus::PipelineStageFlag flag)
 {
-	switch (flag)
-	{
-	case Nexus::PipelineStageFlag::TopOfPipe:
-		return VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-	case Nexus::PipelineStageFlag::BottomOfPipe:
-		return VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-	case Nexus::PipelineStageFlag::VertexInput:
-		return VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
-	case Nexus::PipelineStageFlag::VertexShader:
-		return VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
-	case Nexus::PipelineStageFlag::FragmentShader:
-		return VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-	case Nexus::PipelineStageFlag::EarlyFragmentTest:
-		return VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-	case Nexus::PipelineStageFlag::LateFragmentTest:
-		return VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-	case Nexus::PipelineStageFlag::ColorAttachmentOutput:
-		return VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	case Nexus::PipelineStageFlag::TransferBit:
-		return VK_PIPELINE_STAGE_TRANSFER_BIT;
-	case Nexus::PipelineStageFlag::ComputeBit:
-		return VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
-	default:
-		return VK_PIPELINE_STAGE_FLAG_BITS_MAX_ENUM;
-	}
+	VkPipelineStageFlags output = 0;
+
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::TopOfPipe))
+		output |= VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::BottomOfPipe))
+		output |= VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::VertexInput))
+		output |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::VertexShader))
+		output |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::FragmentShader))
+		output |= VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::EarlyFragmentTest))
+		output |= VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::LateFragmentTest))
+		output |= VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::ColorAttachmentOutput))
+		output |= VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::TransferBit))
+		output |= VK_PIPELINE_STAGE_TRANSFER_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::ComputeBit))
+		output |= VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::PipelineStageFlag::None))
+		output |= VK_PIPELINE_STAGE_NONE;
+
+	return output;
 }
 
-static VkAccessFlagBits GetVulkanAccessFlags(Nexus::AccessFlag flag)
+static VkAccessFlags GetVulkanAccessFlags(Nexus::AccessFlag flag)
 {
-	switch (flag)
-	{
-	case Nexus::AccessFlag::None:
-		return VK_ACCESS_NONE;
-	case Nexus::AccessFlag::IndexRead:
-		return VK_ACCESS_INDEX_READ_BIT;
-	case Nexus::AccessFlag::UniformRead:
-		return VK_ACCESS_UNIFORM_READ_BIT;
-	case Nexus::AccessFlag::InputAttachmentRead:
-		return VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
-	case Nexus::AccessFlag::ShaderRead:
-		return VK_ACCESS_SHADER_READ_BIT;
-	case Nexus::AccessFlag::ShaderWrite:
-		return VK_ACCESS_SHADER_WRITE_BIT;
-	case Nexus::AccessFlag::ColorAttachmentRead:
-		return VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
-	case Nexus::AccessFlag::ColorAttachmentWrite:
-		return VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-	case Nexus::AccessFlag::DepthStencilAttachmentRead:
-		return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
-	case Nexus::AccessFlag::DepthStencilAttachmentWrite:
-		return VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-	case Nexus::AccessFlag::TransferRead:
-		return VK_ACCESS_TRANSFER_READ_BIT;
-	case Nexus::AccessFlag::TransferWrite:
-		return VK_ACCESS_TRANSFER_WRITE_BIT;
-	default:
-		return VK_ACCESS_FLAG_BITS_MAX_ENUM;
-	}
+	VkAccessFlags output = 0;
+
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::IndexRead))
+		output |= VK_ACCESS_INDEX_READ_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::UniformRead))
+		output |= VK_ACCESS_UNIFORM_READ_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::InputAttachmentRead))
+		output |= VK_ACCESS_INDEX_READ_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::ShaderRead))
+		output |= VK_ACCESS_SHADER_READ_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::ShaderWrite))
+		output |= VK_ACCESS_SHADER_WRITE_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::ColorAttachmentRead))
+		output |= VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::ColorAttachmentWrite))
+		output |= VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::DepthStencilAttachmentRead))
+		output |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::DepthStencilAttachmentWrite))
+		output |= VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::TransferRead))
+		output |= VK_ACCESS_TRANSFER_READ_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::TransferWrite))
+		output |= VK_ACCESS_TRANSFER_WRITE_BIT;
+	if (Nexus::IsFlagSet(flag, Nexus::AccessFlag::None))
+		output |= VK_ACCESS_NONE;
+
+	return output;
 }
 
 Nexus::VulkanRenderpass::VulkanRenderpass(const RenderpassSpecification& specs)
