@@ -122,85 +122,85 @@ const float PI = 3.141592;
 const float Epsilon = 0.00001;
 const vec3 Fdielectric = vec3(0.01); // Constant normal Incidence Frensel Factor for all Dielectrics
 
-float ndfGGX(float cosLh, float roughness)
+vec3 Calculate_Fresnel(vec3 F0, vec3 viewDir, vec3 halfDir)
+{
+	return F0 + (vec3(1) - F0) * pow((1 - max(dot(viewDir, halfDir), 0.0)), 5.0);
+}
+
+vec3 Calculate_Lambertian_DiffuseComponent(vec3 materialColor, vec3 Fresnel)
+{
+	vec3 diff = materialColor / PI;
+	return (vec3(1.0) - Fresnel) * diff;
+}
+
+float GGX_NormalDistribution(float roughness, vec3 normal, vec3 halfDir)
 {
 	float alpha = roughness * roughness;
 	float alphaSq = alpha * alpha;
+	float cosNH = max(dot(normal, halfDir), 0.0);
 
-	float denom = (cosLh * cosLh) * (alphaSq - 1.0) + 1.0;
-	return alphaSq / (PI * denom * denom);
+	float den = pow((pow(cosNH, 2.0) * (alphaSq - 1) + 1), 2.0) * PI;
+
+	return alphaSq / den;
 }
 
-// Single term for separable Schlick-GGX below.
-float gaSchlickG1(float cosTheta, float k)
+float GGXschilck_SingleTerm(float cosNX, float k)
 {
-	return cosTheta / (cosTheta * (1.0 - k) + k);
+	return cosNX / (cosNX * (1 - k) + k);
 }
 
-// Schlick-GGX approximation of geometric attenuation function using Smith's method.
-float gaSchlickGGX(float cosLi, float cosLo, float roughness)
+float GGXschick_GeometryShading(vec3 lightDir, vec3 Normal, vec3 viewDir, float roughness)
 {
-	float r = roughness + 1.0;
-	float k = (r * r) / 8.0; // Epic suggests using this roughness remapping for analytic lights.
-	return gaSchlickG1(cosLi, k) * gaSchlickG1(cosLo, k);
+	float k = pow(roughness, 2.0) / 2;
+	float cosNL = max(dot(Normal, lightDir), 0.0);
+	float cosNV = max(dot(Normal, viewDir), 0.0);
+
+	return GGXschilck_SingleTerm(cosNL, k) * GGXschilck_SingleTerm(cosNV, k);
 }
 
-// Shlick's approximation of the Fresnel factor.
-vec3 fresnelSchlick(vec3 F0, float cosTheta)
+vec3 Calculate_CookTorrance_SpecularComponent(vec3 viewDir, vec3 halfDir, vec3 lightDir, vec3 normal, vec3 Fresnel, float roughness)
 {
-	return F0 + (vec3(1.0) - F0) * pow(1.0 - cosTheta, 5.0);
-}
+	float D = GGX_NormalDistribution(roughness, normal, halfDir);
+	float G = GGXschick_GeometryShading(lightDir, normal, viewDir, roughness);
 
-vec3 CalculateBRDF(vec3 F0, vec3 albedo, float cosLhLo, float cosLh, float cosLi, float cosLo, float roughness, float metalness)
-{
-	vec3 F = fresnelSchlick(F0, max(0.0, cosLhLo));
-	float D = ndfGGX(cosLh, roughness);
-	float G = gaSchlickGGX(cosLi, cosLo, roughness);
+	float cosVN = max(dot(viewDir, normal), 0.0);
+	float cosLN = max(dot(lightDir, normal), 0.0);
 
-	vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+	vec3 num = D * G * Fresnel;
+	float den = max(Epsilon, 4 * cosVN * cosLN);
 
-	vec3 diffuseBRDF = kd * albedo;
-	vec3 specularBRDF = (F * D * G) / max(Epsilon, 4.0 * cosLi * cosLo);
-
-	return diffuseBRDF + specularBRDF;
+	return num / den;
 }
 
 void main()
 {
 	vec3 albedo = GetMaterialColor();
-	vec2 MR = GetMetallicRoughness();
-	vec3 N = GetNormal();
+	vec2 metallicRoughness = GetMetallicRoughness();
+	vec3 norm = GetNormal();
 
-	float metalness = MR.r;
-	float roughness = MR.g;
+	vec3 viewDir = normalize(m_sceneBuffer.position - FragPos);
 
-	vec3 F0 = mix(Fdielectric, albedo, metalness);
-	
-	vec3 Lo = normalize(m_sceneBuffer.position - FragPos);
-	float cosLo = max(0.0, dot(N, Lo));
+	vec3 F0 = mix(Fdielectric, albedo, metallicRoughness.r);
 
+	vec3 result = vec3(0.0);
 
-	vec3 Lr = 2.0 * cosLo * N - Lo;
-
-	vec3 directLighting = vec3(0);
-	
-	// PointLights
-	for (int i = 0; i < m_sceneBuffer.pointLightCount; ++i)
+	// Point Lights
+	// Check it light count is less that 10
+	for (int i = 0; i < m_sceneBuffer.pointLightCount; i++)
 	{
-		vec3 Li = m_sceneBuffer.lights[i].position - FragPos;
-		vec3 Lradiance = m_sceneBuffer.lights[i].color;
+		vec3 lightDir = m_sceneBuffer.lights[i].position - FragPos;
+		vec3 lightVector = normalize(lightDir);
 
-		vec3 Lh = normalize(Li + Lo);
+		vec3 halfDir = normalize(lightVector + viewDir);
 
-		float cosLhLo = max(0.0, dot(Lh, Lo));
-		float cosLi = max(0.0, dot(N, Li));
-		float cosLh = max(0.0, dot(N, Lh));
+		vec3 Fresnel = Calculate_Fresnel(F0, viewDir, halfDir);
 
-		vec3 BRDF = CalculateBRDF(F0, albedo, cosLhLo, cosLh, cosLi, cosLo, roughness, metalness);
-		
+		vec3 diffuse = Calculate_Lambertian_DiffuseComponent(albedo, Fresnel);
+		vec3 specular = Calculate_CookTorrance_SpecularComponent(viewDir, halfDir, lightVector, norm, Fresnel, metallicRoughness.g);
+
 		float attenuation = 0.0;
 		{
-			float d = length(Li);
+			float d = length(lightDir);
 			float s = d / m_sceneBuffer.lights[i].size;
 			if (s < 1.0)
 			{
@@ -210,26 +210,28 @@ void main()
 				attenuation = m_sceneBuffer.lights[i].intensity * s3 / (1 + m_sceneBuffer.lights[i].falloff * s);
 			}
 		}
+		vec3 lightColor = m_sceneBuffer.lights[i].color * m_sceneBuffer.lights[i].intensity * attenuation;
 
-		directLighting += BRDF * Lradiance * attenuation  * cosLi;
+		result += (diffuse + specular) * lightColor * max(dot(lightDir, norm), 0.0);
 	}
 
 	// Directional Light
 	{
-		vec3 Li = normalize(m_sceneBuffer.SceneLightDirection.rgb);
-		vec3 Lradiance = m_sceneBuffer.SceneLightColor.rgb;
+		vec3 halfDir = normalize(m_sceneBuffer.SceneLightDirection.rgb + viewDir);
 
-		vec3 Lh = normalize(Li + Lo);
+		vec3 Fresnel = Calculate_Fresnel(F0, viewDir, halfDir);
 
-		float cosLhLo = max(0.0, dot(Lh, Lo));
-		float cosLi = max(0.0, dot(N, Li));
-		float cosLh = max(0.0, dot(N, Lh));
+		vec3 diffuse = Calculate_Lambertian_DiffuseComponent(albedo, Fresnel);
+		vec3 specular = Calculate_CookTorrance_SpecularComponent(viewDir, halfDir, m_sceneBuffer.SceneLightDirection.rgb, norm, Fresnel, metallicRoughness.g);
 
-		vec3 BRDF = CalculateBRDF(F0, albedo, cosLhLo, cosLh, cosLi, cosLo, roughness, metalness);
-
-		directLighting += BRDF * Lradiance * cosLi;
+		result += (diffuse + specular) * m_sceneBuffer.SceneLightColor.rgb * max(dot(m_sceneBuffer.SceneLightDirection.rgb, norm), 0.0);
 	}
-	
-	// Final fragment color.
-	OutColor = vec4(directLighting , 1.0);
+
+	// Tone Mapping
+	result = vec3(1.0) - exp(-result * Exposure);
+
+	// Gamma Correction
+	result = pow(result, vec3(1.0 / Gamma));
+
+	OutColor = vec4(result, 1.0);
 }
