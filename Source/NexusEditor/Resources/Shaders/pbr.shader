@@ -54,6 +54,7 @@ struct PointLight
 	vec3 position; float size;
 	vec3 color; float intensity;
 	vec3 null; float falloff;
+	vec4 n;
 };
 
 layout(set = 0, binding = 1) uniform sceneBuffer
