@@ -13,3 +13,4 @@
 *.sln
 
 /Source/NexusEditor/Resources/Scripts
+/Source/NexusEditor/SandboxProject/.vs/SandboxProject
