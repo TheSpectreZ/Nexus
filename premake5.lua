@@ -26,3 +26,4 @@ workspace "Nexus-Engine"
     
     group "Tools"
         include "Scripts/NexusEditor.lua"
+        include "Scripts/NexusLauncher.lua"
