@@ -4,11 +4,12 @@
 
 Nexus::AssetManager* Nexus::AssetManager::s_Instance = nullptr;
 
-void Nexus::AssetManager::Initialize()
+void Nexus::AssetManager::Initialize(bool LoadDefaultAssets)
 {
 	s_Instance = new AssetManager();
 	
 	// Defaults
+	if(LoadDefaultAssets)
 	{
 		Ref<Asset> checker = Texture::Create("Resources/Textures/DefaultWhite.png");
 		checker->m_Id = 0;
