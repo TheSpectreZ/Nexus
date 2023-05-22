@@ -7,9 +7,6 @@ BinDir = "%{wks.location}/Binaries/%{cfg.buildcfg}"
 IntDir = "%{wks.location}/Intermediates/%{prj.name}/%{cfg.buildcfg}/"
 vcxDir = "%{wks.location}/Intermediates/%{prj.name}"
 
-ScriptBinDir = (SrcDir.."NexusEditor/Resources/Scripts")
-ScriptIntDir = (SrcDir.."NexusEditor/Resources/Scripts/Int")
-
 IncludeDir = {}
 
 IncludeDir["glfw"] = (DepDir.."glfw/include")

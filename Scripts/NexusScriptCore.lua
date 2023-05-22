@@ -2,15 +2,15 @@ project "NexusScriptCore"
     kind "SharedLib"
     language "C#"
     dotnetframework "4.7.2"
-    location (SrcDir.."%{prj.name}")
+    location "../Source/%{prj.name}"
 
-    targetdir(ScriptBinDir)
-    objdir(ScriptIntDir)
+    targetdir "../Source/NexusEditor/Resources/Scripts"
+    objdir "../Source/NexusEditor/Resources/Scripts/Int/%{prj.name}"
 
     files
     {
-        (SrcDir.."%{prj.name}/Source/**.cs"),
-        (SrcDir.."%{prj.name}/Properties/**.cs"),
+        "../Source/%{prj.name}/Source/**.cs",
+        "../Source/%{prj.name}/Properties/**.cs",
     }
 
 	filter "configurations:Debug"
