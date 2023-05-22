@@ -99,20 +99,24 @@ namespace Nexus
 		void InitMono();
 		void ShutdownMono();
 		
-		void InitAssembly();
+		void InitAssembly(const std::string& appAssemblyPath);
 
 		char* ReadBytes(const std::string& filepath, uint32_t* outSize);
 		void PrintAssemblyTypes(MonoAssembly* assembly,const char* name);
 		MonoAssembly* LoadAssembly(const std::string& assemblyPath);
 
-		void LoadCoreAssemblyClasses();
+		void LoadAppAssemblyClasses();
 	private:
 		Ref<Scene> m_scene;
 
 		MonoDomain* m_RootDomain;
 		MonoDomain* m_AppDomain;
+
 		MonoAssembly* m_CoreAssembly;
 		MonoImage* m_CoreAssemblyImage;
+
+		MonoAssembly* m_AppAssembly;
+		MonoImage* m_AppAssemblyImage;
 
 		MonoClass* m_EntityBaseClass;
 		MonoMethod* m_EntityBaseConstructor;

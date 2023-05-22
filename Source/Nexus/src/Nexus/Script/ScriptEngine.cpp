@@ -15,7 +15,7 @@ void Nexus::ScriptEngine::Init()
 {
     s_Instance = new ScriptEngine();
 	s_Instance->InitMono();
-    s_Instance->InitAssembly();
+    s_Instance->InitAssembly("Resources/Scripts/Sandbox.dll");
 
     ScriptGlue::BindComponents();
     ScriptGlue::BindInternalCalls();
@@ -32,7 +32,7 @@ void Nexus::ScriptEngine::ReloadAssembly()
     mono_domain_set(mono_get_root_domain(), false);
     mono_domain_unload(s_Instance->m_AppDomain);
 
-    s_Instance->InitAssembly();
+    s_Instance->InitAssembly("Resources/Scripts/Sandbox.dll");
     ScriptGlue::BindComponents();
 }
 
@@ -97,7 +97,7 @@ void Nexus::ScriptEngine::ShutdownMono()
     m_RootDomain = nullptr;
 }
 
-void Nexus::ScriptEngine::InitAssembly()
+void Nexus::ScriptEngine::InitAssembly(const std::string& appAssemblyPath)
 {
     char friendlyName[] = "NexusAppDomain";
     m_AppDomain = mono_domain_create_appdomain(friendlyName, nullptr);
@@ -108,8 +108,12 @@ void Nexus::ScriptEngine::InitAssembly()
 
     PrintAssemblyTypes(m_CoreAssembly, "Core Assembly");
     
-    // Loading Classes
-    LoadCoreAssemblyClasses();
+    m_AppAssembly = LoadAssembly(appAssemblyPath);
+    m_AppAssemblyImage = mono_assembly_get_image(m_AppAssembly);
+
+    PrintAssemblyTypes(m_AppAssembly, "App Assembly");
+
+    LoadAppAssemblyClasses();
 }
 
 void Nexus::ScriptEngine::PrintAssemblyTypes(MonoAssembly* assembly,const char* name)
@@ -132,11 +136,11 @@ void Nexus::ScriptEngine::PrintAssemblyTypes(MonoAssembly* assembly,const char* 
     NEXUS_LOG_INFO("");
 }
 
-void Nexus::ScriptEngine::LoadCoreAssemblyClasses()
+void Nexus::ScriptEngine::LoadAppAssemblyClasses()
 {
     m_EntityClasses.clear();
 
-    const MonoTableInfo* table = mono_image_get_table_info(m_CoreAssemblyImage, MONO_TABLE_TYPEDEF);
+    const MonoTableInfo* table = mono_image_get_table_info(m_AppAssemblyImage, MONO_TABLE_TYPEDEF);
     int32_t count = mono_table_info_get_rows(table);
 
     m_EntityBaseClass = mono_class_from_name(m_CoreAssemblyImage, "Nexus", "Entity");
@@ -148,8 +152,8 @@ void Nexus::ScriptEngine::LoadCoreAssemblyClasses()
         uint32_t cols[MONO_TYPEDEF_SIZE];
         mono_metadata_decode_row(table, i, cols, MONO_TYPEDEF_SIZE);
 
-        const char* nameSpace = mono_metadata_string_heap(m_CoreAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
-        const char* name = mono_metadata_string_heap(m_CoreAssemblyImage, cols[MONO_TYPEDEF_NAME]);
+        const char* nameSpace = mono_metadata_string_heap(m_AppAssemblyImage, cols[MONO_TYPEDEF_NAMESPACE]);
+        const char* name = mono_metadata_string_heap(m_AppAssemblyImage, cols[MONO_TYPEDEF_NAME]);
 
         std::string Fullname;
         if (strlen(nameSpace) != 0)
@@ -157,7 +161,7 @@ void Nexus::ScriptEngine::LoadCoreAssemblyClasses()
         else
             Fullname = name;
 
-        MonoClass* cl = mono_class_from_name(m_CoreAssemblyImage, nameSpace, name);
+        MonoClass* cl = mono_class_from_name(m_AppAssemblyImage, nameSpace, name);
 
         if (cl == m_EntityBaseClass)
             continue;
