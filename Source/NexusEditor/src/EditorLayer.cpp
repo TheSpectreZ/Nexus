@@ -6,7 +6,7 @@ void EditorLayer::OnAttach()
 
 	// Default Sandbox Project
 	{
-		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxProject\\SandboxProject.nxProject", m_ProjectSpecs);
+		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxAssets\\SandboxAssets.nxProject", m_ProjectSpecs);
 	}
 
 	CreateRenderpassAndFramebuffers();
@@ -26,7 +26,7 @@ void EditorLayer::OnAttach()
 		m_scissor.Extent = { Extent.width, Extent.height };
 	}
 
-	Nexus::Ref<Nexus::Shader> pbr = Nexus::ShaderLib::Get("shaders/pbr.shader");
+	Nexus::Ref<Nexus::Shader> pbr = Nexus::ShaderLib::Get("Resources/Shaders/pbr.shader");
 	
 	// Pipeline
 	{
@@ -397,7 +397,7 @@ void EditorLayer::RenderEditorMainMenu()
 				{
 					m_EditorScene->Clear();
 					Nexus::SceneSerializer::Deserialize(m_EditorScene.get(), m_PhysicsWorld.get(), path);
-					m_SceneData->Build(m_EditorScene, Nexus::ShaderLib::Get("shaders/pbr.shader"));
+					m_SceneData->Build(m_EditorScene, Nexus::ShaderLib::Get("Resources/Shaders/pbr.shader"));
 					NEXUS_LOG_WARN("Scene Deserialized: {0}", path);
 				}
 				else
