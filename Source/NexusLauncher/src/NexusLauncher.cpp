@@ -20,7 +20,7 @@ public:
 	}
 };
 
-Nexus::Application* CreateApplication()
+Nexus::Application* CreateApplication(int argc, char** argv)
 {
 	return new Launcher();
 }

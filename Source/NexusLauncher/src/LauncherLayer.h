@@ -1,12 +1,6 @@
 #pragma once
 #include "Nexus.h"
 
-struct ProjectSpecifications
-{
-	std::string name;
-	std::string filepath;
-};
-
 class LauncherLayer : public Nexus::Layer
 {
 public:
@@ -21,9 +15,10 @@ private:
 	Nexus::FramebufferSpecification m_FramebufferSpecs;
 	Nexus::Ref<Nexus::Framebuffer> m_Framebuffer;
 
-	ProjectSpecifications m_ProjectSpecs;
+	Nexus::ProjectSpecifications m_ProjectSpecs;
 	void RenderLauncherWindow();
 
-	void GenerateProject(const ProjectSpecifications& specs);
+	void GenerateProject(const Nexus::ProjectSpecifications& specs);
+	void LaunchEditor();
 };
 
