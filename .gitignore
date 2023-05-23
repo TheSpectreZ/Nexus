@@ -14,3 +14,6 @@
 
 /Source/NexusEditor/Resources/Scripts
 /Source/NexusEditor/SandboxProject/.vs/SandboxProject
+/Source/NexusEditor/Sandbox/.vs/Sandbox
+/Source/NexusEditor/Sandbox/Scripts/Bin/Debug
+/Source/NexusEditor/Sandbox/Scripts/Bin-Int/Debug

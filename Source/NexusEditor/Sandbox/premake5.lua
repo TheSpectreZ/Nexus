@@ -1,4 +1,4 @@
-workspace "SandboxProject"
+workspace "Sandbox"
     architecture "x64"
     startproject "Sandbox"
 
@@ -11,15 +11,15 @@ workspace "SandboxProject"
         kind "SharedLib"
         language "C#"
         dotnetframework "4.7.2"
-        location("Sandbox")
+        location ("Scripts")
         
-        targetdir "../Resources/Scripts"
-        objdir "../Resources/Scripts/Int/%{prj.name}"
+        targetdir "Scripts/Bin/%{cfg.buildcfg}"
+        objdir "Scripts/Bin-Int/%{cfg.buildcfg}"
 
         files
         {
-            "Sandbox/Source/**.cs",
-            "Sandbox/Properties/**.cs"
+            "Scripts/Source/**.cs",
+            "Scripts/Properties/**.cs"
         }
 
         links
@@ -39,6 +39,9 @@ workspace "SandboxProject"
             optimize "Full"
             symbols "Off"
 
+    local path = os.getenv("NEXUS_ROOT_PATH")
+    assert(path ~= nil, "Environment variable PATH not set")
+
     group "Nexus"
-        include "../../../Scripts/NexusScriptCore.lua"
+        include (path.."/Scripts/NexusScriptCore.lua")
     group ""

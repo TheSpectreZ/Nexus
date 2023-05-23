@@ -9,7 +9,7 @@ class ConfigPremake:
     premakeZipUrls = f"https://github.com/premake/premake-core/releases/download/v{premakeVersion}/premake-{premakeVersion}-windows.zip"
     premakeLicenseUrl = "https://raw.githubusercontent.com/premake/premake-core/master/LICENSE.txt"
     premakeDirectory = "./Build/premake"
-    premakeLauncherDirectory = "./Source/NexusLauncher/Resources/Projects/Binaries/premake"
+    premakeLauncherDirectory = "./Source/NexusEditor/Sandbox/Binaries/premake"
 
     @classmethod
     def Validate(cls):

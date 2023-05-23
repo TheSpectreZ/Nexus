@@ -1,0 +1,6 @@
+Project: v1.0.0
+Name: Sandbox
+Rootpath: D:\EngineDev\Nexus\Source\NexusEditor\Sandbox
+Render Settings:
+  Enable MultiSampling: true
+  Enable HDR: false
