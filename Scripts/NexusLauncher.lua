@@ -3,8 +3,9 @@ project "NexusLauncher"
     cppdialect "C++20"
     location (SrcDir.."%{prj.name}")
 
-    targetdir(BinDir)
-    objdir(IntDir)
+    targetdir (BinDir)
+    objdir (IntDir)
+    debugdir (SrcDir.."NexusEditor")
 
     files
     {
