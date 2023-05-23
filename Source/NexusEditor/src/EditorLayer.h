@@ -4,6 +4,12 @@
 class EditorLayer : public Nexus::Layer
 {
 public:
+	EditorLayer(const std::string& projectPath)
+		:m_ProjectPath(projectPath), m_IsScenePlaying(false), m_PauseScene(false)
+	{
+		// Load Sandbox project If Path is Empty
+	}
+
 	void OnAttach() override;
 	void OnUpdate(Nexus::Timestep step) override;
 	void OnRender() override;
@@ -16,6 +22,8 @@ private:
 	void RenderEditorMainMenu();
 	void RenderEditorWorldControls();
 private:
+	std::string m_ProjectPath;
+	std::string m_ScriptDLLPath;
 	Nexus::ProjectSpecifications m_ProjectSpecs;
 
 	bool m_IsScenePlaying, m_PauseScene;

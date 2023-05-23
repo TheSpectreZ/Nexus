@@ -6,7 +6,36 @@ void EditorLayer::OnAttach()
 
 	// Default Sandbox Project
 	{
-		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxAssets\\SandboxAssets.nxProject", m_ProjectSpecs);
+		if (m_ProjectPath.empty())
+		{
+			m_ProjectPath = "Sandbox\\Sandbox.nxProject";
+		}
+		
+		NEXUS_LOG_DEBUG("Project Loaded: {0}", m_ProjectPath);
+
+		Nexus::ProjectSerializer::DeSerialize(m_ProjectPath, m_ProjectSpecs);
+
+		m_ScriptDLLPath = m_ProjectSpecs.RootPath + "\\Scripts\\Bin\\";
+
+#ifdef NEXUS_DEBUG
+		m_ScriptDLLPath += "Debug\\";
+#elif NEXUS_RELEASE
+		m_ScriptDLLPath += "Release\\";
+#elif NEXUS_DIST
+		m_ScriptDLLPath += "Dist\\";
+#endif // NEXUS_DEBUG
+
+		m_ScriptDLLPath += m_ProjectSpecs.Name + ".dll";
+		
+		if (std::filesystem::exists(m_ScriptDLLPath))
+		{
+			NEXUS_LOG_DEBUG("Script DLL Exists")
+			Nexus::ScriptEngine::ReloadAssembly(m_ScriptDLLPath);
+		}
+		else
+		{
+			NEXUS_LOG_DEBUG("Script DLL Doesn't Exists")
+		}
 	}
 
 	CreateRenderpassAndFramebuffers();
@@ -107,7 +136,8 @@ void EditorLayer::OnUpdate(Nexus::Timestep ts)
 	if (size != m_ImGuiEditorViewportSize)
 	{
 		m_ImGuiEditorViewportSize = size;
-		m_cameraController.SetPerspectiveProjection(45.f, size.x, size.y, 0.1f, 1000.f);
+		if (size.x != 0 && size.y != 0)
+			m_cameraController.SetPerspectiveProjection(45.f, size.x, size.y, 0.1f, 1000.f);
 	}
 
 	m_cameraController.Move();
@@ -474,7 +504,7 @@ void EditorLayer::RenderEditorMainMenu()
 		
 		if (ImGui::MenuItem("Reload Assembly"))
 		{
-			Nexus::ScriptEngine::ReloadAssembly();
+			Nexus::ScriptEngine::ReloadAssembly(m_ScriptDLLPath);
 		}
 		
 		ImGui::EndMenu();
