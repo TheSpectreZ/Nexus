@@ -1,6 +1,7 @@
 #include "LauncherLayer.h"
 
 #include <fstream>
+#include <filesystem>
 
 void LauncherLayer::OnAttach()
 {
@@ -118,7 +119,6 @@ void LauncherLayer::RenderLauncherWindow()
 		m_ProjectSpecs.name = buffer;
 		m_ProjectSpecs.filepath = filepath + "\\" + buffer;
 	
-		// Setup python script to copy premake to Resources
 		// Create .lua and .bat file ( Premake Exists in Bin Folder for Resources )
 		// Call .bat file to create project
 
@@ -134,11 +134,11 @@ void LauncherLayer::GenerateProject(const ProjectSpecifications& specs)
 
 	// Generate Premake File and batch File
 	{
-		_mkdir(specs.filepath.c_str());
+		std::filesystem::create_directory(specs.filepath);
 
 		std::string line;
 
-		std::ifstream ini_file{ "Resources/Scripts/premake5.lua" };
+		std::ifstream ini_file{ "Resources/Projects/premake5.lua" };
 		std::ofstream out_file{ specs.filepath + "/premake5.lua" };
 
 		if (!ini_file || !out_file)
@@ -164,24 +164,45 @@ void LauncherLayer::GenerateProject(const ProjectSpecifications& specs)
 		ini_file.close();
 		out_file.close();
 
-		ini_file = std::ifstream("Resources/Scripts/GenerateProjects.bat");
-		out_file = std::ofstream(specs.filepath + "/GenerateProject.bat");
-
-		if (!ini_file || !out_file)
+		if(!std::filesystem::exists(specs.filepath + "\\GenerateProject.bat"))
 		{
-			NEXUS_LOG_ERROR("Cannot read File");
+			std::filesystem::copy("Resources\\Projects\\GenerateProjects.bat", specs.filepath + "\\GenerateProject.bat");
+			NEXUS_LOG_TRACE("Copied Batch File");
 		}
 
-		while (std::getline(ini_file, line))
+		std::filesystem::path dir = std::filesystem::path(specs.filepath) / "Binaries\\premake";
+
+		if (!std::filesystem::exists(dir))
 		{
-			out_file << line << "\n";
+			std::filesystem::create_directories(dir);
 		}
 
-		NEXUS_LOG_TRACE("Copied Batch File");
+		std::filesystem::path p = specs.filepath + "\\Binaries\\premake\\premake5.exe";
+
+		if(!std::filesystem::exists(p))
+			std::filesystem::copy_file("Resources\\Projects\\Binaries\\premake\\premake5.exe", p);
 	}
 
 	// Generating Project
 	{
+		auto currentPath = std::filesystem::current_path();
+		std::filesystem::current_path(specs.filepath);
 
+		NEXUS_LOG_DEBUG("{0}", std::filesystem::current_path().string());
+
+		std::string p = specs.filepath + "\\GenerateProject.bat";
+		if (!std::system(p.c_str()))
+		{
+			std::filesystem::remove(p);
+			std::filesystem::remove(specs.filepath + "\\premake5.lua");
+			std::filesystem::remove_all(specs.filepath + "\\Binaries");
+		}
+
+		std::filesystem::current_path(currentPath);
+	}
+
+	// Generating Files
+	{
+		std::filesystem::create_directory(specs.filepath + "\\Assets");
 	}
 }
