@@ -83,7 +83,7 @@ namespace Nexus
 		static void Init();
 		static void Shut();
 
-		static void ReloadAssembly();
+		static void ReloadAssembly(const std::string& filepath);
 
 		static void OnSceneStart(Ref<Scene> scene);
 		static void OnSceneUpdate(float ts);
