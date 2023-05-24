@@ -128,20 +128,20 @@ void LauncherLayer::RenderLauncherWindow()
 			m_ProjectSpecs.RootPath = filepath + "\\" + buffer;
 	
 			GenerateProject(m_ProjectSpecs);
-			LaunchEditor();
+			//LaunchEditor();
 			pathselected = false;
 		}
 	}
 
-	if (ImGui::Button("Load"))
-	{
-		std::string path = Nexus::FileDialog::OpenFile("Nexus Project (*.nxProject)\0*.nxProject\0");
-		if (!path.empty())
-		{
-			Nexus::ProjectSerializer::DeSerialize(path, m_ProjectSpecs);
-			LaunchEditor();
-		}
-	}
+	//if (ImGui::Button("Load"))
+	//{
+	//	std::string path = Nexus::FileDialog::OpenFile("Nexus Project (*.nxProject)\0*.nxProject\0");
+	//	if (!path.empty())
+	//	{
+	//		Nexus::ProjectSerializer::DeSerialize(path, m_ProjectSpecs);
+	//		LaunchEditor();
+	//	}
+	//}
 
 	ImGui::End();
 }
