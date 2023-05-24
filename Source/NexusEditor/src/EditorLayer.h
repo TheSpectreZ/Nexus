@@ -18,6 +18,8 @@ public:
 private:
 	void CreateRenderpassAndFramebuffers();
 
+	void LoadProject();
+
 	void RenderProfileStats();
 	void RenderEditorMainMenu();
 	void RenderEditorWorldControls();
