@@ -23,6 +23,8 @@ namespace Nexus
 		
 		Timestep& GetTimeStep() { return m_TimeStep; }
 		Window& GetWindow() { return m_Window; }
+
+		void SetWindowTitle(const char* name);
 	protected:
 		ApplicationSpecifications m_AppSpecs;
 

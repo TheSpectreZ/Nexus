@@ -193,6 +193,11 @@ void Nexus::Application::Shut()
 	}
 }
 
+void Nexus::Application::SetWindowTitle(const char* name)
+{
+	glfwSetWindowTitle(m_Window.handle, name);
+}
+
 void Nexus::Application::ResizeCallback()
 {
 	for (auto& layer : m_layerStack)
