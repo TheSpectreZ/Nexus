@@ -18,12 +18,14 @@ If the repository was cloned non-recursively previously, use `git submodule upda
 
 <ins>**2. Configuring the dependencies:**</ins>
 
+1. Add an environment variable called `NEXUS_ROOT_PATH` that contains the file path to the root Nexus Engine folder (e.g F:/Development/Nexus-Engine)
 1. Run the `EngineBuild.bat` file found in `Build` folder. This will download the required prerequisites for the project if they are not present yet.
-2. One prerequisite is the Vulkan SDK. If it is not installed, the script will execute the `VulkanSDK.exe` file, and will prompt the user to install the SDK.
-3. After installation, run the `EngineBuild.bat` file again. If the Vulkan SDK is installed properly, it will then download the Vulkan SDK Debug libraries. (This may take a longer amount of time)
-4. After downloading and unzipping the files, the `GenerateProjects.bat` script file will get executed automatically, which will then generate a Visual Studio solution file for user's usage.
+2. One such prerequisite to run the Engine is the Vulkan SDK. If it is not founc, the script will download and execute the `VulkanSDK.exe` file, and will prompt the user to install the SDK.
+3. After Installing Vulkan SDK, run the `EngineBuild.bat` file again.
+4. After downloading and unzipping the required files, the `GenerateProjects.bat` script file will get executed automatically by `EngineBuild.bat`, which will then generate a Visual Studio solution file for user's usage.
 
-If changes are made, or if you want to regenerate project files, rerun the `GenerateProjects.bat` script file found in `Build` folder.
+If changes are made to the Engine, or if you want to regenerate Engine project files, rerun the `GenerateProjects.bat` script file found in `Build` folder.
+If changes are made to the Sandbox Project, rerun the `GenerateProject.bat` script file found in `Source\NexusEditor\Sandbox` folder.
 
 ***
 ## Goals
@@ -46,8 +48,7 @@ If changes are made, or if you want to regenerate project files, rerun the `Gene
   - [ ] Water Rendering
 - Physics
   - [x] Jolt Physics Backend
-  - [x] Simple Collider and RigidBody
-  - [ ] More Colliders Types
+  - [x] Simple Colliders and RigidBody
   - [ ] Debug Renderer to Visualize Colliders
   - [ ] Physics Materials
   - [ ] Height-Fields
@@ -56,8 +57,8 @@ If changes are made, or if you want to regenerate project files, rerun the `Gene
   - [x] Scriptclass and Instances
   - [x] Calling C# from C++ and Vice-Versa
   - [x] Fields and Properties
+  - [x] Seperating App and Core DLLs
   - [ ] Serialzing Field Data
-  - [ ] Seperating App and Core DLLs
   - [ ] Reloading Assembly With Filewatcher
   - [ ] Debugging Scripts
 - Editor
@@ -65,9 +66,9 @@ If changes are made, or if you want to regenerate project files, rerun the `Gene
   - [x] Scene Heirarchy and Properties
   - [x] Content Browser
   - [x] Editor Viewport
+  - [x] Launcher
   - [ ] Editor Console/Log
   - [ ] Material Asset Creator
-  - [ ] Launcher
 - Misc
   - [x] Profile Timer
   - [ ] Custom Asset Formats
