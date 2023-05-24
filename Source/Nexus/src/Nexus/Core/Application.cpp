@@ -55,7 +55,7 @@ void Nexus::Application::Init()
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
 		m_Window.handle = glfwCreateWindow(m_Window.width, m_Window.height, m_Window.title, nullptr, nullptr);
-		NEXUS_LOG_TRACE("Window Created: {0}x{1}", m_Window.width, m_Window.height);
+		NEXUS_LOG_TRACE("{2} Window Created: {0}x{1}", m_Window.width, m_Window.height, m_Window.title);
 
 		// Callbacks
 		{
@@ -75,7 +75,7 @@ void Nexus::Application::Init()
 	
 	std::cout << std::endl;
 
-	// Renderer
+	if(m_AppSpecs.rApi != RenderAPI_None)
 	{
 		RendererSpecifications specs{};
 		specs.vsync = m_AppSpecs.Vsync;
@@ -86,11 +86,14 @@ void Nexus::Application::Init()
 		
 		Renderer::Init(specs);
 		Renderer::ResizeCallback = NEXUS_BIND_FN(Application::ResizeCallback,this);
+
+		AssetManager::Initialize(m_AppSpecs.LoadDefaultAssets);
 	}
 
-	AssetManager::Initialize();
-	ScriptEngine::Init();
+	if (m_AppSpecs.EnableScriptEngine)
+		ScriptEngine::Init();
 
+	if (m_AppSpecs.pApi != PhysicsAPI_None)
 	{
 		PhysicsAPIType pApi = PhysicsAPIType::None;
 		if (m_AppSpecs.pApi == PhysicsAPI_Jolt)
@@ -109,7 +112,8 @@ void Nexus::Application::Run()
 		for (auto& l : m_layerStack)
 			l->OnAttach();
 	
-		Renderer::FlushTransferCommandQueue();
+		if (m_AppSpecs.rApi != RenderAPI_None)
+			Renderer::FlushTransferCommandQueue();
 	}
 
 	glfwShowWindow(m_Window.handle);
@@ -136,10 +140,14 @@ void Nexus::Application::Run()
 			{
 				l->OnUpdate(m_TimeStep);
 			}
-			Renderer::FlushTransferCommandQueue();
+
 		}
+
 		// Rendering
+		if (m_AppSpecs.rApi != RenderAPI_None)
 		{
+			Renderer::FlushTransferCommandQueue();
+
 			NEXUS_SCOPED_PROFILE("On Render");
 
 			Renderer::BeginRenderCommandQueue();
@@ -152,7 +160,8 @@ void Nexus::Application::Run()
 		}
 	}
 	
-	Renderer::WaitForDevice();
+	if (m_AppSpecs.rApi != RenderAPI_None)
+		Renderer::WaitForDevice();
 
 	for (auto& l : m_layerStack)
 	{
@@ -165,17 +174,28 @@ void Nexus::Application::Run()
 
 void Nexus::Application::Shut()
 {
-	PhysicsEngine::Shutdown();
+	if (m_AppSpecs.pApi != PhysicsAPI_None)
+		PhysicsEngine::Shutdown();
 
-	AssetManager::Shutdown();
-	ScriptEngine::Shut();
-	Renderer::Shut();
+	if (m_AppSpecs.EnableScriptEngine)
+		ScriptEngine::Shut();
+
+	if (m_AppSpecs.rApi != RenderAPI_None)
+	{
+		AssetManager::Shutdown();
+		Renderer::Shut();
+	}
 	
 	// Window Destruction
 	{
 		glfwDestroyWindow(m_Window.handle);
 		NEXUS_LOG_TRACE("Window Destroyed");
 	}
+}
+
+void Nexus::Application::SetWindowTitle(const char* name)
+{
+	glfwSetWindowTitle(m_Window.handle, name);
 }
 
 void Nexus::Application::ResizeCallback()

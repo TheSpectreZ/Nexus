@@ -8,7 +8,7 @@ workspace "Nexus-Engine"
         "Debug","Release","Dist"
     }
 
-    startproject "NexusEditor"
+    startproject "NexusLauncher"
 
     group "Dependencies"
         include "Scripts/Dependencies/assimp.lua"
@@ -26,3 +26,4 @@ workspace "Nexus-Engine"
     
     group "Tools"
         include "Scripts/NexusEditor.lua"
+        include "Scripts/NexusLauncher.lua"

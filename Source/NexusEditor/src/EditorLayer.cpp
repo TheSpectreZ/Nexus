@@ -6,7 +6,15 @@ void EditorLayer::OnAttach()
 
 	// Default Sandbox Project
 	{
-		Nexus::ProjectSerializer::DeSerialize("D:\\EngineDev\\SandboxAssets\\SandboxAssets.nxProject", m_ProjectSpecs);
+		if (m_ProjectPath.empty())
+		{
+			m_ProjectPath = "Sandbox\\Sandbox.nxProject";
+		}
+
+		if (Nexus::ProjectSerializer::DeSerialize(m_ProjectPath, m_ProjectSpecs))
+		{
+			LoadProject();
+		}
 	}
 
 	CreateRenderpassAndFramebuffers();
@@ -75,11 +83,6 @@ void EditorLayer::OnAttach()
 		
 		m_EditorScene = Nexus::Scene::Create();
 		m_CurrentScene = m_EditorScene;
-
-		Nexus::Entity e2 = m_EditorScene->CreateEntity("Cube");
-		e2.AddComponent<Nexus::Component::Mesh>();
-		e2.AddComponent<Nexus::Component::BoxCollider>();
-		e2.AddComponent<Nexus::Component::RigidBody>();
 		
 		m_SceneData = Nexus::SceneBuildData::Create(m_EditorScene, pbr);
 		m_SceneRenderer.SetContext(m_EditorScene, m_SceneData);
@@ -107,7 +110,8 @@ void EditorLayer::OnUpdate(Nexus::Timestep ts)
 	if (size != m_ImGuiEditorViewportSize)
 	{
 		m_ImGuiEditorViewportSize = size;
-		m_cameraController.SetPerspectiveProjection(45.f, size.x, size.y, 0.1f, 1000.f);
+		if (size.x != 0 && size.y != 0)
+			m_cameraController.SetPerspectiveProjection(45.f, size.x, size.y, 0.1f, 1000.f);
 	}
 
 	m_cameraController.Move();
@@ -355,6 +359,33 @@ void EditorLayer::CreateRenderpassAndFramebuffers()
 	}
 }
 
+void EditorLayer::LoadProject()
+{
+	m_ScriptDLLPath = m_ProjectSpecs.RootPath + "\\Scripts\\Bin\\";
+
+#ifdef NEXUS_DEBUG
+	m_ScriptDLLPath += "Debug\\";
+#elif NEXUS_RELEASE
+	m_ScriptDLLPath += "Release\\";
+#elif NEXUS_DIST
+	m_ScriptDLLPath += "Dist\\";
+#endif // NEXUS_DEBUG
+
+	m_ScriptDLLPath += m_ProjectSpecs.Name + ".dll";
+
+	if (std::filesystem::exists(m_ScriptDLLPath))
+	{
+		Nexus::ScriptEngine::ReloadAssembly(m_ScriptDLLPath);
+	}
+
+	m_ContentBrowser.SetContext(m_ProjectSpecs.RootPath);
+
+	std::string name = "Nexus Editor - " + m_ProjectSpecs.Name;
+	Nexus::Application::Get()->SetWindowTitle(name.c_str());
+
+	NEXUS_LOG_INFO("Loaded Project: {0}", m_ProjectPath);
+}
+
 void EditorLayer::RenderProfileStats()
 {
 	ImGui::Begin("Stats");
@@ -380,6 +411,19 @@ void EditorLayer::RenderEditorMainMenu()
 	
 	if(ImGui::BeginMenu("File"))
 	{
+		if (ImGui::MenuItem("Load Project"))
+		{
+			std::string path = Nexus::FileDialog::OpenFile("Nexus Project (*.nxProject)\0*.nxProject\0");
+			if (!path.empty())
+			{
+				if (Nexus::ProjectSerializer::DeSerialize(path, m_ProjectSpecs))
+				{
+					m_ProjectPath = path;
+					LoadProject();
+				}
+			}
+		}
+
 		if (ImGui::MenuItem("New Scene"))
 		{
 			m_EditorScene->Clear();
@@ -474,7 +518,7 @@ void EditorLayer::RenderEditorMainMenu()
 		
 		if (ImGui::MenuItem("Reload Assembly"))
 		{
-			Nexus::ScriptEngine::ReloadAssembly();
+			Nexus::ScriptEngine::ReloadAssembly(m_ScriptDLLPath);
 		}
 		
 		ImGui::EndMenu();

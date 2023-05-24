@@ -1,16 +1,19 @@
+local RootPath = os.getenv("NEXUS_ROOT_PATH")
+assert(RootPath ~= nil, "Environment variable PATH not set")
+
 project "NexusScriptCore"
     kind "SharedLib"
     language "C#"
     dotnetframework "4.7.2"
-    location "../Source/%{prj.name}"
+    location (RootPath.."/Source/%{prj.name}")
 
-    targetdir "../Source/NexusEditor/Resources/Scripts"
-    objdir "../Source/NexusEditor/Resources/Scripts/Int/%{prj.name}"
+    targetdir (RootPath.."/Source/NexusEditor/Resources/Scripts")
+    objdir (RootPath.."/Source/NexusEditor/Resources/Scripts/Int/%{prj.name}")
 
     files
     {
-        "../Source/%{prj.name}/Source/**.cs",
-        "../Source/%{prj.name}/Properties/**.cs",
+        (RootPath.."/Source/%{prj.name}/Source/**.cs"),
+        (RootPath.."/Source/%{prj.name}/Properties/**.cs"),
     }
 
 	filter "configurations:Debug"

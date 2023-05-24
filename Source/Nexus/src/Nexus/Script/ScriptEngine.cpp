@@ -15,9 +15,6 @@ void Nexus::ScriptEngine::Init()
 {
     s_Instance = new ScriptEngine();
 	s_Instance->InitMono();
-    s_Instance->InitAssembly("Resources/Scripts/Sandbox.dll");
-
-    ScriptGlue::BindComponents();
     ScriptGlue::BindInternalCalls();
 }
 
@@ -27,12 +24,15 @@ void Nexus::ScriptEngine::Shut()
     delete s_Instance;
 }
 
-void Nexus::ScriptEngine::ReloadAssembly()
+void Nexus::ScriptEngine::ReloadAssembly(const std::string& filepath)
 {
-    mono_domain_set(mono_get_root_domain(), false);
-    mono_domain_unload(s_Instance->m_AppDomain);
+    if (s_Instance->m_AppDomain)
+    {
+        mono_domain_set(mono_get_root_domain(), false);
+        mono_domain_unload(s_Instance->m_AppDomain);
+    }
 
-    s_Instance->InitAssembly("Resources/Scripts/Sandbox.dll");
+    s_Instance->InitAssembly(filepath);
     ScriptGlue::BindComponents();
 }
 

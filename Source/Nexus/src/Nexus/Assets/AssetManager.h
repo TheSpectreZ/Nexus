@@ -8,7 +8,7 @@ namespace Nexus
 	{
 		static AssetManager* s_Instance;
 	public:
-		static void Initialize();
+		static void Initialize(bool loadDefaultAssets);
 		static void Shutdown();
 
 		template<typename T,typename... Args>
