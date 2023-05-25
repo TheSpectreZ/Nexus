@@ -83,7 +83,8 @@ namespace Nexus
 		static void Init();
 		static void Shut();
 
-		static void ReloadAssembly(const std::string& filepath);
+		static void SetAppAssemblyFilepath(const std::string& filepath);
+		static void ReloadAssembly();
 
 		static void OnSceneStart(Ref<Scene> scene);
 		static void OnSceneUpdate(float ts);
@@ -99,7 +100,7 @@ namespace Nexus
 		void InitMono();
 		void ShutdownMono();
 		
-		void InitAssembly(const std::string& appAssemblyPath);
+		void InitAssembly();
 
 		char* ReadBytes(const std::string& filepath, uint32_t* outSize);
 		void PrintAssemblyTypes(MonoAssembly* assembly,const char* name);
@@ -108,6 +109,9 @@ namespace Nexus
 		void LoadAppAssemblyClasses();
 	private:
 		Ref<Scene> m_scene;
+
+		std::string m_AppAsseblyPath;
+		bool m_AssemblyReloadPending;
 
 		MonoDomain* m_RootDomain;
 		MonoDomain* m_AppDomain;
