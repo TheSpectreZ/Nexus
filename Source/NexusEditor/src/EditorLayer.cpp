@@ -373,10 +373,7 @@ void EditorLayer::LoadProject()
 
 	m_ScriptDLLPath += m_ProjectSpecs.Name + ".dll";
 
-	if (std::filesystem::exists(m_ScriptDLLPath))
-	{
-		Nexus::ScriptEngine::ReloadAssembly(m_ScriptDLLPath);
-	}
+	Nexus::ScriptEngine::SetAppAssemblyFilepath(m_ScriptDLLPath);
 
 	m_ContentBrowser.SetContext(m_ProjectSpecs.RootPath);
 
@@ -514,11 +511,6 @@ void EditorLayer::RenderEditorMainMenu()
 		if (ImGui::MenuItem("Pause Scene"))
 		{
 			m_PauseScene = !m_PauseScene;
-		}
-		
-		if (ImGui::MenuItem("Reload Assembly"))
-		{
-			Nexus::ScriptEngine::ReloadAssembly(m_ScriptDLLPath);
 		}
 		
 		ImGui::EndMenu();
