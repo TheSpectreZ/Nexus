@@ -40,3 +40,6 @@
 [submodule "Source/Dependencies/tinygltf"]
 	path = Source/Dependencies/tinygltf
 	url = https://github.com/syoyo/tinygltf.git
+[submodule "Source/Dependencies/filewatch"]
+	path = Source/Dependencies/filewatch
+	url = https://github.com/ThomasMonkman/filewatch.git

@@ -6,6 +6,8 @@
 #include "TimeStep.h"
 #include "Renderer/Context.h"
 
+#include <mutex>
+
 namespace Nexus
 {
 	class Application
@@ -25,6 +27,8 @@ namespace Nexus
 		Window& GetWindow() { return m_Window; }
 
 		void SetWindowTitle(const char* name);
+
+		void SubmitToMainThreadQueue(const std::function<void()> func);
 	protected:
 		ApplicationSpecifications m_AppSpecs;
 
@@ -35,6 +39,9 @@ namespace Nexus
 	private:
 		Window m_Window;
 		Timestep m_TimeStep;
+
+		std::vector<std::function<void()>> m_MainThreadQueue;
+		std::mutex m_MainThreadMutex;
 	};
 
 }

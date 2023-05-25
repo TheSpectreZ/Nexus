@@ -8,8 +8,12 @@
 #include "mono/metadata/attrdefs.h"
 
 #include "Scene/Entity.h"
+#include "Core/Application.h"
+#include "FileWatch.hpp"
 
 Nexus::ScriptEngine* Nexus::ScriptEngine::s_Instance = nullptr;
+
+static Nexus::Scope<filewatch::FileWatch<std::string>> s_ScriptEngineFilewatcher;
 
 void Nexus::ScriptEngine::Init()
 {
@@ -21,10 +25,37 @@ void Nexus::ScriptEngine::Init()
 void Nexus::ScriptEngine::Shut()
 {
     s_Instance->ShutdownMono();
+
+    s_ScriptEngineFilewatcher.reset();
     delete s_Instance;
 }
 
-void Nexus::ScriptEngine::ReloadAssembly(const std::string& filepath)
+void Nexus::ScriptEngine::SetAppAssemblyFilepath(const std::string& filepath)
+{
+    s_Instance->m_AppAsseblyPath = filepath;
+
+    s_ScriptEngineFilewatcher.reset();
+
+    s_ScriptEngineFilewatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath, [&](const std::string& path,const filewatch::Event eventType)
+        {
+            NEXUS_LOG_DEBUG("Watched File: {0} - {1}", path, (uint32_t)eventType);
+            
+            if (!s_Instance->m_AssemblyReloadPending && eventType == filewatch::Event::added || eventType == filewatch::Event::modified)
+            {    
+                s_Instance->m_AssemblyReloadPending = true;
+
+                using namespace std::chrono_literals;
+                std::this_thread::sleep_for(500ms);
+
+                Application::Get()->SubmitToMainThreadQueue([]() {ScriptEngine::ReloadAssembly(); });
+            }
+        });
+
+    if (std::filesystem::exists(filepath))
+        ReloadAssembly();
+}
+
+void Nexus::ScriptEngine::ReloadAssembly()
 {
     if (s_Instance->m_AppDomain)
     {
@@ -32,7 +63,7 @@ void Nexus::ScriptEngine::ReloadAssembly(const std::string& filepath)
         mono_domain_unload(s_Instance->m_AppDomain);
     }
 
-    s_Instance->InitAssembly(filepath);
+    s_Instance->InitAssembly();
     ScriptGlue::BindComponents();
 }
 
@@ -97,7 +128,7 @@ void Nexus::ScriptEngine::ShutdownMono()
     m_RootDomain = nullptr;
 }
 
-void Nexus::ScriptEngine::InitAssembly(const std::string& appAssemblyPath)
+void Nexus::ScriptEngine::InitAssembly()
 {
     char friendlyName[] = "NexusAppDomain";
     m_AppDomain = mono_domain_create_appdomain(friendlyName, nullptr);
@@ -108,7 +139,7 @@ void Nexus::ScriptEngine::InitAssembly(const std::string& appAssemblyPath)
 
     PrintAssemblyTypes(m_CoreAssembly, "Core Assembly");
     
-    m_AppAssembly = LoadAssembly(appAssemblyPath);
+    m_AppAssembly = LoadAssembly(m_AppAsseblyPath);
     m_AppAssemblyImage = mono_assembly_get_image(m_AppAssembly);
 
     PrintAssemblyTypes(m_AppAssembly, "App Assembly");
