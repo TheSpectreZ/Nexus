@@ -35,6 +35,7 @@ project "Nexus"
         IncludeDir["joltRoot"],
         IncludeDir["jolt"],
         IncludeDir["tinygltf"],
+        IncludeDir["filewatch"],
 
         "$(VULKAN_SDK)/Include",
     }
