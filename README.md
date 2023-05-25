@@ -1,77 +1,30 @@
-# Nexus 
-
-Nexus is primarily a hobby project, a Game-Engine / Rendering-Framework for Windows. Note that Currently it's still in developement.
-
-![Screenshot 2023-05-19 125434](https://github.com/TheSpectreZ/Nexus/assets/122666662/c05b0fcc-6feb-4736-9897-effdb5ff1b4e)
-
-
-***
+# Welcome to Nexus 
+Nexus Engine is an exciting project that serves as a Game Engine and Rendering Framework primarily developed for Windows. Please keep in mind that it is currently in the development phase, with continuous improvements being made.
 
 ## Getting Started
-Visual Studio 2022 is recommended, Nexus is officially untested on other development environments other than Windows.
 
-<ins>**1. Downloading the repository:**</ins>
+To begin working with Nexus, It is recommended to use **Visual Studio 2022** as the development environment, as it is the officially supported platform for this project. Follow the steps below to get started:
 
-Start by cloning the repository with `git clone --recursive https://github.com/TheSpectreZ/Nexus`.
+<ins>**1. Downloading the Repository**</ins>
 
-If the repository was cloned non-recursively previously, use `git submodule update --init` to clone the necessary submodules.
+Clone the repository using the following command: `git clone --recursive https://github.com/TheSpectreZ/Nexus`
 
-<ins>**2. Configuring the dependencies:**</ins>
+If you had previously cloned the repository non-recursively, you can clone the necessary submodules by running: `git submodule update --init`
 
-1. Add an environment variable called `NEXUS_ROOT_PATH` that contains the file path to the root Nexus Engine folder (e.g F:/Development/Nexus-Engine)
-1. Run the `EngineBuild.bat` file found in `Build` folder. This will download the required prerequisites for the project if they are not present yet.
-2. One such prerequisite to run the Engine is the Vulkan SDK. If it is not founc, the script will download and execute the `VulkanSDK.exe` file, and will prompt the user to install the SDK.
-3. After Installing Vulkan SDK, run the `EngineBuild.bat` file again.
-4. After downloading and unzipping the required files, the `GenerateProjects.bat` script file will get executed automatically by `EngineBuild.bat`, which will then generate a Visual Studio solution file for user's usage.
+<ins>**2. Configuring Dependencies**</ins>
 
-If changes are made to the Engine, or if you want to regenerate Engine project files, rerun the `GenerateProjects.bat` script file found in `Build` folder.
-If changes are made to the Sandbox Project, rerun the `GenerateProject.bat` script file found in `Source\NexusEditor\Sandbox` folder.
+Before building the engine, you need to set up some dependencies. Follow these instructions carefully:
 
-***
-## Goals
-- Renderer
-  - [x] Vulkan Backend
-  - [x] Shader and Descriptor Management
-  - [x] Scene System
-  - [x] glTF Mesh Loading with Materials
-  - [x] PBR with Point and Directional Lights
-  - [ ] Image based Lighting
-  - [ ] Shadows  
-  - [ ] Bloom
-  - [ ] Frustrum Culling
-  - [ ] Rendering Billboards
-  - [ ] Text Rendering
-  - [ ] Instanced Rendering
-  - [ ] External Materials
-  - [ ] Animation
-  - [ ] Terrain Generation
-  - [ ] Water Rendering
-- Physics
-  - [x] Jolt Physics Backend
-  - [x] Simple Colliders and RigidBody
-  - [ ] Debug Renderer to Visualize Colliders
-  - [ ] Physics Materials
-  - [ ] Height-Fields
-- Scripting
-  - [x] Mono Backend
-  - [x] Scriptclass and Instances
-  - [x] Calling C# from C++ and Vice-Versa
-  - [x] Fields and Properties
-  - [x] Seperating App and Core DLLs
-  - [ ] Serialzing Field Data
-  - [ ] Reloading Assembly With Filewatcher
-  - [ ] Debugging Scripts
-- Editor
-  - [x] ImGui Backend
-  - [x] Scene Heirarchy and Properties
-  - [x] Content Browser
-  - [x] Editor Viewport
-  - [x] Launcher
-  - [ ] Editor Console/Log
-  - [ ] Material Asset Creator
-- Misc
-  - [x] Profile Timer
-  - [ ] Custom Asset Formats
-  - [ ] Multi-Threading Support
-  - [ ] Instrumentation
-  - [ ] Runtime
+- Add an environment variable called `NEXUS_ROOT_PATH`. Set its value to the file path of the root Nexus Engine folder (e.g. F:/Development/Nexus-Engine). Take a look at [this](https://docs.oracle.com/en/database/oracle/machine-learning/oml4r/1.5.1/oread/creating-and-modifying-environment-variables-on-windows.html) if you aren't sure how to do it.
+- Locate and run the `EngineBuild.bat` file found in the `Build` folder. This script will automatically download any required prerequisites for the project, if they are not already present on your system.
+- One of the essential prerequisites is the Vulkan SDK. If the SDK is not found, the script will download the `VulkanSDK.exe` file and guide you through the installation process.
+- Once the Vulkan SDK is installed, run the `EngineBuild.bat` file again.
+- The `EngineBuild.bat` script will generate a Visual Studio solution file for your convenience. This solution file will allow you to work with the Nexus Engine.
+- If you make any changes to the Engine or if you want to regenerate the Engine project files, simply rerun the `GenerateProjects.bat` script found in the `Build` folder.
+- Similarly, if you make changes to the Sandbox Project, rerun the `GenerateProject.bat` script located in the `Source\NexusEditor\Sandbox` folder.
+
+Feel free to explore the Nexus Game Engine and contribute to its development. If you encounter any issues or have suggestions, please open a new [issue](https://github.com/TheSpectreZ/Nexus/issues) on the GitHub repository.
+
+Here's a sneak peek of the current state of the engine's editor:
+
+![Screenshot 2023-05-19 125434](https://github.com/TheSpectreZ/Nexus/assets/122666662/c05b0fcc-6feb-4736-9897-effdb5ff1b4e)
