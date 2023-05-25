@@ -123,6 +123,16 @@ void Nexus::Application::Run()
 
 		glfwPollEvents();
 
+		// Main Thread Queue
+		{
+			std::scoped_lock<std::mutex> lock(m_MainThreadMutex);
+
+			for (auto& func : m_MainThreadQueue)
+				func();
+			
+			m_MainThreadQueue.clear();
+		}
+
 		// TimeStep
 		{
 			static float ct, lt;
@@ -196,6 +206,12 @@ void Nexus::Application::Shut()
 void Nexus::Application::SetWindowTitle(const char* name)
 {
 	glfwSetWindowTitle(m_Window.handle, name);
+}
+
+void Nexus::Application::SubmitToMainThreadQueue(const std::function<void()> func)
+{
+	std::scoped_lock<std::mutex> lock(m_MainThreadMutex);
+	m_MainThreadQueue.emplace_back(func);
 }
 
 void Nexus::Application::ResizeCallback()
