@@ -4,7 +4,7 @@ import winreg
 import requests
 import time
 import urllib
-import shutil
+
 from zipfile import ZipFile
 
 def GetSystemEnvironmentVariable(name):
@@ -125,6 +125,3 @@ def UnzipFile(filepath, deleteZipFile=True):
 
     if deleteZipFile:
         os.remove(zipFilePath) # delete zip file
-
-def CopyFile(src,dst):
-    shutil.copy2(src, dst)
