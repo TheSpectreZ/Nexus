@@ -27,6 +27,7 @@ project "NexusLauncher"
     links
     {
         "Nexus",
+        "NexusEditor"
     }
     
     linkoptions 
