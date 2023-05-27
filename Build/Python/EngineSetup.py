@@ -23,6 +23,8 @@ if (premakeInstalled):
         os.chdir('./Source/NexusEditor/Sandbox')
         print("\n")
         subprocess.call([os.path.abspath("./GenerateProject.bat"), "nopause"])
+        print("\n")
+        subprocess.call([os.path.abspath('./Scripts/Build.bat')])
 
     print("\nSetup completed!")
 else:
