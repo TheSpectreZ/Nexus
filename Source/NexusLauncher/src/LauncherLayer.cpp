@@ -120,6 +120,15 @@ void LauncherLayer::RenderLauncherWindow()
 	
 	ImGui::Checkbox("Enable Multisampling", &m_ProjectSpecs.renderSettings.EnableMultiSampling);
 
+	static bool launch = false;
+	ImGui::Checkbox("Launch Editor", &launch);
+
+	if (launch)
+	{
+		ImGui::SameLine();
+		ImGui::TextWrapped("Note that This would launch the Editor without the Debugger. Load the Project from Editor Itself after lauching it from VS to use Debugger");
+	}
+
 	if (ImGui::Button("Create"))
 	{
 		if (pathselected)
@@ -128,20 +137,24 @@ void LauncherLayer::RenderLauncherWindow()
 			m_ProjectSpecs.RootPath = filepath + "\\" + buffer;
 	
 			GenerateProject(m_ProjectSpecs);
-			//LaunchEditor();
+			
+			if(launch)
+			{
+				LaunchEditor();
+			}
 			pathselected = false;
 		}
 	}
 
-	//if (ImGui::Button("Load"))
-	//{
-	//	std::string path = Nexus::FileDialog::OpenFile("Nexus Project (*.nxProject)\0*.nxProject\0");
-	//	if (!path.empty())
-	//	{
-	//		Nexus::ProjectSerializer::DeSerialize(path, m_ProjectSpecs);
-	//		LaunchEditor();
-	//	}
-	//}
+	if (launch && ImGui::Button("Load"))
+	{
+		std::string path = Nexus::FileDialog::OpenFile("Nexus Project (*.nxProject)\0*.nxProject\0");
+		if (!path.empty())
+		{
+			Nexus::ProjectSerializer::DeSerialize(path, m_ProjectSpecs);
+			LaunchEditor();
+		}
+	}
 
 	ImGui::End();
 }
@@ -201,7 +214,7 @@ void LauncherLayer::GenerateProject(const Nexus::ProjectSpecifications& specs)
 			std::filesystem::copy_file("Sandbox\\Binaries\\premake\\premake5.exe", p);
 	}
 
-	// Generating Project
+	// C# Project
 	{
 		auto currentPath = std::filesystem::current_path();
 		std::filesystem::current_path(specs.RootPath);
@@ -215,7 +228,26 @@ void LauncherLayer::GenerateProject(const Nexus::ProjectSpecifications& specs)
 			std::filesystem::remove(specs.RootPath + "\\premake5.lua");
 			std::filesystem::remove_all(specs.RootPath + "\\Binaries");
 		}
+		
+		std::filesystem::current_path(specs.RootPath + "\\Scripts");
+		std::ofstream batchFile("build.bat");
 
+		std::string projectName = specs.Name + ".csproj";
+
+		batchFile << "@echo off" << std::endl;
+		batchFile << "rem Build the C# project" << std::endl;
+		batchFile << " \"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe\" /p:Configuration=Debug " << projectName << std::endl;
+		batchFile << " \"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe\" /p:Configuration=Release " << projectName  << std::endl;
+		batchFile << " \"C:\\Program Files (x86)\\Microsoft Visual Studio\\2022\\BuildTools\\MSBuild\\Current\\Bin\\MSBuild.exe\" /p:Configuration=Dist " << projectName << std::endl;
+	
+		batchFile.close();
+
+		std::string f = "build.bat";
+		if (!std::system(f.c_str()))
+		{
+			std::filesystem::remove(f);
+		}
+		
 		std::filesystem::current_path(currentPath);
 	}
 
@@ -226,6 +258,10 @@ void LauncherLayer::GenerateProject(const Nexus::ProjectSpecifications& specs)
 		m_ProjectSpecs.Version = "v1.0.0";
 		m_ProjectSpecs.renderSettings.EnableHDR = false;
 		Nexus::ProjectSerializer::Serialize(m_ProjectSpecs);
+
+		std::filesystem::create_directories(specs.RootPath + "\\Scripts\\Bin\\Debug");
+		std::filesystem::create_directories(specs.RootPath + "\\Scripts\\Bin\\Release");
+		std::filesystem::create_directories(specs.RootPath + "\\Scripts\\Bin\\Dist");
 	}
 }
 
