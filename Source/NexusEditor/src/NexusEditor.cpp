@@ -1,3 +1,4 @@
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #include "EntryPoint.h"
 #include "EditorLayer.h"
 
@@ -20,11 +21,7 @@ public:
 	}
 };
 
-Nexus::Application* CreateApplication(int argc,char** argv)
+Nexus::Application* CreateApplication(std::string projectPath)
 {
-	std::string project;
-	if (argc > 1)
-		project = argv[1];
-
-	return new NexusEditor(project);
+	return new NexusEditor(projectPath);
 }

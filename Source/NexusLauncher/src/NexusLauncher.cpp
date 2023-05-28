@@ -1,3 +1,4 @@
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 #include "EntryPoint.h"
 #include "LauncherLayer.h"
 
@@ -20,7 +21,7 @@ public:
 	}
 };
 
-Nexus::Application* CreateApplication(int argc, char** argv)
+Nexus::Application* CreateApplication(std::string args)
 {
 	return new Launcher();
 }
