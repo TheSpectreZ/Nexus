@@ -8,22 +8,19 @@ workspace "Nexus-Engine"
         "Debug","Release","Dist"
     }
 
-    startproject "NexusLauncher"
+    startproject "NexusEd"
 
     group "Dependencies"
-        include "Scripts/Dependencies/assimp.lua"
         include "Scripts/Dependencies/glfw.lua"
         include "Scripts/Dependencies/spdlog.lua"
         include "Scripts/Dependencies/imgui.lua"
         include "Scripts/Dependencies/yamlcpp.lua"
-        include "Scripts/Dependencies/openALsoft.lua"
         include "Scripts/Dependencies/glad.lua"
         include "Scripts/Dependencies/jolt.lua"
     
-    group "Core"
-        include "Scripts/Nexus.lua"
-        include "Scripts/NexusScriptCore.lua"
+    group "NexusEngine"
+        include "Scripts/Engine/Core.lua"
+        include "Scripts/Engine/Engine.lua"
     
     group "Tools"
-        include "Scripts/NexusEditor.lua"
-        include "Scripts/NexusLauncher.lua"
+        include "Scripts/Tools/NexusEd.lua"

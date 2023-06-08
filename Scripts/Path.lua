@@ -30,3 +30,10 @@ IncludeDir["Nexus"] = (SrcDir.."Nexus/src/Nexus")
 LibDir = {}
 
 LibDir["vulkanSDK"] = "$(VULKAN_SDK)/Lib"
+
+IncludePath = {}
+IncludePath["spdlog"] = (DepDir.."spdlog/include")
+IncludePath["glfw"] = (DepDir.."glfw/include")
+
+IncludePath["Core"] = (SrcDir.."Engine/Core/include")
+IncludePath["Engine"] = (SrcDir.."Engine/Engine/include")
