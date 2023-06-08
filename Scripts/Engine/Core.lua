@@ -1,4 +1,4 @@
-project "Core"
+project "NxCore"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -17,13 +17,7 @@ project "Core"
 
 	includedirs
 	{
-		IncludePath["Core"],
-		IncludePath["spdlog"]
-	}
-
-	links
-	{
-		"spdlog"
+		IncludePath["NxCore"]
 	}
 
 	defines "NEXUS_CORE_SHARED_BUILD"

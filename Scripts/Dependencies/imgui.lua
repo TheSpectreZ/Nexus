@@ -1,5 +1,5 @@
 project "imgui"
-	kind "StaticLib"
+	kind "SharedLib"
 	language "C++"
 	location (vcxDir)
     staticruntime "Off"
@@ -33,8 +33,8 @@ project "imgui"
 
 	includedirs
 	{
-		IncludeDir["imgui"],
-		IncludeDir["glfw"],
+		IncludePath["imgui"],
+		IncludePath["glfw"],
 		
 		"$(VULKAN_SDK)/Include"
 	}
@@ -47,7 +47,7 @@ project "imgui"
 
 	libdirs
 	{
-		LibDir["vulkanSDK"]
+		LibPath["vulkanSDK"]
 	}
 
 	filter "system:windows"

@@ -1,5 +1,4 @@
 #pragma once
-#include "TimeStep.h"
 
 #ifdef NEXUS_CORE_SHARED_BUILD
 #define NEXUS_CORE_API __declspec(dllexport)
@@ -13,7 +12,7 @@ namespace Nexus
 	{
 	public:
 		virtual void OnAttach(){};
-  		virtual void OnUpdate(Timestep ts){};
+  		virtual void OnUpdate(float dt){};
 		virtual void OnRender(){};
 		virtual void OnDetach(){};
 		virtual void OnWindowResize(int width, int height) {};

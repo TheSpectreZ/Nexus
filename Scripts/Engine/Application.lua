@@ -1,4 +1,4 @@
-project "Engine"
+project "NxApplication"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -17,18 +17,13 @@ project "Engine"
 
 	includedirs
 	{
-		IncludePath["glfw"],
-		IncludePath["spdlog"],
-
-		IncludePath["Core"],
-		IncludePath["Engine"]
+		IncludePath["NxCore"],
+		IncludePath["NxApplication"]
 	}
 
 	links
 	{
-		"glfw",
-
-		"Core"
+		"NxCore",
 	}
 
 	defines "NEXUS_ENGINE_SHARED_BUILD"

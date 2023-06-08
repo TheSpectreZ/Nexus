@@ -1,13 +1,8 @@
 #pragma once
+#include "RenderAPI.h"
 
 namespace Nexus
 {
-	enum RenderApi
-	{
-		RenderAPI_None,
-		RenderAPI_Vulkan
-	};
-
 	enum PhysicsAPI
 	{
 		PhysicsAPI_None,
@@ -20,12 +15,12 @@ namespace Nexus
 		int Window_height;
 		const char* Window_Title;
 		
-		bool Vsync;
-		bool MultiSampling;
-		bool EnableScriptEngine;
-		bool LoadDefaultAssets;
+		bool Vsync = true;
+		bool MultiSampling = false;
+		bool EnableScriptEngine = false;
+		bool LoadDefaultAssets = false;
 
-		RenderApi rApi;
+		RenderAPIType rApi;
 		PhysicsAPI pApi;
 	};
 }

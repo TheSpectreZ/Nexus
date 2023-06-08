@@ -7,33 +7,25 @@ BinDir = "%{wks.location}/Binaries/%{cfg.buildcfg}"
 IntDir = "%{wks.location}/Intermediates/%{prj.name}/%{cfg.buildcfg}/"
 vcxDir = "%{wks.location}/Intermediates/%{prj.name}"
 
-IncludeDir = {}
-
-IncludeDir["glfw"] = (DepDir.."glfw/include")
-IncludeDir["spdlog"] = (DepDir.."spdlog/include")
-IncludeDir["vulkanMemoryAllocator"] = (DepDir.."VulkanMemoryAllocator/include")
-IncludeDir["stb"] = (DepDir.."stb")
-IncludeDir["imgui"] = (DepDir.."imgui")
-IncludeDir["entt"] = (DepDir.."entt/single_include")
-IncludeDir["yamlcpp"] = (DepDir.."yamlcpp/include")
-IncludeDir["glad"] = (DepDir.."glad/include")
-IncludeDir["nlohmannJson"] = (DepDir.."nlohmannJson/single_include")
-IncludeDir["assimp"] = (DepDir.."Assimp/include")
-IncludeDir["openALsoft"] = (DepDir.."openALsoft/include")
-IncludeDir["mono"] = (VenDir.."Mono/include")
-IncludeDir["joltRoot"] = (DepDir.."Jolt")
-IncludeDir["jolt"] = (DepDir.."Jolt/Jolt")
-IncludeDir["tinygltf"] = (DepDir.."tinygltf")
-IncludeDir["filewatch"] = (DepDir.."filewatch")
-IncludeDir["Nexus"] = (SrcDir.."Nexus/src/Nexus")
-
-LibDir = {}
-
-LibDir["vulkanSDK"] = "$(VULKAN_SDK)/Lib"
+LibPath = {}
+LibPath["vulkanSDK"] = "$(VULKAN_SDK)/Lib"
 
 IncludePath = {}
-IncludePath["spdlog"] = (DepDir.."spdlog/include")
+IncludePath["vulkanMemoryAllocator"] = (DepDir.."VulkanMemoryAllocator/include")
+IncludePath["stb"] = (DepDir.."stb")
+IncludePath["imgui"] = (DepDir.."imgui")
+IncludePath["entt"] = (DepDir.."entt/single_include")
+IncludePath["yamlcpp"] = (DepDir.."yamlcpp/include")
+IncludePath["nlohmannJson"] = (DepDir.."nlohmannJson/single_include")
+IncludePath["mono"] = (VenDir.."Mono/include")
+IncludePath["joltRoot"] = (DepDir.."Jolt")
+IncludePath["jolt"] = (DepDir.."Jolt/Jolt")
+IncludePath["tinygltf"] = (DepDir.."tinygltf")
+IncludePath["filewatch"] = (DepDir.."filewatch")
 IncludePath["glfw"] = (DepDir.."glfw/include")
 
-IncludePath["Core"] = (SrcDir.."Engine/Core/include")
-IncludePath["Engine"] = (SrcDir.."Engine/Engine/include")
+IncludePath["NxCore"] = (SrcDir.."Engine/NxCore/include")
+IncludePath["NxVulkan"] = (SrcDir.."Engine/NxVulkan/include")
+IncludePath["NxGraphics"] = (SrcDir.."Engine/NxGraphics/include")
+IncludePath["NxRenderEngine"] = (SrcDir.."Engine/NxRenderEngine/include")
+IncludePath["NxApplication"] = (SrcDir.."Engine/NxApplication/include")

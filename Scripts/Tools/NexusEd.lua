@@ -17,13 +17,12 @@ project "NexusEd"
 
 	links
 	{
-		"Engine"
+		"NxApplication"
 	}
 
 	includedirs
 	{
-		IncludePath["Core"],
-		IncludePath["Engine"]
+		IncludePath["NxApplication"]
 	}
 
 	filter "system:windows"

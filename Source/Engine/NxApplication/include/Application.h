@@ -1,8 +1,9 @@
 #pragma once
+
+// Application
 #include "Layer.h"
 #include "ApplicationSpecifications.h"
 #include "Window.h"
-#include "TimeStep.h"
 
 #ifdef NEXUS_ENGINE_SHARED_BUILD
 #define NEXUS_ENGINE_API __declspec(dllexport)
@@ -36,7 +37,6 @@ namespace Nexus
 		void PopLayer(Layer* layer);
 	private:
 		Window m_Window;
-		Timestep m_TimeStep;
 	};
 
 }
