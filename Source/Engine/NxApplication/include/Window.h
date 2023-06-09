@@ -1,6 +1,5 @@
 #pragma once
-
-typedef struct GLFWwindow GLFWwindow;
+#include <Windows.h>
 
 namespace Nexus
 {
@@ -8,6 +7,6 @@ namespace Nexus
 	{
 		int width, height;
 		const char* title;
-		GLFWwindow* handle;
+		HWND handle;
 	};
 }

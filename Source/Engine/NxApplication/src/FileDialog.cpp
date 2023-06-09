@@ -1,15 +1,15 @@
 #include "FileDialog.h"
 
-#include "GLFW/glfw3.h"
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include "GLFW/glfw3native.h"
+//#include "GLFW/glfw3.h"
+//#define GLFW_EXPOSE_NATIVE_WIN32
+//#include "GLFW/glfw3native.h"
 
 #include <commdlg.h>
 #include <ShlObj_core.h>
 
 namespace Nexus::FileDialog
 {
-	GLFWwindow* m_window = nullptr;
+	HWND m_window = nullptr;
 }
 
 void Nexus::FileDialog::SetContextWindow(const Window& Window)
@@ -26,7 +26,7 @@ std::string Nexus::FileDialog::OpenFile(const char* Filter)
 	ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
-	ofn.hwndOwner = glfwGetWin32Window(m_window);
+	ofn.hwndOwner = m_window;
 	ofn.lpstrFile = szFile;
 	ofn.nMaxFile = sizeof(szFile);
 	ofn.lpstrFilter = Filter;
@@ -50,7 +50,7 @@ std::string Nexus::FileDialog::SaveFile(const char* Filter)
 	ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
 	ofn.lStructSize = sizeof(OPENFILENAME);
-	ofn.hwndOwner = glfwGetWin32Window(m_window);
+	ofn.hwndOwner = m_window;
 	ofn.lpstrFile = szFile;
 	ofn.nMaxFile = sizeof(szFile);
 	ofn.lpstrFilter = Filter;
@@ -70,7 +70,7 @@ std::string Nexus::FileDialog::SelectFolder()
 	TCHAR szDir[260] = { 0 };
 
 	BROWSEINFO bInfo;
-	bInfo.hwndOwner = glfwGetWin32Window(m_window);
+	bInfo.hwndOwner = m_window;
 	bInfo.pidlRoot = NULL;
 	bInfo.pszDisplayName = szDir;
 	bInfo.lpszTitle = "Select a folder";

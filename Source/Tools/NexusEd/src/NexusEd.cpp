@@ -7,8 +7,8 @@ public:
 	NexusEd()
 	{
 		m_AppSpecs.Window_Title = "NexusEd";
-		m_AppSpecs.Window_Width = 1600;
-		m_AppSpecs.Window_height = 900;
+		m_AppSpecs.Window_Width = 1024;
+		m_AppSpecs.Window_height = 578;
 	}
 };
 

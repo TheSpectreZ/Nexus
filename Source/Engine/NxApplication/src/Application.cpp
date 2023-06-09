@@ -1,153 +1,163 @@
-#include "GLFW/glfw3.h"
-
 // STL
 #include <vector>
 
 // Application
+#include "Base.h"
+#include "Logger.h"
 #include "Application.h"
 #include "Input.h"
 #include "FileDialog.h"
-
-// Core
-#include "Logger.h"
-#include "Assert.h"
-
-// Modules
-#include "RenderEngine.h"
 
 namespace Nexus
 {
 	Application* Application::s_Instance = nullptr;	
 
-	static std::vector<Nexus::Layer*> m_layerStack;
-	static float s_DeltaTime = 0.f;
+	struct ApplicationData
+	{
+		std::vector<Layer*> layerStack;
+
+		const char* clsName = "NEXUS_WINDOW";
+		bool IsRunning = true;
+		MSG msg;
+		HINSTANCE hInst;
+	};
+	
+	static ApplicationData* s_Data;
 }
 
 Nexus::Application::Application()
 {
 	s_Instance = this;
-	NEXUS_LOG_INIT
+	s_Data = new ApplicationData();
 
-	if (!glfwInit())
-	{
-		NEXUS_ASSERT(1, "glfw Initialization Failed");
-	}
-
-	NEXUS_LOG_TRACE("Nexus::Core Initialized");
 }
 
 Nexus::Application::~Application()
 {
-	glfwTerminate();
-	NEXUS_LOG_TRACE("Nexus::Core Terminated");
-	NEXUS_LOG_SHUT
+	s_Instance = nullptr;
+	delete s_Data;
 }
 
 void Nexus::Application::Init()
 {
+	LogManager::Initialize();
+	
+	LogManager::Get()->Make(LoggerType::Console);
+	LogManager::Get()->Make(LoggerType::File);
+
 	// Window Creation
 	{
 		m_Window.width = m_AppSpecs.Window_Width;
 		m_Window.height = m_AppSpecs.Window_height;
 		m_Window.title = m_AppSpecs.Window_Title;
-		m_Window.handle = nullptr;
+		
+		s_Data->hInst = GetModuleHandle(NULL);
 
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+		WNDCLASSEX wc{};
+		wc.cbSize = sizeof(WNDCLASSEX);
+		wc.style = CS_HREDRAW | CS_VREDRAW;
+		wc.lpfnWndProc = WindowProc;
+		wc.hInstance = s_Data->hInst;
+		wc.lpszClassName = s_Data->clsName;
+		
+		RegisterClassEx(&wc);
 
-		m_Window.handle = glfwCreateWindow(m_Window.width, m_Window.height, m_Window.title, nullptr, nullptr);
-		NEXUS_LOG_TRACE("{2} Window Created: {0}x{1}", m_Window.width, m_Window.height, m_Window.title);
+		RECT wr = { 0, 0, (LONG)m_Window.width, (LONG)m_Window.height };   
+		AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);    
 
-		// Callbacks
-		{
-			glfwSetWindowUserPointer(m_Window.handle, &m_Window);
-			glfwSetWindowSizeCallback(m_Window.handle, [](GLFWwindow* window, int width, int height)
-				{
-					Window& data = *(Window*)glfwGetWindowUserPointer(window);
-					data.width = width;
-					data.height = height;
-				});
-		}
+		m_Window.handle = CreateWindowEx(0, s_Data->clsName, m_Window.title, WS_OVERLAPPEDWINDOW,
+			CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL,
+			s_Data->hInst, NULL);
 
-		Input::SetContextWindow(m_Window);
-		FileDialog::SetContextWindow(m_Window);
+		NEXUS_LOG("Application", "Window Created: %i,%i", m_Window.width, m_Window.height);
 	}
 
-	// Modules
-	{
-		RenderEngine::Initialize(m_AppSpecs.rApi);
-	}
 }
 
 void Nexus::Application::Run()
 {
-	for (auto& l : m_layerStack)
+	for (auto& l : s_Data->layerStack)
 		l->OnAttach();
-	
-	glfwShowWindow(m_Window.handle);
-	while (!glfwWindowShouldClose(m_Window.handle))
+
+	ShowWindow(m_Window.handle, SW_SHOW);
+	while (s_Data->IsRunning)
 	{
-		glfwPollEvents();
-
+		if(PeekMessage(&s_Data->msg, NULL, 0, 0, PM_REMOVE))
 		{
-			static float ct, lt;
-			
-			ct = (float)glfwGetTime();
-			s_DeltaTime = ct - lt;
-			lt = ct;
+			TranslateMessage(&s_Data->msg);
+			DispatchMessage(&s_Data->msg);
+		
+			if (s_Data->msg.message == WM_QUIT)
+				s_Data->IsRunning = false;
 		}
 
-		for (auto& l : m_layerStack)
-		{
-			l->OnUpdate(s_DeltaTime);
-		}
+		for (auto& l : s_Data->layerStack)
+			l->OnUpdate(0.f);
+
+		for (auto& l : s_Data->layerStack)
+			l->OnRender();
 	}
-	
-	for (auto& l : m_layerStack)
+
+	for (auto& l : s_Data->layerStack)
 	{
 		l->OnDetach();
 		PopLayer(l);
-		delete l;
 	}
 }
 
 void Nexus::Application::Shut()
 {
-	// Modules
-	{
-		RenderEngine::Shutdown();
-	}
+	UnregisterClass(s_Data->clsName,s_Data->hInst);
 
-	// Window Destruction
-	{
-		glfwDestroyWindow(m_Window.handle);
-		NEXUS_LOG_TRACE("Window Destroyed");
-	}
+	LogManager::Shutdown();
 }
 
 void Nexus::Application::SetWindowTitle(const char* name)
 {
-	glfwSetWindowTitle(m_Window.handle, name);
+	SetWindowText(m_Window.handle, name);
 }
 
 void Nexus::Application::ResizeCallback()
 {
-	for (auto& layer : m_layerStack)
-	{
-		layer->OnWindowResize(m_Window.width, m_Window.height);
-	}
+	
 }
 
 void Nexus::Application::PushLayer(Layer* layer)
 {
-	m_layerStack.push_back(layer);
+	s_Data->layerStack.push_back(layer);
 }
 
 void Nexus::Application::PopLayer(Layer* layer)
 {
-	auto it = std::find(m_layerStack.begin(), m_layerStack.end(), layer);
-	if (it != m_layerStack.end())
+	auto it = std::find(s_Data->layerStack.begin(), s_Data->layerStack.end(), layer);
+	if (it != s_Data->layerStack.end())
 	{
-		m_layerStack.erase(it);
+		s_Data->layerStack.erase(it);
+		delete layer;
 	}
+}
+
+LRESULT CALLBACK Nexus::Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch (message)
+	{
+		case WM_DESTROY:
+		{
+			PostQuitMessage(0);
+			return 0;
+		}
+		case WM_CLOSE:
+		{
+			PostQuitMessage(0);
+			return 0;
+		}
+		case WM_SIZE:
+		{
+			s_Instance->m_Window.width = LOWORD(lParam);
+			s_Instance->m_Window.height = HIWORD(lParam);
+			break;
+		}
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
 }

@@ -32,11 +32,12 @@ namespace Nexus
 		ApplicationSpecifications m_AppSpecs;
 
 		void ResizeCallback();
-
+		
 		void PushLayer(Layer* layer);
 		void PopLayer(Layer* layer);
 	private:
 		Window m_Window;
+		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	};
 
 }
