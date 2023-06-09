@@ -1,6 +1,6 @@
 #pragma once
-#include "spdlog/spdlog.h"
-#include <memory>
+#include "Base.h"
+#include <fstream>
 
 #ifdef NEXUS_CORE_SHARED_BUILD
 #define NEXUS_CORE_API __declspec(dllexport)
@@ -8,37 +8,72 @@
 #define NEXUS_CORE_API __declspec(dllimport)
 #endif // NEXUS_CORE_SHARED_BUILD
 
-namespace Nexus::Utility
+namespace Nexus
 {
-	struct NEXUS_CORE_API Logger
+	enum class NEXUS_CORE_API LoggerType
 	{
-		static void Init();
-		static void Shut();
-
-		static std::shared_ptr<spdlog::logger> _logger;
+		Console, File
 	};
+
+	class Logger
+	{
+	public:
+		virtual void Log(const char* Entry,int line, const char* file, const char* format, ...) = 0;
+		virtual ~Logger() = default;
+	};
+
+	class NEXUS_CORE_API ConsoleLogger : public Logger
+	{
+	public:
+		ConsoleLogger();
+		~ConsoleLogger() override;
+
+		void Log(const char* Entry, int line, const char* file, const char* format, ...) override;
+	};
+
+	class NEXUS_CORE_API FileLogger : public Logger
+	{
+	public:
+		FileLogger();
+		~FileLogger() override;
+
+		void Log(const char* Entry, int line, const char* file, const char* format, ...) override;
+	private:
+		std::ofstream _stream;
+	};
+
+	class NEXUS_CORE_API LogManager
+	{
+		static LogManager* s_Instance;
+	public:
+		static LogManager* Get() { return s_Instance; }
+		static void Initialize();
+		static void Shutdown();
+
+		template<typename... Args>
+		void Make(LoggerType Type, Args... args)
+		{
+			switch (Type)
+			{
+			case Nexus::LoggerType::Console:
+				m_Loggers.push_back(CreateRef<ConsoleLogger>()); break;
+			case Nexus::LoggerType::File:
+				m_Loggers.push_back(CreateRef<FileLogger>(args...)); break;
+			default:
+				return;
+			}
+		}
+
+		template<typename... Args>
+		void Log(const char* Entry, int line, const char* file, const char* format, Args... args)
+		{
+			for (auto& logger : m_Loggers)
+				logger->Log(Entry, line, file, format, args...);
+		}
+	private:
+		std::vector< Ref<Logger> > m_Loggers;
+	};
+
+#define NEXUS_LOG(Entry,log,...) ::Nexus::LogManager::Get()->Log(Entry,__LINE__,__FILE__,log,##__VA_ARGS__)
+
 }
-
-#ifdef NEXUS_ENABLE_LOG
-
-#define NEXUS_LOG_INIT ::Nexus::Utility::Logger::Init();
-#define NEXUS_LOG_SHUT ::Nexus::Utility::Logger::Shut();
-
-#define NEXUS_LOG_DEBUG(...) ::Nexus::Utility::Logger::_logger->debug(__VA_ARGS__);
-#define NEXUS_LOG_TRACE(...) ::Nexus::Utility::Logger::_logger->trace(__VA_ARGS__);
-#define NEXUS_LOG_INFO(...) ::Nexus::Utility::Logger::_logger->info(__VA_ARGS__);
-#define NEXUS_LOG_WARN(...) ::Nexus::Utility::Logger::_logger->warn(__VA_ARGS__);
-#define NEXUS_LOG_ERROR(...) ::Nexus::Utility::Logger::_logger->error(__VA_ARGS__);
-
-#else
-
-#define NEXUS_LOG_INIT
-#define NEXUS_LOG_SHUT
-
-#define NEXUS_LOG_DEBUG(...)
-#define NEXUS_LOG_TRACE(...)
-#define NEXUS_LOG_INFO(...)
-#define NEXUS_LOG_WARN(...)
-#define NEXUS_LOG_ERROR(...)
-
-#endif
