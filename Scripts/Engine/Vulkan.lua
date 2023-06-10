@@ -1,4 +1,4 @@
-project "NxCore"
+project "NxVulkan"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -17,15 +17,37 @@ project "NxCore"
 
 	includedirs
 	{
-		IncludePath["NxCore"]
+		"$(VULKAN_SDK)/Include",
+		IncludePath["VMA"],
+		IncludePath["NxCore"],
+		IncludePath["NxVulkan"],
+		IncludePath["NxGraphics"],
 	}
 
-	defines "NEXUS_CORE_SHARED_BUILD"
+	links
+	{
+		"NxCore",
+		"vulkan-1.lib"
+	}
+
+	libdirs
+	{
+		"$(VULKAN_SDK)/Lib"
+	}
+
+	defines 
+	{
+		"NEXUS_VULKAN_SHARED_BUILD"
+	}
 
 	filter "system:windows"
 		systemversion "latest"
-		defines "NEXUS_SYSTEM_WINDOWS"
-		disablewarnings { "4251" }
+		defines 
+		{
+			"VK_USE_PLATFORM_WIN32_KHR",
+			"NEXUS_SYSTEM_WINDOWS"
+		}
+		disablewarnings { "4251","4275" }
 
 	filter "configurations:Debug"
 		optimize "Off"

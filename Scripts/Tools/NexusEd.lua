@@ -22,12 +22,15 @@ project "NexusEd"
 
 	includedirs
 	{
+		IncludePath["NxCore"],
+		IncludePath["NxRenderer"],
 		IncludePath["NxApplication"]
 	}
 
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
+		disablewarnings { "4251","4996" }
 
 	filter "configurations:Debug"
 		optimize "Off"

@@ -7,11 +7,8 @@ BinDir = "%{wks.location}/Binaries/%{cfg.buildcfg}"
 IntDir = "%{wks.location}/Intermediates/%{prj.name}/%{cfg.buildcfg}/"
 vcxDir = "%{wks.location}/Intermediates/%{prj.name}"
 
-LibPath = {}
-LibPath["vulkanSDK"] = "$(VULKAN_SDK)/Lib"
-
 IncludePath = {}
-IncludePath["vulkanMemoryAllocator"] = (DepDir.."VulkanMemoryAllocator/include")
+IncludePath["VMA"] = (DepDir.."VulkanMemoryAllocator/include")
 IncludePath["stb"] = (DepDir.."stb")
 IncludePath["imgui"] = (DepDir.."imgui")
 IncludePath["entt"] = (DepDir.."entt/single_include")
@@ -27,5 +24,5 @@ IncludePath["glfw"] = (DepDir.."glfw/include")
 IncludePath["NxCore"] = (SrcDir.."Engine/NxCore/include")
 IncludePath["NxVulkan"] = (SrcDir.."Engine/NxVulkan/include")
 IncludePath["NxGraphics"] = (SrcDir.."Engine/NxGraphics/include")
-IncludePath["NxRenderEngine"] = (SrcDir.."Engine/NxRenderEngine/include")
+IncludePath["NxRenderer"] = (SrcDir.."Engine/NxRenderer/include")
 IncludePath["NxApplication"] = (SrcDir.."Engine/NxApplication/include")

@@ -30,7 +30,6 @@ project "jolt"
 	filter "system:windows"
 		systemversion "latest"
         files { (DepDir.."Jolt/Jolt/Jolt.natvis") }
-        defines "JPH_PLATFORM_WINDOWS"
 
 	filter "configurations:Debug"
         optimize "Off"

@@ -1,4 +1,4 @@
-project "NxCore"
+project "NxGraphics"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -17,10 +17,11 @@ project "NxCore"
 
 	includedirs
 	{
-		IncludePath["NxCore"]
+		IncludePath["NxCore"],
+		IncludePath["NxGraphics"],
 	}
 
-	defines "NEXUS_CORE_SHARED_BUILD"
+	defines "NEXUS_GRAPHICS_SHARED_BUILD"
 
 	filter "system:windows"
 		systemversion "latest"

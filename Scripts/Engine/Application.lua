@@ -18,12 +18,15 @@ project "NxApplication"
 	includedirs
 	{
 		IncludePath["NxCore"],
+		IncludePath["NxGraphics"],
+		IncludePath["NxRenderer"],
 		IncludePath["NxApplication"]
 	}
 
 	links
 	{
 		"NxCore",
+		"NxRenderer"
 	}
 
 	defines "NEXUS_ENGINE_SHARED_BUILD"
@@ -31,6 +34,7 @@ project "NxApplication"
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
+		disablewarnings { "4251" }
 
 	filter "configurations:Debug"
 		optimize "Off"

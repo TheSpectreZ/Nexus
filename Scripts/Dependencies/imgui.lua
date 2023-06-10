@@ -34,20 +34,22 @@ project "imgui"
 	includedirs
 	{
 		IncludePath["imgui"],
-		IncludePath["glfw"],
 		
-		"$(VULKAN_SDK)/Include"
+		"$(VULKAN_SDK)/Include",
+		(DepDir.."imgui/examples/libs/glfw/include")
 	}
 
 	links
 	{
-		"glfw",
+		"glfw3.lib",
+		"legacy_stdio_definitions.lib",
 		"vulkan-1.lib"
 	}
 
 	libdirs
 	{
-		LibPath["vulkanSDK"]
+		"$(VULKAN_SDK)/Lib",
+		(DepDir.."imgui/examples/libs/glfw/lib-vc2010-64")
 	}
 
 	filter "system:windows"

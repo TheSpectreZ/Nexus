@@ -1,4 +1,4 @@
-project "NxCore"
+project "NxRenderer"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -17,10 +17,26 @@ project "NxCore"
 
 	includedirs
 	{
-		IncludePath["NxCore"]
+		"$(VULKAN_SDK)/Include",
+		IncludePath["VMA"],
+
+		IncludePath["NxCore"],
+		IncludePath["NxVulkan"],
+		IncludePath["NxGraphics"],
+		IncludePath["NxRenderer"],
 	}
 
-	defines "NEXUS_CORE_SHARED_BUILD"
+	links
+	{
+		"NxCore",
+		"NxGraphics",
+		"NxVulkan",
+	}
+
+	defines 
+	{
+		"NEXUS_RENDERER_SHARED_BUILD"
+	}
 
 	filter "system:windows"
 		systemversion "latest"
