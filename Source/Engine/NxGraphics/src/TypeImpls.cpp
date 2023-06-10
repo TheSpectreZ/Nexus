@@ -1,4 +1,4 @@
-#include "TypeImpls.h"
+#include "NxGraphics/TypeImpls.h"
 
 std::string Nexus::GetShaderStageTypeStringName(ShaderStage stage)
 {

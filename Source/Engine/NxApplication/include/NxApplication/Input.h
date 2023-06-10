@@ -1,5 +1,5 @@
 #pragma once
-#include "Window.h"
+#include "NxCore/Window.h"
 #include "KeyCode.h"
 #include <utility>
 

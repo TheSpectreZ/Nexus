@@ -1,9 +1,5 @@
-#include "FileDialog.h"
-
-//#include "GLFW/glfw3.h"
-//#define GLFW_EXPOSE_NATIVE_WIN32
-//#include "GLFW/glfw3native.h"
-
+#include "NxApplication/FileDialog.h"
+#include <Windows.h>
 #include <commdlg.h>
 #include <ShlObj_core.h>
 
@@ -14,7 +10,7 @@ namespace Nexus::FileDialog
 
 void Nexus::FileDialog::SetContextWindow(const Window& Window)
 {
-	m_window = Window.handle;
+	m_window = (HWND)Window.hwnd;
 }
 
 std::string Nexus::FileDialog::OpenFile(const char* Filter)

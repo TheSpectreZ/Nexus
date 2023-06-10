@@ -1,4 +1,4 @@
-#include "Input.h"
+#include "NxApplication/Input.h"
 
 
 //namespace Nexus::Input

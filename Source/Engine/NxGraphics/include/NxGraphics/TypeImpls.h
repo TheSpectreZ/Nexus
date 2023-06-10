@@ -1,6 +1,12 @@
 #pragma once
 #include <string>
 
+#ifdef NEXUS_GRAPHICS_SHARED_BUILD
+#define NEXUS_GRAPHICS_API __declspec(dllexport)
+#else
+#define NEXUS_GRAPHICS_API __declspec(dllimport)
+#endif // NEXUS_GRAPHICS_SHARED_BUILD
+
 namespace Nexus
 {
 	struct Viewport
@@ -49,9 +55,9 @@ namespace Nexus
 		Repeat, Mirrored_Repeat, Clamped_To_Edge
 	};
 
-	std::string GetShaderStageTypeStringName(ShaderStage stage);
+	std::string NEXUS_GRAPHICS_API GetShaderStageTypeStringName(ShaderStage stage);
 
-	std::string GetBufferTypeStringName(BufferType Type);
+	std::string NEXUS_GRAPHICS_API GetBufferTypeStringName(BufferType Type);
 
-	std::string GetShaderResourceTypeStringName(ShaderResourceType Type);
+	std::string NEXUS_GRAPHICS_API GetShaderResourceTypeStringName(ShaderResourceType Type);
 }

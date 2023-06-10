@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "Window.h"
+#include "NxCore/Window.h"
 
 // Currently Supports Windows Only !
 

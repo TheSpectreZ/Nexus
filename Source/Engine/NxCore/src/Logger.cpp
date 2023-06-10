@@ -1,6 +1,7 @@
-#include "Logger.h"
+#include "NxCore/Logger.h"
 #include <Windows.h>
 #include <filesystem>
+#include <iostream>
 
 Nexus::ConsoleLogger::ConsoleLogger()
 {
@@ -14,6 +15,7 @@ Nexus::ConsoleLogger::ConsoleLogger()
 
 Nexus::ConsoleLogger::~ConsoleLogger()
 {
+	std::cin.get();
 	FreeConsole();
 }
 
@@ -30,7 +32,7 @@ void Nexus::ConsoleLogger::Log(const char* Entry, int line, const char* file, co
 	vsnprintf(buffer, 1024, format, args);
 	va_end(args);
 
-	strncat(finalBuffer, buffer, 1024);
+	strncat_s(finalBuffer, buffer, 1024);
 
 
 	printf("%s\n", finalBuffer);
@@ -40,9 +42,11 @@ Nexus::FileLogger::FileLogger()
 {
 	std::string buffer(128, '\0');
 	auto timeTApp = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-	auto appLT = localtime(&timeTApp);
+	
+	tm appLT;
+	localtime_s(&appLT, &timeTApp);
 
-	strftime(&buffer[0], buffer.size(), " %Y-%m-%d@%H-%M LOG.txt", appLT);
+	strftime(&buffer[0], buffer.size(), " %Y-%m-%d@%H-%M LOG.txt", &appLT);
 
 	std::filesystem::path filePath = std::filesystem::current_path() / "Logs";
 	std::filesystem::create_directories(filePath);
@@ -69,7 +73,7 @@ void Nexus::FileLogger::Log(const char* Entry, int line, const char* file, const
 	vsnprintf(buffer, 1024, format, args);
 	va_end(args);
 
-	strncat(finalBuffer, buffer, 1024);
+	strncat_s(finalBuffer, buffer, 1024);
 
 	_stream << finalBuffer;
 	_stream << std::endl;

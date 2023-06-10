@@ -1,4 +1,5 @@
 #pragma once
+#include "NxRenderer/RendererAPI.h"
 
 namespace Nexus
 {
@@ -19,6 +20,7 @@ namespace Nexus
 		bool EnableScriptEngine = false;
 		bool LoadDefaultAssets = false;
 
+		RendererAPI rApi;
 		PhysicsAPI pApi;
 	};
 }

@@ -1,12 +1,16 @@
 // STL
 #include <vector>
+// Core
+#include "NxCore/Base.h"
+#include "NxCore/Logger.h"
+#include "NxCore/Assertion.h"
 
 // Application
-#include "Base.h"
-#include "Logger.h"
-#include "Application.h"
-#include "Input.h"
-#include "FileDialog.h"
+#include "NxApplication/Application.h"
+#include "NxApplication/Input.h"
+#include "NxApplication/FileDialog.h"
+// Modules
+#include "NxRenderer/Renderer.h"
 
 namespace Nexus
 {
@@ -65,13 +69,18 @@ void Nexus::Application::Init()
 		RECT wr = { 0, 0, (LONG)m_Window.width, (LONG)m_Window.height };   
 		AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, FALSE);    
 
-		m_Window.handle = CreateWindowEx(0, s_Data->clsName, m_Window.title, WS_OVERLAPPEDWINDOW,
+		HWND hwnd = CreateWindowEx(0, s_Data->clsName, m_Window.title, WS_OVERLAPPEDWINDOW,
 			CW_USEDEFAULT, CW_USEDEFAULT, wr.right - wr.left, wr.bottom - wr.top, NULL, NULL,
 			s_Data->hInst, NULL);
 
+		m_Window.hwnd = (void*)hwnd;
 		NEXUS_LOG("Application", "Window Created: %i,%i", m_Window.width, m_Window.height);
 	}
 
+	// Modules
+	{
+		Module::Renderer::Initialize({ m_AppSpecs.rApi,&m_Window,s_Data->hInst });
+	}
 }
 
 void Nexus::Application::Run()
@@ -79,7 +88,7 @@ void Nexus::Application::Run()
 	for (auto& l : s_Data->layerStack)
 		l->OnAttach();
 
-	ShowWindow(m_Window.handle, SW_SHOW);
+	ShowWindow((HWND)m_Window.hwnd, SW_SHOW);
 	while (s_Data->IsRunning)
 	{
 		if(PeekMessage(&s_Data->msg, NULL, 0, 0, PM_REMOVE))
@@ -107,6 +116,12 @@ void Nexus::Application::Run()
 
 void Nexus::Application::Shut()
 {
+	// Modules
+	{
+		Module::Renderer::Shutdown();
+	}
+
+	DestroyWindow((HWND)m_Window.hwnd);
 	UnregisterClass(s_Data->clsName,s_Data->hInst);
 
 	LogManager::Shutdown();
@@ -114,7 +129,7 @@ void Nexus::Application::Shut()
 
 void Nexus::Application::SetWindowTitle(const char* name)
 {
-	SetWindowText(m_Window.handle, name);
+	SetWindowText((HWND)m_Window.hwnd, name);
 }
 
 void Nexus::Application::ResizeCallback()

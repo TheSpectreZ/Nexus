@@ -1,9 +1,9 @@
 #pragma once
-
+#include <Windows.h>
 // Application
 #include "Layer.h"
 #include "ApplicationSpecifications.h"
-#include "Window.h"
+#include "NxCore/Window.h"
 
 #ifdef NEXUS_ENGINE_SHARED_BUILD
 #define NEXUS_ENGINE_API __declspec(dllexport)

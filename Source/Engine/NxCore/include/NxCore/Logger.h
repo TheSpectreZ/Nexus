@@ -15,7 +15,7 @@ namespace Nexus
 		Console, File
 	};
 
-	class Logger
+	class NEXUS_CORE_API Logger
 	{
 	public:
 		virtual void Log(const char* Entry,int line, const char* file, const char* format, ...) = 0;

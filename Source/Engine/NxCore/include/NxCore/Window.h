@@ -1,5 +1,4 @@
 #pragma once
-#include <Windows.h>
 
 namespace Nexus
 {
@@ -7,6 +6,6 @@ namespace Nexus
 	{
 		int width, height;
 		const char* title;
-		HWND handle;
+		void* hwnd;
 	};
 }
