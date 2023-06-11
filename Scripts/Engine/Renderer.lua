@@ -41,7 +41,7 @@ project "NxRenderer"
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
-		disablewarnings { "4251" }
+		disablewarnings { "4251","4275" }
 
 	filter "configurations:Debug"
 		optimize "Off"
