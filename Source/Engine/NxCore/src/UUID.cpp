@@ -8,6 +8,11 @@ namespace Nexus
 	static std::uniform_int_distribution<uint64_t> s_UniformDistribution;
 }
 
+Nexus::UUID::UUID(uint64_t Id)
+{
+	m_Id = Id;
+}
+
 Nexus::UUID::UUID(bool defaultValue)
 {
 	m_Id = defaultValue ? UINT64_MAX : s_UniformDistribution(eng);

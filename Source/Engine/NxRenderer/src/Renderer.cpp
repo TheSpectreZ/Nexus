@@ -24,3 +24,11 @@ void Nexus::Module::Renderer::Shutdown()
 
 	delete s_Instance;
 }
+
+void Nexus::Module::Renderer::Start()
+{
+}
+
+void Nexus::Module::Renderer::Flush()
+{
+}

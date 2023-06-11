@@ -22,8 +22,12 @@ namespace Nexus::Module
 		static Renderer* s_Instance;
 	public:
 		static Renderer* Get() { return s_Instance; }
+		
 		static void Initialize(const RendererCreateInfo& Info);
 		static void Shutdown();
+
+		void Start();
+		void Flush();
 
 		Renderer() = default;
 		~Renderer() = default;

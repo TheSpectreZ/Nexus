@@ -4,12 +4,12 @@
 #include "NxCore/Base.h"
 #include "NxCore/Logger.h"
 #include "NxCore/Assertion.h"
-
 // Application
 #include "NxApplication/Application.h"
 #include "NxApplication/Input.h"
 #include "NxApplication/FileDialog.h"
 // Modules
+#include "NxCore/Input.h"
 #include "NxRenderer/Renderer.h"
 
 namespace Nexus
@@ -34,6 +34,10 @@ Nexus::Application::Application()
 	s_Instance = this;
 	s_Data = new ApplicationData();
 
+	m_Window.title = "Nexus";
+	m_Window.width = 600;
+	m_Window.height = 400;
+	m_Window.hwnd = nullptr;
 }
 
 Nexus::Application::~Application()
@@ -79,7 +83,14 @@ void Nexus::Application::Init()
 
 	// Modules
 	{
-		Module::Renderer::Initialize({ m_AppSpecs.rApi,&m_Window,s_Data->hInst });
+		Module::RendererCreateInfo rCreateInfo{};
+		rCreateInfo.apiType = m_AppSpecs.rApi;
+		rCreateInfo.window = &m_Window;
+		rCreateInfo.HInstance = s_Data->hInst;
+		rCreateInfo.resizeCallback = NEXUS_BIND_FN(Application::ResizeCallback, this);
+
+		Module::Input::Initialize(m_Window);
+		Module::Renderer::Initialize(rCreateInfo);
 	}
 }
 
@@ -93,6 +104,9 @@ void Nexus::Application::Run()
 	{
 		if(PeekMessage(&s_Data->msg, NULL, 0, 0, PM_REMOVE))
 		{
+			if (Module::Input::Get()->IsKeyPressed(VK_ESCAPE))
+				s_Data->msg.message = WM_CLOSE;
+
 			TranslateMessage(&s_Data->msg);
 			DispatchMessage(&s_Data->msg);
 		
@@ -103,8 +117,14 @@ void Nexus::Application::Run()
 		for (auto& l : s_Data->layerStack)
 			l->OnUpdate(0.f);
 
-		for (auto& l : s_Data->layerStack)
-			l->OnRender();
+		{
+			Module::Renderer::Get()->Flush();
+
+			for (auto& l : s_Data->layerStack)
+				l->OnRender();
+
+			Module::Renderer::Get()->Flush();
+		}
 	}
 
 	for (auto& l : s_Data->layerStack)
@@ -170,6 +190,16 @@ LRESULT CALLBACK Nexus::Application::WindowProc(HWND hWnd, UINT message, WPARAM 
 		{
 			s_Instance->m_Window.width = LOWORD(lParam);
 			s_Instance->m_Window.height = HIWORD(lParam);
+			break;
+		}
+		case WM_KEYDOWN:
+		{
+			Module::Input::Get()->SetKeyState(wParam, true);
+			break;
+		}
+		case WM_KEYUP:
+		{
+			Module::Input::Get()->SetKeyState(wParam, false);
 			break;
 		}
 	}
