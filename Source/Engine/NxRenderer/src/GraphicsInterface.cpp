@@ -3,6 +3,7 @@
 
 #include "NxVulkan/VkContext.h"
 #include "NxVulkan/VkSwapchain.h"
+#include "NxVulkan/VkCommandQueue.h"
 
 namespace Nexus::GraphicsInterface
 {
@@ -30,4 +31,9 @@ Nexus::Ref<Nexus::Context> Nexus::GraphicsInterface::CreateContext(RendererAPI A
 Nexus::Ref<Nexus::Swapchain> Nexus::GraphicsInterface::CreateSwapchain(Window* window)
 {
 	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanSwapchain>(window));
+}
+
+Nexus::Ref<Nexus::CommandQueue> Nexus::GraphicsInterface::CreateCommandQueue(std::function<void()> resizeCallback)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanCommandQueue>(resizeCallback));
 }

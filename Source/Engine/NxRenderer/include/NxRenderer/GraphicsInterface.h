@@ -5,9 +5,11 @@
 
 #include "NxGraphics/Context.h"
 #include "NxGraphics/Swapchain.h"
+#include "NxGraphics/CommandQueue.h"
 
 namespace Nexus::GraphicsInterface
 {
 	Ref<Context> CreateContext(RendererAPI API, const ContextCreateInfo& Info);
 	Ref<Swapchain> CreateSwapchain(Window* window);
+	Ref<CommandQueue> CreateCommandQueue(std::function<void()> resizeCallback);
 }

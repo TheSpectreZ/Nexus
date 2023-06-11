@@ -1,15 +1,12 @@
 #pragma once
-#include "NxVulkan/VkAssert.h"
 #include "NxGraphics/Context.h"
+#include "NxVulkan/VkDevice.h"
 
 #ifdef NEXUS_VULKAN_SHARED_BUILD
 #define NEXUS_VULKAN_API __declspec(dllexport)
 #else
 #define NEXUS_VULKAN_API __declspec(dllimport)
 #endif
-
-typedef struct VkInstance_T* VkInstance;
-typedef struct VkSurfaceKHR_T* VkSurfaceKHR;
 
 namespace Nexus
 {

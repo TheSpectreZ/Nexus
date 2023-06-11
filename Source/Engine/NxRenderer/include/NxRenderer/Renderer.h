@@ -14,6 +14,7 @@ namespace Nexus::Module
 		RendererAPI apiType;
 		Window* window;
 		void* HInstance;
+		std::function<void()> resizeCallback;
 	};
 
 	class NEXUS_RENDERER_API Renderer
@@ -29,5 +30,6 @@ namespace Nexus::Module
 	private:
 		Ref<Context> m_Context;
 		Ref<Swapchain> m_Swapchain;
+		Ref<CommandQueue> m_CommandQueue;
 	};
 }

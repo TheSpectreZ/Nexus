@@ -11,10 +11,14 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 
 	s_Instance->m_Swapchain = GraphicsInterface::CreateSwapchain(Info.window);
 	s_Instance->m_Swapchain->Initialize();
+
+	s_Instance->m_CommandQueue = GraphicsInterface::CreateCommandQueue(Info.resizeCallback);
+	s_Instance->m_CommandQueue->Initialize();
 }
 
 void Nexus::Module::Renderer::Shutdown()
 {
+	s_Instance->m_CommandQueue->Shutdown();
 	s_Instance->m_Swapchain->Shutdown();
 	s_Instance->m_Context->Shutdown();
 
