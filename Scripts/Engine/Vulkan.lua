@@ -27,6 +27,7 @@ project "NxVulkan"
 	links
 	{
 		"NxCore",
+		"NxGraphics",
 		"vulkan-1.lib"
 	}
 
@@ -38,6 +39,13 @@ project "NxVulkan"
 	defines 
 	{
 		"NEXUS_VULKAN_SHARED_BUILD"
+	}
+
+	linkoptions 
+	{
+		"-IGNORE:4098",
+		"-IGNORE:4099", 
+		"-IGNORE:4006", 
 	}
 
 	filter "system:windows"
@@ -53,13 +61,31 @@ project "NxVulkan"
 		optimize "Off"
 		symbols "Full"
 		defines "NEXUS_DEBUG"
+		links
+        {
+            "shaderc_combinedd.lib",
+            "spirv-cross-glsld.lib",
+            "spirv-cross-cored.lib",
+        }
 
 	filter "configurations:Release"
 		optimize "Speed"
 		symbols "FastLink"
 		defines "NEXUS_RELEASE"
+		links
+        {
+            "shaderc_combined.lib",
+            "spirv-cross-glsl.lib",
+            "spirv-cross-core.lib",
+        }
 
 	filter "configurations:Dist"
 		optimize "Full"
 		symbols "Off"
 		defines "NEXUS_DIST"
+		links
+        {
+            "shaderc_combined.lib",
+            "spirv-cross-glsl.lib",
+            "spirv-cross-core.lib",
+        }
