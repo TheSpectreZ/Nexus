@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 
 #ifdef NEXUS_CORE_SHARED_BUILD
 #define NEXUS_CORE_API __declspec(dllexport)
@@ -7,6 +8,11 @@
 #define NEXUS_CORE_API __declspec(dllimport)
 #endif // NEXUS_CORE_SHARED_BUILD
 
+struct Sorb
+{
+	bool chutiya;
+	bool Intelegient;
+};
 
 namespace Nexus
 {

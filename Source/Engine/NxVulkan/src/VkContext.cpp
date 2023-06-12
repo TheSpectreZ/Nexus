@@ -47,7 +47,7 @@ void Nexus::VulkanContext::Initialize()
 		NEXUS_LOG("VULKAN", "Instance Layers:");
 		for (auto& l : AvailableLayers)
 		{
-			NEXUS_LOG("VULKAN", "\t%s", l.layerName);
+			NEXUS_LOG("Vulkan", "\t%s", l.layerName);
 		}
 
 	}

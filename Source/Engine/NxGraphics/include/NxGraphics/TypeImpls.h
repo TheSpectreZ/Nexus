@@ -9,48 +9,48 @@
 
 namespace Nexus
 {
-	struct Viewport
+	struct NEXUS_GRAPHICS_API Viewport
 	{
 		float x, y, width, height, minDepth, maxDepth;
 	};
 
-	struct Offset
+	struct NEXUS_GRAPHICS_API Offset
 	{
 		int x, y;
 	};
 
-	struct Extent
+	struct NEXUS_GRAPHICS_API Extent
 	{
 		unsigned int width, height;
 	};
 
-	struct Scissor
+	struct NEXUS_GRAPHICS_API Scissor
 	{
 		Offset Offset;
 		Extent Extent;
 	};
 
-	enum class ShaderStage
+	enum class NEXUS_GRAPHICS_API ShaderStage
 	{
 		Vertex = 0, Fragment = 1
 	};
 	
-	enum class BufferType
+	enum class NEXUS_GRAPHICS_API BufferType
 	{
 		Vertex, Index
 	};
 
-	enum class ShaderResourceType
+	enum class NEXUS_GRAPHICS_API ShaderResourceType
 	{
 		Uniform, SampledImage
 	};
 
-	enum class SamplerFilter
+	enum class NEXUS_GRAPHICS_API SamplerFilter
 	{
 		Nearest, Linear
 	};
 
-	enum class SamplerWrapMode
+	enum class NEXUS_GRAPHICS_API SamplerWrapMode
 	{
 		Repeat, Mirrored_Repeat, Clamped_To_Edge
 	};

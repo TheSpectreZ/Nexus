@@ -1,16 +1,12 @@
 #pragma once
-#include "RenderTypes.h"
-#include "Buffer.h"
-#include "ShaderResource.h"
-#include "ResourcePool.h"
+#include "NxCore/Base.h"
 #include "Texture.h"
-#include <filesystem>
-
+#include <vector>
 
 namespace Nexus
 {
 	typedef std::vector<uint32_t> SpirV;
-	
+
 	struct ResourceHeapHandle
 	{
 		uint64_t hashId;
@@ -34,12 +30,9 @@ namespace Nexus
 
 	class Shader
 	{
-	public:		
-		static Ref<Shader> Create(const std::string& Filepath);
-		virtual void Destroy() = 0;
-
+	public:
 		Shader() = default;
-		~Shader() = default;
+		virtual ~Shader() = default;
 
 		virtual void AllocateShaderResourceHeap(ResourceHeapHandle handle) = 0;
 		virtual void DeallocateShaderResourceHeap(ResourceHeapHandle handle) = 0;
@@ -47,25 +40,12 @@ namespace Nexus
 
 		virtual void AllocateUniformBuffer(UniformBufferHandle handle) = 0;
 		virtual void DeallocateUniformBuffer(UniformBufferHandle handle) = 0;
-		
+
 		virtual void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, UniformBufferHandle bufferHandle) = 0;
 		virtual void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texture) = 0;
-		
+
 		virtual void SetUniformData(UniformBufferHandle handle, void* data) = 0;
 	};
 
-	class ShaderLib
-	{
-		friend class VulkanShader;
-
-		static ShaderLib* s_Instance;
-	public:
-		static void Initialize();
-		static void Terminate();
-
-		static Ref<Shader> Get(const std::string& shaderPath);
-	private:
-		ResourcePool m_ResourcePool;
-		std::unordered_map<std::string, Ref<Shader>> m_Shaders;
-	};
+	
 }

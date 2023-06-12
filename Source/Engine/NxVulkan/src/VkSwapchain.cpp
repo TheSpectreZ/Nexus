@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "NxVulkan/VkDevice.h"
 #include "NxVulkan/VkContext.h"
 #include "NxVulkan/VkSwapchain.h"

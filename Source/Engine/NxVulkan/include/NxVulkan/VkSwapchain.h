@@ -24,7 +24,7 @@ namespace Nexus
 	
 		VkSwapchainKHR GetHandle() { return m_Swapchain; }	
 		VkExtent2D GetImageExtent() { return m_extent; }
-		VkFormat GetImageFormat();
+		VkFormat GetImageFormat() { return m_format.format; }
 		uint32_t GetImageCount() override { return (uint32_t)m_SwapchainImages.size(); }
 		VkImageView GetImageView(uint32_t index) 
 		{ 

@@ -104,15 +104,16 @@ void Nexus::Application::Run()
 	{
 		if(PeekMessage(&s_Data->msg, NULL, 0, 0, PM_REMOVE))
 		{
-			if (Module::Input::Get()->IsKeyPressed(VK_ESCAPE))
-				s_Data->msg.message = WM_CLOSE;
-
 			TranslateMessage(&s_Data->msg);
 			DispatchMessage(&s_Data->msg);
 		
+			if (Module::Input::Get()->IsKeyPressed(VK_ESCAPE))
+				s_Data->IsRunning = false;
+
 			if (s_Data->msg.message == WM_QUIT)
 				s_Data->IsRunning = false;
 		}
+		
 
 		for (auto& l : s_Data->layerStack)
 			l->OnUpdate(0.f);

@@ -2,9 +2,15 @@
 #include "VkAssert.h"
 #include "NxGraphics/Texture.h"
 
+#ifdef NEXUS_VULKAN_SHARED_BUILD
+#define NEXUS_VULKAN_API __declspec(dllexport)
+#else
+#define NEXUS_VULKAN_API __declspec(dllimport)
+#endif
+
 namespace Nexus
 {
-	class VulkanTexture : public Texture
+	class NEXUS_VULKAN_API VulkanTexture : public Texture
 	{
 		friend class VulkanCommandQueue;
 	public:
@@ -23,7 +29,7 @@ namespace Nexus
 		VmaAllocation m_StagingAlloc;
 	};
 
-	class VulkanSampler : public Sampler
+	class NEXUS_VULKAN_API VulkanSampler : public Sampler
 	{
 	public:
 		VulkanSampler(SamplerFilter Near, SamplerFilter Far, SamplerWrapMode U, SamplerWrapMode V, SamplerWrapMode W);
