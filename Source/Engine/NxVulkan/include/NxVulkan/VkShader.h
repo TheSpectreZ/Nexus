@@ -25,6 +25,11 @@ namespace Nexus
 		}
 	};
 
+	struct VertexInputReflectData
+	{
+
+	};
+
 	struct NEXUS_VULKAN_API ReflectionData
 	{
 		std::unordered_map<uint32_t, std::vector<Nexus::ShaderResouceHeapLayoutBinding>> bindings;
@@ -34,7 +39,7 @@ namespace Nexus
 	{
 		static const uint32_t maxHeapCountPerPool = 100;
 	public:
-		VulkanShader(SpirV& vertexData, SpirV& fragmentData, const char* Filepath);
+		VulkanShader(const ShaderSpecification& specs);
 		~VulkanShader() override;
 
 		void AllocateShaderResourceHeap(ResourceHeapHandle handle) override;

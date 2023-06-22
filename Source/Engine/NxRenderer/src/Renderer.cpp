@@ -12,12 +12,22 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 	s_Instance->m_Swapchain = GraphicsInterface::CreateSwapchain(Info.window);
 	s_Instance->m_Swapchain->Initialize();
 
-	s_Instance->m_CommandQueue = GraphicsInterface::CreateCommandQueue(Info.resizeCallback);
+	auto callback = [&]() -> decltype(auto) 
+	{ 
+		s_Instance->ResizeCallback();
+		return Info.resizeCallback(); 
+	};
+
+	s_Instance->m_CommandQueue = GraphicsInterface::CreateCommandQueue(callback);
 	s_Instance->m_CommandQueue->Initialize();
+
+	s_Instance->m_ForwardDrawer = CreateRef<ForwardDrawer>();
 }
 
 void Nexus::Module::Renderer::Shutdown()
 {
+	s_Instance->m_ForwardDrawer.reset();
+
 	s_Instance->m_CommandQueue->Shutdown();
 	s_Instance->m_Swapchain->Shutdown();
 	s_Instance->m_Context->Shutdown();
@@ -25,10 +35,34 @@ void Nexus::Module::Renderer::Shutdown()
 	delete s_Instance;
 }
 
-void Nexus::Module::Renderer::Start()
+void Nexus::Module::Renderer::Begin()
 {
+	m_CommandQueue->BeginRenderQueue();
 }
 
-void Nexus::Module::Renderer::Flush()
+void Nexus::Module::Renderer::End()
 {
+	m_CommandQueue->EndRenderQueue();
+}
+
+void Nexus::Module::Renderer::FlushRender()
+{
+	m_CommandQueue->FlushRenderQueue();
+}
+
+void Nexus::Module::Renderer::Submit(Ref<Scene> scene)
+{
+	m_ForwardDrawer->Draw(scene);
+}
+
+void Nexus::Module::Renderer::FlushTransfer()
+{
+	m_CommandQueue->FlushTransferQueue();
+}
+
+void Nexus::Module::Renderer::ResizeCallback()
+{
+	Extent extent = m_Swapchain->GetExtent();
+
+	m_ForwardDrawer->OnWindowResize(extent);
 }

@@ -42,7 +42,7 @@ namespace Nexus
 		uint32_t offset, size;
 	};
 
-	struct PipelineCreateInfo
+	struct PipelineSpecification
 	{
 		Ref<Shader> shader;
 		Ref<Renderpass> renderpass;
@@ -50,10 +50,6 @@ namespace Nexus
 		bool multisampled;
 		std::vector<VertexAttribInfo> vertexAttribInfo;
 		std::vector<VertexBindInfo> vertexBindInfo;
-
-		std::vector<PushConstantInfo> pushConstantInfo;
-		std::vector<Ref<ShaderResourceHeapLayout>> shaderResourceHeapLayouts;
-
 		RasterizerInfo rasterizerInfo;
 	};
 

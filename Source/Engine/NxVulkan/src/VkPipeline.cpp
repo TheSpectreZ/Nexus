@@ -74,7 +74,7 @@ namespace Nexus
 
 }
 
-Nexus::VulkanPipeline::VulkanPipeline(const PipelineCreateInfo& i)
+Nexus::VulkanPipeline::VulkanPipeline(const PipelineSpecification& i)
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
     Ref<VulkanPhysicalDevice> gpu = VulkanContext::Get()->GetPhysicalDeviceRef();

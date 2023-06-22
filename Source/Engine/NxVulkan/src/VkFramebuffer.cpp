@@ -67,7 +67,7 @@ Nexus::VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec
 		_VKR = vkCreateFramebuffer(device, &Info, nullptr, &m_Framebuffer[i]);
 		CHECK_LOG_VKR;
 	}
-	NEXUS_LOG("Vulkan", "Framebuffer Created : AttachmentCount - {0}", m_Attachments[0].size());
+	NEXUS_LOG("Vulkan", "Framebuffer Created : AttachmentCount - %i", m_Attachments[0].size());
 }
 
 Nexus::VulkanFramebuffer::~VulkanFramebuffer()

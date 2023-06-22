@@ -3,6 +3,12 @@
 #include "Texture.h"
 #include <vector>
 
+#ifdef NEXUS_GRAPHICS_SHARED_BUILD
+#define NEXUS_GRAPHICS_API __declspec(dllexport)
+#else
+#define NEXUS_GRAPHICS_API __declspec(dllimport)
+#endif // NEXUS_GRAPHICS_SHARED_BUILD
+
 namespace Nexus
 {
 	typedef std::vector<uint32_t> SpirV;
@@ -28,6 +34,13 @@ namespace Nexus
 		uint32_t binding;
 	};
 
+	struct ShaderSpecification
+	{
+		SpirV vertexData;
+		SpirV fragmentData;
+		std::string filepath;
+	};
+
 	class Shader
 	{
 	public:
@@ -47,5 +60,8 @@ namespace Nexus
 		virtual void SetUniformData(UniformBufferHandle handle, void* data) = 0;
 	};
 
-	
+	namespace ShaderCompiler
+	{
+		Nexus::ShaderSpecification NEXUS_GRAPHICS_API CompileFromFile(const std::string& filepath);
+	}
 }

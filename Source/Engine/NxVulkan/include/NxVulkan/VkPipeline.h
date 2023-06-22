@@ -13,7 +13,7 @@ namespace Nexus
 	class NEXUS_VULKAN_API VulkanPipeline : public Pipeline
 	{
 	public:
-		VulkanPipeline(const PipelineCreateInfo& Info);
+		VulkanPipeline(const PipelineSpecification& Info);
 		~VulkanPipeline() override;
 
 		VkPipeline Get() { return m_Pipeline; }

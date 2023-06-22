@@ -17,9 +17,9 @@ namespace Nexus
 
 		virtual void BeginRenderQueue() = 0;
 		virtual void EndRenderQueue() = 0;
-		virtual void FlushRenderQueue() = 0;
-
+		
 		virtual void FlushTransferQueue() = 0;
+		virtual void FlushRenderQueue() = 0;
 
 		//virtual void BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer) = 0;
 		//virtual void EndRenderPass() = 0;

@@ -160,7 +160,8 @@ void Nexus::VulkanCommandQueue::FlushRenderQueue()
 	m_RenderSubmitInfo.pWaitSemaphores = &m_ImageAvailableSemaphore[m_FrameIndex];
 	m_RenderSubmitInfo.pSignalSemaphores = &m_RenderFinishedSemaphore[m_FrameIndex];
 
-	vkQueueSubmit(m_RenderQueue, 1, &m_RenderSubmitInfo, m_RenderFences[m_FrameIndex]);
+	_VKR = vkQueueSubmit(m_RenderQueue, 1, &m_RenderSubmitInfo, m_RenderFences[m_FrameIndex]);
+	CHECK_LOG_VKR;
 
 	m_PresentInfo.pSwapchains = &m_Swapchain;
 	m_PresentInfo.pImageIndices = &m_ImageIndex;
@@ -168,6 +169,7 @@ void Nexus::VulkanCommandQueue::FlushRenderQueue()
 	m_PresentInfo.waitSemaphoreCount = 1;
 
 	_VKR = vkQueuePresentKHR(m_PresentQueue, &m_PresentInfo);
+	CHECK_LOG_VKR;
 
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR || _VKR == VK_SUBOPTIMAL_KHR)
 	{

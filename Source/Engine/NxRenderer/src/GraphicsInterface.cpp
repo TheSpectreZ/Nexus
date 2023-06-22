@@ -4,6 +4,10 @@
 #include "NxVulkan/VkContext.h"
 #include "NxVulkan/VkSwapchain.h"
 #include "NxVulkan/VkCommandQueue.h"
+#include "NxVulkan/VkRenderpass.h"
+#include "NxVulkan/VkFramebuffer.h"
+#include "NxVulkan/VkPipeline.h"
+#include "NxVulkan/VkShader.h"
 
 namespace Nexus::GraphicsInterface
 {
@@ -36,4 +40,24 @@ Nexus::Ref<Nexus::Swapchain> Nexus::GraphicsInterface::CreateSwapchain(Window* w
 Nexus::Ref<Nexus::CommandQueue> Nexus::GraphicsInterface::CreateCommandQueue(std::function<void()> resizeCallback)
 {
 	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanCommandQueue>(resizeCallback));
+}
+
+Nexus::Ref<Nexus::Shader> Nexus::GraphicsInterface::CreateShader(const ShaderSpecification& specs)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanShader>(specs));
+}
+
+Nexus::Ref<Nexus::Renderpass> Nexus::GraphicsInterface::CreateRenderpass(const RenderpassSpecification& specs)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanRenderpass>(specs));
+}
+
+Nexus::Ref<Nexus::Framebuffer> Nexus::GraphicsInterface::CreateFramebuffer(const FramebufferSpecification& specs)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanFramebuffer>(specs));
+}
+
+Nexus::Ref<Nexus::Pipeline> Nexus::GraphicsInterface::CreatePipeline(const PipelineSpecification& specs)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanPipeline>(specs));
 }
