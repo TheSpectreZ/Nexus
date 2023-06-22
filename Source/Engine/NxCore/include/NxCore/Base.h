@@ -47,4 +47,4 @@ namespace Nexus
 
 }
 
-#define NEXUS_BIND_FN(fn,ref) [ref](auto&&... args) -> decltype(auto) { return ref->fn(std::forward<decltype(args)>(args)...); }
+#define NEXUS_BIND_FN(fn,ref) [&](auto&&... args) -> decltype(auto) { return ref->fn(std::forward<decltype(args)>(args)...); }
