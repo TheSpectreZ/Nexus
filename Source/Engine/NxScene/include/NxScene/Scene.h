@@ -1,6 +1,7 @@
 #pragma once
-#include "NxCore/Base.h"
+#define WIN32_LEAN_AND_MEAN
 #include "entt/entt.hpp"
+#include "NxCore/Base.h"
 #include "Component.h"
 
 namespace Nexus
