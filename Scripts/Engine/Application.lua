@@ -17,7 +17,10 @@ project "NxApplication"
 
 	includedirs
 	{
+		"$(VULKAN_SDK)/Include",
+		IncludePath["entt"],
 		IncludePath["NxCore"],
+		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderer"],
 		IncludePath["NxApplication"]
@@ -26,7 +29,8 @@ project "NxApplication"
 	links
 	{
 		"NxCore",
-		"NxRenderer"
+		"NxScene",
+		"NxRenderer",
 	}
 
 	defines "NEXUS_ENGINE_SHARED_BUILD"

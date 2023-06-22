@@ -63,7 +63,6 @@ project "NxVulkan"
 		defines "NEXUS_DEBUG"
 		links
         {
-            "shaderc_combinedd.lib",
             "spirv-cross-glsld.lib",
             "spirv-cross-cored.lib",
         }
@@ -74,7 +73,6 @@ project "NxVulkan"
 		defines "NEXUS_RELEASE"
 		links
         {
-            "shaderc_combined.lib",
             "spirv-cross-glsl.lib",
             "spirv-cross-core.lib",
         }
@@ -85,7 +83,6 @@ project "NxVulkan"
 		defines "NEXUS_DIST"
 		links
         {
-            "shaderc_combined.lib",
             "spirv-cross-glsl.lib",
             "spirv-cross-core.lib",
         }

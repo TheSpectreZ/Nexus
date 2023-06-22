@@ -11,18 +11,25 @@ project "NexusEd"
 
 	files
 	{
-		(SrcDir.."Tools/%{prj.name}/include/**.h"),
+		(SrcDir.."Tools/%{prj.name}/src/**.h"),
 		(SrcDir.."Tools/%{prj.name}/src/**.cpp")
 	}
 
 	links
 	{
+		"NxScene",
+		"NxRenderer",
 		"NxApplication"
 	}
 
 	includedirs
 	{
+		"$(VULKAN_SDK)/Include",
+		IncludePath["entt"],
+
 		IncludePath["NxCore"],
+		IncludePath["NxScene"],
+		IncludePath["NxGraphics"],
 		IncludePath["NxRenderer"],
 		IncludePath["NxApplication"]
 	}
