@@ -1,4 +1,5 @@
 #pragma once
+#define NOMINMAX
 #include <Windows.h>
 // Application
 #include "Layer.h"

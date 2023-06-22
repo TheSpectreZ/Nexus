@@ -6,7 +6,6 @@
 #include "NxCore/Assertion.h"
 // Application
 #include "NxApplication/Application.h"
-#include "NxApplication/Input.h"
 #include "NxApplication/FileDialog.h"
 // Modules
 #include "NxCore/Input.h"
@@ -83,13 +82,14 @@ void Nexus::Application::Init()
 
 	// Modules
 	{
+		Module::Input::Initialize(m_Window);
+
 		Module::RendererCreateInfo rCreateInfo{};
 		rCreateInfo.apiType = m_AppSpecs.rApi;
 		rCreateInfo.window = &m_Window;
 		rCreateInfo.HInstance = s_Data->hInst;
 		rCreateInfo.resizeCallback = NEXUS_BIND_FN(Application::ResizeCallback, this);
 
-		Module::Input::Initialize(m_Window);
 		Module::Renderer::Initialize(rCreateInfo);
 	}
 }
@@ -114,18 +114,16 @@ void Nexus::Application::Run()
 				s_Data->IsRunning = false;
 		}
 		
-
 		for (auto& l : s_Data->layerStack)
 			l->OnUpdate(0.f);
+		Module::Renderer::Get()->FlushTransfer();
 
-		{
-			Module::Renderer::Get()->Flush();
+		//Module::Renderer::Get()->Begin();
+		for (auto& l : s_Data->layerStack)
+			l->OnRender();
+		//Module::Renderer::Get()->End();
 
-			for (auto& l : s_Data->layerStack)
-				l->OnRender();
-
-			Module::Renderer::Get()->Flush();
-		}
+		//Module::Renderer::Get()->FlushRender();
 	}
 
 	for (auto& l : s_Data->layerStack)
@@ -155,7 +153,10 @@ void Nexus::Application::SetWindowTitle(const char* name)
 
 void Nexus::Application::ResizeCallback()
 {
-	
+	for (auto& l : s_Data->layerStack)
+	{
+		l->OnWindowResize(m_Window.width, m_Window.height);
+	}
 }
 
 void Nexus::Application::PushLayer(Layer* layer)
@@ -195,12 +196,12 @@ LRESULT CALLBACK Nexus::Application::WindowProc(HWND hWnd, UINT message, WPARAM 
 		}
 		case WM_KEYDOWN:
 		{
-			Module::Input::Get()->SetKeyState(wParam, true);
+			Module::Input::Get()->SetKeyState((uint16_t)wParam, true);
 			break;
 		}
 		case WM_KEYUP:
 		{
-			Module::Input::Get()->SetKeyState(wParam, false);
+			Module::Input::Get()->SetKeyState((uint16_t)wParam, false);
 			break;
 		}
 	}
