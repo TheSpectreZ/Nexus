@@ -261,34 +261,37 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 	_VKR = vkQueueSubmit(m_TransferQueue, 1, &m_TransferSubmitInfo, nullptr);
 	vkQueueWaitIdle(m_TransferQueue);
 
-	vkBeginCommandBuffer(m_RenderCommandBuffer[m_FrameIndex], &m_CmdBeginInfo);
+	if (m_RenderQueueIndex != m_TransferQueueIndex)
 	{
-		for (auto& i : m_TransferData.m_Textures)
+		vkBeginCommandBuffer(m_RenderCommandBuffer[m_FrameIndex], &m_CmdBeginInfo);
 		{
-			VkImageMemoryBarrier barrier{};
-			barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-			barrier.pNext = nullptr;
-			barrier.image = i->m_Image;
-			barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			barrier.subresourceRange.baseMipLevel = 0;
-			barrier.subresourceRange.levelCount = 1;
-			barrier.subresourceRange.baseArrayLayer = 0;
-			barrier.subresourceRange.layerCount = 1;
-			barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
-			barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			barrier.srcQueueFamilyIndex = m_TransferQueueIndex;
-			barrier.dstQueueFamilyIndex = m_RenderQueueIndex;
-			barrier.srcAccessMask = 0;
-			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			for (auto& i : m_TransferData.m_Textures)
+			{
+				VkImageMemoryBarrier barrier{};
+				barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+				barrier.pNext = nullptr;
+				barrier.image = i->m_Image;
+				barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				barrier.subresourceRange.baseMipLevel = 0;
+				barrier.subresourceRange.levelCount = 1;
+				barrier.subresourceRange.baseArrayLayer = 0;
+				barrier.subresourceRange.layerCount = 1;
+				barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+				barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				barrier.srcQueueFamilyIndex = m_TransferQueueIndex;
+				barrier.dstQueueFamilyIndex = m_RenderQueueIndex;
+				barrier.srcAccessMask = 0;
+				barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-			vkCmdPipelineBarrier(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+				vkCmdPipelineBarrier(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+			}
 		}
-	}
-	vkEndCommandBuffer(m_RenderCommandBuffer[m_FrameIndex]);
+		vkEndCommandBuffer(m_RenderCommandBuffer[m_FrameIndex]);
 
-	m_TransferSubmitInfo.pCommandBuffers = &m_RenderCommandBuffer[m_FrameIndex];
-	_VKR = vkQueueSubmit(m_RenderQueue, 1, &m_TransferSubmitInfo, nullptr);
-	vkQueueWaitIdle(m_RenderQueue);
+		m_TransferSubmitInfo.pCommandBuffers = &m_RenderCommandBuffer[m_FrameIndex];
+		_VKR = vkQueueSubmit(m_RenderQueue, 1, &m_TransferSubmitInfo, nullptr);
+		vkQueueWaitIdle(m_RenderQueue);
+	}
 
 	m_TransferData.Clear();
 }
