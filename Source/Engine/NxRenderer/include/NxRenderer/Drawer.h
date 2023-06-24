@@ -37,5 +37,7 @@ namespace Nexus
 
 		Ref<Shader> m_shader;
 		Ref<Pipeline> m_pipeline;
+
+		Ref<Buffer> m_buffer;
 	};
 }

@@ -1,7 +1,7 @@
 #include "NxGraphics/ResourcePool.h"
 #include "NxCore/Logger.h"
 
-void Nexus::ResourcePool::Clear()
+/*void Nexus::ResourcePool::Clear()
 {
 	m_UniformBuffers.clear();
 	m_GrabageUniformBuffers.clear();
@@ -39,4 +39,23 @@ void Nexus::ResourcePool::DeallocateUniformBuffer(uint64_t hashId)
 
 	m_GrabageUniformBuffers[hashId] = true;
 	//NEXUS_LOG("Vulkan", "Uniform Buffer Deallocated : %i", hashId);
+}
+*/
+
+template<>
+void Nexus::ResourcePool::Clear<Nexus::UniformBuffer>()
+{
+	m_UniformBufferPool.Clear();
+}
+
+template<>
+void Nexus::ResourcePool::Allocate<Nexus::UniformBuffer>(const ResourceID& Id,uint32_t&& args)
+{
+	m_UniformBufferPool.Allocate(Id, std::forward<uint32_t>(args));
+}
+
+template<>
+void Nexus::ResourcePool::Deallocate<Nexus::UniformBuffer>(const ResourceID& Id)
+{
+	m_UniformBufferPool.DeAllocate(Id);
 }

@@ -1,8 +1,8 @@
 #include "NxVulkan/VkCommandQueue.h"
 #include "NxVulkan/VkSwapchain.h"
-//#include "NxVulkan/VkRenderPass.h"
-//#include "NxVulkan/VkFramebuffer.h"
-//#include "NxVulkan/VkPipeline.h"
+#include "NxVulkan/VkRenderPass.h"
+#include "NxVulkan/VkFramebuffer.h"
+#include "NxVulkan/VkPipeline.h"
 
 Nexus::VulkanCommandQueue* Nexus::VulkanCommandQueue::s_Instance = nullptr;
 
@@ -166,7 +166,6 @@ void Nexus::VulkanCommandQueue::FlushRenderQueue()
 	m_PresentInfo.pSwapchains = &m_Swapchain;
 	m_PresentInfo.pImageIndices = &m_ImageIndex;
 	m_PresentInfo.pWaitSemaphores = &m_RenderFinishedSemaphore[m_FrameIndex];
-	m_PresentInfo.waitSemaphoreCount = 1;
 
 	_VKR = vkQueuePresentKHR(m_PresentQueue, &m_PresentInfo);
 	CHECK_LOG_VKR;
@@ -196,6 +195,17 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 
 	vkBeginCommandBuffer(m_TransferCommandBuffer[m_FrameIndex], &m_CmdBeginInfo);
 	{
+		for (auto& buffer : m_TransferData.m_Buffer)
+		{
+			VkBufferCopy copy{};
+			copy.size = buffer->m_Size;
+			copy.dstOffset = 0;
+			copy.srcOffset = 0;
+
+			vkCmdCopyBuffer(m_TransferCommandBuffer[m_FrameIndex], buffer->m_stagBuf, buffer->m_Buffer, 1, &copy);
+			NEXUS_LOG("Vulkan Debug", "Copied Buffer");
+		}
+
 		// Static Buffer
 		for (auto& buffer : m_TransferData.m_StaticBuffer)
 		{
@@ -293,34 +303,34 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 	m_TransferData.Clear();
 }
 
-//void Nexus::VulkanCommandQueue::BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer)
-//{
-//	Ref<VulkanRenderpass> renderpass = DynamicPointerCast<VulkanRenderpass>(pass);
-//	Ref<VulkanFramebuffer> frame = DynamicPointerCast<VulkanFramebuffer>(framebuffer);
-//
-//	VkRenderPassBeginInfo Info{};
-//	Info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-//	Info.pNext = nullptr;
-//	Info.renderPass = renderpass->Get();
-//	Info.framebuffer = frame->Get(m_FrameIndex);
-//	Info.renderArea.offset = { 0,0 };
-//	Info.renderArea.extent = frame->GetExtent();
-//	Info.clearValueCount = (uint32_t)frame->GetClearValues().size();
-//	Info.pClearValues = frame->GetClearValues().data();
-//
-//	vkCmdBeginRenderPass(m_RenderCommandBuffer[m_FrameIndex], &Info, VK_SUBPASS_CONTENTS_INLINE);
-//}
-//
-//void Nexus::VulkanCommandQueue::EndRenderPass()
-//{
-//	vkCmdEndRenderPass(m_RenderCommandBuffer[m_FrameIndex]);
-//}
-//
-//void Nexus::VulkanCommandQueue::BindPipeline(Ref<Pipeline> pipeline)
-//{
-//	Ref<VulkanPipeline> Vkp = DynamicPointerCast<VulkanPipeline>(pipeline);
-//	vkCmdBindPipeline(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, Vkp->Get());
-//}
+void Nexus::VulkanCommandQueue::BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer)
+{
+	Ref<VulkanRenderpass> renderpass = DynamicPointerCast<VulkanRenderpass>(pass);
+	Ref<VulkanFramebuffer> frame = DynamicPointerCast<VulkanFramebuffer>(framebuffer);
+
+	VkRenderPassBeginInfo Info{};
+	Info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	Info.pNext = nullptr;
+	Info.renderPass = renderpass->Get();
+	Info.framebuffer = frame->Get(m_FrameIndex);
+	Info.renderArea.offset = { 0,0 };
+	Info.renderArea.extent = frame->GetExtent();
+	Info.clearValueCount = (uint32_t)frame->GetClearValues().size();
+	Info.pClearValues = frame->GetClearValues().data();
+
+	vkCmdBeginRenderPass(m_RenderCommandBuffer[m_FrameIndex], &Info, VK_SUBPASS_CONTENTS_INLINE);
+}
+
+void Nexus::VulkanCommandQueue::EndRenderPass()
+{
+	vkCmdEndRenderPass(m_RenderCommandBuffer[m_FrameIndex]);
+}
+
+void Nexus::VulkanCommandQueue::BindPipeline(Ref<Pipeline> pipeline)
+{
+	Ref<VulkanPipeline> Vkp = DynamicPointerCast<VulkanPipeline>(pipeline);
+	vkCmdBindPipeline(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, Vkp->Get());
+}
 
 void Nexus::VulkanCommandQueue::SetScissor(Scissor scissor)
 {
@@ -346,6 +356,13 @@ void Nexus::VulkanCommandQueue::Transferdata::Clear()
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
 
+	for (auto& b : m_Buffer)
+	{
+		vmaDestroyBuffer(device->GetAllocator(), b->m_stagBuf, b->m_stagAlloc);
+		b->m_stagBuf = nullptr;
+	}
+	m_Buffer.clear();
+
 	for (auto& b : m_StaticBuffer)
 	{
 		vmaDestroyBuffer(device->GetAllocator(), b->m_StagingBuff, b->m_StagingAlloc);
@@ -359,6 +376,11 @@ void Nexus::VulkanCommandQueue::Transferdata::Clear()
 		i->m_StagingBuffer = nullptr;
 	}
 	m_Textures.clear();
+}
+
+void Nexus::VulkanCommandQueue::TransferBufferToGPU(VulkanBuffer* buffer)
+{
+	m_TransferData.m_Buffer.push_back(buffer);
 }
 
 void Nexus::VulkanCommandQueue::TransferBufferToGPU(VulkanStaticBuffer* buf)

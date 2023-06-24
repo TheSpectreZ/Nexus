@@ -37,7 +37,7 @@ namespace Nexus
 	
 	enum class NEXUS_GRAPHICS_API BufferType
 	{
-		Vertex, Index
+		Vertex, Index, Uniform, Storage
 	};
 
 	enum class NEXUS_GRAPHICS_API ShaderResourceType

@@ -3,6 +3,8 @@
 #include "VkContext.h"
 #include "VkBuffer.h"
 #include "VkTexture.h"
+#include "VkFramebuffer.h"
+#include "VkPipeline.h"
 
 #ifdef NEXUS_VULKAN_SHARED_BUILD
 #define NEXUS_VULKAN_API __declspec(dllexport)
@@ -34,14 +36,15 @@ namespace Nexus
 
 		void FlushTransferQueue() override;
 
-		//void BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer) override;
-		//void EndRenderPass() override;
+		void BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer) override;
+		void EndRenderPass() override;
 
-		//void BindPipeline(Ref<Pipeline> pipeline) override;
+		void BindPipeline(Ref<Pipeline> pipeline) override;
 
 		void SetScissor(Scissor scissor) override;
 		void SetViewport(Viewport viewport) override;
 
+		void TransferBufferToGPU(VulkanBuffer* buffer);
 		void TransferBufferToGPU(VulkanStaticBuffer* buffer);
 		void TransferTextureToGPU(VulkanTexture* texture);
 
@@ -77,12 +80,13 @@ namespace Nexus
 	
 		struct Transferdata
 		{
+			std::vector<VulkanBuffer*> m_Buffer;
 			std::vector<VulkanStaticBuffer*> m_StaticBuffer;
 			std::vector<VulkanTexture*> m_Textures;
 
 			bool Empty()
 			{
-				return m_StaticBuffer.empty() && m_Textures.empty();
+				return (m_StaticBuffer.empty() && m_Textures.empty()) && m_Buffer.empty();
 			}
 			void Clear();
 		} m_TransferData;

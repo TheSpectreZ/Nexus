@@ -3,6 +3,21 @@
 
 namespace Nexus
 {
+	struct BufferSpecification
+	{
+		BufferType type;
+		uint32_t size;
+		bool cpuMemory;
+		void* data;
+	};
+
+	class Buffer
+	{
+	public:
+		Buffer() = default;
+		virtual ~Buffer() = default;
+	};
+
 	class StaticBuffer
 	{
 	public:

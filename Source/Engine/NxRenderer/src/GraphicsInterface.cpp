@@ -61,3 +61,8 @@ Nexus::Ref<Nexus::Pipeline> Nexus::GraphicsInterface::CreatePipeline(const Pipel
 {
 	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanPipeline>(specs));
 }
+
+Nexus::Ref<Nexus::Buffer> Nexus::GraphicsInterface::CreateBuffer(const BufferSpecification& specs)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanBuffer>(specs));
+}

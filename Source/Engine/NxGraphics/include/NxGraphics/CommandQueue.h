@@ -1,5 +1,8 @@
 #pragma once
 #include "TypeImpls.h"
+#include "Renderpass.h"
+#include "Framebuffer.h"	
+#include "Pipeline.h"
 #include <functional>
 
 namespace Nexus
@@ -21,10 +24,10 @@ namespace Nexus
 		virtual void FlushTransferQueue() = 0;
 		virtual void FlushRenderQueue() = 0;
 
-		//virtual void BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer) = 0;
-		//virtual void EndRenderPass() = 0;
+		virtual void BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer) = 0;
+		virtual void EndRenderPass() = 0;
 
-		//virtual void BindPipeline(Ref<Pipeline> pipeline) = 0;
+		virtual void BindPipeline(Ref<Pipeline> pipeline) = 0;
 
 		virtual void SetScissor(Scissor scissor) = 0;
 		virtual void SetViewport(Viewport viewport) = 0;

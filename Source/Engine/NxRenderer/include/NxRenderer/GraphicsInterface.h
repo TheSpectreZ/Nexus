@@ -9,6 +9,7 @@
 #include "NxGraphics/Renderpass.h"
 #include "NxGraphics/Framebuffer.h"
 #include "NxGraphics/Pipeline.h"
+#include "NxGraphics/Buffer.h"
 
 namespace Nexus::GraphicsInterface
 {
@@ -20,4 +21,5 @@ namespace Nexus::GraphicsInterface
 	Ref<Renderpass> CreateRenderpass(const RenderpassSpecification& specs);
 	Ref<Framebuffer> CreateFramebuffer(const FramebufferSpecification& specs);
 	Ref<Pipeline> CreatePipeline(const PipelineSpecification& specs);
+	Ref<Buffer> CreateBuffer(const BufferSpecification& specs);
 }
