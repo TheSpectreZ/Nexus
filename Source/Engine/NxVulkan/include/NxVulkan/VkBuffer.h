@@ -16,6 +16,9 @@ namespace Nexus
 	public:
 		VulkanBuffer(const BufferSpecification& specs);
 		~VulkanBuffer() override;
+
+		VkBuffer Get() { return m_Buffer; }
+		uint32_t GetSize() override { return m_Size; }
 	private:
 		BufferType m_Type; uint32_t m_Size;
 		VkBuffer m_Buffer, m_stagBuf;

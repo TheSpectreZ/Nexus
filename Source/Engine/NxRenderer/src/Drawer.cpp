@@ -62,9 +62,34 @@ Nexus::ForwardDrawer::ForwardDrawer()
 		m_pass = GraphicsInterface::CreateRenderpass(specs);
 	}
 
+	// Framebuffer
+	{
+		auto extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
+
+		auto& a1 = m_fbSpecs.attachments.emplace_back();
+		a1.Type = Nexus::FramebufferAttachmentType::Color;
+		a1.multisampled = true;
+		a1.hdr = false;
+
+		auto& a2 = m_fbSpecs.attachments.emplace_back();
+		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
+		a2.multisampled = true;
+		a2.hdr = false;
+
+		auto& a3 = m_fbSpecs.attachments.emplace_back();
+		a3.Type = Nexus::FramebufferAttachmentType::PresentSrc;
+		a3.multisampled = false;
+		a3.hdr = false;
+
+		m_fbSpecs.extent = extent;
+		m_fbSpecs.renderpass = m_pass;
+
+		m_fb = GraphicsInterface::CreateFramebuffer(m_fbSpecs);
+	}
+
 	// Pipeline
 	{
-		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/pbr.shader");
+		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/simple.glsl");
 		m_shader = GraphicsInterface::CreateShader(shaderSpecs);
 
 		std::vector<VertexBindInfo> pipelineVertexBindInfo(1);
@@ -121,67 +146,63 @@ Nexus::ForwardDrawer::ForwardDrawer()
 		m_pipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
 	}
 
-	// Framebuffer
+	// Screen
 	{
 		auto extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
 
-		auto& a1 = m_fbSpecs.attachments.emplace_back();
-		a1.Type = Nexus::FramebufferAttachmentType::Color;
-		a1.multisampled = true;
-		a1.hdr = false;
+		m_Viewport.x = 0.f;
+		m_Viewport.y = 0.f;
+		m_Viewport.width = (float)extent.width;
+		m_Viewport.height = (float)extent.height;
+		m_Viewport.minDepth = 0.f;
+		m_Viewport.maxDepth = 1.f;
 
-		auto& a2 = m_fbSpecs.attachments.emplace_back();
-		a2.Type = Nexus::FramebufferAttachmentType::DepthStencil;
-		a2.multisampled = true;
-		a2.hdr = false;
-
-		auto& a3 = m_fbSpecs.attachments.emplace_back();
-		a3.Type = Nexus::FramebufferAttachmentType::PresentSrc;
-		a3.multisampled = false;
-		a3.hdr = false;
-
-		m_fbSpecs.extent = extent;
-		m_fbSpecs.renderpass = m_pass;
-
-		m_fb = GraphicsInterface::CreateFramebuffer(m_fbSpecs);
+		m_Scissor.Extent = extent;
+		m_Scissor.Offset = { 0,0 };
 	}
 
 	// Test Buffer
 	{
 		struct Vertex
 		{
-			glm::vec3 v[4];
-			glm::vec2 e;
+			glm::vec3 v[5];
+			glm::vec2 c;
 		};
 
-		Vertex vertices[6] = {};
+		std::vector<Vertex> vertices(6);
+		vertices[0].v[0] = glm::vec3(-0.5f, -0.5f, 0.0f);
+		vertices[1].v[0] = glm::vec3( 0.5f, -0.5f, 0.0f);
+		vertices[2].v[0] = glm::vec3( 0.5f,  0.5f, 0.0f);
+		vertices[3].v[0] = glm::vec3(-0.5f,  0.5f, 0.0f);
 
-		BufferSpecification specs{};
-		specs.type = BufferType::Vertex;
-		specs.size = sizeof(glm::vec3) * 4 + sizeof(glm::vec2) * 6;
-		specs.cpuMemory = false;
-		specs.data = vertices;
+		std::vector<uint32_t> indices =
+		{
+			0,1,2,2,3,0
+		};
 
-		m_buffer = GraphicsInterface::CreateBuffer(specs);
+		RenderableMeshSpecification specs{};
+		specs.Type = MeshType::Static;
+		specs.MeshVerticesSize = sizeof(Vertex) * vertices.size();
+		specs.MeshVerticesData = vertices.data();
+		specs.MeshIndicesSize = sizeof(uint32_t) * indices.size();
+		specs.MeshIndicesData = indices.data();
+
+		m_Mesh = CreateRef<RenderableMesh>(specs);
 	}
-}
-
-Nexus::ForwardDrawer::~ForwardDrawer()
-{
-	m_buffer.reset();
-	m_pipeline.reset();
-	m_shader.reset();
-	m_fb.reset();
-	m_pass.reset();
 }
 
 void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 {
-	//Module::Renderer::Get()->GetCommandQueue()->BeginRenderPass(m_pass, m_fb);
-	//
-	//Module::Renderer::Get()->GetCommandQueue()->BindPipeline(m_pipeline);
-	//
-	//Module::Renderer::Get()->GetCommandQueue()->EndRenderPass();
+	auto commandQueue = Module::Renderer::Get()->GetCommandQueue();
+
+	commandQueue->BeginRenderPass(m_pass, m_fb);
+	commandQueue->BindPipeline(m_pipeline);
+	commandQueue->SetViewport(m_Viewport);
+	commandQueue->SetScissor(m_Scissor);
+	commandQueue->BindVertexBuffer(m_Mesh->GetVertexBuffer());
+	commandQueue->BindIndexBuffer(m_Mesh->GetIndexBuffer());
+	commandQueue->DrawIndices(m_Mesh->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
+	commandQueue->EndRenderPass();
 }
 
 void Nexus::ForwardDrawer::OnWindowResize(Extent extent)

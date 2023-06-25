@@ -85,7 +85,7 @@ void Nexus::VulkanContext::Initialize()
 		info.pApplicationInfo = &app;
 		info.flags = 0;
 
-		std::vector<const char*> InstanceExtensions = { "VK_KHR_surface","VK_KHR_win32_surface" };
+		std::vector<const char*> InstanceExtensions = { VK_KHR_SURFACE_EXTENSION_NAME,VK_KHR_WIN32_SURFACE_EXTENSION_NAME };
 
 		if (debugEnabled)
 			InstanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);

@@ -199,7 +199,7 @@ Nexus::VulkanDevice::VulkanDevice(Ref<VulkanPhysicalDevice> device,const std::ve
 		q.pNext = nullptr;
 		q.pQueuePriorities = &queuePriority;
 		q.queueCount = 1;
-		q.queueFamilyIndex = m_QueueFamilyIndices.Compute;
+		q.queueFamilyIndex = m_QueueFamilyIndices.Graphics;
 		q.flags = 0;
 	}
 
@@ -214,7 +214,7 @@ Nexus::VulkanDevice::VulkanDevice(Ref<VulkanPhysicalDevice> device,const std::ve
 			q.pNext = nullptr;
 			q.pQueuePriorities = &queuePriority;
 			q.queueCount = 1;
-			q.queueFamilyIndex = m_QueueFamilyIndices.Graphics;
+			q.queueFamilyIndex = m_QueueFamilyIndices.Compute;
 			q.flags = 0;
 		}
 	}
@@ -279,8 +279,8 @@ Nexus::VulkanDevice::VulkanDevice(Ref<VulkanPhysicalDevice> device,const std::ve
 	// Queues
 	{
 		vkGetDeviceQueue(m_logicalDevice, m_QueueFamilyIndices.Graphics, 0, &m_GraphicsQueue);
-		vkGetDeviceQueue(m_logicalDevice, m_QueueFamilyIndices.Compute, 0, &m_ComputeQueue);
 		vkGetDeviceQueue(m_logicalDevice, m_QueueFamilyIndices.Present, 0, &m_PresentQueue);
+		vkGetDeviceQueue(m_logicalDevice, m_QueueFamilyIndices.Compute, 0, &m_ComputeQueue);
 		vkGetDeviceQueue(m_logicalDevice, m_QueueFamilyIndices.Transfer, 0, &m_TransferQueue);
 
 		NEXUS_LOG("Vulkan", "%s Queue Created, Family Index: %i", "Graphics", m_QueueFamilyIndices.Graphics);

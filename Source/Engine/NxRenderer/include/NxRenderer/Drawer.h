@@ -2,12 +2,13 @@
 #include "NxScene/Scene.h"
 #include "GraphicsInterface.h"
 
+#include "Mesh.h"
+
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
 #else
 #define NEXUS_RENDERER_API __declspec(dllimport)
 #endif // NEXUS_RENDERER_SHARED_BUILD
-
 
 namespace Nexus
 {
@@ -25,12 +26,15 @@ namespace Nexus
 	{
 	public:
 		ForwardDrawer();
-		~ForwardDrawer() override;
+		~ForwardDrawer() override = default;
 
 		void Draw(Ref<Scene> scene) override;
 		void OnWindowResize(Extent extent) override;
 	private:
 		FramebufferSpecification m_fbSpecs;
+
+		Viewport m_Viewport;
+		Scissor m_Scissor;
 
 		Ref<Renderpass> m_pass;
 		Ref<Framebuffer> m_fb;
@@ -38,6 +42,6 @@ namespace Nexus
 		Ref<Shader> m_shader;
 		Ref<Pipeline> m_pipeline;
 
-		Ref<Buffer> m_buffer;
+		Ref<RenderableMesh> m_Mesh;
 	};
 }

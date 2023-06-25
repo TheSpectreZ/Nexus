@@ -11,7 +11,7 @@ Nexus::RenderableMesh::RenderableMesh(const RenderableMeshSpecification& specs)
 
 	m_VertexBuffer = GraphicsInterface::CreateBuffer(bSpecs);
 
-	bSpecs.type = BufferType::Vertex;
+	bSpecs.type = BufferType::Index;
 	bSpecs.size = specs.MeshIndicesSize;
 	bSpecs.data = specs.MeshIndicesData;
 

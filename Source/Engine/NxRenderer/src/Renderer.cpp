@@ -29,8 +29,13 @@ void Nexus::Module::Renderer::Shutdown()
 	s_Instance->m_ForwardDrawer.reset();
 
 	s_Instance->m_CommandQueue->Shutdown();
+	s_Instance->m_CommandQueue.reset();
+
 	s_Instance->m_Swapchain->Shutdown();
+	s_Instance->m_Swapchain.reset();
+
 	s_Instance->m_Context->Shutdown();
+	s_Instance->m_Context.reset();
 
 	delete s_Instance;
 }

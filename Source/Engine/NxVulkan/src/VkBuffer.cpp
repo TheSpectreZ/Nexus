@@ -83,7 +83,7 @@ Nexus::VulkanStaticBuffer::~VulkanStaticBuffer()
 	if (m_StagingBuff != nullptr)
 		vmaDestroyBuffer(VulkanContext::Get()->GetDeviceRef()->GetAllocator(), m_StagingBuff, m_StagingAlloc);
 
-	NEXUS_LOG("Vulkan", "Static % s Buffer Destroyed", GetVulkanBufferTypeName(m_Type));
+	NEXUS_LOG("Vulkan", "Static %s Buffer Destroyed", GetVulkanBufferTypeName(m_Type));
 }
 
 #pragma endregion
@@ -184,5 +184,5 @@ Nexus::VulkanBuffer::~VulkanBuffer()
 		vmaDestroyBuffer(allocator, m_stagBuf, m_stagAlloc);
 	
 	vmaDestroyBuffer(allocator, m_Buffer, m_Alloc);
-	NEXUS_LOG("Vulkan", "%s Buffer Destroyed : size-&i", GetBufferTypeStringName(m_Type).c_str(), m_Size);
+	NEXUS_LOG("Vulkan", "%s Buffer Destroyed : size-%i", GetBufferTypeStringName(m_Type).c_str(), m_Size);
 }

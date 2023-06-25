@@ -20,8 +20,7 @@ namespace Nexus
 	public:
 		static VulkanCommandQueue* Get() { return s_Instance; }
 		
-		VulkanCommandQueue(std::function<void()> resizeCallback)
-			:m_ResizeCallback(resizeCallback) {}
+		VulkanCommandQueue(std::function<void()> resizeCallback);
 		~VulkanCommandQueue() = default;
 
 		VkCommandBuffer GetCurrentCommandBuffer() { return m_RenderCommandBuffer[m_FrameIndex]; }
@@ -47,6 +46,10 @@ namespace Nexus
 		void TransferBufferToGPU(VulkanBuffer* buffer);
 		void TransferBufferToGPU(VulkanStaticBuffer* buffer);
 		void TransferTextureToGPU(VulkanTexture* texture);
+
+		void BindVertexBuffer(Ref<Buffer> buffer) override;
+		void BindIndexBuffer(Ref<Buffer> buffer) override;
+		void DrawIndices(uint32_t IndexCount) override;
 
 		//void DrawSubMesh(SubMesh* submesh) override;
 		//void DrawMesh(Ref<StaticMesh> mesh) override;

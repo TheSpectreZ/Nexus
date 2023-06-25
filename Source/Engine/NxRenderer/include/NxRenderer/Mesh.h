@@ -30,6 +30,9 @@ namespace Nexus
 	public:
 		RenderableMesh(const RenderableMeshSpecification& specs);
 		virtual ~RenderableMesh();
+
+		Ref<Buffer> GetVertexBuffer() { return m_VertexBuffer; }
+		Ref<Buffer> GetIndexBuffer() { return m_IndexBuffer; }
 	private:
 		Ref<Buffer> m_VertexBuffer;
 		Ref<Buffer> m_IndexBuffer;

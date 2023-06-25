@@ -1,9 +1,11 @@
 #pragma once
+#include <functional>
+
 #include "TypeImpls.h"
 #include "Renderpass.h"
 #include "Framebuffer.h"	
 #include "Pipeline.h"
-#include <functional>
+#include "Buffer.h"
 
 namespace Nexus
 {
@@ -32,6 +34,10 @@ namespace Nexus
 		virtual void SetScissor(Scissor scissor) = 0;
 		virtual void SetViewport(Viewport viewport) = 0;
 
+		virtual void BindVertexBuffer(Ref<Buffer> buffer) = 0;
+		virtual void BindIndexBuffer(Ref<Buffer> buffer) = 0;
+		virtual void DrawIndices(uint32_t indexCount) = 0;
+		
 		//virtual void DrawSubMesh(SubMesh* submesh) = 0;
 		//virtual void DrawMesh(Ref<StaticMesh> mesh) = 0;
 	};

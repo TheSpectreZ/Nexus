@@ -35,7 +35,7 @@ Nexus::VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& spec
 				if (a.Type == FramebufferAttachmentType::DepthStencil)
 					c = { {1.f,0.f} };
 				else
-					c = { {0.1f,0.1f,0.1f,1.f} };
+					c = { {0.57f,0.43f,0.87f,1.f} };
 			}
 		}
 	}

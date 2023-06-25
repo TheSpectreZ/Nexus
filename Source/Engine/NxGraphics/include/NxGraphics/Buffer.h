@@ -16,6 +16,8 @@ namespace Nexus
 	public:
 		Buffer() = default;
 		virtual ~Buffer() = default;
+
+		virtual uint32_t GetSize() = 0;
 	};
 
 	class StaticBuffer
