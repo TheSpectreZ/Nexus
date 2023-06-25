@@ -1,6 +1,8 @@
 #include "NxRenderer/Drawer.h"
 #include "NxRenderer/Renderer.h"
 
+#include "NxAsset/glTFImporter.h"
+
 Nexus::ForwardDrawer::ForwardDrawer()
 {
 	// Renderpass
@@ -98,10 +100,10 @@ Nexus::ForwardDrawer::ForwardDrawer()
 			pipelineVertexBindInfo[0].inputRate = VertexBindInfo::INPUT_RATE_VERTEX;
 
 			// Depends on Vertex
-			pipelineVertexBindInfo[0].stride = sizeof(glm::vec3) * 4 + sizeof(glm::vec2);
+			pipelineVertexBindInfo[0].stride = sizeof(MeshVertex);
 		}
 
-		std::vector<VertexAttribInfo> pipelineVertexAttribInfo(5);
+		std::vector<VertexAttribInfo> pipelineVertexAttribInfo(6);
 		{
 			pipelineVertexAttribInfo[0].binding = 0;
 			pipelineVertexAttribInfo[0].location = 0;
@@ -110,23 +112,28 @@ Nexus::ForwardDrawer::ForwardDrawer()
 
 			pipelineVertexAttribInfo[1].binding = 0;
 			pipelineVertexAttribInfo[1].location = 1;
-			pipelineVertexAttribInfo[1].offset = sizeof(glm::vec3);
+			pipelineVertexAttribInfo[1].offset = sizeof(float) * 3;
 			pipelineVertexAttribInfo[1].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
 
 			pipelineVertexAttribInfo[2].binding = 0;
 			pipelineVertexAttribInfo[2].location = 2;
-			pipelineVertexAttribInfo[2].offset = sizeof(glm::vec3) * 2;
+			pipelineVertexAttribInfo[2].offset = sizeof(float) * 6;
 			pipelineVertexAttribInfo[2].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
 
 			pipelineVertexAttribInfo[3].binding = 0;
 			pipelineVertexAttribInfo[3].location = 3;
-			pipelineVertexAttribInfo[3].offset = sizeof(glm::vec3) * 3;
+			pipelineVertexAttribInfo[3].offset = sizeof(float) * 9;
 			pipelineVertexAttribInfo[3].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
 
 			pipelineVertexAttribInfo[4].binding = 0;
 			pipelineVertexAttribInfo[4].location = 4;
-			pipelineVertexAttribInfo[4].offset = sizeof(glm::vec3) * 4;
+			pipelineVertexAttribInfo[4].offset = sizeof(float) * 12;
 			pipelineVertexAttribInfo[4].format = VertexAttribInfo::ATTRIB_FORMAT_VEC2;
+
+			pipelineVertexAttribInfo[5].binding = 0;
+			pipelineVertexAttribInfo[5].location = 5;
+			pipelineVertexAttribInfo[5].offset = sizeof(float) * 14;
+			pipelineVertexAttribInfo[5].format = VertexAttribInfo::ATTRIB_FORMAT_VEC4;
 
 		}
 
@@ -163,30 +170,11 @@ Nexus::ForwardDrawer::ForwardDrawer()
 
 	// Test Buffer
 	{
-		struct Vertex
-		{
-			glm::vec3 v[5];
-			glm::vec2 c;
-		};
-
-		std::vector<Vertex> vertices(6);
-		vertices[0].v[0] = glm::vec3(-0.5f, -0.5f, 0.0f);
-		vertices[1].v[0] = glm::vec3( 0.5f, -0.5f, 0.0f);
-		vertices[2].v[0] = glm::vec3( 0.5f,  0.5f, 0.0f);
-		vertices[3].v[0] = glm::vec3(-0.5f,  0.5f, 0.0f);
-
-		std::vector<uint32_t> indices =
-		{
-			0,1,2,2,3,0
-		};
-
 		RenderableMeshSpecification specs{};
 		specs.Type = MeshType::Static;
-		specs.MeshVerticesSize = sizeof(Vertex) * vertices.size();
-		specs.MeshVerticesData = vertices.data();
-		specs.MeshIndicesSize = sizeof(uint32_t) * indices.size();
-		specs.MeshIndicesData = indices.data();
-
+	
+		Importer::glTF::Load("Resources/Meshes/sphere.gltf", &specs.meshSpecs);
+		
 		m_Mesh = CreateRef<RenderableMesh>(specs);
 	}
 }

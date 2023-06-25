@@ -2,7 +2,7 @@
 #include "NxScene/Scene.h"
 #include "GraphicsInterface.h"
 
-#include "Mesh.h"
+#include "RenderableMesh.h"	
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)

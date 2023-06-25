@@ -1,5 +1,5 @@
 #pragma once
-#include "GraphicsInterface.h"
+#include "NxGraphics/Renderables.h"	
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
@@ -17,15 +17,10 @@ namespace Nexus
 	struct RenderableMeshSpecification
 	{
 		MeshType Type;
-
-		uint32_t MeshVerticesSize;
-		void* MeshVerticesData;
-
-		uint32_t MeshIndicesSize;
-		void* MeshIndicesData;
+		MeshSpecifications meshSpecs;
 	};
 
-	class RenderableMesh
+	class RenderableMesh : Mesh
 	{
 	public:
 		RenderableMesh(const RenderableMeshSpecification& specs);
@@ -33,8 +28,5 @@ namespace Nexus
 
 		Ref<Buffer> GetVertexBuffer() { return m_VertexBuffer; }
 		Ref<Buffer> GetIndexBuffer() { return m_IndexBuffer; }
-	private:
-		Ref<Buffer> m_VertexBuffer;
-		Ref<Buffer> m_IndexBuffer;
 	};
 }
