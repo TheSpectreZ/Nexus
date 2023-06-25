@@ -118,12 +118,12 @@ void Nexus::Application::Run()
 			l->OnUpdate(0.f);
 		Module::Renderer::Get()->FlushTransfer();
 
-		//Module::Renderer::Get()->Begin();
+		Module::Renderer::Get()->Begin();
 		for (auto& l : s_Data->layerStack)
 			l->OnRender();
-		//Module::Renderer::Get()->End();
+		Module::Renderer::Get()->End();
 
-		//Module::Renderer::Get()->FlushRender();
+		Module::Renderer::Get()->FlushRender();
 	}
 
 	for (auto& l : s_Data->layerStack)
@@ -138,6 +138,7 @@ void Nexus::Application::Shut()
 	// Modules
 	{
 		Module::Renderer::Shutdown();
+		Module::Input::Shutdown();
 	}
 
 	DestroyWindow((HWND)m_Window.hwnd);
