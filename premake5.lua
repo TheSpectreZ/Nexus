@@ -22,6 +22,7 @@ workspace "Nexus-Engine"
         include "Scripts/Engine/Graphics.lua"
         include "Scripts/Engine/Renderer.lua"
         include "Scripts/Engine/Scene.lua"
+        include "Scripts/Engine/Asset.lua"
     group ""
     
     group "Platform"

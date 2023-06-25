@@ -25,6 +25,8 @@ project "NxRenderer"
 		IncludePath["NxVulkan"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxScene"],
+		IncludePath["NxAsset"],
+
 		IncludePath["NxRenderer"],
 	}
 
@@ -34,6 +36,7 @@ project "NxRenderer"
 		"NxGraphics",
 		"NxVulkan",
 		"NxScene",
+		"NxAsset"
 	}
 
 	defines 

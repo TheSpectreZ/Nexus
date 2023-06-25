@@ -1,8 +1,8 @@
-project "NexusEd"
-	kind "WindowedApp"
+project "NxAsset"
+	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
-	location (SrcDir.."Tools/%{prj.name}")
+	location (SrcDir.."Engine/%{prj.name}")
 
 	targetdir (BinDir)
 	objdir (IntDir)
@@ -11,35 +11,39 @@ project "NexusEd"
 
 	files
 	{
-		(SrcDir.."Tools/%{prj.name}/src/**.h"),
-		(SrcDir.."Tools/%{prj.name}/src/**.cpp")
-	}
-
-	links
-	{
-		"imgui",
-		"NxScene",
-		"NxRenderer",
-		"NxApplication"
+		(SrcDir.."Engine/%{prj.name}/include/**.h"),
+		(SrcDir.."Engine/%{prj.name}/src/**.cpp")
 	}
 
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
-		IncludePath["entt"],
-		IncludePath["imgui"],
-
+        IncludePath["stb"],
+        IncludePath["tinygltf"],
+        IncludePath["yamlcpp"],
+        IncludePath["nlohmannJson"],
+        
 		IncludePath["NxCore"],
-		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
-		IncludePath["NxRenderer"],
-		IncludePath["NxApplication"]
+		IncludePath["NxAsset"]
+	}
+
+	links
+	{
+		"yamlcpp",
+        "NxCore",
+		"NxGraphics"
+	}
+
+	defines 
+	{
+		"NEXUS_ASSET_SHARED_BUILD"
 	}
 
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
-		disablewarnings { "4251","4996" }
+		disablewarnings { "4251","4275" }
 
 	filter "configurations:Debug"
 		optimize "Off"
