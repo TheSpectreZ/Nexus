@@ -6,6 +6,7 @@ layout(location = 1) in vec3 InNorm;
 layout(location = 2) in vec3 InTang;
 layout(location = 3) in vec3 InBiTang;
 layout(location = 4) in vec2 InTexC;
+layout(location = 5) in vec4 InColor;
 
 layout(location = 0) out vec3 OutPos;
 
