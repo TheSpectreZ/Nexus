@@ -70,7 +70,7 @@ void Nexus::VulkanContext::Initialize()
 	// Instance
 	{
 		VkApplicationInfo app{};
-		//	app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+		app.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		app.pNext = nullptr;
 		app.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
 		app.engineVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
