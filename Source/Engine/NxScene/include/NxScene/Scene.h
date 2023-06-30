@@ -2,7 +2,9 @@
 #define WIN32_LEAN_AND_MEAN
 #include "entt/entt.hpp"
 #include "NxCore/Base.h"
+
 #include "Component.h"
+#include "Camera.h"
 
 namespace Nexus
 {
@@ -14,6 +16,10 @@ namespace Nexus
 	public:
 		static Ref<Scene> Create();
 		Ref<Scene> Duplicate();
+		
+		void SetCamera(Camera* cam) { m_Camera = cam; }
+		Camera* GetCamera() { return m_Camera; }
+
 		void Clear();
 
 		Entity CreateEntity();
@@ -31,6 +37,7 @@ namespace Nexus
 
 		Entity GetEntityWithUUID(UUID id);
 	private:
+		Camera* m_Camera;
 		entt::registry m_registry;
 		std::unordered_map<UUID, Entity> m_EntityMap;
 

@@ -10,7 +10,6 @@ void Nexus::CameraController::SetKeyBinding(CameraBinding binding, uint16_t key)
 void Nexus::CameraController::AttachCamera(Camera* camera)
 {
 	m_Camera = camera;
-	m_Camera->position = glm::vec3(0.f, 0.f, 4.f);
 }
 
 void Nexus::CameraController::SetPerspectiveProjection(float fovy, float width, float height, float zNear, float zFar)
@@ -25,7 +24,7 @@ void Nexus::CameraController::Update(float dt)
 	{
 		if (Module::Input::Get()->IsKeyPressed(m_KeyBinds[i]))
 		{
-			m_Camera->position += GetMovementMultiplier((CameraBinding)i) * dt * m_Speed;
+			m_position += GetMovementMultiplier((CameraBinding)i) * dt * m_Speed;
 		}
 	}
 
@@ -66,7 +65,7 @@ void Nexus::CameraController::Update(float dt)
 		}
 	}
 
-	m_Camera->view = glm::lookAt(m_Camera->position, m_Camera->position + m_front, m_up);
+	m_Camera->view = glm::lookAt(m_position, m_position + m_front, m_up);
 }
 
 glm::vec3 Nexus::CameraController::GetMovementMultiplier(CameraBinding binding)
