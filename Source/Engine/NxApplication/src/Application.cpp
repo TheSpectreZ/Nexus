@@ -115,7 +115,7 @@ void Nexus::Application::Run()
 		}
 		
 		for (auto& l : s_Data->layerStack)
-			l->OnUpdate(0.f);
+			l->OnUpdate(0.001f);
 		Module::Renderer::Get()->FlushTransfer();
 
 		Module::Renderer::Get()->Begin();
@@ -175,6 +175,9 @@ void Nexus::Application::PopLayer(Layer* layer)
 	}
 }
 
+#define GET_X(lp) ((int)(short)LOWORD(lp))
+#define GET_Y(lp) ((int)(short)HIWORD(lp))
+
 LRESULT CALLBACK Nexus::Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
@@ -205,6 +208,46 @@ LRESULT CALLBACK Nexus::Application::WindowProc(HWND hWnd, UINT message, WPARAM 
 			Module::Input::Get()->SetKeyState((uint16_t)wParam, false);
 			break;
 		}
+		case WM_MOUSEMOVE:
+		{
+			Module::Input::Get()->SetCursorPositionState(GET_X(lParam), GET_Y(lParam));
+			break;
+		}
+
+		case WM_LBUTTONDOWN:
+		{
+			Module::Input::Get()->SetMouseButtonState(Mouse::Left, true);
+			break;
+		}
+		case WM_LBUTTONUP:
+		{
+			Module::Input::Get()->SetMouseButtonState(Mouse::Left, false);
+			break;
+		}
+
+		case WM_RBUTTONDOWN:
+		{
+			Module::Input::Get()->SetMouseButtonState(Mouse::Right, true);
+			break;
+		}
+		case WM_RBUTTONUP:
+		{
+			Module::Input::Get()->SetMouseButtonState(Mouse::Right, false);
+			break;
+		}
+
+		case WM_MBUTTONDOWN:
+		{
+			Module::Input::Get()->SetMouseButtonState(Mouse::Middle, true);
+			break;
+		}
+		case WM_MBUTTONUP:
+		{
+			Module::Input::Get()->SetMouseButtonState(Mouse::Middle, false);
+			break;
+		}
+
+
 	}
 
 	return DefWindowProc(hWnd, message, wParam, lParam);

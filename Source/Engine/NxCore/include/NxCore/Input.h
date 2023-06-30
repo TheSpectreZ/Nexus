@@ -1,9 +1,9 @@
 #pragma once
 #include <cstdint>
 #include <bitset>
+
 #include "Window.h"
 #include "KeyCode.h"
-
 
 namespace Nexus::Module
 {
