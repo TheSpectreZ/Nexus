@@ -1,23 +1,31 @@
 #pragma once
-#include <string>
-#include "NxAsset/glTFImporter.h"
-#include "NxCore/UUID.h"
+#include <filesystem>
+#include "NxGraphics/Renderables.h"
 
-#include "glm/glm.hpp"	
+#ifdef NEXUS_ASSET_SHARED_BUILD
+#define NEXUS_ASSET_API __declspec(dllexport)
+#else
+#define NEXUS_ASSET_API __declspec(dllimport)
+#endif // NEXUS_ASSET_SHARED_BUILD
 
 namespace Nexus
 {
-	enum class AssetType
+	enum class NEXUS_ASSET_API AssetType
 	{
-		Mesh, Texture
+		None, Mesh, Texture
 	};
 
-	class Asset
+	class NEXUS_ASSET_API Asset
 	{
 		friend class AssetManager;
 	public:
-		Asset() = default;
+		Asset()
+			:m_Type(AssetType::None),m_Path("")
+		{}
 		virtual ~Asset() = default;
+
+		virtual bool Import(const std::filesystem::path& Sourcefilepath, const std::filesystem::path& AssetPath, const std::filesystem::path& BinPath) { return false; };
+		virtual bool Load(const std::filesystem::path& AssetPath) { return false; }
 
 		AssetType GetType() { return m_Type; }
 		std::string GetPath() { return m_Path; }
@@ -26,14 +34,17 @@ namespace Nexus
 		std::string m_Path;
 	};
 
-	class MeshAsset : public Asset
+	class NEXUS_ASSET_API MeshAsset : public Asset
 	{
 	public:
 		MeshAsset() = default;
 		~MeshAsset() override = default;
 
-		void Make(const std::string& sourceFilepath);
+		bool Import(const std::filesystem::path& Sourcefilepath, const std::filesystem::path& AssetPath, const std::filesystem::path& BinPath);
+		bool Load(const std::filesystem::path& AssetPath);
+
+		const MeshSpecifications& GetMeshSpecifications() { return m_Specs; }
 	private:
-		std::vector<Importer::glTF::Mesh> m_Meshes;
+		MeshSpecifications m_Specs;
 	};
 }
