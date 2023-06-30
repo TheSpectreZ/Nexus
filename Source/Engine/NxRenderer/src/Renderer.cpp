@@ -21,12 +21,18 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 	s_Instance->m_CommandQueue = GraphicsInterface::CreateCommandQueue(callback);
 	s_Instance->m_CommandQueue->Initialize();
 
+	s_Instance->m_ResourcePool = CreateRef<ResourcePool>();
+	s_Instance->m_ResourcePool->Initialize();
+	
 	s_Instance->m_ForwardDrawer = CreateRef<ForwardDrawer>();
 }
 
 void Nexus::Module::Renderer::Shutdown()
 {
 	s_Instance->m_ForwardDrawer.reset();
+	
+	s_Instance->m_ResourcePool->Shutdown();
+	s_Instance->m_ResourcePool.reset();
 
 	s_Instance->m_CommandQueue->Shutdown();
 	s_Instance->m_CommandQueue.reset();
