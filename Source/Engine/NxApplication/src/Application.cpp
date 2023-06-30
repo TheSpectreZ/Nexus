@@ -1,5 +1,6 @@
 // STL
 #include <vector>
+#include <chrono>
 // Core
 #include "NxCore/Base.h"
 #include "NxCore/Logger.h"
@@ -96,6 +97,14 @@ void Nexus::Application::Init()
 
 void Nexus::Application::Run()
 {
+	static LARGE_INTEGER frequency{};
+	static LARGE_INTEGER prevTime{};
+
+	static float deltaTime = 0.f;
+
+	QueryPerformanceFrequency(&frequency);
+	QueryPerformanceCounter(&prevTime);
+
 	for (auto& l : s_Data->layerStack)
 		l->OnAttach();
 
@@ -113,9 +122,18 @@ void Nexus::Application::Run()
 			if (s_Data->msg.message == WM_QUIT)
 				s_Data->IsRunning = false;
 		}
+
+		// Delta Time
+		{
+			static LARGE_INTEGER currentTime;
+			QueryPerformanceCounter(&currentTime);
+
+			deltaTime = (float) (currentTime.QuadPart - prevTime.QuadPart) / frequency.QuadPart;
+			prevTime = currentTime;
+		}
 		
 		for (auto& l : s_Data->layerStack)
-			l->OnUpdate(0.001f);
+			l->OnUpdate(deltaTime);
 		Module::Renderer::Get()->FlushTransfer();
 
 		Module::Renderer::Get()->Begin();
