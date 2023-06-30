@@ -19,10 +19,12 @@ namespace Nexus
 
 		VkBuffer Get() { return m_Buffer; }
 		uint32_t GetSize() override { return m_Size; }
+		void Update(void* data) override;
 	private:
 		BufferType m_Type; uint32_t m_Size;
 		VkBuffer m_Buffer, m_stagBuf;
 		VmaAllocation m_Alloc, m_stagAlloc;
+		VmaAllocationInfo m_Info;
 	};
 
 	class NEXUS_VULKAN_API VulkanStaticBuffer : public StaticBuffer

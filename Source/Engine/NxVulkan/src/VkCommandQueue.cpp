@@ -3,6 +3,7 @@
 #include "NxVulkan/VkRenderPass.h"
 #include "NxVulkan/VkFramebuffer.h"
 #include "NxVulkan/VkPipeline.h"
+#include "NxVulkan/VkShader.h"
 
 void Nexus::VulkanCommandQueue::Transferdata::Clear()
 {
@@ -357,6 +358,14 @@ void Nexus::VulkanCommandQueue::BeginRenderPass(Ref<Renderpass> pass, Ref<Frameb
 void Nexus::VulkanCommandQueue::EndRenderPass()
 {
 	vkCmdEndRenderPass(m_RenderCommandBuffer[m_FrameIndex]);
+}
+
+void Nexus::VulkanCommandQueue::BindShaderResourceHeap(Ref<Shader> shader, ResourceHeapHandle handle)
+{
+	Ref<VulkanShader> vks = DynamicPointerCast<VulkanShader>(shader);
+
+	VkDescriptorSet& Set = vks->m_SetResource[handle.set].Heaps[handle.hashId].Get();
+	vkCmdBindDescriptorSets(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, vks->m_Layout, handle.set, 1, &Set, 0, nullptr);
 }
 
 void Nexus::VulkanCommandQueue::BindPipeline(Ref<Pipeline> pipeline)

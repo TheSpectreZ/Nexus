@@ -38,6 +38,7 @@ namespace Nexus
 		void BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer) override;
 		void EndRenderPass() override;
 
+		void BindShaderResourceHeap(Ref<Shader> shader, ResourceHeapHandle handle) override;
 		void BindPipeline(Ref<Pipeline> pipeline) override;
 
 		void SetScissor(Scissor scissor) override;

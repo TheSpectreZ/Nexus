@@ -25,11 +25,6 @@ namespace Nexus
 		}
 	};
 
-	struct VertexInputReflectData
-	{
-
-	};
-
 	struct NEXUS_VULKAN_API ReflectionData
 	{
 		std::unordered_map<uint32_t, std::vector<Nexus::ShaderResouceHeapLayoutBinding>> bindings;
@@ -38,20 +33,18 @@ namespace Nexus
 	class NEXUS_VULKAN_API VulkanShader : public Shader
 	{
 		static const uint32_t maxHeapCountPerPool = 100;
+		friend class VulkanCommandQueue;
 	public:
 		VulkanShader(const ShaderSpecification& specs);
 		~VulkanShader() override;
 
 		void AllocateShaderResourceHeap(ResourceHeapHandle handle) override;
 		void DeallocateShaderResourceHeap(ResourceHeapHandle handle) override;
-		void BindShaderResourceHeap(ResourceHeapHandle handle) override;
+		void GetShaderResourceHeapLayoutBinding(ShaderResouceHeapLayoutBinding*& heap, uint32_t set,uint32_t binding) override;
 
-		void AllocateUniformBuffer(UniformBufferHandle handle) override;
-		void DeallocateUniformBuffer(UniformBufferHandle handle) override;
-		void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, UniformBufferHandle bufferHandle) override;
+		void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, uint32_t binding, Ref<Buffer> buffer) override;
 		void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texture) override;
-		void SetUniformData(UniformBufferHandle handle, void* data) override;
-
+		
 		VkShaderModule GetModule(VkShaderStageFlagBits flag);
 		VkPipelineLayout GetPipelineLayout() { return m_Layout; }
 	private:

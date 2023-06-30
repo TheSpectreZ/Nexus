@@ -144,13 +144,12 @@ Nexus::VulkanBuffer::VulkanBuffer(const BufferSpecification& specs)
 		bInfo.usage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
 
 	auto allocator = VulkanContext::Get()->GetDeviceRef()->GetAllocator();
-	VmaAllocationInfo alInfo{};
-	_VKR = vmaCreateBuffer(allocator, &bInfo, &aInfo, &m_Buffer, &m_Alloc, &alInfo);
+	_VKR = vmaCreateBuffer(allocator, &bInfo, &aInfo, &m_Buffer, &m_Alloc, &m_Info);
 
 	if (specs.cpuMemory && specs.data)
 	{
-		if (alInfo.pMappedData)
-			memcpy(alInfo.pMappedData, specs.data, m_Size);
+		if (m_Info.pMappedData)
+			memcpy(m_Info.pMappedData, specs.data, m_Size);
 
 	}
 		
@@ -185,4 +184,12 @@ Nexus::VulkanBuffer::~VulkanBuffer()
 	
 	vmaDestroyBuffer(allocator, m_Buffer, m_Alloc);
 	NEXUS_LOG("Vulkan", "%s Buffer Destroyed : size-%i", GetBufferTypeStringName(m_Type).c_str(), m_Size);
+}
+
+void Nexus::VulkanBuffer::Update(void* data)
+{
+	if (!data) return;
+	if (!m_Info.pMappedData) return;
+
+	memcpy(m_Info.pMappedData, data, m_Size);
 }
