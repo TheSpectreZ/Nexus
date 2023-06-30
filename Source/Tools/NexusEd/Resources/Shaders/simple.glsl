@@ -10,10 +10,16 @@ layout(location = 5) in vec4 InColor;
 
 layout(location = 0) out vec3 OutPos;
 
+layout(set = 0,binding = 0) uniform CameraBuffer
+{
+	mat4 projection;
+	mat4 view;
+} u_Camera;
+
 void main()
 {
 	OutPos = InPos;
-    gl_Position = vec4(InPos, 1.0);
+    gl_Position = u_Camera.projection * u_Camera.view * vec4(InPos, 1.0);
 }
 
 #shader FRAGMENT
