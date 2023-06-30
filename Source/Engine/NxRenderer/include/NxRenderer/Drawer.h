@@ -43,5 +43,7 @@ namespace Nexus
 		Ref<Pipeline> m_pipeline;
 
 		Ref<RenderableMesh> m_Mesh;
+		ResourceHeapHandle m_Heap;
+		UniformBufferHandle m_Uniform;
 	};
 }

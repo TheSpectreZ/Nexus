@@ -9,18 +9,18 @@
 
 namespace Nexus
 {
-	enum class MeshType
+	enum class NEXUS_RENDERER_API MeshType
 	{
 		Static, Dynamic, Animated
 	};
 
-	struct RenderableMeshSpecification
+	struct NEXUS_RENDERER_API RenderableMeshSpecification
 	{
 		MeshType Type;
 		MeshSpecifications meshSpecs;
 	};
 
-	class RenderableMesh : Mesh
+	class NEXUS_RENDERER_API RenderableMesh : public Mesh
 	{
 	public:
 		RenderableMesh(const RenderableMeshSpecification& specs);

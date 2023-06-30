@@ -2,7 +2,6 @@
 #include "NxRenderer/GraphicsInterface.h"
 
 Nexus::RenderableMesh::RenderableMesh(const RenderableMeshSpecification& specs)
-	:Mesh(specs.meshSpecs)
 {
 	auto& mSpecs = specs.meshSpecs;
 
@@ -29,18 +28,16 @@ Nexus::RenderableMesh::RenderableMesh(const RenderableMeshSpecification& specs)
 	bSpecs.cpuMemory = false;
 
 	bSpecs.type = BufferType::Vertex;
-	bSpecs.size = verts.size() * sizeof(MeshVertex);
+	bSpecs.size = (uint32_t)verts.size() * sizeof(MeshVertex);
 	bSpecs.data = verts.data();
 
 	m_VertexBuffer = GraphicsInterface::CreateBuffer(bSpecs);
 
 	bSpecs.type = BufferType::Index;
-	bSpecs.size = indexs.size() * sizeof(uint32_t);
+	bSpecs.size = (uint32_t)indexs.size() * sizeof(uint32_t);
 	bSpecs.data = indexs.data();
 
 	m_IndexBuffer = GraphicsInterface::CreateBuffer(bSpecs);
-
-	Mesh::m_Elements.clear();
 }
 
 Nexus::RenderableMesh::~RenderableMesh()

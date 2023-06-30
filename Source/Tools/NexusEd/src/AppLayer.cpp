@@ -27,6 +27,7 @@ void AppLayer::OnAttach()
 	// Scene
 	{
 		m_EditorScene = Scene::Create();
+		m_EditorScene->SetCamera(&m_EditorCamera);
 	}
 }
 
