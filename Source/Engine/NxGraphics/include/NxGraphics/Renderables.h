@@ -21,9 +21,13 @@ namespace Nexus
 	class NEXUS_GRAPHICS_API Renderable
 	{
 	public:
-		Renderable() = default;
+		Renderable(RenderableType type) :m_Type(type) {}
 		virtual ~Renderable() = default;
+
+		RenderableType GetType() { return m_Type; }
 	protected:
+		RenderableType m_Type;
+
 		Ref<Buffer> m_VertexBuffer;
 		Ref<Buffer> m_IndexBuffer;
 	};
@@ -50,10 +54,7 @@ namespace Nexus
 	class NEXUS_GRAPHICS_API Mesh : public Renderable
 	{
 	public:
-		Mesh(const MeshSpecifications& specs);
+		Mesh() :Renderable(RenderableType::Mesh) {}
 		~Mesh() override = default;
-	protected:
-		std::vector<MeshElement> m_Elements;
-		std::vector<uint64_t> m_MaterialIndices;
 	};
 }

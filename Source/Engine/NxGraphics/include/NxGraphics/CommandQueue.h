@@ -29,6 +29,7 @@ namespace Nexus
 		virtual void BeginRenderPass(Ref<Renderpass> pass, Ref<Framebuffer> framebuffer) = 0;
 		virtual void EndRenderPass() = 0;
 
+		virtual void BindShaderResourceHeap(Ref<Shader> shader, ResourceHeapHandle handle) = 0;
 		virtual void BindPipeline(Ref<Pipeline> pipeline) = 0;
 
 		virtual void SetScissor(Scissor scissor) = 0;
@@ -36,6 +37,7 @@ namespace Nexus
 
 		virtual void BindVertexBuffer(Ref<Buffer> buffer) = 0;
 		virtual void BindIndexBuffer(Ref<Buffer> buffer) = 0;
+
 		virtual void DrawIndices(uint32_t indexCount) = 0;
 		
 		//virtual void DrawSubMesh(SubMesh* submesh) = 0;

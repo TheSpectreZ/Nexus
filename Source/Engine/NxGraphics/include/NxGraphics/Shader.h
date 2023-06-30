@@ -1,6 +1,9 @@
 #pragma once
 #include "NxCore/Base.h"
 #include "Texture.h"
+#include "Buffer.h"
+#include "ShaderResource.h"
+
 #include <vector>
 
 #ifdef NEXUS_GRAPHICS_SHARED_BUILD
@@ -49,15 +52,10 @@ namespace Nexus
 
 		virtual void AllocateShaderResourceHeap(ResourceHeapHandle handle) = 0;
 		virtual void DeallocateShaderResourceHeap(ResourceHeapHandle handle) = 0;
-		virtual void BindShaderResourceHeap(ResourceHeapHandle handle) = 0;
+		virtual void GetShaderResourceHeapLayoutBinding(ShaderResouceHeapLayoutBinding*& layout,uint32_t set,uint32_t binding) = 0;
 
-		virtual void AllocateUniformBuffer(UniformBufferHandle handle) = 0;
-		virtual void DeallocateUniformBuffer(UniformBufferHandle handle) = 0;
-
-		virtual void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, UniformBufferHandle bufferHandle) = 0;
+		virtual void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle,uint32_t binding, Ref<Buffer> buffer) = 0;
 		virtual void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texture) = 0;
-
-		virtual void SetUniformData(UniformBufferHandle handle, void* data) = 0;
 	};
 
 	namespace ShaderCompiler
