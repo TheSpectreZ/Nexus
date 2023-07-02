@@ -1,5 +1,5 @@
 project "imgui"
-	kind "SharedLib"
+	kind "StaticLib"
 	language "C++"
 	location (vcxDir)
     staticruntime "Off"
@@ -20,15 +20,6 @@ project "imgui"
 		(DepDir.."imgui/imstb_textedit.h"),
 		(DepDir.."imgui/imstb_truetype.h"),
 		(DepDir.."imgui/imgui_demo.cpp"),
-
-		(DepDir.."imgui/backends/imgui_impl_glfw.h"),
-		(DepDir.."imgui/backends/imgui_impl_glfw.cpp"),
-
-        (DepDir.."imgui/backends/imgui_impl_opengl3.h"),
-		(DepDir.."imgui/backends/imgui_impl_opengl3.cpp"),
-
-        (DepDir.."imgui/backends/imgui_impl_vulkan.h"),
-		(DepDir.."imgui/backends/imgui_impl_vulkan.cpp"),
 	}
 
 	includedirs

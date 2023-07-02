@@ -20,6 +20,7 @@ project "NxApplication"
 		"$(VULKAN_SDK)/Include",
 		IncludePath["entt"],
 		IncludePath["NxCore"],
+		IncludePath["NxAsset"],
 		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderer"],
@@ -30,6 +31,7 @@ project "NxApplication"
 	{
 		"NxCore",
 		"NxScene",
+		"NxAsset",
 		"NxRenderer",
 	}
 

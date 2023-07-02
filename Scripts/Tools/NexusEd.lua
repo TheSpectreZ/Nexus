@@ -17,8 +17,13 @@ project "NexusEd"
 
 	links
 	{
+		"vulkan-1.lib",
 		"imgui",
+		"NxCore",
 		"NxScene",
+		"NxAsset",
+		"NxGraphics",
+		"NxVulkan",
 		"NxRenderer",
 		"NxApplication"
 	}
@@ -28,18 +33,26 @@ project "NexusEd"
 		"$(VULKAN_SDK)/Include",
 		IncludePath["entt"],
 		IncludePath["imgui"],
+		IncludePath["VMA"],
 
 		IncludePath["NxCore"],
 		IncludePath["NxScene"],
+		IncludePath["NxAsset"],
 		IncludePath["NxGraphics"],
+		IncludePath["NxVulkan"],
 		IncludePath["NxRenderer"],
 		IncludePath["NxApplication"]
+	}
+
+	libdirs
+	{
+		"$(VULKAN_SDK)/Lib"
 	}
 
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
-		disablewarnings { "4251","4996" }
+		disablewarnings { "4251","4996","4275" }
 
 	filter "configurations:Debug"
 		optimize "Off"
