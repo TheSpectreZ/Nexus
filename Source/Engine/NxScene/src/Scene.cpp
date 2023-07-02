@@ -3,6 +3,17 @@
 #include "NxScene/Scene.h"
 #include "NxScene/Entity.h"
 
+Nexus::Scene::Scene()
+{
+	m_Id = UUID();
+	m_Camera = nullptr;
+}
+
+Nexus::Scene::~Scene()
+{
+	Clear();
+}
+
 void Nexus::Scene::Clear()
 {
 	m_registry.each([&](entt::entity e)
@@ -13,14 +24,6 @@ void Nexus::Scene::Clear()
 	m_registry.clear();
 	m_EntityMap.clear();
 	NEXUS_LOG("ECS", "Scene Cleared");
-}
-
-Nexus::Ref<Nexus::Scene> Nexus::Scene::Create()
-{
-	NEXUS_LOG("ECS", "Scene Created");
-	
-	auto scene = CreateRef<Scene>();
-	return scene;
 }
 
 #define COPY_ENTITY_COMPONENT(en,newEn,Name) if(en.HasComponent<Name>()) newEn.AddComponent<Name>(en.GetComponent<Name>())

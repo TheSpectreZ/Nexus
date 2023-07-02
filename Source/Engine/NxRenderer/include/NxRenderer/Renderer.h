@@ -5,6 +5,7 @@
 
 #include "GraphicsInterface.h"
 #include "ResourcePool.h"
+#include "RenderableScene.h"	
 #include "Drawer.h"
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD

@@ -1,8 +1,8 @@
+#include "NxCore/Logger.h"
+#include "NxCore/Assertion.h"
 #include "NxRenderer/Drawer.h"
 #include "NxRenderer/Renderer.h"
-
-#include "NxAsset/glTFImporter.h"
-#include "NxAsset/Asset.h"
+#include "NxAsset/Manager.h"
 
 Nexus::ForwardDrawer::ForwardDrawer()
 {
@@ -95,23 +95,6 @@ Nexus::ForwardDrawer::ForwardDrawer()
 		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/simple.glsl");
 		m_shader = GraphicsInterface::CreateShader(shaderSpecs);
 
-		// Descriptor
-		{
-			auto pool = Module::Renderer::Get()->GetResourcePool();
-
-			m_Heap.hashId = UUID().operator size_t();
-			m_Heap.set = 0;
-			m_shader->AllocateShaderResourceHeap(m_Heap);
-
-			m_Uniform.hashId = UUID().operator size_t();
-			m_Uniform.set = 0;
-			m_Uniform.binding = 0;
-			
-			pool->AllocateUniformBuffer(m_shader, m_Uniform);
-
-			m_shader->BindUniformWithResourceHeap(m_Heap, m_Uniform.binding, pool->GetUniformBuffer(m_Uniform.hashId));
-		}
-
 		std::vector<VertexBindInfo> pipelineVertexBindInfo(1);
 		{
 			pipelineVertexBindInfo[0].binding = 0;
@@ -185,35 +168,25 @@ Nexus::ForwardDrawer::ForwardDrawer()
 		m_Scissor.Extent = extent;
 		m_Scissor.Offset = { 0,0 };
 	}
-
-	// Test Buffer
-	{
-		Ref<MeshAsset> asset = CreateRef<MeshAsset>();
-		asset->Load("Project\\Assets\\cube.NxAsset");
-
-		RenderableMeshSpecification specs{};
-		specs.Type = MeshType::Static;
-		specs.meshSpecs = asset->GetMeshSpecifications();
-	
-		m_Mesh = CreateRef<RenderableMesh>(specs);
-	}
 }
 
 void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 {
-	auto pool = Module::Renderer::Get()->GetResourcePool();
-	pool->UpdateUniformBuffer(m_Uniform.hashId, scene->GetCamera());
+	UUID Id = scene->GetId();
+	if (!m_RenderableScenes.contains(Id))
+		m_RenderableScenes[Id] = CreateRef<RenderableScene>(scene, m_shader, Module::Renderer::Get()->GetResourcePool());
+
+	m_RenderableScenes[Id]->Prepare();
 
 	auto commandQueue = Module::Renderer::Get()->GetCommandQueue();
 
 	commandQueue->BeginRenderPass(m_pass, m_fb);
-	commandQueue->BindShaderResourceHeap(m_shader, m_Heap);
 	commandQueue->BindPipeline(m_pipeline);
 	commandQueue->SetViewport(m_Viewport);
 	commandQueue->SetScissor(m_Scissor);
-	commandQueue->BindVertexBuffer(m_Mesh->GetVertexBuffer());
-	commandQueue->BindIndexBuffer(m_Mesh->GetIndexBuffer());
-	commandQueue->DrawIndices(m_Mesh->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
+
+	m_RenderableScenes[Id]->Draw(commandQueue);
+
 	commandQueue->EndRenderPass();
 }
 

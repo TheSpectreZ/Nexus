@@ -2,7 +2,7 @@
 #include "NxScene/Scene.h"
 #include "GraphicsInterface.h"
 
-#include "RenderableMesh.h"	
+#include "RenderableScene.h"
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
@@ -18,7 +18,6 @@ namespace Nexus
 		Drawer() = default;
 		virtual ~Drawer() = default;
 
-		virtual void Draw(Ref<Scene> scene) = 0;
 		virtual void OnWindowResize(Extent extent) = 0;
 	};
 
@@ -28,7 +27,7 @@ namespace Nexus
 		ForwardDrawer();
 		~ForwardDrawer() override = default;
 
-		void Draw(Ref<Scene> scene) override;
+		void Draw(Ref<Scene> scene);
 		void OnWindowResize(Extent extent) override;
 	private:
 		FramebufferSpecification m_fbSpecs;
@@ -42,8 +41,6 @@ namespace Nexus
 		Ref<Shader> m_shader;
 		Ref<Pipeline> m_pipeline;
 
-		Ref<RenderableMesh> m_Mesh;
-		ResourceHeapHandle m_Heap;
-		UniformBufferHandle m_Uniform;
+		std::unordered_map<UUID, Ref<RenderableScene>> m_RenderableScenes;
 	};
 }

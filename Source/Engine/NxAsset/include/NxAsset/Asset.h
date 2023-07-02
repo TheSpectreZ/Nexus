@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
-#include "NxGraphics/Renderables.h"
+#include <fstream>
+#include "NxGraphics/AssetSpecifications.h"
 
 #ifdef NEXUS_ASSET_SHARED_BUILD
 #define NEXUS_ASSET_API __declspec(dllexport)
@@ -10,6 +11,13 @@
 
 namespace Nexus
 {
+	typedef std::filesystem::path AssetFilePath;
+
+	namespace Utils
+	{
+		bool GetUUIDFromAssetFile(const AssetFilePath& path, UUID& Id, std::stringstream* stream);
+	}
+
 	enum class NEXUS_ASSET_API AssetType
 	{
 		None, Mesh, Texture
@@ -19,32 +27,42 @@ namespace Nexus
 	{
 		friend class AssetManager;
 	public:
-		Asset()
-			:m_Type(AssetType::None),m_Path("")
-		{}
+		Asset(AssetType type) :m_Type(type) {}
 		virtual ~Asset() = default;
 
-		virtual bool Import(const std::filesystem::path& Sourcefilepath, const std::filesystem::path& AssetPath, const std::filesystem::path& BinPath) { return false; };
-		virtual bool Load(const std::filesystem::path& AssetPath) { return false; }
+		virtual bool Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath) { return false; };
+		virtual bool Load(const AssetFilePath& AssetPath) { return false; }
 
 		AssetType GetType() { return m_Type; }
-		std::string GetPath() { return m_Path; }
 	protected:
 		AssetType m_Type;
-		std::string m_Path;
 	};
+
+#define OVERRIDE_BASE_ASSET bool Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath) override; bool Load(const AssetFilePath& AssetPath) override;
 
 	class NEXUS_ASSET_API MeshAsset : public Asset
 	{
 	public:
-		MeshAsset() = default;
+		MeshAsset() :Asset(AssetType::Mesh),m_Specs() {}
 		~MeshAsset() override = default;
 
-		bool Import(const std::filesystem::path& Sourcefilepath, const std::filesystem::path& AssetPath, const std::filesystem::path& BinPath);
-		bool Load(const std::filesystem::path& AssetPath);
+		OVERRIDE_BASE_ASSET
 
 		const MeshSpecifications& GetMeshSpecifications() { return m_Specs; }
 	private:
 		MeshSpecifications m_Specs;
+	};
+
+	class NEXUS_ASSET_API TextureAsset : public Asset
+	{
+	public:
+		TextureAsset() : Asset(AssetType::Texture),m_Specs() {}
+		~TextureAsset() override = default;
+
+		OVERRIDE_BASE_ASSET
+
+		const TextureSpecifications& GetTextureSpecifications() { return m_Specs; }
+	private:
+		TextureSpecifications m_Specs;
 	};
 }

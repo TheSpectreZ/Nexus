@@ -1,10 +1,11 @@
 #pragma once
 #include "NxCore/UUID.h"	
 #include "NxRenderer/GraphicsInterface.h"
+#include "NxRenderer/RenderableMesh.h"
 
 namespace Nexus
 {
-	class ResourcePool
+	class NEXUS_RENDERER_API ResourcePool
 	{
 	public:
 		ResourcePool() = default;
@@ -14,10 +15,14 @@ namespace Nexus
 		void Shutdown();
 
 		Ref<Buffer> GetUniformBuffer(UUID HashID) { return m_UniformBuffers[HashID]; }
-		void AllocateUniformBuffer(Ref<Shader> shader, UniformBufferHandle handle);
+		Ref<Buffer> AllocateUniformBuffer(Ref<Shader> shader, UniformBufferHandle handle);
 		void DeallocateUniformBuffer(UUID HashID);
-		void UpdateUniformBuffer(UUID HashID, void* Data);
+		
+		Ref<RenderableMesh> GetRenderableMesh(UUID HashID) { return m_RenderableMeshes[HashID]; }
+		Ref<RenderableMesh> AllocateRenderableMesh(const RenderableMeshSpecification& specs,UUID HashID);
+		void DeallocateRenderableMesh(UUID HashID);
 	private:
 		std::unordered_map<UUID, Ref<Buffer>> m_UniformBuffers;
+		std::unordered_map<UUID, Ref<RenderableMesh>> m_RenderableMeshes;
 	};
 }

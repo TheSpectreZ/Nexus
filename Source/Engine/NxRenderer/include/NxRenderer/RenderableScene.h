@@ -1,28 +1,31 @@
 #pragma once
-#include "NxGraphics/Shader.h"
+#include "NxRenderer/ResourcePool.h"
 #include "NxScene/Scene.h"
 #include "NxScene/Entity.h"
-#include "NxCore/UUID.h"
+
+#ifdef NEXUS_RENDERER_SHARED_BUILD
+#define NEXUS_RENDERER_API __declspec(dllexport)
+#else
+#define NEXUS_RENDERER_API __declspec(dllimport)
+#endif
 
 namespace Nexus
 {
-	class RenderableScene
+	class NEXUS_RENDERER_API RenderableScene
 	{
 	public:
-		RenderableScene(Ref<Scene> scene, Ref<Shader> shader);
+		RenderableScene(Ref<Scene> scene, Ref<Shader> shader,Ref<ResourcePool> pool);
 		~RenderableScene();
 
-		void InitResources();
-		void UpdateResources();
-		void DestroyResources();
-
-		void OnMaterialCreation(UUID Id);
-		void OnSceneDestruction();
-		void OnEntityCreation(Entity e);
-		void OnEntityDestruction(Entity e);
+		void Prepare();
+		void Draw(Ref<CommandQueue> queue);
 	private:
+		void Initialize();
+		void Destroy();
+
 		Ref<Shader> m_Shader;
 		Ref<Scene> m_Scene;
+		Ref<ResourcePool> m_Pool;
 
 		ResourceHeapHandle PerSceneHeap;
 		UniformBufferHandle PerSceneUniform0;

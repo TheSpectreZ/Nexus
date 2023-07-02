@@ -14,7 +14,11 @@ namespace Nexus
 	class NEXUS_SCENE_API Scene
 	{
 	public:
-		static Ref<Scene> Create();
+		Scene();
+		~Scene();
+
+		UUID GetId() { return m_Id; }
+
 		Ref<Scene> Duplicate();
 		
 		void SetCamera(Camera* cam) { m_Camera = cam; }
@@ -37,6 +41,7 @@ namespace Nexus
 
 		Entity GetEntityWithUUID(UUID id);
 	private:
+		UUID m_Id;
 		Camera* m_Camera;
 		entt::registry m_registry;
 		std::unordered_map<UUID, Entity> m_EntityMap;

@@ -1,8 +1,6 @@
 #pragma once
-#include <vector>
-#include "glm/glm.hpp"
-
 #include "NxCore/Base.h"
+#include "AssetSpecifications.h"
 #include "Buffer.h"
 
 #ifdef NEXUS_GRAPHICS_SHARED_BUILD
@@ -30,25 +28,6 @@ namespace Nexus
 
 		Ref<Buffer> m_VertexBuffer;
 		Ref<Buffer> m_IndexBuffer;
-	};
-
-	struct NEXUS_GRAPHICS_API MeshVertex
-	{
-		glm::vec3 position, normal, tangent, bitangent;
-		glm::vec2 texCoord;
-		glm::vec4 color;
-	};
-
-	struct NEXUS_GRAPHICS_API MeshElement
-	{
-		std::vector<MeshVertex> Vertices;
-		std::vector<uint32_t> Indices;
-	};
-
-	struct NEXUS_GRAPHICS_API MeshSpecifications
-	{
-		std::vector<MeshElement> elements;
-		std::vector<uint64_t> materialIndices;
 	};
 
 	class NEXUS_GRAPHICS_API Mesh : public Renderable

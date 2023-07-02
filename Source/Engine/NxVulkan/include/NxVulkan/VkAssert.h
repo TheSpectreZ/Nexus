@@ -8,5 +8,5 @@
 static VkResult _VKR;
 
 #define CLEAR_VKR _VKR = VK_SUCCESS
-#define CHECK_LOG_VKR NEXUS_ASSERT((_VKR != VK_SUCCESS),"VkResult: {0}",string_VkResult(_VKR)); CLEAR_VKR
+#define CHECK_LOG_VKR NEXUS_ASSERT((_VKR != VK_SUCCESS),"VkResult: %s",string_VkResult(_VKR)); CLEAR_VKR
 #define CHECK_HANDLE(handle,type) CHECK_LOG_VKR; NEXUS_ASSERT((handle == nullptr),"%s:%s is Null",#type,#handle);

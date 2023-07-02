@@ -29,6 +29,7 @@ namespace Nexus
 
 		void SetWindowTitle(const char* name);
 		Window& GetWindow() { return m_Window; }
+		const ApplicationSpecifications& GetAppSpecs() { return m_AppSpecs; }
 	protected:
 		ApplicationSpecifications m_AppSpecs;
 

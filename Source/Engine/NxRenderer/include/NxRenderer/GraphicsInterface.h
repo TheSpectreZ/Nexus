@@ -11,15 +11,21 @@
 #include "NxGraphics/Pipeline.h"
 #include "NxGraphics/Buffer.h"
 
+#ifdef NEXUS_RENDERER_SHARED_BUILD
+#define NEXUS_RENDERER_API __declspec(dllexport)
+#else
+#define NEXUS_RENDERER_API __declspec(dllimport)
+#endif // NEXUS_RENDERER_SHARED_BUILD
+
 namespace Nexus::GraphicsInterface
 {
-	Ref<Context> CreateContext(RendererAPI API, const ContextCreateInfo& Info);
-	Ref<Swapchain> CreateSwapchain(Window* window);
-	Ref<CommandQueue> CreateCommandQueue(std::function<void()> resizeCallback);
+	Ref<Context> NEXUS_RENDERER_API CreateContext(RendererAPI API, const ContextCreateInfo& Info);
+	Ref<Swapchain> NEXUS_RENDERER_API CreateSwapchain(Window* window);
+	Ref<CommandQueue> NEXUS_RENDERER_API CreateCommandQueue(std::function<void()> resizeCallback);
 
-	Ref<Shader> CreateShader(const ShaderSpecification& specs);
-	Ref<Renderpass> CreateRenderpass(const RenderpassSpecification& specs);
-	Ref<Framebuffer> CreateFramebuffer(const FramebufferSpecification& specs);
-	Ref<Pipeline> CreatePipeline(const PipelineSpecification& specs);
-	Ref<Buffer> CreateBuffer(const BufferSpecification& specs);
+	Ref<Shader> NEXUS_RENDERER_API CreateShader(const ShaderSpecification& specs);
+	Ref<Renderpass> NEXUS_RENDERER_API CreateRenderpass(const RenderpassSpecification& specs);
+	Ref<Framebuffer> NEXUS_RENDERER_API CreateFramebuffer(const FramebufferSpecification& specs);
+	Ref<Pipeline> NEXUS_RENDERER_API CreatePipeline(const PipelineSpecification& specs);
+	Ref<Buffer> NEXUS_RENDERER_API CreateBuffer(const BufferSpecification& specs);
 }

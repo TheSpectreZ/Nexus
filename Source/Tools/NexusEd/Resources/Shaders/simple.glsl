@@ -16,10 +16,15 @@ layout(set = 0,binding = 0) uniform CameraBuffer
 	mat4 view;
 } u_Camera;
 
+layout(set = 1,binding = 0) uniform TransformBuffer
+{
+	mat4 model;
+} u_Transform;
+
 void main()
 {
 	OutPos = InPos;
-    gl_Position = u_Camera.projection * u_Camera.view * vec4(InPos, 1.0);
+    gl_Position = u_Camera.projection * u_Camera.view * u_Transform.model * vec4(InPos, 1.0);
 }
 
 #shader FRAGMENT
