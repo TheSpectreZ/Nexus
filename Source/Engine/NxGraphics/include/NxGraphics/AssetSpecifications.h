@@ -24,15 +24,22 @@ namespace Nexus
 		std::vector<uint32_t> Indices;
 	};
 
-	struct NEXUS_GRAPHICS_API MeshSpecifications
+	struct NEXUS_GRAPHICS_API MeshSpecification
 	{
 		std::vector<MeshElement> elements;
 		std::vector<uint64_t> materialIndices;
 	};
 
-	struct NEXUS_GRAPHICS_API TextureSpecifications
+	struct NEXUS_GRAPHICS_API TextureSpecification
 	{
 		Extent extent;
 		void* pixeldata;
+	};
+
+	struct NEXUS_GRAPHICS_API SamplerSpecification
+	{
+		SamplerFilter Near;
+		SamplerFilter Far;
+		SamplerWrapMode U, V, W;
 	};
 }

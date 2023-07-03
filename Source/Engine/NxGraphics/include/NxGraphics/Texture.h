@@ -1,14 +1,8 @@
 #pragma once
-#include "TypeImpls.h"
+#include "AssetSpecifications.h"
 
 namespace Nexus
 {
-	struct TextureCreateInfo
-	{
-		Extent extent;
-		void* pixeldata;
-	};
-
 	class Texture
 	{
 	public:

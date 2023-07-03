@@ -3,7 +3,7 @@
 #include "NxVulkan/VkSwapchain.h"
 #include "NxVulkan/VkCommandQueue.h"
 
-Nexus::VulkanTexture::VulkanTexture(const TextureCreateInfo& info)
+Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 	:m_Extent(info.extent)
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
@@ -129,15 +129,15 @@ VkSamplerAddressMode GetVulkanSamplerWrapMode(Nexus::SamplerWrapMode mode)
 	}
 }
 
-Nexus::VulkanSampler::VulkanSampler(SamplerFilter Near, SamplerFilter Far, SamplerWrapMode U, SamplerWrapMode V, SamplerWrapMode W)
+Nexus::VulkanSampler::VulkanSampler(const SamplerSpecification& specs)
 {
 	VkSamplerCreateInfo info{};
 	info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	info.magFilter = GetVulkanSamplerFilter(Near);
-	info.minFilter = GetVulkanSamplerFilter(Far);
-	info.addressModeU = GetVulkanSamplerWrapMode(U);
-	info.addressModeV = GetVulkanSamplerWrapMode(V);
-	info.addressModeW = GetVulkanSamplerWrapMode(W);
+	info.magFilter = GetVulkanSamplerFilter(specs.Near);
+	info.minFilter = GetVulkanSamplerFilter(specs.Far);
+	info.addressModeU = GetVulkanSamplerWrapMode(specs.U);
+	info.addressModeV = GetVulkanSamplerWrapMode(specs.V);
+	info.addressModeW = GetVulkanSamplerWrapMode(specs.W);
 	info.anisotropyEnable = VK_TRUE;
 
 	VkPhysicalDeviceProperties Props;

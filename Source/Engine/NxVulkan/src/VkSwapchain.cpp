@@ -180,13 +180,6 @@ Nexus::Extent Nexus::VulkanSwapchain::GetExtent()
 
 void Nexus::VulkanSwapchain::ReCreate()
 {
-	//int width = 0, height = 0;
-	//glfwGetFramebufferSize(m_window->handle, &width, &height);
-	//while (width == 0 || height == 0) {
-	//	glfwGetFramebufferSize(m_window->handle, &width, &height);
-	//	glfwWaitEvents();
-	//}
-
 	VulkanContext::Get()->GetDeviceRef()->Wait();
 
 	Shutdown();

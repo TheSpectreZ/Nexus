@@ -48,9 +48,9 @@ namespace Nexus
 
 		OVERRIDE_BASE_ASSET
 
-		const MeshSpecifications& GetMeshSpecifications() { return m_Specs; }
+		const MeshSpecification& GetMeshSpecifications() { return m_Specs; }
 	private:
-		MeshSpecifications m_Specs;
+		MeshSpecification m_Specs;
 	};
 
 	class NEXUS_ASSET_API TextureAsset : public Asset
@@ -61,8 +61,8 @@ namespace Nexus
 
 		OVERRIDE_BASE_ASSET
 
-		const TextureSpecifications& GetTextureSpecifications() { return m_Specs; }
+		const TextureSpecification& GetTextureSpecifications() { return m_Specs; }
 	private:
-		TextureSpecifications m_Specs;
+		TextureSpecification m_Specs;
 	};
 }

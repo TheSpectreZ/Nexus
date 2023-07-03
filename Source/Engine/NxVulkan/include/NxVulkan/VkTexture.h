@@ -14,7 +14,7 @@ namespace Nexus
 	{
 		friend class VulkanCommandQueue;
 	public:
-		VulkanTexture(const TextureCreateInfo& Info);
+		VulkanTexture(const TextureSpecification& Specs);
 		~VulkanTexture() override;
 
 		VkImageView Get() { return m_View; }
@@ -32,7 +32,7 @@ namespace Nexus
 	class NEXUS_VULKAN_API VulkanSampler : public Sampler
 	{
 	public:
-		VulkanSampler(SamplerFilter Near, SamplerFilter Far, SamplerWrapMode U, SamplerWrapMode V, SamplerWrapMode W);
+		VulkanSampler(const SamplerSpecification& Specs);
 		~VulkanSampler() override;
 
 		VkSampler Get() { return m_Sampler; }

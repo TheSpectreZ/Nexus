@@ -41,7 +41,7 @@ namespace Nexus::Utils
 			return AssetType::None;
 	}
 
-	void SerializeMeshAsset(std::ofstream& outFile, const MeshSpecifications& obj)
+	void SerializeMeshAsset(std::ofstream& outFile, const MeshSpecification& obj)
 	{
 		uint32_t numElements = (uint32_t)obj.elements.size();
 		outFile.write(reinterpret_cast<const char*>(&numElements), sizeof(uint32_t));
@@ -64,7 +64,7 @@ namespace Nexus::Utils
 		outFile.write(reinterpret_cast<const char*>(obj.materialIndices.data()), numMaterialIndices * sizeof(uint64_t));
 	}
 
-	void DeserializeMeshAsset(std::ifstream& inFile, MeshSpecifications& obj) 
+	void DeserializeMeshAsset(std::ifstream& inFile, MeshSpecification& obj) 
 	{
 		uint32_t numElements = 0;
 		inFile.read(reinterpret_cast<char*>(&numElements), sizeof(uint32_t));
@@ -92,13 +92,13 @@ namespace Nexus::Utils
 		inFile.read(reinterpret_cast<char*>(obj.materialIndices.data()), numMaterialIndices * sizeof(uint64_t));
 	}
 
-	void SerializeTextureAsset(std::ofstream& outFile, const TextureSpecifications& obj)
+	void SerializeTextureAsset(std::ofstream& outFile, const TextureSpecification& obj)
 	{
 		outFile.write(reinterpret_cast<const char*>(&obj.extent), sizeof(Extent));
 		outFile.write(reinterpret_cast<const char*>(obj.pixeldata), sizeof(uint8_t) * obj.extent.width * obj.extent.height * 4);
 	}
 
-	void DeserializeTextureAsset(std::ifstream& inFile, TextureSpecifications& obj)
+	void DeserializeTextureAsset(std::ifstream& inFile, TextureSpecification& obj)
 	{
 		inFile.read(reinterpret_cast<char*>(&obj.extent), sizeof(Extent));
 
@@ -171,7 +171,7 @@ namespace Nexus::Importer
 		}
 	}
 	
-	bool LoadglTF(const AssetFilePath& filepath, MeshSpecifications* specs)
+	bool LoadglTF(const AssetFilePath& filepath, MeshSpecification* specs)
 	{
 		tinygltf::Model scene;
 		tinygltf::TinyGLTF Importer;
@@ -384,7 +384,7 @@ namespace Nexus::Importer
 		return true;
 	}
 
-	bool LoadTexture(const AssetFilePath& filepath, TextureSpecifications* specs)
+	bool LoadTexture(const AssetFilePath& filepath, TextureSpecification* specs)
 	{
 		int w, h, c;
 		void* pixels = stbi_load(filepath.string().c_str(), &w, &h, &c, 4);
@@ -405,7 +405,7 @@ namespace Nexus::Importer
 
 bool Nexus::MeshAsset::Import(const AssetFilePath& sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath)
 {
-	MeshSpecifications data;
+	MeshSpecification data;
 	if (!Importer::LoadglTF(sourcefilepath, &data))
 		return false;
 
@@ -488,7 +488,7 @@ bool Nexus::MeshAsset::Load(const AssetFilePath& AssetPath)
 
 bool Nexus::TextureAsset::Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath)
 {
-	TextureSpecifications data{};
+	TextureSpecification data{};
 	if (!Importer::LoadTexture(Sourcefilepath, &data))
 		return false;
 
