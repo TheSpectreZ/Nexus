@@ -10,7 +10,7 @@ namespace Nexus::FileDialog
 
 void Nexus::FileDialog::SetContextWindow(const Window& Window)
 {
-	m_window = (HWND)Window.hwnd;
+	m_window = (HWND)Window.nativeHandle;
 }
 
 std::string Nexus::FileDialog::OpenFile(const char* Filter)
@@ -69,7 +69,7 @@ std::string Nexus::FileDialog::SelectFolder()
 	bInfo.hwndOwner = m_window;
 	bInfo.pidlRoot = NULL;
 	bInfo.pszDisplayName = szDir;
-	bInfo.lpszTitle = "Select a folder";
+	bInfo.lpszTitle = L"Select a folder";
 	bInfo.ulFlags = 0;
 	bInfo.lpfn = NULL;
 	bInfo.lParam = 0;
@@ -79,7 +79,11 @@ std::string Nexus::FileDialog::SelectFolder()
 	if (lpItem != NULL)
 	{
 		SHGetPathFromIDList(lpItem, szDir);
-		return bInfo.pszDisplayName;
+		
+		std::wstring ws(bInfo.pszDisplayName);
+		std::string myVarS = std::string(ws.begin(), ws.end());
+		
+		return myVarS;
 	}
 
 	return std::string();

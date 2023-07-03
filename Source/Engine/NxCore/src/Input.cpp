@@ -1,3 +1,4 @@
+#include "GLFW/glfw3.h"
 #include "NxCore/Input.h"
 
 Nexus::Module::Input* Nexus::Module::Input::s_Instance = nullptr;
@@ -5,43 +6,34 @@ Nexus::Module::Input* Nexus::Module::Input::s_Instance = nullptr;
 void Nexus::Module::Input::Initialize(const Window& window)
 {
 	s_Instance = new Input;
-	s_Instance->m_hwnd = window.hwnd;
+	s_Instance->m_handle = window.handle;
 }
 
 void Nexus::Module::Input::Shutdown()
 {
-	s_Instance->m_hwnd = nullptr;
+	s_Instance->m_handle = nullptr;
 	delete s_Instance;
 }
 
-bool Nexus::Module::Input::IsKeyPressed(uint16_t key)
+bool Nexus::Module::Input::IsKeyPressed(uint16_t key, bool repeat)
 {
-	return m_Keys[key];
+	auto state = glfwGetKey((GLFWwindow*)m_handle, key);
+	
+	if (repeat)
+		return state == GLFW_PRESS || state == GLFW_REPEAT;
+	
+	return state == GLFW_PRESS;
 }
 
 bool Nexus::Module::Input::IsMouseButtonPressed(uint16_t button)
 {
-	return m_MouseButtons[button];
+	auto state = glfwGetMouseButton((GLFWwindow*)m_handle, button);
+	return state == GLFW_PRESS;
 }
 
 void Nexus::Module::Input::GetMouseCursorPosition(float* x, float* y)
 {
-	*x = m_CursorX;
-	*y = m_CursorY;
-}
-
-void Nexus::Module::Input::SetKeyState(uint16_t key, bool state)
-{
-	m_Keys[key] = state;
-}
-
-void Nexus::Module::Input::SetMouseButtonState(uint16_t button, bool state)
-{
-	m_MouseButtons[button] = state;
-}
-
-void Nexus::Module::Input::SetCursorPositionState(float x, float y)
-{
-	m_CursorX = x;
-	m_CursorY = y;
+	static double X, Y;
+	glfwGetCursorPos((GLFWwindow*)m_handle, &X, &Y);
+	*x = (float)X; *y = (float)Y;
 }

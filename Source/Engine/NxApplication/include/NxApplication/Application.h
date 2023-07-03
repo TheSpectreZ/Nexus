@@ -1,6 +1,7 @@
 #pragma once
 #define NOMINMAX
 #include <Windows.h>
+#include <cstdint>	
 // Application
 #include "Layer.h"
 #include "ApplicationSpecifications.h"
@@ -28,7 +29,7 @@ namespace Nexus
 		void Shut();
 
 		void SetWindowTitle(const char* name);
-		Window& GetWindow() { return m_Window; }
+		const Window& GetWindow() { return m_Window; }
 		const ApplicationSpecifications& GetAppSpecs() { return m_AppSpecs; }
 	protected:
 		ApplicationSpecifications m_AppSpecs;
@@ -39,7 +40,6 @@ namespace Nexus
 		void PopLayer(Layer* layer);
 	private:
 		Window m_Window;
-		static LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 	};
 
 }
