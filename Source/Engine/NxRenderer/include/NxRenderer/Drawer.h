@@ -24,11 +24,14 @@ namespace Nexus
 	class NEXUS_RENDERER_API ForwardDrawer : public Drawer
 	{
 	public:
-		ForwardDrawer();
+		ForwardDrawer(bool renderToTexture = false);
 		~ForwardDrawer() override = default;
 
 		void Draw(Ref<Scene> scene);
 		void OnWindowResize(Extent extent) override;
+
+		Ref<Framebuffer> GetFramebuffer() { return m_fb; }
+		uint32_t GetResolveIndex() { return 2; }
 	private:
 		FramebufferSpecification m_fbSpecs;
 

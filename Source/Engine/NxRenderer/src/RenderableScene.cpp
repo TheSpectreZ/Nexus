@@ -1,8 +1,9 @@
 #include "NxRenderer/RenderableScene.h"
+#include "NxRenderer/ResourcePool.h"
 #include "NxAsset/Manager.h"
 
-Nexus::RenderableScene::RenderableScene(Ref<Scene> scene, Ref<Shader> shader, Ref<ResourcePool> pool)
-	:m_Shader(shader),m_Scene(scene),m_Pool(pool)
+Nexus::RenderableScene::RenderableScene(Ref<Scene> scene, Ref<Shader> shader)
+	:m_Shader(shader),m_Scene(scene)
 {
 	Initialize();
 }
@@ -14,7 +15,7 @@ Nexus::RenderableScene::~RenderableScene()
 
 void Nexus::RenderableScene::Prepare()
 {
-	auto cameraBuf = m_Pool->GetUniformBuffer(PerSceneUniform0.hashId);
+	auto cameraBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform0.hashId);
 	cameraBuf->Update(m_Scene->GetCamera());
 }
 
@@ -31,11 +32,11 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 		auto& Identity = entity.GetComponent<Component::Identity>();
 		auto Transform = entity.GetComponent<Component::Transform>().GetTransform();
 		
-		auto buff = m_Pool->GetUniformBuffer(PerEntityUniform[Identity.uuid].hashId);
+		auto buff = ResourcePool::Get()->GetUniformBuffer(PerEntityUniform[Identity.uuid].hashId);
 		buff->Update(glm::value_ptr(Transform));
 		
 		auto MeshHandle = entity.GetComponent<Component::Mesh>().handle;
-		auto RTMesh = m_Pool->GetRenderableMesh(MeshHandle);
+		auto RTMesh = ResourcePool::Get()->GetRenderableMesh(MeshHandle);
 
 		queue->BindShaderResourceHeap(m_Shader, PerEntityHeap[Identity.uuid]);
 		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
@@ -56,7 +57,7 @@ void Nexus::RenderableScene::Initialize()
 		PerSceneUniform0.hashId = UUID();
 		PerSceneUniform0.set = 0;
 		PerSceneUniform0.binding = 0;
-		auto buff = m_Pool->AllocateUniformBuffer(m_Shader, PerSceneUniform0);
+		auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform0);
 
 		m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0.binding, buff);
 	}
@@ -82,7 +83,7 @@ void Nexus::RenderableScene::Initialize()
 			uniformHandle.set = 1;
 			uniformHandle.binding = 0;
 
-			auto buff = m_Pool->AllocateUniformBuffer(m_Shader, uniformHandle);
+			auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, uniformHandle);
 			PerEntityUniform[Identity.uuid] = uniformHandle;
 
 			m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
@@ -93,13 +94,13 @@ void Nexus::RenderableScene::Initialize()
 void Nexus::RenderableScene::Destroy()
 {
 	m_Shader->DeallocateShaderResourceHeap(PerSceneHeap);
-	m_Pool->DeallocateUniformBuffer(PerSceneUniform0.hashId);
-	m_Pool->DeallocateUniformBuffer(PerSceneUniform1.hashId);
+	ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform0.hashId);
+	ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform1.hashId);
 
 	for (auto& [k, v] : PerEntityHeap)
 	{
 		m_Shader->DeallocateShaderResourceHeap(v);
-		m_Pool->DeallocateUniformBuffer(PerEntityUniform[k].hashId);
+		ResourcePool::Get()->DeallocateUniformBuffer(PerEntityUniform[k].hashId);
 	}
 	PerEntityHeap.clear();
 	PerEntityUniform.clear();

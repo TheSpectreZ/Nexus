@@ -2,13 +2,18 @@
 
 #include "NxCore/Assertion.h"
 
+Nexus::ResourcePool* Nexus::ResourcePool::s_Instance = nullptr;
+
 void Nexus::ResourcePool::Initialize()
 {
+	s_Instance = new ResourcePool;
 }
 
 void Nexus::ResourcePool::Shutdown()
 {
-	m_UniformBuffers.clear();
+	s_Instance->m_RenderableMeshes.clear();
+	s_Instance->m_UniformBuffers.clear();
+	delete s_Instance;
 }
 
 Nexus::Ref<Nexus::Buffer> Nexus::ResourcePool::AllocateUniformBuffer(Ref<Shader> shader, UniformBufferHandle handle)

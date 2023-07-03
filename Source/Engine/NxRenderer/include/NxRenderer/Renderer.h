@@ -4,9 +4,6 @@
 #include <unordered_map>
 
 #include "GraphicsInterface.h"
-#include "ResourcePool.h"
-#include "RenderableScene.h"	
-#include "Drawer.h"
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
@@ -45,17 +42,9 @@ namespace Nexus::Module
 		Ref<Context> GetContext() { return m_Context; }
 		Ref<Swapchain> GetSwapchain() { return m_Swapchain; }
 		Ref<CommandQueue> GetCommandQueue() { return m_CommandQueue; }
-		Ref<ResourcePool> GetResourcePool() { return m_ResourcePool; }
-
-		void Submit(Ref<Scene> scene);
 	private:
 		Ref<Context> m_Context;
 		Ref<Swapchain> m_Swapchain;
 		Ref<CommandQueue> m_CommandQueue;
-		Ref<ResourcePool> m_ResourcePool;
-
-		Ref<ForwardDrawer> m_ForwardDrawer;
-
-		void ResizeCallback();
 	};
 }

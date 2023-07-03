@@ -7,12 +7,11 @@ namespace Nexus
 {
 	class NEXUS_RENDERER_API ResourcePool
 	{
+		static ResourcePool* s_Instance;
 	public:
-		ResourcePool() = default;
-		~ResourcePool() = default;
-
-		void Initialize();
-		void Shutdown();
+		static ResourcePool* Get() { return s_Instance; }
+		static void Initialize();
+		static void Shutdown();
 
 		Ref<Buffer> GetUniformBuffer(UUID HashID) { return m_UniformBuffers[HashID]; }
 		Ref<Buffer> AllocateUniformBuffer(Ref<Shader> shader, UniformBufferHandle handle);

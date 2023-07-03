@@ -1,5 +1,5 @@
 #pragma once
-#include "NxRenderer/ResourcePool.h"
+#include "NxGraphics/CommandQueue.h"
 #include "NxScene/Scene.h"
 #include "NxScene/Entity.h"
 
@@ -14,7 +14,7 @@ namespace Nexus
 	class NEXUS_RENDERER_API RenderableScene
 	{
 	public:
-		RenderableScene(Ref<Scene> scene, Ref<Shader> shader,Ref<ResourcePool> pool);
+		RenderableScene(Ref<Scene> scene, Ref<Shader> shader);
 		~RenderableScene();
 
 		void Prepare();
@@ -25,8 +25,7 @@ namespace Nexus
 
 		Ref<Shader> m_Shader;
 		Ref<Scene> m_Scene;
-		Ref<ResourcePool> m_Pool;
-
+		
 		ResourceHeapHandle PerSceneHeap;
 		UniformBufferHandle PerSceneUniform0;
 		UniformBufferHandle PerSceneUniform1;

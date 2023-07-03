@@ -17,7 +17,7 @@ namespace Nexus
 	struct NEXUS_RENDERER_API RenderableMeshSpecification
 	{
 		MeshType Type;
-		MeshSpecifications meshSpecs;
+		MeshSpecification meshSpecs;
 	};
 
 	class NEXUS_RENDERER_API RenderableMesh : public Mesh

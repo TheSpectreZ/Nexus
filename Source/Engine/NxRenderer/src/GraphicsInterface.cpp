@@ -66,3 +66,13 @@ Nexus::Ref<Nexus::Buffer> Nexus::GraphicsInterface::CreateBuffer(const BufferSpe
 {
 	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanBuffer>(specs));
 }
+
+Nexus::Ref<Nexus::Texture>NEXUS_RENDERER_API Nexus::GraphicsInterface::CreateTexture(const TextureSpecification& specs)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanTexture>(specs));
+}
+
+Nexus::Ref<Nexus::Sampler>NEXUS_RENDERER_API Nexus::GraphicsInterface::CreateSampler(const SamplerSpecification& specs)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanSampler>(specs));
+}

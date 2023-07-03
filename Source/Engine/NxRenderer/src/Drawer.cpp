@@ -4,7 +4,7 @@
 #include "NxRenderer/Renderer.h"
 #include "NxAsset/Manager.h"
 
-Nexus::ForwardDrawer::ForwardDrawer()
+Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 {
 	// Renderpass
 	{
@@ -35,7 +35,11 @@ Nexus::ForwardDrawer::ForwardDrawer()
 			resolve.load = Nexus::ImageOperation::DontCare;
 			resolve.store = Nexus::ImageOperation::Store;
 			resolve.initialLayout = Nexus::ImageLayout::Undefined;
-			resolve.finalLayout = Nexus::ImageLayout::PresentSrc;
+
+			if(RenderToTexture)
+				resolve.finalLayout = Nexus::ImageLayout::ShaderReadOnly;
+			else
+				resolve.finalLayout = Nexus::ImageLayout::PresentSrc;
 		}
 
 		std::vector<Nexus::SubpassDescription> subpasses;
@@ -80,7 +84,12 @@ Nexus::ForwardDrawer::ForwardDrawer()
 		a2.hdr = false;
 
 		auto& a3 = m_fbSpecs.attachments.emplace_back();
-		a3.Type = Nexus::FramebufferAttachmentType::PresentSrc;
+
+		if (RenderToTexture)
+			a3.Type = Nexus::FramebufferAttachmentType::ShaderReadOnly_Color;
+		else
+			a3.Type = Nexus::FramebufferAttachmentType::PresentSrc;
+
 		a3.multisampled = false;
 		a3.hdr = false;
 
@@ -174,7 +183,7 @@ void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 {
 	UUID Id = scene->GetId();
 	if (!m_RenderableScenes.contains(Id))
-		m_RenderableScenes[Id] = CreateRef<RenderableScene>(scene, m_shader, Module::Renderer::Get()->GetResourcePool());
+		m_RenderableScenes[Id] = CreateRef<RenderableScene>(scene, m_shader);
 
 	m_RenderableScenes[Id]->Prepare();
 
@@ -193,6 +202,16 @@ void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 void Nexus::ForwardDrawer::OnWindowResize(Extent extent)
 {
 	m_fbSpecs.extent = extent;
+
+	m_Viewport.x = 0.f;
+	m_Viewport.y = 0.f;
+	m_Viewport.width = (float)extent.width;
+	m_Viewport.height = (float)extent.height;
+	m_Viewport.minDepth = 0.f;
+	m_Viewport.maxDepth = 1.f;
+
+	m_Scissor.Extent = extent;
+	m_Scissor.Offset = { 0,0 };
 
 	m_fb.reset();
 	m_fb = GraphicsInterface::CreateFramebuffer(m_fbSpecs);
