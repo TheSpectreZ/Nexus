@@ -7,8 +7,6 @@ project "NxApplication"
 	targetdir (BinDir)
 	objdir (IntDir)
 
-	characterset "MBCS"
-
 	files
 	{
 		(SrcDir.."Engine/%{prj.name}/include/**.h"),
@@ -19,6 +17,7 @@ project "NxApplication"
 	{
 		"$(VULKAN_SDK)/Include",
 		IncludePath["entt"],
+		IncludePath["glfw"],
 		IncludePath["NxCore"],
 		IncludePath["NxAsset"],
 		IncludePath["NxScene"],
@@ -29,6 +28,7 @@ project "NxApplication"
 
 	links
 	{
+		"glfw",
 		"NxCore",
 		"NxScene",
 		"NxAsset",

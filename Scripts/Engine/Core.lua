@@ -7,8 +7,6 @@ project "NxCore"
 	targetdir (BinDir)
 	objdir (IntDir)
 
-	characterset "MBCS"
-
 	files
 	{
 		(SrcDir.."Engine/%{prj.name}/include/**.h"),
@@ -17,7 +15,13 @@ project "NxCore"
 
 	includedirs
 	{
+		IncludePath["glfw"],
 		IncludePath["NxCore"]
+	}
+
+	links
+	{
+		"glfw"
 	}
 
 	defines "NEXUS_CORE_SHARED_BUILD"

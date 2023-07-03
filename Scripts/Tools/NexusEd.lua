@@ -7,8 +7,6 @@ project "NexusEd"
 	targetdir (BinDir)
 	objdir (IntDir)
 
-	characterset "MBCS"
-
 	files
 	{
 		(SrcDir.."Tools/%{prj.name}/src/**.h"),

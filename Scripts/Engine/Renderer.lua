@@ -7,8 +7,6 @@ project "NxRenderer"
 	targetdir (BinDir)
 	objdir (IntDir)
 
-	characterset "MBCS"
-
 	files
 	{
 		(SrcDir.."Engine/%{prj.name}/include/**.h"),

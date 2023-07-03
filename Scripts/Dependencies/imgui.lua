@@ -20,19 +20,22 @@ project "imgui"
 		(DepDir.."imgui/imstb_textedit.h"),
 		(DepDir.."imgui/imstb_truetype.h"),
 		(DepDir.."imgui/imgui_demo.cpp"),
+
+		(DepDir.."imgui/backends/imgui_impl_glfw.cpp"),
+		(DepDir.."imgui/backends/imgui_impl_glfw.h"),
 	}
 
 	includedirs
 	{
+		IncludePath["glfw"],
 		IncludePath["imgui"],
 		
 		"$(VULKAN_SDK)/Include",
-		(DepDir.."imgui/examples/libs/glfw/include")
 	}
 
 	links
 	{
-		"glfw3.lib",
+		"glfw",
 		"legacy_stdio_definitions.lib",
 		"vulkan-1.lib"
 	}
@@ -40,7 +43,6 @@ project "imgui"
 	libdirs
 	{
 		"$(VULKAN_SDK)/Lib",
-		(DepDir.."imgui/examples/libs/glfw/lib-vc2010-64")
 	}
 
 	filter "system:windows"
