@@ -1,10 +1,8 @@
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.cpp"
+
 #include "NxApplication/Application.h"
 #include "Context.h"
-#include "imgui.h"
-
-#define VK_USE_PLATFORM_WIN32_KHR
-#include "backends/imgui_impl_win32.cpp"
-#include "backends/imgui_impl_vulkan.cpp"
 
 #include "NxRenderer/GraphicsInterface.h"
 #include "NxRenderer/Renderer.h"
@@ -18,8 +16,10 @@ NexusEd::Context* NexusEd::Context::s_Instance = nullptr;
 struct EditorData
 {
 	Nexus::RendererAPI api;
+	GLFWwindow* handle;
+
 	VkDescriptorPool pool;
-	void* hwnd;
+	VkPipelineLayout layout;
 
 	Nexus::Ref<Nexus::CommandQueue> queue;
 	Nexus::Ref<Nexus::VulkanCommandQueue> vkqueue;
@@ -34,24 +34,6 @@ struct EditorData
 
 EditorData* s_Data;
 
-static int ImGui_ImpWin32_CreateVkSurface(ImGuiViewport* viewport, ImU64 vk_instance, const void* vk_allocator, ImU64* out_vk_surface)
-{
-	ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
-	ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
-	IM_UNUSED(bd);
-	
-	VkWin32SurfaceCreateInfoKHR Info{};
-	Info.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-	Info.pNext = nullptr;
-	Info.hwnd = (HWND)vd->Hwnd;
-	Info.hinstance = (HINSTANCE)GetModuleHandle(NULL);
-	Info.flags = 0;
-
-	VkResult err = vkCreateWin32SurfaceKHR((VkInstance)vk_instance, &Info, (const VkAllocationCallbacks*)vk_allocator, (VkSurfaceKHR*)out_vk_surface);
-	
-	return (int)err;
-}
-
 void NexusEd::Context::Initialize()
 {
 	s_Instance = new Context;
@@ -59,9 +41,10 @@ void NexusEd::Context::Initialize()
 	
 	auto& appSpecs = Nexus::Application::Get()->GetAppSpecs();
 	s_Data->api = appSpecs.rApi;
+	
 	auto& window = Nexus::Application::Get()->GetWindow();
-	s_Data->hwnd = window.hwnd;
-
+	s_Data->handle = (GLFWwindow*)window.handle;
+	
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
@@ -72,11 +55,8 @@ void NexusEd::Context::Initialize()
 	io.ConfigViewportsNoAutoMerge = false;
 	io.ConfigViewportsNoTaskBarIcon = true;
 
-	ImGuiPlatformIO& pIo = ImGui::GetPlatformIO();
-	pIo.Platform_CreateVkSurface = ImGui_ImpWin32_CreateVkSurface;
-
-	//s_Instance->ImplFonts();
-	//s_Instance->ImplStyles();
+	s_Instance->ImplFonts();
+	s_Instance->ImplStyles();
 
 	s_Instance->ImplWindowInit();
 
@@ -96,24 +76,35 @@ void NexusEd::Context::Shutdown()
 	delete s_Instance;
 }
 
-void NexusEd::Context::OnWindowResize()
+void NexusEd::Context::OnWindowResize(Nexus::Extent extent)
 {
-	auto extent = Nexus::Module::Renderer::Get()->GetSwapchain()->GetExtent();
 	s_Data->fbspecs.extent = extent;
 
 	s_Data->fb.reset();
 	s_Data->fb = Nexus::GraphicsInterface::CreateFramebuffer(s_Data->fbspecs);
+
+	s_Data->Viewport.x = 0.f;
+	s_Data->Viewport.y = 0.f;
+	s_Data->Viewport.width = (float)extent.width;
+	s_Data->Viewport.height = (float)extent.height;
+	s_Data->Viewport.minDepth = 0.f;
+	s_Data->Viewport.maxDepth = 1.f;
+
+	s_Data->Scissor.Extent = extent;
+	s_Data->Scissor.Offset = { 0,0 };
 }
 
 void NexusEd::Context::BeginFrame()
 {
-	s_Data->queue->BeginRenderPass(s_Data->pass, s_Data->fb);
-
 	if (s_Data->api == Nexus::RendererAPI::VULKAN)
 		ImGui_ImplVulkan_NewFrame();
 
-	ImGui_ImplWin32_NewFrame();
+	ImGui_ImplGlfw_NewFrame();
 	ImGui::NewFrame();
+
+	ImGui::DockSpaceOverViewport(ImGui::GetMainViewport());
+
+	s_Data->queue->BeginRenderPass(s_Data->pass, s_Data->fb);
 }
 
 void NexusEd::Context::EndFrame()
@@ -142,8 +133,8 @@ void NexusEd::Context::EndFrame()
 void NexusEd::Context::ImplFonts()
 {
 	ImGuiIO& Io = ImGui::GetIO();
-	Io.Fonts->AddFontFromFileTTF("Resources/Fonts/OpenSans/OpenSans-Bold.ttf", 15.f);
-	Io.FontDefault = Io.Fonts->AddFontFromFileTTF("Resources/Fonts/OpenSans/OpenSans-Regular.ttf", 15.f);
+	Io.Fonts->AddFontFromFileTTF("Resources/Fonts/OpenSans/OpenSans-Bold.ttf", 18.f);
+	Io.FontDefault = Io.Fonts->AddFontFromFileTTF("Resources/Fonts/OpenSans/OpenSans-Regular.ttf", 18.f);
 }
 
 void NexusEd::Context::ImplStyles()
@@ -190,8 +181,8 @@ void NexusEd::Context::ImplStyles()
 
 void NexusEd::Context::ImplWindowInit()
 {
-	ImGui_ImplWin32_Init(s_Data->hwnd);
-
+	ImGui_ImplGlfw_InitForVulkan(s_Data->handle, true);
+	
 	// Renderpass
 	{
 		std::vector<Nexus::RenderpassAttachmentDescription> attachments;
@@ -200,7 +191,7 @@ void NexusEd::Context::ImplWindowInit()
 			color.type = Nexus::ImageType::Color;
 			color.multiSampled = false;
 			color.hdr = false;
-			color.load = Nexus::ImageOperation::Load;
+			color.load = Nexus::ImageOperation::Clear;
 			color.store = Nexus::ImageOperation::Store;
 			color.initialLayout = Nexus::ImageLayout::Undefined;
 			color.finalLayout = Nexus::ImageLayout::PresentSrc;
@@ -267,7 +258,7 @@ void NexusEd::Context::ImplWindowInit()
 
 void NexusEd::Context::ImplWindowShut()
 {
-	ImGui_ImplWin32_Shutdown();
+	ImGui_ImplGlfw_Shutdown();
 	s_Data->fb.reset();
 	s_Data->pass.reset();
 }
@@ -322,6 +313,8 @@ void NexusEd::Context::ImplVulkanInit()
 
 	ImGui_ImplVulkan_Init(&Info, DynamicPointerCast<VulkanRenderpass>(s_Data->pass)->Get());
 
+	s_Data->layout = ImGui_ImplVulkan_GetBackendData()->PipelineLayout;
+
 	{
 		VkCommandPoolCreateInfo p{};
 		p.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -372,4 +365,19 @@ void NexusEd::Context::ImplVulkanShut()
 
 	ImGui_ImplVulkan_Shutdown();
 	vkDestroyDescriptorPool(context->GetDeviceRef()->Get(), s_Data->pool, nullptr);
+}
+
+void NexusEd::Context::BindTextureId(ImTextureID Id)
+{
+	if (s_Data->api == Nexus::RendererAPI::VULKAN)
+	{
+		VkCommandBuffer cmd = s_Data->vkqueue->GetCurrentCommandBuffer();
+		VkDescriptorSet set = (VkDescriptorSet)Id;
+		vkCmdBindDescriptorSets(cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, s_Data->layout, 0, 1, &set, 0, nullptr);
+	}
+}
+
+uint32_t NexusEd::Context::GetFrameIndex()
+{
+	return s_Data->queue->GetFrameIndex();
 }

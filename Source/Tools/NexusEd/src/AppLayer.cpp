@@ -1,6 +1,7 @@
 #include "AppLayer.h"
 #include "NxGraphics/TypeImpls.h"
 #include "NxRenderer/Renderer.h"
+#include "NxRenderer/ResourcePool.h"
 #include "NxScene/Entity.h"
 #include "NxCore/Input.h"
 #include "NxAsset/Manager.h"
@@ -12,10 +13,20 @@ using namespace Nexus;
 
 void AppLayer::OnAttach()
 {
-	NexusEd::Context::Initialize();
+	m_ForwardDrawer = CreateRef<ForwardDrawer>(true);
 
+	// Editor
+	{
+		NexusEd::Context::Initialize();
+		
+		m_Viewport.Initialize();
+		m_Viewport.SetContext(m_ForwardDrawer->GetFramebuffer(), m_ForwardDrawer->GetResolveIndex());
+
+		m_ContentBrowser.Initialize();
+		m_ContentBrowser.SetContext("Projects");
+	}
+	
 	Extent extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
-
 	// Camera
 	{
 		m_EditorCameraController.AttachCamera(&m_EditorCamera);
@@ -30,7 +41,6 @@ void AppLayer::OnAttach()
 		m_EditorCameraController.SetPerspectiveProjection(45.f, (float)extent.width, (float)extent.height, 0.1f, 1000.f);
 	}
 
-
 	// Scene
 	{
 		m_EditorScene = CreateRef<Scene>();
@@ -42,13 +52,12 @@ void AppLayer::OnAttach()
 		specs.Type = MeshType::Static;
 		specs.meshSpecs = DynamicPointerCast<MeshAsset>(result.asset)->GetMeshSpecifications();
 
-		Module::Renderer::Get()->GetResourcePool()->AllocateRenderableMesh(specs, result.id);
+		ResourcePool::Get()->AllocateRenderableMesh(specs, result.id);
 
 		{
 			auto entity = m_EditorScene->CreateEntity();
 			auto& MeshComponent = entity.AddComponent<Component::Mesh>();
 			MeshComponent.handle = result.id;
-
 		}
 		
 		{
@@ -64,29 +73,51 @@ void AppLayer::OnAttach()
 
 void AppLayer::OnUpdate(float dt)
 {
+	glm::vec2 size = m_Viewport.GetViewportSize();
+	if (size != m_ViewportSize)
+	{
+		m_ViewportSize = size;
+		if (size.x != 0 && size.y != 0)
+			m_EditorCameraController.SetPerspectiveProjection(45.f, size.x, size.y, 0.1f, 1000.f);
+	}
+
 	m_EditorCameraController.Update(dt);
 }
 
 void AppLayer::OnRender()
 {
-	// Rendering
-	Module::Renderer::Get()->Submit(m_EditorScene);
+	// Game
+	m_ForwardDrawer->Draw(m_EditorScene);
 
-	NexusEd::Context::Get()->BeginFrame();
-	ImGui::ShowDemoWindow();
-	NexusEd::Context::Get()->EndFrame();
+	// Editor
+	{
+		NexusEd::Context::Get()->BeginFrame();
+
+		m_ContentBrowser.Render();
+		m_Viewport.Render();
+
+		NexusEd::Context::Get()->EndFrame();
+	}
 }
 
 void AppLayer::OnDetach()
 {
 	m_EditorScene->Clear();
+	m_ForwardDrawer.reset();
 
-	NexusEd::Context::Shutdown();
+	// Editor
+	{
+		NexusEd::Context::Shutdown();
+	}
 }
 
 void AppLayer::OnWindowResize(int width, int height)
 {
-	NexusEd::Context::OnWindowResize();
-	
 	m_EditorCameraController.SetPerspectiveProjection(45.f, (float)width, (float)height, 0.1f, 1000.f);
+
+	Extent extent = { (uint32_t)width,(uint32_t)height };
+
+	NexusEd::Context::OnWindowResize(extent);
+	m_ForwardDrawer->OnWindowResize(extent);
+	m_Viewport.SetContext(m_ForwardDrawer->GetFramebuffer(), m_ForwardDrawer->GetResolveIndex());
 }
