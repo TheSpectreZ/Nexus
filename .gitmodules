@@ -25,3 +25,6 @@
 [submodule "Source/Dependencies/filewatch"]
 	path = Source/Dependencies/filewatch
 	url = https://github.com/ThomasMonkman/filewatch.git
+[submodule "Source/Dependencies/glfw"]
+	path = Source/Dependencies/glfw
+	url = https://github.com/glfw/glfw.git
