@@ -34,6 +34,12 @@ namespace Nexus
 	{
 		Extent extent;
 		void* pixeldata;
+
+		~TextureSpecification()
+		{
+			extent = { 0,0 };
+			delete[] pixeldata;
+		}
 	};
 
 	struct NEXUS_GRAPHICS_API SamplerSpecification
