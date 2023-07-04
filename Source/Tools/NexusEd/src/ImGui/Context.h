@@ -1,5 +1,7 @@
 #pragma once
+#include "NxCore/Base.h"
 #include "NxGraphics/TypeImpls.h"
+#include "NxGraphics/Texture.h"
 #include "imgui.h"
 
 namespace NexusEd
@@ -7,6 +9,7 @@ namespace NexusEd
 	class Context
 	{
 		friend class Viewport;
+		friend class ContentBrowser;
 		static Context* s_Instance;
 	public:
 		static Context* Get() { return s_Instance; }
@@ -26,6 +29,8 @@ namespace NexusEd
 		void ImplVulkanInit();
 		void ImplVulkanShut();
 
+		ImTextureID CreateTextureId(Nexus::Ref<Nexus::Texture> texture, Nexus::Ref<Nexus::Sampler> sampler);
+		void DestroyTextureId(ImTextureID Id);
 		void BindTextureId(ImTextureID Id);
 		uint32_t GetFrameIndex();
 	};

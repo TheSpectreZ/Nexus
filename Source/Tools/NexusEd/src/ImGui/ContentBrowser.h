@@ -2,6 +2,8 @@
 #include <filesystem>
 #include "imgui.h"
 
+#include "NxRenderer/ResourcePool.h"	
+
 namespace NexusEd
 {
 	class ContentBrowser
@@ -20,7 +22,8 @@ namespace NexusEd
 		void DrawDirectoryFiles(std::filesystem::path path);
 		void DrawDirectoryFilesTopBar();
 
-		ImTextureID m_FileID, m_FolderID, m_ForwardID, m_BackwardID;
+		ImTextureID m_FileID, m_FolderID;
+		Nexus::Ref<Nexus::Sampler> m_Sampler;
 	};
 }
 

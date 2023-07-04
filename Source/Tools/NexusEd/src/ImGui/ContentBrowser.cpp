@@ -1,20 +1,29 @@
-#include "Context.h"
 #include "ContentBrowser.h"
+#include "Context.h"
 #include "NxApplication/Application.h"
+#include "NxAsset/Manager.h"
+
+using namespace Nexus;
 
 void NexusEd::ContentBrowser::Initialize()
 {
-	//auto [sampler, Id] = AssetManager::Load<Sampler>(SamplerFilter::Linear, SamplerFilter::Linear, SamplerWrapMode::Repeat, SamplerWrapMode::Repeat, SamplerWrapMode::Repeat);
+	Nexus::SamplerSpecification samplerSpecs{};
+	samplerSpecs.Far = Nexus::SamplerFilter::Linear;
+	samplerSpecs.Near = Nexus::SamplerFilter::Linear;
+	samplerSpecs.U = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.V = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.W = Nexus::SamplerWrapMode::Repeat;
 
-	//auto [File, FileId] = AssetManager::Load<Texture>("Resources/Icons/File.png");
-	//auto [Folder, FolderId] = AssetManager::Load<Texture>("Resources/Icons/Folder.png");
-	//auto [Forward, ForwardId] = AssetManager::Load<Texture>("Resources/Icons/Forward.png");
-	//auto [Backward, BackwardId] = AssetManager::Load<Texture>("Resources/Icons/Back.png");
-	//
-	//m_FileID = EditorContext::s_Instance->MakeTextureID(File, sampler);
-	//m_FolderID = EditorContext::s_Instance->MakeTextureID(Folder, sampler);
-	//m_ForwardID = EditorContext::s_Instance->MakeTextureID(Forward, sampler);
-	//m_BackwardID = EditorContext::s_Instance->MakeTextureID(Backward, sampler);
+	m_Sampler.reset();
+	m_Sampler = Nexus::GraphicsInterface::CreateSampler(samplerSpecs);
+	
+	Module::AssetLoadResult file = Module::AssetManager::Get()->Load(AssetType::Texture, "Resources/Icons/File.NxAsset");
+	Ref<Texture> filetexture = ResourcePool::Get()->AllocateTexture(DynamicPointerCast<TextureAsset>(file.asset)->GetTextureSpecifications(), file.id);
+	m_FileID = Context::Get()->CreateTextureId(filetexture, m_Sampler);
+	
+	Module::AssetLoadResult folder = Module::AssetManager::Get()->Load(AssetType::Texture, "Resources/Icons/Folder.NxAsset");
+	Ref<Texture> foldertexture = ResourcePool::Get()->AllocateTexture(DynamicPointerCast<TextureAsset>(folder.asset)->GetTextureSpecifications(), folder.id);
+	m_FolderID = Context::Get()->CreateTextureId(foldertexture, m_Sampler);
 }
 
 void NexusEd::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
@@ -67,19 +76,17 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 		if (dir.is_directory())
 		{
-			//EditorContext::s_Instance->BindTextureID(m_FolderID);
-			//if (ImGui::ImageButton(m_FolderID, { thumbnailSize,thumbnailSize }))
-			if(ImGui::Button(filenameString.c_str(), { thumbnailSize,thumbnailSize }))
+			Context::Get()->BindTextureId(m_FolderID);
+			if (ImGui::ImageButton(m_FolderID, { thumbnailSize,thumbnailSize }))
 			{
 				m_SelectedDirectory = p;
 			}
 		}
 		else 
 		{
-			//EditorContext::s_Instance->BindTextureID(m_FileID);
-			//ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
-			ImGui::Button(filenameString.c_str(), { thumbnailSize,thumbnailSize });
-
+			Context::Get()->BindTextureId(m_FileID);
+			ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
+			
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 			{	
 				const wchar_t* itemPath = p.c_str();
@@ -94,16 +101,6 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 	}
 	ImGui::PopStyleColor();
 	ImGui::Columns(1);
-}
-
-void NexusEd::ContentBrowser::DrawDirectoryFilesTopBar()
-{
-	//EditorContext::s_Instance->BindTextureID(m_ForwardID);
-	//EditorContext::s_Instance->BindTextureID(m_BackwardID);
-
-	ImGui::ImageButton(m_BackwardID, { 20.f,20.f });
-	ImGui::SameLine(32.f);
-	ImGui::ImageButton(m_ForwardID, { 20.f,20.f });
 }
 
 void NexusEd::ContentBrowser::SetContext(const std::string& projectRootPath)
@@ -141,8 +138,6 @@ void NexusEd::ContentBrowser::Render()
 		ImGui::TableSetColumnIndex(1);
 
 		ImGui::BeginChild("Files", { ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y });
-		//DrawDirectoryFilesTopBar();
-		ImGui::Separator();
 		DrawDirectoryFiles(m_CurrentDirectory);
 		ImGui::EndChild();
 

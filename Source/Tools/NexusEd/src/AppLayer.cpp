@@ -46,7 +46,7 @@ void AppLayer::OnAttach()
 		m_EditorScene = CreateRef<Scene>();
 		m_EditorScene->SetCamera(&m_EditorCamera);
 
-		auto result = Module::AssetManager::Get()->Load(AssetType::Mesh, "Projects\\Assets\\cube.NxAsset");
+		auto result = Module::AssetManager::Get()->Load(AssetType::Mesh, "Projects/Assets/cube.NxAsset");
 
 		RenderableMeshSpecification specs{};
 		specs.Type = MeshType::Static;

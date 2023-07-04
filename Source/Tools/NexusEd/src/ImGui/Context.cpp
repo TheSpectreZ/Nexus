@@ -10,6 +10,7 @@
 #include "NxVulkan/VkCommandQueue.h"
 #include "NxVulkan/VkRenderpass.h"
 #include "NxVulkan/VkContext.h"
+#include "NxVulkan/VkTexture.h"
 
 NexusEd::Context* NexusEd::Context::s_Instance = nullptr;
 
@@ -365,6 +366,25 @@ void NexusEd::Context::ImplVulkanShut()
 
 	ImGui_ImplVulkan_Shutdown();
 	vkDestroyDescriptorPool(context->GetDeviceRef()->Get(), s_Data->pool, nullptr);
+}
+
+ImTextureID NexusEd::Context::CreateTextureId(Nexus::Ref<Nexus::Texture> texture, Nexus::Ref<Nexus::Sampler> sampler)
+{
+	if (s_Data->api == Nexus::RendererAPI::VULKAN)
+	{
+		VkSampler samp = Nexus::DynamicPointerCast<Nexus::VulkanSampler>(sampler)->Get();
+		VkImageView view = Nexus::DynamicPointerCast<Nexus::VulkanTexture>(texture)->Get();
+
+		return (ImTextureID)ImGui_ImplVulkan_AddTexture(samp, view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+	}
+}
+
+void NexusEd::Context::DestroyTextureId(ImTextureID Id)
+{
+	if (s_Data->api == Nexus::RendererAPI::VULKAN)
+	{
+		ImGui_ImplVulkan_RemoveTexture((VkDescriptorSet)Id);
+	}
 }
 
 void NexusEd::Context::BindTextureId(ImTextureID Id)
