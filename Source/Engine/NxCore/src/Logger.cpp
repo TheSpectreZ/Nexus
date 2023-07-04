@@ -15,8 +15,6 @@ Nexus::ConsoleLogger::ConsoleLogger()
 
 Nexus::ConsoleLogger::~ConsoleLogger()
 {
-	std::cout << "\nPress any key to Continue...\n";
-	std::cin.get();
 	FreeConsole();
 }
 
