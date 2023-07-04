@@ -40,7 +40,7 @@ Nexus::Ref<Nexus::Buffer> Nexus::ResourcePool::AllocateUniformBuffer(Ref<Shader>
 void Nexus::ResourcePool::DeallocateUniformBuffer(UUID HashID)
 {
 	if (m_UniformBuffers.contains(HashID))
-		m_UniformBuffers[HashID].reset();
+		m_UniformBuffers.erase(HashID);
 }
 
 Nexus::Ref<Nexus::RenderableMesh> Nexus::ResourcePool::AllocateRenderableMesh(const RenderableMeshSpecification& specs, UUID HashID)
@@ -54,5 +54,19 @@ Nexus::Ref<Nexus::RenderableMesh> Nexus::ResourcePool::AllocateRenderableMesh(co
 void Nexus::ResourcePool::DeallocateRenderableMesh(UUID HashID)
 {
 	if (m_RenderableMeshes.contains(HashID))
-		m_RenderableMeshes[HashID].reset();
+		m_RenderableMeshes.erase(HashID);
+}
+
+Nexus::Ref<Nexus::Texture> Nexus::ResourcePool::AllocateTexture(const TextureSpecification& specs, UUID HashID)
+{
+	if (!m_Textures.contains(HashID))
+		m_Textures[HashID] = GraphicsInterface::CreateTexture(specs);
+
+	return m_Textures[HashID];
+}
+
+void Nexus::ResourcePool::DeallocateTexture(UUID HashID)
+{
+	if (m_Textures.contains(HashID))
+		m_Textures.erase(HashID);
 }
