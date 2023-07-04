@@ -102,11 +102,12 @@ namespace Nexus::Utils
 	{
 		inFile.read(reinterpret_cast<char*>(&obj.extent), sizeof(Extent));
 
-		uint32_t dataSize = obj.extent.width * obj.extent.height * 4 * sizeof(uint8_t);
+		uint32_t dataSize = obj.extent.width * obj.extent.height * 4;
 		
 		uint8_t* data = new uint8_t[dataSize];
 		inFile.read(reinterpret_cast<char*>(data), dataSize);
 
+		obj.pixeldata = new uint8_t[dataSize];
 		memcpy(obj.pixeldata, data, dataSize);
 
 		delete[] data;
@@ -387,13 +388,14 @@ namespace Nexus::Importer
 	bool LoadTexture(const AssetFilePath& filepath, TextureSpecification* specs)
 	{
 		int w, h, c;
-		void* pixels = stbi_load(filepath.string().c_str(), &w, &h, &c, 4);
+		uint8_t* pixels = stbi_load(filepath.string().c_str(), &w, &h, &c, 4);
 
 		if (!pixels)
 			return false;
 
 		specs->extent.width = (uint32_t)w;
 		specs->extent.height = (uint32_t)h;
+		specs->pixeldata = new uint8_t[w * h * 4];
 
 		memcpy(specs->pixeldata, pixels, (size_t)w * h * 4);
 
@@ -549,7 +551,7 @@ bool Nexus::TextureAsset::Load(const AssetFilePath& AssetPath)
 	YAML::Node data = YAML::Load(stream.str());
 
 	AssetType Type = Utils::GetTypeFromString(data["Asset Type"].as<std::string>());
-	if (Type != AssetType::Mesh)
+	if (Type != AssetType::Texture)
 		return false;
 
 	auto ref = data["Asset Ref"];
