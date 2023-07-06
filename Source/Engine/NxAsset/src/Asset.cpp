@@ -321,9 +321,9 @@ namespace Nexus::Importer
 								int b = buf[index + 1];
 								int c = buf[index + 2];
 
-								submesh.Indices[index] = (totalVertices + a);
-								submesh.Indices[index + 1] = (totalVertices + b);
-								submesh.Indices[index + 2] = (totalVertices + c);
+								submesh.Indices[index] = (uint32_t)totalVertices + a;
+								submesh.Indices[index + 1] = (uint32_t)totalVertices + b;
+								submesh.Indices[index + 2] = (uint32_t)totalVertices + c;
 
 								if (!foundTangent || !foundBiTangent)
 								{
@@ -340,9 +340,9 @@ namespace Nexus::Importer
 								int b = buf[index + 1];
 								int c = buf[index + 2];
 
-								submesh.Indices[index] = (totalVertices + a);
-								submesh.Indices[index + 1] = (totalVertices + b);
-								submesh.Indices[index + 2] = (totalVertices + c);
+								submesh.Indices[index] = (uint16_t)totalVertices + a;
+								submesh.Indices[index + 1] = (uint16_t)totalVertices + b;
+								submesh.Indices[index + 2] = (uint16_t)totalVertices + c;
 
 								if (!foundTangent || !foundBiTangent)
 								{
@@ -359,9 +359,9 @@ namespace Nexus::Importer
 								int b = buf[index + 1];
 								int c = buf[index + 2];
 
-								submesh.Indices[index] = (totalVertices + a);
-								submesh.Indices[index + 1] = (totalVertices + b);
-								submesh.Indices[index + 2] = (totalVertices + c);
+								submesh.Indices[index] = (uint8_t)totalVertices + a;
+								submesh.Indices[index + 1] = (uint8_t)totalVertices + b;
+								submesh.Indices[index + 2] = (uint8_t)totalVertices + c;
 
 								if (!foundTangent || !foundBiTangent)
 								{
@@ -485,6 +485,7 @@ bool Nexus::MeshAsset::Load(const AssetFilePath& AssetPath)
 	
 	inFile.close();
 	
+	m_Name = AssetPath.filename().stem().generic_string();
 	return true;
 }
 
@@ -567,5 +568,6 @@ bool Nexus::TextureAsset::Load(const AssetFilePath& AssetPath)
 
 	inFile.close();
 
+	m_Name = AssetPath.filename().stem().generic_string();
 	return true;
 }

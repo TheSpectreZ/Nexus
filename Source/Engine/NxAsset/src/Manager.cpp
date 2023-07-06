@@ -69,4 +69,5 @@ Nexus::Module::AssetLoadResult Nexus::Module::AssetManager::Load(AssetType type,
 
 	res.success = true;
 	res.asset = m_Assets[res.id];
+	return res;
 }

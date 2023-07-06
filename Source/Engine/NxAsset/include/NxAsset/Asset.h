@@ -27,15 +27,17 @@ namespace Nexus
 	{
 		friend class AssetManager;
 	public:
-		Asset(AssetType type) :m_Type(type) {}
+		Asset(AssetType type) :m_Type(type), m_Name("Empty-Asset") {}
 		virtual ~Asset() = default;
 
 		virtual bool Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath) { return false; };
 		virtual bool Load(const AssetFilePath& AssetPath) { return false; }
 
 		AssetType GetType() { return m_Type; }
+		std::string GetName() { return m_Name; }
 	protected:
 		AssetType m_Type;
+		std::string m_Name;
 	};
 
 #define OVERRIDE_BASE_ASSET bool Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath) override; bool Load(const AssetFilePath& AssetPath) override;
