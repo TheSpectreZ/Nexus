@@ -15,16 +15,6 @@ void AppLayer::OnAttach()
 {
 	m_ForwardDrawer = CreateRef<ForwardDrawer>(true);
 
-	// Editor
-	{
-		NexusEd::Context::Initialize();
-		
-		m_Viewport.Initialize();
-		m_Viewport.SetContext(m_ForwardDrawer->GetFramebuffer(), m_ForwardDrawer->GetResolveIndex());
-
-		m_ContentBrowser.Initialize();
-		m_ContentBrowser.SetContext("Projects");
-	}
 	
 	Extent extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
 	// Camera
@@ -69,6 +59,19 @@ void AppLayer::OnAttach()
 			MeshComponent.handle = result.id;
 		}
 	}
+
+	// Editor
+	{
+		NexusEd::Context::Initialize();
+
+		m_Viewport.Initialize();
+		m_Viewport.SetContext(m_ForwardDrawer->GetFramebuffer(), m_ForwardDrawer->GetResolveIndex());
+
+		m_ContentBrowser.Initialize();
+		m_ContentBrowser.SetContext("Projects");
+
+		m_SceneHeirarchy.SetContext(m_EditorScene);
+	}
 }
 
 void AppLayer::OnUpdate(float dt)
@@ -94,6 +97,7 @@ void AppLayer::OnRender()
 		NexusEd::Context::Get()->BeginFrame();
 
 		m_ContentBrowser.Render();
+		//m_SceneHeirarchy.Render();
 		m_Viewport.Render();
 
 		NexusEd::Context::Get()->EndFrame();

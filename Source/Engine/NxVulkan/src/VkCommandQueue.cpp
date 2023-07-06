@@ -202,7 +202,6 @@ void Nexus::VulkanCommandQueue::FlushRenderQueue()
 	m_PresentInfo.waitSemaphoreCount = 1;
 	
 	_VKR = vkQueuePresentKHR(m_PresentQueue, &m_PresentInfo);
-	CHECK_LOG_VKR;
 	
 	if (_VKR == VK_ERROR_OUT_OF_DATE_KHR || _VKR == VK_SUBOPTIMAL_KHR)
 	{

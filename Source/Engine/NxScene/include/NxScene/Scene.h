@@ -39,6 +39,12 @@ namespace Nexus
 			return m_registry.view<T...>();
 		}
 
+		template<typename Func>
+		auto RunForAllEntities(Func func)
+		{
+			m_registry.each(func);
+		}
+
 		Entity GetEntityWithUUID(UUID id);
 	private:
 		UUID m_Id;

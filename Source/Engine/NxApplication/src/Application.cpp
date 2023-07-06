@@ -38,7 +38,8 @@ Nexus::Application::Application()
 	m_Window.title = "Nexus";
 	m_Window.width = 600;
 	m_Window.height = 400;
-	m_Window.handle = nullptr;
+	m_Window.glfwHandle = nullptr;
+	m_Window.nativeHandle = nullptr;
 }
 
 Nexus::Application::~Application()
@@ -59,23 +60,21 @@ void Nexus::Application::Init()
 		m_Window.width = m_AppSpecs.Window_Width;
 		m_Window.height = m_AppSpecs.Window_height;
 		m_Window.title = m_AppSpecs.Window_Title;
-		m_Window.handle = nullptr;
-		m_Window.nativeHandle = nullptr;
-
+		
 		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
 
-		m_Window.handle = glfwCreateWindow(m_Window.width, m_Window.height, m_Window.title, nullptr, nullptr);
+		m_Window.glfwHandle = glfwCreateWindow(m_Window.width, m_Window.height, m_Window.title, nullptr, nullptr);
 
 		s_Data->hInst = GetModuleHandle(NULL);
-		m_Window.nativeHandle = glfwGetWin32Window((GLFWwindow*)m_Window.handle);
+		m_Window.nativeHandle = glfwGetWin32Window((GLFWwindow*)m_Window.glfwHandle);
 
 		// Callbacks
 		{
-			glfwSetWindowUserPointer((GLFWwindow*)m_Window.handle, &m_Window);
+			glfwSetWindowUserPointer((GLFWwindow*)m_Window.glfwHandle, &m_Window);
 
-			glfwSetWindowSizeCallback((GLFWwindow*)m_Window.handle, [](GLFWwindow* window, int width, int height)
+			glfwSetWindowSizeCallback((GLFWwindow*)m_Window.glfwHandle, [](GLFWwindow* window, int width, int height)
 				{
 					int w = 0, h = 0;
 					glfwGetFramebufferSize(window, &w, &h);
@@ -117,14 +116,14 @@ void Nexus::Application::Run()
 	for (auto& l : s_Data->layerStack)
 		l->OnAttach();
 
-	glfwShowWindow((GLFWwindow*)m_Window.handle);
-	while (!glfwWindowShouldClose((GLFWwindow*)m_Window.handle))
+	glfwShowWindow((GLFWwindow*)m_Window.glfwHandle);
+	while (!glfwWindowShouldClose((GLFWwindow*)m_Window.glfwHandle))
 	{
 		glfwPollEvents();
 	
 		// Delta Time
 		{
-			currentTime = glfwGetTime();
+			currentTime = (float)glfwGetTime();
 			deltaTime = currentTime - lastTime;
 			lastTime = currentTime;
 		}
@@ -157,7 +156,7 @@ void Nexus::Application::Shut()
 		Module::Input::Shutdown();
 	}
 
-	glfwDestroyWindow((GLFWwindow*)m_Window.handle);
+	glfwDestroyWindow((GLFWwindow*)m_Window.glfwHandle);
 	glfwTerminate();
 	
 	LogManager::Shutdown();
@@ -166,7 +165,7 @@ void Nexus::Application::Shut()
 void Nexus::Application::SetWindowTitle(const char* name)
 {
 	m_Window.title = name;
-	glfwSetWindowTitle((GLFWwindow*)m_Window.handle, name);
+	glfwSetWindowTitle((GLFWwindow*)m_Window.glfwHandle, name);
 }
 
 void Nexus::Application::ResizeCallback()

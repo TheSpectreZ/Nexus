@@ -31,6 +31,16 @@ struct EditorData
 
 	Nexus::Viewport Viewport;
 	Nexus::Scissor Scissor;
+
+	~EditorData()
+	{
+		vkqueue.reset();
+		queue.reset();
+		fb.reset();
+		pass.reset();
+		api = Nexus::RendererAPI::NONE;
+		handle = nullptr;
+	}
 };
 
 EditorData* s_Data;
@@ -44,7 +54,7 @@ void NexusEd::Context::Initialize()
 	s_Data->api = appSpecs.rApi;
 	
 	auto& window = Nexus::Application::Get()->GetWindow();
-	s_Data->handle = (GLFWwindow*)window.handle;
+	s_Data->handle = (GLFWwindow*)window.glfwHandle;
 	
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -260,8 +270,6 @@ void NexusEd::Context::ImplWindowInit()
 void NexusEd::Context::ImplWindowShut()
 {
 	ImGui_ImplGlfw_Shutdown();
-	s_Data->fb.reset();
-	s_Data->pass.reset();
 }
 
 void NexusEd::Context::ImplVulkanInit()

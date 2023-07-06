@@ -6,6 +6,7 @@
 
 #include "ImGui/Viewport.h"	
 #include "ImGui/ContentBrowser.h"
+#include "ImGui/SceneHeirarchy.h"
 
 class AppLayer : public Nexus::Layer
 {
@@ -22,6 +23,7 @@ private:
 	glm::vec2 m_ViewportSize;
 	NexusEd::Viewport m_Viewport;
 	NexusEd::ContentBrowser m_ContentBrowser;
+	NexusEd::SceneHeirarchy m_SceneHeirarchy;
 
 	Nexus::Camera m_EditorCamera;
 	Nexus::CameraController m_EditorCameraController;

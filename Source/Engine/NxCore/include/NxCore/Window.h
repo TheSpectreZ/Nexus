@@ -6,7 +6,7 @@ namespace Nexus
 	{
 		int width, height;
 		const char* title;
-		void* handle;
+		void* glfwHandle;
 		void* nativeHandle;
 	};
 }

@@ -6,7 +6,7 @@ Nexus::Module::Input* Nexus::Module::Input::s_Instance = nullptr;
 void Nexus::Module::Input::Initialize(const Window& window)
 {
 	s_Instance = new Input;
-	s_Instance->m_handle = window.handle;
+	s_Instance->m_handle = window.glfwHandle;
 }
 
 void Nexus::Module::Input::Shutdown()
