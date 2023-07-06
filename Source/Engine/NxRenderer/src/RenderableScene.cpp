@@ -29,13 +29,18 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 	{
 		entity = { e,m_Scene.get() };
 
-		auto& Identity = entity.GetComponent<Component::Identity>();
-		auto Transform = entity.GetComponent<Component::Transform>().GetTransform();
+		auto MeshHandle = entity.GetComponent<Component::Mesh>().handle;
+		if (!MeshHandle)
+			continue;
 		
+		auto& Identity = entity.GetComponent<Component::Identity>();
+		if (!PerEntityHeap.contains(Identity.uuid))
+			CreateEntityResource(Identity.uuid);
+
+		auto Transform = entity.GetComponent<Component::Transform>().GetTransform();
 		auto buff = ResourcePool::Get()->GetUniformBuffer(PerEntityUniform[Identity.uuid].hashId);
 		buff->Update(glm::value_ptr(Transform));
 		
-		auto MeshHandle = entity.GetComponent<Component::Mesh>().handle;
 		auto RTMesh = ResourcePool::Get()->GetRenderableMesh(MeshHandle);
 
 		queue->BindShaderResourceHeap(m_Shader, PerEntityHeap[Identity.uuid]);
@@ -71,22 +76,7 @@ void Nexus::RenderableScene::Initialize()
 			entity = Entity(e, m_Scene.get());
 			auto& Identity = entity.GetComponent<Component::Identity>();
 
-			ResourceHeapHandle heapHandle{};
-			heapHandle.hashId = UUID();
-			heapHandle.set = 1;
-
-			m_Shader->AllocateShaderResourceHeap(heapHandle);
-			PerEntityHeap[Identity.uuid] = heapHandle;
-
-			UniformBufferHandle uniformHandle{};
-			uniformHandle.hashId = UUID();
-			uniformHandle.set = 1;
-			uniformHandle.binding = 0;
-
-			auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, uniformHandle);
-			PerEntityUniform[Identity.uuid] = uniformHandle;
-
-			m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
+			CreateEntityResource(Identity.uuid);
 		}
 	}
 }
@@ -104,4 +94,24 @@ void Nexus::RenderableScene::Destroy()
 	}
 	PerEntityHeap.clear();
 	PerEntityUniform.clear();
+}
+
+void Nexus::RenderableScene::CreateEntityResource(UUID Id)
+{
+	ResourceHeapHandle heapHandle{};
+	heapHandle.hashId = UUID();
+	heapHandle.set = 1;
+
+	m_Shader->AllocateShaderResourceHeap(heapHandle);
+	PerEntityHeap[Id] = heapHandle;
+
+	UniformBufferHandle uniformHandle{};
+	uniformHandle.hashId = UUID();
+	uniformHandle.set = 1;
+	uniformHandle.binding = 0;
+
+	auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, uniformHandle);
+	PerEntityUniform[Id] = uniformHandle;
+
+	m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
 }

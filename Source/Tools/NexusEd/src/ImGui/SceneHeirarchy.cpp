@@ -2,11 +2,14 @@
 #include "NxApplication/FileDialog.h"
 #include "NxScene/Component.h"
 #include "NxAsset/Manager.h"
+#include "NxRenderer/ResourcePool.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"
 
-bool NexusEd::ImGuiUtils::DrawVec3Control(const char* label, glm::vec3& vector, float reset , float columnWidth )
+namespace NexusEd::ImGuiUtils
+{
+	bool DrawVec3Control(const char* label, glm::vec3& vector, float reset , float columnWidth )
 {
 	bool changed = false;
 
@@ -89,6 +92,14 @@ bool NexusEd::ImGuiUtils::DrawVec3Control(const char* label, glm::vec3& vector, 
 	return changed;
 }
 
+	ImVec2 ImVec2Sum(ImVec2 a, ImVec2 b)
+	{
+		return { a.x + b.x,a.y + b.y };
+	}
+}
+
+using namespace Nexus;
+
 template <typename T>
 static void DisplayAddComponentEntry(const std::string& entryName,Nexus::Entity e)
 {
@@ -148,7 +159,19 @@ static void DrawComponent(const std::string& name, Nexus::Entity e, UIFuntion ui
 	}
 }
 
-using namespace Nexus;
+static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
+{
+	auto res = Module::AssetManager::Get()->Load(AssetType::Mesh, filepath);
+	if (!res.success)
+		return;
+
+	RenderableMeshSpecification specs{};
+	specs.Type = MeshType::Static;
+	specs.meshSpecs = DynamicPointerCast<MeshAsset>(res.asset)->GetMeshSpecifications();
+
+	ResourcePool::Get()->AllocateRenderableMesh(specs, res.id);
+	component.handle = res.id;
+}
 
 void NexusEd::SceneHeirarchy::SetContext(Ref<Scene> scene)
 {
@@ -293,7 +316,45 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Mesh>("Mesh", en, [&](auto& component)
 		{
-			
+			static std::string name;	
+
+			if (!component.handle)
+				name = "No Mesh Assigned";
+			else
+			{
+				name = Module::AssetManager::Get()->
+					Retrive<Nexus::Asset>(AssetType::Mesh, component.handle)->GetName();
+			}
+
+			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 125.f);
+			ImGui::LabelText("Name", "%s", name.c_str());
+			ImGui::PopItemWidth();
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Set", ImVec2(80.f, 25.f)))
+				ImGui::OpenPopup("Set Mesh");
+
+			if (ImGui::BeginPopup("Set Mesh"))
+			{
+				if (ImGui::MenuItem("Cube"))
+					LoadMesh("Resources/Meshes/cube.NxAsset", component);
+
+				if (ImGui::MenuItem("Sphere"))
+					LoadMesh("Resources/Meshes/sphere.NxAsset", component);
+
+				if (ImGui::MenuItem("IcoSphere"))
+					LoadMesh("Resources/Meshes/IcoSphere.NxAsset", component);
+
+				if (ImGui::MenuItem("Torus"))
+					LoadMesh("Resources/Meshes/torus.NxAsset", component);
+
+				if (ImGui::MenuItem("Cylinder"))
+					LoadMesh("Resources/Meshes/cylinder.NxAsset", component);
+
+				ImGui::EndPopup();
+			}
+
 		});
 
 	DrawComponent<Component::Script>("Script", en, [&](auto& component)

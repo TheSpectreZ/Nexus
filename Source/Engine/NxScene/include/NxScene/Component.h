@@ -60,7 +60,7 @@ namespace Nexus
 
 		struct NEXUS_SCENE_API Mesh
 		{
-			Mesh() = default;
+			Mesh() :handle(true) {}
 			Mesh(const Mesh&) = default;
 			Mesh(UUID UUID);
 
