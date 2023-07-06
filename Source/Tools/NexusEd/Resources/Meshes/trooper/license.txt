@@ -1,0 +1,11 @@
+Model Information:
+* title:	The Mandalorian - Dark Trooper Beskar MK1
+* source:	https://sketchfab.com/3d-models/the-mandalorian-dark-trooper-beskar-mk1-348bbf851fe14937a74422b0cdc3ae42
+* author:	ImADefaultCube117 (https://sketchfab.com/20193dd085)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "The Mandalorian - Dark Trooper Beskar MK1" (https://sketchfab.com/3d-models/the-mandalorian-dark-trooper-beskar-mk1-348bbf851fe14937a74422b0cdc3ae42) by ImADefaultCube117 (https://sketchfab.com/20193dd085) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

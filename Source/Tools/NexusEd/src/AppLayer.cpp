@@ -50,13 +50,20 @@ void AppLayer::OnAttach()
 			MeshComponent.handle = result.id;
 		}
 		
+		//Module::AssetManager::Get()->Import(AssetType::Mesh, "Resources/Meshes/house/scene.gltf", "Projects/Assets", "Projects/Binaries/Assets");
+
+		auto house = Module::AssetManager::Get()->Load(AssetType::Mesh, "Projects/Assets/scene.NxAsset");
+		specs.meshSpecs = DynamicPointerCast<MeshAsset>(house.asset)->GetMeshSpecifications();
+
+		ResourcePool::Get()->AllocateRenderableMesh(specs, house.id);
+
 		{
 			auto entity = m_EditorScene->CreateEntity();
 			auto& TransformComponent = entity.GetComponent<Component::Transform>();
 			TransformComponent.Translation = glm::vec3(5.f, 0.f, 0.f);
 
 			auto& MeshComponent = entity.AddComponent<Component::Mesh>();
-			MeshComponent.handle = result.id;
+			MeshComponent.handle = house.id;
 		}
 	}
 

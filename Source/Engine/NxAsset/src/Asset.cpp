@@ -213,9 +213,10 @@ namespace Nexus::Importer
 
 		// Mesh
 		{
+			size_t totalVertices = 0;
+			
 			for (auto& mesh : scene.meshes)
 			{
-
 				for (auto& primitive : mesh.primitives)
 				{
 					bool foundTangent = false;
@@ -224,82 +225,80 @@ namespace Nexus::Importer
 					auto& submesh = specs->elements.emplace_back();
 
 					// Vertices
+					const float* positionBuffer = nullptr;
+					const float* normalBuffer = nullptr;
+					const float* texCoordBuffer = nullptr;
+					const float* tangentBuffer = nullptr;
+					const float* bitangentBuffer = nullptr;
+
+					size_t vertexCount = 0;
+
+					auto p = primitive.attributes.find("POSITION");
+					if (p != primitive.attributes.end())
 					{
-						const float* positionBuffer = nullptr;
-						const float* normalBuffer = nullptr;
-						const float* texCoordBuffer = nullptr;
-						const float* tangentBuffer = nullptr;
-						const float* bitangentBuffer = nullptr;
+						auto& accessor = scene.accessors[p->second];
+						auto& view = scene.bufferViews[accessor.bufferView];
+						positionBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
 
-						size_t vertexCount = 0;
+						vertexCount = accessor.count;
+					}
 
-						auto p = primitive.attributes.find("POSITION");
-						if (p != primitive.attributes.end())
-						{
-							auto& accessor = scene.accessors[p->second];
-							auto& view = scene.bufferViews[accessor.bufferView];
-							positionBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+					auto n = primitive.attributes.find("NORMAL");
+					if (n != primitive.attributes.end())
+					{
+						auto& accessor = scene.accessors[n->second];
+						auto& view = scene.bufferViews[accessor.bufferView];
+						normalBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+					}
 
-							vertexCount = accessor.count;
-						}
+					auto t = primitive.attributes.find("TEXCOORD_0");
+					if (t != primitive.attributes.end())
+					{
+						auto& accessor = scene.accessors[t->second];
+						auto& view = scene.bufferViews[accessor.bufferView];
+						texCoordBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+					}
 
-						auto n = primitive.attributes.find("NORMAL");
-						if (n != primitive.attributes.end())
-						{
-							auto& accessor = scene.accessors[n->second];
-							auto& view = scene.bufferViews[accessor.bufferView];
-							normalBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
-						}
+					auto a = primitive.attributes.find("TANGENT");
+					if (a != primitive.attributes.end())
+					{
+						auto& accessor = scene.accessors[a->second];
+						auto& view = scene.bufferViews[accessor.bufferView];
+						tangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+						foundTangent = true;
+					}
 
-						auto t = primitive.attributes.find("TEXCOORD_0");
-						if (t != primitive.attributes.end())
-						{
-							auto& accessor = scene.accessors[t->second];
-							auto& view = scene.bufferViews[accessor.bufferView];
-							texCoordBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
-						}
+					auto b = primitive.attributes.find("BITANGENT");
+					if (b != primitive.attributes.end())
+					{
+						auto& accessor = scene.accessors[b->second];
+						auto& view = scene.bufferViews[accessor.bufferView];
+						bitangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+						foundBiTangent = true;
+					}
 
-						auto a = primitive.attributes.find("TANGENT");
-						if (a != primitive.attributes.end())
-						{
-							auto& accessor = scene.accessors[a->second];
-							auto& view = scene.bufferViews[accessor.bufferView];
-							tangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
-							foundTangent = true;
-						}
+					submesh.Vertices.resize(vertexCount);
+					for (size_t i = 0; i < vertexCount; i++)
+					{
+						auto& vertex = submesh.Vertices[i];
 
-						auto b = primitive.attributes.find("BITANGENT");
-						if (b != primitive.attributes.end())
-						{
-							auto& accessor = scene.accessors[b->second];
-							auto& view = scene.bufferViews[accessor.bufferView];
-							bitangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
-							foundBiTangent = true;
-						}
+						vertex.position = glm::make_vec3(&positionBuffer[i * 3]);
 
-						submesh.Vertices.resize(vertexCount);
-						for (size_t i = 0; i < vertexCount; i++)
-						{
-							auto& vertex = submesh.Vertices[i];
+						if (normalBuffer)
+							vertex.normal = glm::make_vec3(&normalBuffer[i * 3]);
+						else
+							vertex.normal = glm::vec3(0.f);
 
-							vertex.position = glm::make_vec3(&positionBuffer[i * 3]);
+						if (texCoordBuffer)
+							vertex.texCoord = glm::make_vec2(&texCoordBuffer[i * 2]);
+						else
+							vertex.texCoord = glm::vec2(0.f);
 
-							if (normalBuffer)
-								vertex.normal = glm::make_vec3(&normalBuffer[i * 3]);
-							else
-								vertex.normal = glm::vec3(0.f);
+						if (tangentBuffer)
+							vertex.tangent = glm::make_vec3(&tangentBuffer[i * 3]);
 
-							if (texCoordBuffer)
-								vertex.texCoord = glm::make_vec2(&texCoordBuffer[i * 2]);
-							else
-								vertex.texCoord = glm::vec2(0.f);
-
-							if (tangentBuffer)
-								vertex.tangent = glm::make_vec3(&tangentBuffer[i * 3]);
-
-							if (bitangentBuffer)
-								vertex.bitangent = glm::make_vec3(&bitangentBuffer[i * 3]);
-						}
+						if (bitangentBuffer)
+							vertex.bitangent = glm::make_vec3(&bitangentBuffer[i * 3]);
 					}
 
 					// Indices
@@ -311,6 +310,8 @@ namespace Nexus::Importer
 						uint32_t* indexbuffer = nullptr;
 						uint32_t indexCount = (uint32_t)accessor.count;
 
+						submesh.Indices.resize(indexCount);
+
 						if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
 						{
 							const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
@@ -320,9 +321,9 @@ namespace Nexus::Importer
 								int b = buf[index + 1];
 								int c = buf[index + 2];
 
-								submesh.Indices.push_back(a);
-								submesh.Indices.push_back(b);
-								submesh.Indices.push_back(c);
+								submesh.Indices[index] = (totalVertices + a);
+								submesh.Indices[index + 1] = (totalVertices + b);
+								submesh.Indices[index + 2] = (totalVertices + c);
 
 								if (!foundTangent || !foundBiTangent)
 								{
@@ -339,10 +340,9 @@ namespace Nexus::Importer
 								int b = buf[index + 1];
 								int c = buf[index + 2];
 
-								submesh.Indices.push_back(a);
-								submesh.Indices.push_back(b);
-								submesh.Indices.push_back(c);
-
+								submesh.Indices[index] = (totalVertices + a);
+								submesh.Indices[index + 1] = (totalVertices + b);
+								submesh.Indices[index + 2] = (totalVertices + c);
 
 								if (!foundTangent || !foundBiTangent)
 								{
@@ -359,10 +359,9 @@ namespace Nexus::Importer
 								int b = buf[index + 1];
 								int c = buf[index + 2];
 
-								submesh.Indices.push_back(a);
-								submesh.Indices.push_back(b);
-								submesh.Indices.push_back(c);
-
+								submesh.Indices[index] = (totalVertices + a);
+								submesh.Indices[index + 1] = (totalVertices + b);
+								submesh.Indices[index + 2] = (totalVertices + c);
 
 								if (!foundTangent || !foundBiTangent)
 								{
@@ -377,6 +376,7 @@ namespace Nexus::Importer
 						}
 					}
 
+					totalVertices += vertexCount;
 				}
 			}
 		}

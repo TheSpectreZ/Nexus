@@ -17,11 +17,11 @@ void NexusEd::ContentBrowser::Initialize()
 	m_Sampler.reset();
 	m_Sampler = Nexus::GraphicsInterface::CreateSampler(samplerSpecs);
 	
-	Module::AssetLoadResult file = Module::AssetManager::Get()->Load(AssetType::Texture, "Resources/Icons/File.NxAsset");
+	Module::AssetLoadResult file = Module::AssetManager::Get()->Load(AssetType::Texture, "Projects/Assets/File.NxAsset");
 	Ref<Texture> filetexture = ResourcePool::Get()->AllocateTexture(DynamicPointerCast<TextureAsset>(file.asset)->GetTextureSpecifications(), file.id);
 	m_FileID = Context::Get()->CreateTextureId(filetexture, m_Sampler);
 	
-	Module::AssetLoadResult folder = Module::AssetManager::Get()->Load(AssetType::Texture, "Resources/Icons/Folder.NxAsset");
+	Module::AssetLoadResult folder = Module::AssetManager::Get()->Load(AssetType::Texture, "Projects/Assets/Folder.NxAsset");
 	Ref<Texture> foldertexture = ResourcePool::Get()->AllocateTexture(DynamicPointerCast<TextureAsset>(folder.asset)->GetTextureSpecifications(), folder.id);
 	m_FolderID = Context::Get()->CreateTextureId(foldertexture, m_Sampler);
 }
