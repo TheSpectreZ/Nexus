@@ -43,7 +43,7 @@ void Nexus::ResourcePool::DeallocateUniformBuffer(UUID HashID)
 		m_UniformBuffers.erase(HashID);
 }
 
-Nexus::Ref<Nexus::RenderableMesh> Nexus::ResourcePool::AllocateRenderableMesh(const RenderableMeshSpecification& specs, UUID HashID)
+Nexus::Ref<Nexus::RenderableMesh> Nexus::ResourcePool::AllocateRenderableMesh(const MeshSpecification& specs, UUID HashID)
 {
 	if (!m_RenderableMeshes.contains(HashID))
 		m_RenderableMeshes[HashID] = CreateRef<RenderableMesh>(specs);

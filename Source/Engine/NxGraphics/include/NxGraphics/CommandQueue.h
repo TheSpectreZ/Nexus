@@ -38,9 +38,6 @@ namespace Nexus
 		virtual void BindVertexBuffer(Ref<Buffer> buffer) = 0;
 		virtual void BindIndexBuffer(Ref<Buffer> buffer) = 0;
 
-		virtual void DrawIndices(uint32_t indexCount) = 0;
-		
-		//virtual void DrawSubMesh(SubMesh* submesh) = 0;
-		//virtual void DrawMesh(Ref<StaticMesh> mesh) = 0;
+		virtual void DrawIndices(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance) = 0;
 	};
 }

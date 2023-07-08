@@ -34,6 +34,10 @@ namespace Nexus
 	{
 	public:
 		Mesh() :Renderable(RenderableType::Mesh) {}
-		~Mesh() override = default;
+		virtual ~Mesh() override = default;
+
+		const std::vector<SubmeshElement>& GetSubmeshes() { return m_Submeshs; }
+	protected:
+		std::vector<SubmeshElement> m_Submeshs;
 	};
 }

@@ -17,19 +17,19 @@ namespace Nexus
 		glm::vec2 texCoord;
 		glm::vec4 color;
 	};
+	
+	struct NEXUS_GRAPHICS_API SubmeshElement
+	{
+		uint32_t VertexOff, IndexOff;
+		uint32_t VertexSize, IndexSize;
+		uint32_t materialIndex;
+	};
 
 	struct NEXUS_GRAPHICS_API MeshElement
 	{
 		std::vector<MeshVertex> Vertices;
 		std::vector<uint32_t> Indices;
 	};
-
-	struct NEXUS_GRAPHICS_API MeshSpecification
-	{
-		std::vector<MeshElement> elements;
-		std::vector<uint64_t> materialIndices;
-	};
-
 	struct NEXUS_GRAPHICS_API TextureSpecification
 	{
 		Extent extent;
@@ -47,5 +47,39 @@ namespace Nexus
 		SamplerFilter Near;
 		SamplerFilter Far;
 		SamplerWrapMode U, V, W;
+	};
+
+	enum class NEXUS_GRAPHICS_API TextureMapType
+	{
+		Albedo = 0, Normal = 1, MetallicRoughness = 2
+	};
+
+	struct NEXUS_GRAPHICS_API TextureMapElement
+	{
+		uint32_t textureId;
+		uint32_t samplerId;
+	};
+
+	struct NEXUS_GRAPHICS_API MaterialElement
+	{
+		std::unordered_map<TextureMapType, uint32_t> Maps;
+		
+		glm::vec4 albedo;
+		float metalness, roughness;
+	};
+
+	struct NEXUS_GRAPHICS_API MaterialSpecification
+	{
+		std::vector<TextureSpecification> textures;
+		std::vector<SamplerSpecification> samplers;
+		std::vector<TextureMapElement> texElements;
+		std::vector<MaterialElement> matElements;
+	};
+
+	struct NEXUS_GRAPHICS_API MeshSpecification
+	{
+		MeshElement mesh;
+		std::vector<SubmeshElement> submeshes;
+		MaterialSpecification materials;
 	};
 }

@@ -31,6 +31,8 @@ void AppLayer::OnAttach()
 		m_EditorCameraController.SetPerspectiveProjection(45.f, (float)extent.width, (float)extent.height, 0.1f, 1000.f);
 	}
 
+	Module::AssetManager::Get()->Import(AssetType::Mesh, "Resources/Meshes/house/scene.gltf", "Projects/Assets", "Projects/Binaries/Assets");
+
 	// Scene
 	{
 		m_EditorScene = CreateRef<Scene>();
@@ -50,6 +52,12 @@ void AppLayer::OnAttach()
 		m_SceneHeirarchy.SetContext(m_EditorScene);
 	}
 }
+
+/// 
+/// working on the Mesh Asset System - Implementing Submeshes and Materials
+/// Make the Serializer work
+/// Have the Asset Manager store the Renderable Meshes and Other ResourcePool stuff - The pool exists storing internal for stuff like uniforms and Samplers...
+/// 
 
 void AppLayer::OnUpdate(float dt)
 {

@@ -43,53 +43,38 @@ namespace Nexus::Utils
 
 	void SerializeMeshAsset(std::ofstream& outFile, const MeshSpecification& obj)
 	{
-		uint32_t numElements = (uint32_t)obj.elements.size();
-		outFile.write(reinterpret_cast<const char*>(&numElements), sizeof(uint32_t));
+		uint32_t numVertices = obj.mesh.Vertices.size();
+		outFile.write(reinterpret_cast<const char*>(&numVertices), sizeof(uint32_t));
+		outFile.write(reinterpret_cast<const char*>(obj.mesh.Vertices.data()), numVertices * sizeof(MeshVertex));
 
-		for (const auto& element : obj.elements) 
-		{
-			uint32_t numVertices = (uint32_t)element.Vertices.size();
+		uint32_t numIndices = obj.mesh.Indices.size();
+		outFile.write(reinterpret_cast<const char*>(&numIndices), sizeof(uint32_t));
+		outFile.write(reinterpret_cast<const char*>(obj.mesh.Indices.data()), numIndices * sizeof(uint32_t));
 
-			outFile.write(reinterpret_cast<const char*>(&numVertices), sizeof(uint32_t));
-			outFile.write(reinterpret_cast<const char*>(element.Vertices.data()), numVertices * sizeof(MeshVertex));
-
-			uint32_t numIndices = (uint32_t)element.Indices.size();
-
-			outFile.write(reinterpret_cast<const char*>(&numIndices), sizeof(uint32_t));
-			outFile.write(reinterpret_cast<const char*>(element.Indices.data()), numIndices * sizeof(uint32_t));
-		}
-
-		uint32_t numMaterialIndices = (uint32_t)obj.materialIndices.size();
-		outFile.write(reinterpret_cast<const char*>(&numMaterialIndices), sizeof(uint32_t));
-		outFile.write(reinterpret_cast<const char*>(obj.materialIndices.data()), numMaterialIndices * sizeof(uint64_t));
+		uint32_t numSubmeshes = obj.submeshes.size();
+		outFile.write(reinterpret_cast<const char*>(&numSubmeshes), sizeof(uint32_t));
+		outFile.write(reinterpret_cast<const char*>(obj.submeshes.data()), numSubmeshes * sizeof(SubmeshElement));
 	}
 
-	void DeserializeMeshAsset(std::ifstream& inFile, MeshSpecification& obj) 
+	void DeserializeMeshAsset(std::ifstream& inFile, MeshSpecification& obj)
 	{
-		uint32_t numElements = 0;
-		inFile.read(reinterpret_cast<char*>(&numElements), sizeof(uint32_t));
+		uint32_t numVertices;
+		inFile.read(reinterpret_cast<char*>(&numVertices), sizeof(uint32_t));
 
-		obj.elements.resize(numElements);
+		obj.mesh.Vertices.resize(numVertices);
+		inFile.read(reinterpret_cast<char*>(obj.mesh.Vertices.data()), numVertices * sizeof(MeshVertex));
 
-		for (auto& element : obj.elements) {
-			uint32_t numVertices = 0;
-			inFile.read(reinterpret_cast<char*>(&numVertices), sizeof(uint32_t));
+		uint32_t numIndices;
+		inFile.read(reinterpret_cast<char*>(&numIndices), sizeof(uint32_t));
 
-			element.Vertices.resize(numVertices);
-			inFile.read(reinterpret_cast<char*>(element.Vertices.data()), numVertices * sizeof(MeshVertex));
+		obj.mesh.Indices.resize(numIndices);
+		inFile.read(reinterpret_cast<char*>(obj.mesh.Indices.data()), numIndices * sizeof(uint32_t));
 
-			uint32_t numIndices = 0;
-			inFile.read(reinterpret_cast<char*>(&numIndices), sizeof(uint32_t));
+		uint32_t numSubmeshes;
+		inFile.read(reinterpret_cast<char*>(&numSubmeshes), sizeof(uint32_t));
 
-			element.Indices.resize(numIndices);
-			inFile.read(reinterpret_cast<char*>(element.Indices.data()), numIndices * sizeof(uint32_t));
-		}
-
-		uint32_t numMaterialIndices = 0;
-		inFile.read(reinterpret_cast<char*>(&numMaterialIndices), sizeof(uint32_t));
-
-		obj.materialIndices.resize(numMaterialIndices);
-		inFile.read(reinterpret_cast<char*>(obj.materialIndices.data()), numMaterialIndices * sizeof(uint64_t));
+		obj.submeshes.resize(numSubmeshes);
+		inFile.read(reinterpret_cast<char*>(obj.submeshes.data()), numSubmeshes * sizeof(SubmeshElement));
 	}
 
 	void SerializeTextureAsset(std::ofstream& outFile, const TextureSpecification& obj)
@@ -172,6 +157,63 @@ namespace Nexus::Importer
 		}
 	}
 	
+	Nexus::SamplerFilter GetFilterMode(int32_t filter)
+	{
+		switch (filter)
+		{
+		case 9728:
+			return SamplerFilter::Nearest;
+		case 9729:
+			return SamplerFilter::Linear;
+		case 9984:
+			return SamplerFilter::Nearest;
+		case 9985:
+			return SamplerFilter::Nearest;
+		case 9986:
+			return SamplerFilter::Linear;
+		case 9987:
+			return SamplerFilter::Linear;
+		default:
+			NEXUS_LOG("glTF Importer Error", "Unknown GLTF Filter Mode: %i", filter);
+			return SamplerFilter::Linear;
+		}
+	}
+
+	Nexus::SamplerWrapMode GetWrapMode(int32_t mode)
+	{
+		switch (mode)
+		{
+		case 10497:
+			return SamplerWrapMode::Repeat;
+		case 33071:
+			return SamplerWrapMode::Clamped_To_Edge;
+		case 33648:
+			return SamplerWrapMode::Mirrored_Repeat;
+		default:
+			NEXUS_LOG("glTF Importer Error", "Unknown GLTF Wrap Mode: {0}", mode);
+			return SamplerWrapMode::Repeat;
+		}
+	}
+
+	bool LoadTexture(const AssetFilePath& filepath, TextureSpecification* specs)
+	{
+		int w, h, c;
+		uint8_t* pixels = stbi_load(filepath.string().c_str(), &w, &h, &c, 4);
+
+		if (!pixels)
+			return false;
+
+		specs->extent.width = (uint32_t)w;
+		specs->extent.height = (uint32_t)h;
+		specs->pixeldata = new uint8_t[w * h * 4];
+
+		memcpy(specs->pixeldata, pixels, (size_t)w * h * 4);
+
+		stbi_image_free(pixels);
+
+		return true;
+	}
+
 	bool LoadglTF(const AssetFilePath& filepath, MeshSpecification* specs)
 	{
 		tinygltf::Model scene;
@@ -214,7 +256,10 @@ namespace Nexus::Importer
 		// Mesh
 		{
 			size_t totalVertices = 0;
+			size_t totalIndex = 0;
 			
+			std::unordered_map<uint32_t, MeshElement> elements;
+
 			for (auto& mesh : scene.meshes)
 			{
 				for (auto& primitive : mesh.primitives)
@@ -222,8 +267,8 @@ namespace Nexus::Importer
 					bool foundTangent = false;
 					bool foundBiTangent = false;
 
-					auto& submesh = specs->elements.emplace_back();
-
+					auto& sm = elements[primitive.material];
+					
 					// Vertices
 					const float* positionBuffer = nullptr;
 					const float* normalBuffer = nullptr;
@@ -277,10 +322,12 @@ namespace Nexus::Importer
 						foundBiTangent = true;
 					}
 
-					submesh.Vertices.resize(vertexCount);
+					size_t prevSize = sm.Vertices.size();
+					sm.Vertices.resize(prevSize + vertexCount);
+
 					for (size_t i = 0; i < vertexCount; i++)
 					{
-						auto& vertex = submesh.Vertices[i];
+						auto& vertex = sm.Vertices[prevSize + i];
 
 						vertex.position = glm::make_vec3(&positionBuffer[i * 3]);
 
@@ -301,106 +348,179 @@ namespace Nexus::Importer
 							vertex.bitangent = glm::make_vec3(&bitangentBuffer[i * 3]);
 					}
 
-					// Indices
+					auto& accessor = scene.accessors[primitive.indices];
+					auto& view = scene.bufferViews[accessor.bufferView];
+					auto& buffer = scene.buffers[view.buffer];
+
+					uint32_t* indexbuffer = nullptr;
+					uint32_t indexCount = (uint32_t)accessor.count;
+
+					prevSize = sm.Indices.size();
+					sm.Indices.resize(prevSize + indexCount);
+
+					if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
 					{
-						auto& accessor = scene.accessors[primitive.indices];
-						auto& view = scene.bufferViews[accessor.bufferView];
-						auto& buffer = scene.buffers[view.buffer];
-
-						uint32_t* indexbuffer = nullptr;
-						uint32_t indexCount = (uint32_t)accessor.count;
-
-						submesh.Indices.resize(indexCount);
-
-						if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
+						const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+						for (size_t index = 0; index < accessor.count; index += 3)
 						{
-							const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-							for (size_t index = 0; index < accessor.count; index += 3)
+							int a = buf[index];
+							int b = buf[index + 1];
+							int c = buf[index + 2];
+
+							sm.Indices[prevSize + index] = (uint32_t)totalVertices + a;
+							sm.Indices[prevSize + index + 1] = (uint32_t)totalVertices + b;
+							sm.Indices[prevSize + index + 2] = (uint32_t)totalVertices + c;
+
+							if (!foundTangent || !foundBiTangent)
 							{
-								int a = buf[index];
-								int b = buf[index + 1];
-								int c = buf[index + 2];
-
-								submesh.Indices[index] = (uint32_t)totalVertices + a;
-								submesh.Indices[index + 1] = (uint32_t)totalVertices + b;
-								submesh.Indices[index + 2] = (uint32_t)totalVertices + c;
-
-								if (!foundTangent || !foundBiTangent)
-								{
-									CalculateTangentAndBiTangent(submesh.Vertices[a], submesh.Vertices[b], submesh.Vertices[c], foundTangent, foundBiTangent);
-								}
+								CalculateTangentAndBiTangent(sm.Vertices[a], sm.Vertices[b], sm.Vertices[c], foundTangent, foundBiTangent);
 							}
 						}
-						else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT)
+					}
+					else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT)
+					{
+						const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+						for (size_t index = 0; index < accessor.count; index += 3)
 						{
-							const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-							for (size_t index = 0; index < accessor.count; index += 3)
+							int a = buf[index];
+							int b = buf[index + 1];
+							int c = buf[index + 2];
+
+							sm.Indices[prevSize + index] = (uint16_t)totalVertices + a;
+							sm.Indices[prevSize + index + 1] = (uint16_t)totalVertices + b;
+							sm.Indices[prevSize + index + 2] = (uint16_t)totalVertices + c;
+
+							if (!foundTangent || !foundBiTangent)
 							{
-								int a = buf[index];
-								int b = buf[index + 1];
-								int c = buf[index + 2];
-
-								submesh.Indices[index] = (uint16_t)totalVertices + a;
-								submesh.Indices[index + 1] = (uint16_t)totalVertices + b;
-								submesh.Indices[index + 2] = (uint16_t)totalVertices + c;
-
-								if (!foundTangent || !foundBiTangent)
-								{
-									CalculateTangentAndBiTangent(submesh.Vertices[a], submesh.Vertices[b], submesh.Vertices[c], foundTangent, foundBiTangent);
-								}
+								CalculateTangentAndBiTangent(sm.Vertices[a], sm.Vertices[b], sm.Vertices[c], foundTangent, foundBiTangent);
 							}
 						}
-						else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE)
+					}
+					else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE)
+					{
+						const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+						for (size_t index = 0; index < accessor.count; index += 3)
 						{
-							const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-							for (size_t index = 0; index < accessor.count; index += 3)
+							int a = buf[index];
+							int b = buf[index + 1];
+							int c = buf[index + 2];
+
+							sm.Indices[prevSize + index] = (uint8_t)totalVertices + a;
+							sm.Indices[prevSize + index + 1] = (uint8_t)totalVertices + b;
+							sm.Indices[prevSize + index + 2] = (uint8_t)totalVertices + c;
+
+							if (!foundTangent || !foundBiTangent)
 							{
-								int a = buf[index];
-								int b = buf[index + 1];
-								int c = buf[index + 2];
-
-								submesh.Indices[index] = (uint8_t)totalVertices + a;
-								submesh.Indices[index + 1] = (uint8_t)totalVertices + b;
-								submesh.Indices[index + 2] = (uint8_t)totalVertices + c;
-
-								if (!foundTangent || !foundBiTangent)
-								{
-									CalculateTangentAndBiTangent(submesh.Vertices[a], submesh.Vertices[b], submesh.Vertices[c], foundTangent, foundBiTangent);
-								}
+								CalculateTangentAndBiTangent(sm.Vertices[a], sm.Vertices[b], sm.Vertices[c], foundTangent, foundBiTangent);
 							}
 						}
-						else
-						{
-							auto err = "GLTF Indices Type Not Supported" + accessor.componentType;
-							NEXUS_ASSERT(true, err);
-						}
+					}
+					else
+					{
+						auto err = "GLTF Indices Type Not Supported" + accessor.componentType;
+						NEXUS_ASSERT(true, err);
 					}
 
 					totalVertices += vertexCount;
+					totalIndex += indexCount;
 				}
+			}
+
+			specs->mesh.Vertices.reserve(totalVertices);
+			specs->mesh.Indices.reserve(totalIndex);
+
+			for (auto& [key, value] : elements)
+			{
+				auto& sm = specs->submeshes.emplace_back();
+				sm.materialIndex = key;
+				sm.VertexOff = specs->mesh.Vertices.size();
+				sm.VertexSize = value.Vertices.size();
+				sm.IndexOff = specs->mesh.Indices.size();
+				sm.IndexSize = value.Indices.size();
+
+				specs->mesh.Vertices.insert(specs->mesh.Vertices.end(), value.Vertices.begin(), value.Vertices.end());
+				specs->mesh.Indices.insert(specs->mesh.Indices.end(), value.Indices.begin(), value.Indices.end());
+			}
+		}
+
+		// Material
+		{
+			std::vector<std::string> images;
+			
+			for (auto& image : scene.images)
+			{
+				images.emplace_back(image.uri);
+			}
+
+			for (auto& sampler : scene.samplers)
+			{
+				auto& s = specs->materials.samplers.emplace_back();
+
+				s.Near = GetFilterMode(sampler.magFilter);
+				s.Far = GetFilterMode(sampler.minFilter);
+				s.U = GetWrapMode(sampler.wrapS);
+				s.V = GetWrapMode(sampler.wrapT);
+				s.W = s.V;
+			}
+
+			for (auto& texture : scene.textures)
+			{
+				auto& t = specs->materials.texElements.emplace_back();
+
+				t.textureId = texture.source;
+				t.samplerId = texture.sampler;
+			}
+
+			for (auto& material : scene.materials)
+			{
+				auto& m = specs->materials.matElements.emplace_back();
+
+				if (FIND_VALUE_BY_NAME(material, "baseColorTexture"))
+				{
+					m.Maps[TextureMapType::Albedo] = material.values["baseColorTexture"].TextureIndex();
+					m.albedo = glm::vec4(1.f);
+				}
+
+				if (FIND_VALUE_BY_NAME(material, "metallicRoughnessTexture"))
+				{
+					m.Maps[TextureMapType::MetallicRoughness] = material.values["metallicRoughnessTexture"].TextureIndex();
+					
+					m.roughness = 1.f;
+					m.metalness = 1.f;
+				}
+				else
+				{
+					if (FIND_VALUE_BY_NAME(material, "roughnessFactor"))
+					{
+						m.roughness = (float)material.values["roughnessFactor"].Factor();
+					}
+
+					if (FIND_VALUE_BY_NAME(material, "metallicFactor"))
+					{
+						m.metalness = (float)material.values["metallicFactor"].Factor();
+					}
+				}
+
+				if (FIND_VALUE_BY_NAME(material, "normalTexture"))
+				{
+					m.Maps[TextureMapType::Normal] = material.values["normalTexture"].TextureIndex();
+				}
+
+				if (FIND_VALUE_BY_NAME(material, "baseColorFactor"))
+				{
+					m.albedo = glm::make_vec4(material.values["baseColorFactor"].ColorFactor().data());
+				}
+			}
+
+			specs->materials.textures.resize(images.size());
+			for (size_t i = 0; i < images.size(); i++)
+			{
+				AssetFilePath p = filepath.parent_path().generic_string() + "/" + images[i];
+				LoadTexture(p, &specs->materials.textures[i]);
 			}
 		}
 
 		NEXUS_LOG("glTF Importer", "Successfully Loaded File - %s", filepath.string().c_str());
-		return true;
-	}
-
-	bool LoadTexture(const AssetFilePath& filepath, TextureSpecification* specs)
-	{
-		int w, h, c;
-		uint8_t* pixels = stbi_load(filepath.string().c_str(), &w, &h, &c, 4);
-
-		if (!pixels)
-			return false;
-
-		specs->extent.width = (uint32_t)w;
-		specs->extent.height = (uint32_t)h;
-		specs->pixeldata = new uint8_t[w * h * 4];
-
-		memcpy(specs->pixeldata, pixels, (size_t)w * h * 4);
-
-		stbi_image_free(pixels);
-
 		return true;
 	}
 }
@@ -413,8 +533,8 @@ bool Nexus::MeshAsset::Import(const AssetFilePath& sourcefilepath, const AssetFi
 
 	UUID Id;
 	
-	auto assetFile = AssetPath.string() + "\\" + sourcefilepath.filename().stem().string() + AssetExtension;
-	auto binFile = BinPath.string() + "\\" + sourcefilepath.filename().stem().string() + BinExtension;
+	auto assetFile = AssetPath.string() + "/" + sourcefilepath.filename().stem().string() + AssetExtension;
+	auto binFile = BinPath.string() + "/" + sourcefilepath.filename().stem().string() + BinExtension;
 
 	// Meta
 	{

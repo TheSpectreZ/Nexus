@@ -45,15 +45,11 @@ namespace Nexus
 		void SetViewport(Viewport viewport) override;
 
 		void TransferBufferToGPU(VulkanBuffer* buffer);
-		void TransferBufferToGPU(VulkanStaticBuffer* buffer);
 		void TransferTextureToGPU(VulkanTexture* texture);
 
 		void BindVertexBuffer(Ref<Buffer> buffer) override;
 		void BindIndexBuffer(Ref<Buffer> buffer) override;
-		void DrawIndices(uint32_t IndexCount) override;
-
-		//void DrawSubMesh(SubMesh* submesh) override;
-		//void DrawMesh(Ref<StaticMesh> mesh) override;
+		void DrawIndices(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance) override;
 	private:
 		std::function<void()> m_ResizeCallback;
 
@@ -85,12 +81,11 @@ namespace Nexus
 		struct Transferdata
 		{
 			std::vector<VulkanBuffer*> m_Buffer;
-			std::vector<VulkanStaticBuffer*> m_StaticBuffer;
 			std::vector<VulkanTexture*> m_Textures;
 
 			bool Empty()
 			{
-				return (m_StaticBuffer.empty() && m_Textures.empty()) && m_Buffer.empty();
+				return (m_Textures.empty()) && m_Buffer.empty();
 			}
 			void Clear();
 		} m_TransferData;

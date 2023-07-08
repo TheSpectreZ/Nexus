@@ -19,7 +19,7 @@ namespace Nexus
 		void DeallocateUniformBuffer(UUID HashID);
 		
 		Ref<RenderableMesh> GetRenderableMesh(UUID HashID) { return m_RenderableMeshes[HashID]; }
-		Ref<RenderableMesh> AllocateRenderableMesh(const RenderableMeshSpecification& specs,UUID HashID);
+		Ref<RenderableMesh> AllocateRenderableMesh(const MeshSpecification& specs,UUID HashID);
 		void DeallocateRenderableMesh(UUID HashID);
 
 		Ref<Texture> GetTexture(UUID HashID) { return m_Textures[HashID]; }

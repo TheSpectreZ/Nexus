@@ -20,20 +20,4 @@ namespace Nexus
 		virtual uint32_t GetSize() = 0;
 		virtual void Update(void* data) = 0;
 	};
-
-	class StaticBuffer
-	{
-	public:
-		StaticBuffer() = default;
-		virtual ~StaticBuffer() = default;
-	};
-
-	class UniformBuffer
-	{
-	public:
-		UniformBuffer() = default;
-		virtual ~UniformBuffer() = default;
-
-		virtual void Update(void* data) = 0;
-	};
 }

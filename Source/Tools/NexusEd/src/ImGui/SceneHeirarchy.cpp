@@ -165,11 +165,7 @@ static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
 	if (!res.success)
 		return;
 
-	RenderableMeshSpecification specs{};
-	specs.Type = MeshType::Static;
-	specs.meshSpecs = DynamicPointerCast<MeshAsset>(res.asset)->GetMeshSpecifications();
-
-	ResourcePool::Get()->AllocateRenderableMesh(specs, res.id);
+	ResourcePool::Get()->AllocateRenderableMesh( DynamicPointerCast<MeshAsset>(res.asset)->GetMeshSpecifications(), res.id );
 	component.handle = res.id;
 }
 
@@ -334,6 +330,18 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 			if (ImGui::Button("Set", ImVec2(80.f, 25.f)))
 				ImGui::OpenPopup("Set Mesh");
+
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+				{
+					const wchar_t* path = (const wchar_t*)payload->Data;
+					AssetFilePath file = path;
+					if (file.extension().string() == ".NxAsset")
+						LoadMesh(file, component);	
+				}
+				ImGui::EndDragDropTarget();
+			}
 
 			if (ImGui::BeginPopup("Set Mesh"))
 			{

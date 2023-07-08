@@ -16,13 +16,6 @@ void Nexus::VulkanCommandQueue::Transferdata::Clear()
 	}
 	m_Buffer.clear();
 
-	for (auto& b : m_StaticBuffer)
-	{
-		vmaDestroyBuffer(device->GetAllocator(), b->m_StagingBuff, b->m_StagingAlloc);
-		b->m_StagingBuff = nullptr;
-	}
-	m_StaticBuffer.clear();
-
 	for (auto& i : m_Textures)
 	{
 		vmaDestroyBuffer(device->GetAllocator(), i->m_StagingBuffer, i->m_StagingAlloc);
@@ -239,17 +232,6 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 			NEXUS_LOG("Vulkan Debug", "Copied Buffer");
 		}
 
-		// Static Buffer
-		for (auto& buffer : m_TransferData.m_StaticBuffer)
-		{
-			VkBufferCopy copy{};
-			copy.size = buffer->m_size;
-			copy.dstOffset = 0;
-			copy.srcOffset = 0;
-
-			vkCmdCopyBuffer(m_TransferCommandBuffer[m_FrameIndex], buffer->m_StagingBuff, buffer->m_buffer, 1, &copy);
-		}
-
 		// Texture
 		for (auto& texture : m_TransferData.m_Textures)
 		{
@@ -303,6 +285,12 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 	m_TransferSubmitInfo.pCommandBuffers = &m_TransferCommandBuffer[m_FrameIndex];
 	_VKR = vkQueueSubmit(m_TransferQueue, 1, &m_TransferSubmitInfo, nullptr);
 	vkQueueWaitIdle(m_TransferQueue);
+
+	if (m_RenderQueueIndex == m_TransferQueueIndex)
+	{
+		m_TransferData.Clear();
+		return;
+	}
 
 	vkBeginCommandBuffer(m_RenderCommandBuffer[m_FrameIndex], &m_CmdBeginInfo);
 	{
@@ -398,11 +386,6 @@ void Nexus::VulkanCommandQueue::TransferBufferToGPU(VulkanBuffer* buffer)
 	m_TransferData.m_Buffer.push_back(buffer);
 }
 
-void Nexus::VulkanCommandQueue::TransferBufferToGPU(VulkanStaticBuffer* buf)
-{
-	m_TransferData.m_StaticBuffer.push_back(buf);
-}
-
 void Nexus::VulkanCommandQueue::TransferTextureToGPU(VulkanTexture* texture)
 {
 	m_TransferData.m_Textures.push_back(texture);
@@ -425,32 +408,7 @@ void Nexus::VulkanCommandQueue::BindIndexBuffer(Ref<Buffer> buffer)
 	vkCmdBindIndexBuffer(m_RenderCommandBuffer[m_FrameIndex], buf->Get(), 0, VK_INDEX_TYPE_UINT32);
 }
 
-void Nexus::VulkanCommandQueue::DrawIndices(uint32_t IndexCount)
+void Nexus::VulkanCommandQueue::DrawIndices(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance)
 {
-	vkCmdDrawIndexed(m_RenderCommandBuffer[m_FrameIndex], IndexCount, 1, 0, 0, 0);
+	vkCmdDrawIndexed(m_RenderCommandBuffer[m_FrameIndex], IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
 }
-
-//void Nexus::VulkanCommandQueue::DrawSubMesh(SubMesh* submesh)
-//{
-//	Ref<VulkanStaticBuffer> vb = DynamicPointerCast<VulkanStaticBuffer>(submesh->vb);
-//	Ref<VulkanStaticBuffer> ib = DynamicPointerCast<VulkanStaticBuffer>(submesh->ib);
-//
-//	VkBuffer buf[] = { vb->Get() };
-//	VkDeviceSize off[] = { 0 };
-//
-//	vkCmdBindVertexBuffers(m_RenderCommandBuffer[m_FrameIndex], 0, 1, buf, off);
-//	vkCmdBindIndexBuffer(m_RenderCommandBuffer[m_FrameIndex], ib->Get(), 0, VK_INDEX_TYPE_UINT32);
-//	vkCmdDrawIndexed(m_RenderCommandBuffer[m_FrameIndex], ib->m_size / sizeof(uint32_t), 1, 0, 0, 0);
-//}
-//
-//void Nexus::VulkanCommandQueue::DrawMesh(Ref<StaticMesh> mesh)
-//{
-//	auto& submeshes = mesh->GetSubMeshes();
-//	for (auto& sm : submeshes)
-//	{
-//		if (!sm.draw)
-//			continue;
-//	
-//		DrawSubMesh(&sm);
-//	}
-//}

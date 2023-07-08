@@ -46,7 +46,11 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 		queue->BindShaderResourceHeap(m_Shader, PerEntityHeap[Identity.uuid]);
 		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
 		queue->BindIndexBuffer(RTMesh->GetIndexBuffer());
-		queue->DrawIndices(RTMesh->GetIndexBuffer()->GetSize() / sizeof(uint32_t));
+
+		for (auto& sm : RTMesh->GetSubmeshes())
+		{
+			queue->DrawIndices(sm.IndexSize, 1, sm.IndexOff, 0, 0);
+		}
 	}
 }
 
