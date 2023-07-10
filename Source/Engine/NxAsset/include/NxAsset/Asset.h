@@ -20,7 +20,7 @@ namespace Nexus
 
 	enum class NEXUS_ASSET_API AssetType
 	{
-		None, Mesh, Texture
+		None, Mesh, Texture, MaterialTable
 	};
 
 	class NEXUS_ASSET_API Asset
@@ -66,5 +66,18 @@ namespace Nexus
 		const TextureSpecification& GetTextureSpecifications() { return m_Specs; }
 	private:
 		TextureSpecification m_Specs;
+	};
+
+	class NEXUS_ASSET_API MaterialTableAsset : public Asset
+	{
+	public:
+		MaterialTableAsset() : Asset(AssetType::MaterialTable) {}
+		~MaterialTableAsset() override = default;
+
+		OVERRIDE_BASE_ASSET
+
+		const MaterialTableSpecification GetMaterialTableSpecifications() { return m_Specs; }
+	private:
+		MaterialTableSpecification m_Specs;
 	};
 }

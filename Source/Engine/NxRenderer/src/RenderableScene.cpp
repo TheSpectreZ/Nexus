@@ -16,7 +16,21 @@ Nexus::RenderableScene::~RenderableScene()
 void Nexus::RenderableScene::Prepare()
 {
 	auto cameraBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform0.hashId);
-	cameraBuf->Update(m_Scene->GetCamera());
+	cameraBuf->Update((void*)m_Scene->GetCamera());
+
+	auto sceneBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform1.hashId);
+	sceneBuf->Update((void*)&m_SceneBuffer);
+
+	Entity entity;
+	auto view = m_Scene->GetAllEntitiesWith<Component::DirectionalLight>();
+	for (auto& e : view)
+	{
+		entity = { e,m_Scene.get() };
+
+		auto& DL = entity.GetComponent<Component::DirectionalLight>();
+		m_SceneBuffer.lightDir = DL.direction;
+		m_SceneBuffer.lightCol = DL.color;
+	}
 }
 
 void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
@@ -47,8 +61,18 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
 		queue->BindIndexBuffer(RTMesh->GetIndexBuffer());
 
+		if (!RTMesh->GetMaterialTable())
+			return;
+
+		auto& Materials = RTMesh->GetMaterialTable()->GetMaterials();
+
 		for (auto& sm : RTMesh->GetSubmeshes())
 		{
+			auto MatId = Materials[sm.materialIndex].m_Id;
+			if (!PerMaterialHeap.contains(MatId))
+				CreateMaterialResource(Materials[sm.materialIndex]);
+
+			queue->BindShaderResourceHeap(m_Shader, PerMaterialHeap[MatId]);
 			queue->DrawIndices(sm.IndexSize, 1, sm.IndexOff, 0, 0);
 		}
 	}
@@ -66,22 +90,28 @@ void Nexus::RenderableScene::Initialize()
 		PerSceneUniform0.hashId = UUID();
 		PerSceneUniform0.set = 0;
 		PerSceneUniform0.binding = 0;
-		auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform0);
+		auto cbuff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform0);
 
-		m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0.binding, buff);
+		// Scene
+		PerSceneUniform1.hashId = UUID();
+		PerSceneUniform1.set = 0;
+		PerSceneUniform1.binding = 1;
+		auto sbuff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform1);
+
+		m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0.binding, cbuff);
+		m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform1.binding, sbuff);
 	}
 
-	// Entity
+	// Sampler
 	{
-		Entity entity;
-		auto view = m_Scene->GetAllEntitiesWith<Component::Mesh>();
-		for (auto& e : view)
-		{
-			entity = Entity(e, m_Scene.get());
-			auto& Identity = entity.GetComponent<Component::Identity>();
+		SamplerSpecification specs{};
+		specs.Far = SamplerFilter::Linear;
+		specs.Near = SamplerFilter::Linear;
+		specs.U = SamplerWrapMode::Repeat;
+		specs.V = SamplerWrapMode::Repeat;
+		specs.W = SamplerWrapMode::Repeat;
 
-			CreateEntityResource(Identity.uuid);
-		}
+		m_Sampler = GraphicsInterface::CreateSampler(specs);
 	}
 }
 
@@ -98,6 +128,14 @@ void Nexus::RenderableScene::Destroy()
 	}
 	PerEntityHeap.clear();
 	PerEntityUniform.clear();
+	
+	for (auto& [k, v] : PerMaterialHeap)
+	{
+		m_Shader->DeallocateShaderResourceHeap(v);
+		ResourcePool::Get()->DeallocateUniformBuffer(PerMaterialUniform[k].hashId);
+	}
+	PerMaterialHeap.clear();
+	PerMaterialUniform.clear();
 }
 
 void Nexus::RenderableScene::CreateEntityResource(UUID Id)
@@ -118,4 +156,41 @@ void Nexus::RenderableScene::CreateEntityResource(UUID Id)
 	PerEntityUniform[Id] = uniformHandle;
 
 	m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
+}
+
+void Nexus::RenderableScene::CreateMaterialResource(const RenderableMaterial& material)
+{
+	ResourceHeapHandle heapHandle{};
+	heapHandle.hashId = UUID();
+	heapHandle.set = 2;
+
+	m_Shader->AllocateShaderResourceHeap(heapHandle);
+	PerMaterialHeap[material.m_Id] = heapHandle;
+
+	UniformBufferHandle uniformHandle{};
+	uniformHandle.hashId = UUID();
+	uniformHandle.set = 2;
+	uniformHandle.binding = 0;
+
+	auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, uniformHandle);
+	buff->Update((void*)&material.m_Params);
+	PerMaterialUniform[material.m_Id] = uniformHandle;
+
+	m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
+
+	CombinedImageSamplerHandle imageHandle{};
+	imageHandle.set = 2;
+	imageHandle.sampler = m_Sampler;
+
+	imageHandle.binding = 1;
+	imageHandle.texture = material.m_AlbedoMap;
+	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+
+	imageHandle.binding = 2;
+	imageHandle.texture = material.m_MetalicRoughnessMap;
+	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	
+	imageHandle.binding = 3;
+	imageHandle.texture = material.m_NormalMap;
+	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 }

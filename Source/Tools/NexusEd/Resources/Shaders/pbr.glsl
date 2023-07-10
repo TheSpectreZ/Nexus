@@ -12,11 +12,13 @@ layout(location = 1) out vec3 FragNorm;
 layout(location = 2) out vec2 FragTexC;
 layout(location = 3) out mat3 FragTBN;
 
-layout(set = 0, binding = 0) uniform SceneBuffer
+layout(set = 0, binding = 0) uniform CameraBuffer
 {
 	mat4 projection;
 	mat4 view;
-} u_SceneBuffer;
+	vec3 position;
+	float null;
+} u_CameraBuffer;
 
 layout(set = 1, binding = 0) uniform InstanceBuffer
 {
@@ -36,7 +38,7 @@ void main()
 	
 	vec4 Pos = u_InstanceBuffer.Transform * vec4(InPos, 1.0);
 	FragPos = vec3(Pos);
-	gl_Position = u_SceneBuffer.projection * u_SceneBuffer.view * Pos;
+	gl_Position = u_CameraBuffer.projection * u_CameraBuffer.view * Pos;
 }
 
 #shader FRAGMENT
@@ -49,6 +51,14 @@ layout(location = 3) in mat3 FragTBN;
 
 layout(location = 0) out vec4 OutColor;
 
+layout(set = 0, binding = 0) uniform CameraBuffer
+{
+	mat4 projection;
+	mat4 view;
+	vec3 position;
+	float null;
+} u_CameraBuffer;
+
 struct PointLight
 {
 	vec3 position; float size;
@@ -59,10 +69,11 @@ struct PointLight
 
 layout(set = 0, binding = 1) uniform sceneBuffer
 {
-	vec3 position; float pointLightCount;
-	vec4 SceneLightDirection;
+	vec3 SceneLightDirection;
+	float pointLightCount;
 	vec4 SceneLightColor;
-	vec4 null;
+
+	vec4 n1,n2;
 
 	PointLight lights[10];
 } m_sceneBuffer;
@@ -72,16 +83,9 @@ layout(set = 2, binding = 0) uniform MaterialBuffer
 	vec4 AlbedoColor;
 	float roughness;
 	float metalness;
-	float albedoTexCoord;
-	float mrTexCoord;
-
-	float useMR;
-	float useAlbedo;
 	float useNormal;
-
-	float null;
-	vec4 null2;
-
+	
+	float nul;
 } m_MaterialBuffer;
 
 layout(set = 2, binding = 1) uniform sampler2D albedoMap;
@@ -90,18 +94,12 @@ layout(set = 2, binding = 3) uniform sampler2D normalMap;
 
 vec3 GetMaterialColor()
 {
-	if (m_MaterialBuffer.useAlbedo == 1.0)
-		return texture(albedoMap, FragTexC).rgb;
-	else
-		return m_MaterialBuffer.AlbedoColor.rgb;
+	return texture(albedoMap, FragTexC).rgb * m_MaterialBuffer.AlbedoColor.rgb;
 }
 
 vec2 GetMetallicRoughness()
 {
-	if (m_MaterialBuffer.useMR == 1.0)
-		return texture(metallicRoughnessMap, FragTexC).rg;
-	else
-		return vec2(m_MaterialBuffer.metalness, m_MaterialBuffer.roughness);
+	return texture(metallicRoughnessMap, FragTexC).rg * vec2(m_MaterialBuffer.metalness, m_MaterialBuffer.roughness);
 }
 
 vec3 GetNormal()
@@ -179,7 +177,7 @@ void main()
 	vec2 metallicRoughness = GetMetallicRoughness();
 	vec3 norm = GetNormal();
 
-	vec3 viewDir = normalize(m_sceneBuffer.position - FragPos);
+	vec3 viewDir = normalize(u_CameraBuffer.position - FragPos);
 
 	vec3 F0 = mix(Fdielectric, albedo, metallicRoughness.r);
 
@@ -218,7 +216,7 @@ void main()
 
 	// Directional Light
 	{
-		vec3 halfDir = normalize(m_sceneBuffer.SceneLightDirection.rgb + viewDir);
+		vec3 halfDir = normalize(m_sceneBuffer.SceneLightDirection + viewDir);
 
 		vec3 Fresnel = Calculate_Fresnel(F0, viewDir, halfDir);
 

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "NxCore/Base.h"
 
 #ifdef NEXUS_GRAPHICS_SHARED_BUILD
 #define NEXUS_GRAPHICS_API __declspec(dllexport)
@@ -32,8 +33,9 @@ namespace Nexus
 
 	enum class NEXUS_GRAPHICS_API ShaderStage
 	{
-		Vertex = 0, Fragment = 1
+		None = 0,Vertex = 1, Fragment = 2
 	};
+	ENUM_FLAG_OPERATORS(ShaderStage)
 	
 	enum class NEXUS_GRAPHICS_API BufferType
 	{

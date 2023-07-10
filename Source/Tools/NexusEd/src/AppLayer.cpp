@@ -15,7 +15,6 @@ void AppLayer::OnAttach()
 {
 	m_ForwardDrawer = CreateRef<ForwardDrawer>(true);
 
-	
 	Extent extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
 	// Camera
 	{
@@ -31,12 +30,18 @@ void AppLayer::OnAttach()
 		m_EditorCameraController.SetPerspectiveProjection(45.f, (float)extent.width, (float)extent.height, 0.1f, 1000.f);
 	}
 
-	Module::AssetManager::Get()->Import(AssetType::Mesh, "Resources/Meshes/house/scene.gltf", "Projects/Assets", "Projects/Binaries/Assets");
+	//Module::AssetManager::Get()->Import(AssetType::Mesh, "Resources/Meshes/house/scene.gltf", "Projects/Assets/mesh/", "Projects/Binaries/Assets/mesh");
+	//Module::AssetManager::Get()->Import(AssetType::MaterialTable, "Resources/Meshes/house/scene.gltf", "Projects/Assets/Mat/", "Projects/Binaries/Assets/mat");
 
 	// Scene
 	{
 		m_EditorScene = CreateRef<Scene>();
 		m_EditorScene->SetCamera(&m_EditorCamera);
+
+		auto light = m_EditorScene->CreateEntity("Light");
+		light.AddComponent<Component::DirectionalLight>();
+
+		auto entity = m_EditorScene->CreateEntity("Mesh");
 	}
 
 	// Editor

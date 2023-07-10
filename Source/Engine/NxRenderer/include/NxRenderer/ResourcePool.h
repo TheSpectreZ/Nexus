@@ -5,6 +5,10 @@
 
 namespace Nexus
 {
+#define RESOURCE_METHOD_DECL(Resource,Specs,m_Member)\
+	Ref<Resource> Get##Resource(UUID HashId) {return m_Member[HashId];}\
+	Ref<Resource> Allocate##Resource(const Specs& specs,UUID HashID);\
+	void Deallocate##Resource(UUID HashID);
 
 	class NEXUS_RENDERER_API ResourcePool
 	{
@@ -18,16 +22,13 @@ namespace Nexus
 		Ref<Buffer> AllocateUniformBuffer(Ref<Shader> shader, UniformBufferHandle handle);
 		void DeallocateUniformBuffer(UUID HashID);
 		
-		Ref<RenderableMesh> GetRenderableMesh(UUID HashID) { return m_RenderableMeshes[HashID]; }
-		Ref<RenderableMesh> AllocateRenderableMesh(const MeshSpecification& specs,UUID HashID);
-		void DeallocateRenderableMesh(UUID HashID);
-
-		Ref<Texture> GetTexture(UUID HashID) { return m_Textures[HashID]; }
-		Ref<Texture> AllocateTexture(const TextureSpecification& specs, UUID HashID);
-		void DeallocateTexture(UUID HashID);
+		RESOURCE_METHOD_DECL(Texture,TextureSpecification,m_Textures)
+		RESOURCE_METHOD_DECL(RenderableMesh, MeshSpecification, m_RenderableMeshes)
+		RESOURCE_METHOD_DECL(MaterialTable, MaterialTableSpecification, m_MaterialTables)
 	private:
 		std::unordered_map<UUID, Ref<Buffer>> m_UniformBuffers;
-		std::unordered_map<UUID, Ref<RenderableMesh>> m_RenderableMeshes;
 		std::unordered_map<UUID, Ref<Texture>> m_Textures;
+		std::unordered_map<UUID, Ref<RenderableMesh>> m_RenderableMeshes;
+		std::unordered_map<UUID, Ref<MaterialTable>> m_MaterialTables;
 	};
 }

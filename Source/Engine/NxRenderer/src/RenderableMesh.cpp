@@ -23,6 +23,7 @@ Nexus::RenderableMesh::RenderableMesh(const MeshSpecification& specs)
 
 Nexus::RenderableMesh::~RenderableMesh()
 {
+	m_MaterialTable.reset();
 	m_VertexBuffer.reset();
 	m_IndexBuffer.reset();
 }

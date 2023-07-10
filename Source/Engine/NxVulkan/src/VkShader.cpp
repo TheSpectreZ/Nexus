@@ -18,15 +18,6 @@ static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData
 	
 	spirv_cross::ShaderResources resources = reflector.get_shader_resources();
 	
-	// Stage Input 
-	for (const auto& resource : resources.stage_inputs)
-	{
-		//auto& type = reflector.get_type(resource.base_type_id);
-		uint32_t binding = reflector.get_decoration(resource.id, spv::DecorationLocation);
-		
-		NEXUS_LOG("Vulkan DEBUG", "%s Stage Input: %i",Nexus::GetShaderStageTypeStringName(stage).c_str(), binding);
-	}
-
 	// Uniform Buffers
 	for (const auto& resource : resources.uniform_buffers)
 	{
@@ -42,9 +33,12 @@ static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData
 			uint32_t binding = reflector.get_decoration(resource.id, spv::DecorationBinding);
 			uint32_t set = reflector.get_decoration(resource.id, spv::DecorationDescriptorSet);
 
-			auto& ref = data->bindings[set].emplace_back();
+			if (binding >= data->bindings[set].size())
+				data->bindings[set].emplace_back();
+
+			auto& ref = data->bindings[set].at(binding);
 			ref.bindPoint = binding;
-			ref.stage = stage;
+			ref.stage = ref.stage | stage;
 			ref.type = Nexus::ShaderResourceType::Uniform;
 			ref.bufferSize = size;
 		}
@@ -62,9 +56,12 @@ static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData
 		//uint32_t dimension = baseType.image.dim;
 		//uint32_t arraySize = type.array[0];
 
-		auto& ref = data->bindings[set].emplace_back();
+		if (binding >= data->bindings[set].size())
+			data->bindings[set].emplace_back();
+		
+		auto& ref = data->bindings[set].at(binding);
 		ref.bindPoint = binding;
-		ref.stage = stage;
+		ref.stage = ref.stage | stage;
 		ref.type = Nexus::ShaderResourceType::SampledImage;
 		ref.bufferSize = 0;
 	}
@@ -114,7 +111,7 @@ Nexus::VulkanShader::VulkanShader(const ShaderSpecification& specs)
 			pool = CreateRef<VulkanShaderResourcePool>(m_SetResource[set].HeapLayout, maxHeapCountPerPool);
 			NEXUS_LOG("Vulkan", "");
 		}
-		NEXUS_LOG("Vulkan", "=================\n");
+		NEXUS_LOG("\nVulkan", "=================\n");
 	}
 
 	/////////////////////////////////

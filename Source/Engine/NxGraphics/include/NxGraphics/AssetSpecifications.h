@@ -2,6 +2,7 @@
 #include <vector>
 #include "glm/glm.hpp"
 #include "TypeImpls.h"
+#include "Texture.h"
 
 #ifdef NEXUS_GRAPHICS_SHARED_BUILD
 #define NEXUS_GRAPHICS_API __declspec(dllexport)
@@ -30,6 +31,7 @@ namespace Nexus
 		std::vector<MeshVertex> Vertices;
 		std::vector<uint32_t> Indices;
 	};
+
 	struct NEXUS_GRAPHICS_API TextureSpecification
 	{
 		Extent extent;
@@ -38,7 +40,8 @@ namespace Nexus
 		~TextureSpecification()
 		{
 			extent = { 0,0 };
-			delete[] pixeldata;
+			if(pixeldata)
+				delete[] pixeldata;
 		}
 	};
 
@@ -60,26 +63,29 @@ namespace Nexus
 		uint32_t samplerId;
 	};
 
-	struct NEXUS_GRAPHICS_API MaterialElement
+	struct NEXUS_GRAPHICS_API MaterialParameters
 	{
-		std::unordered_map<TextureMapType, uint32_t> Maps;
-		
-		glm::vec4 albedo;
-		float metalness, roughness;
+		glm::vec4 albedoColor = glm::vec4(1.f);
+		float roughness = 0.5, metalness = 0.5f;
+		float useNormal = 0.f, nul = 0.f;
 	};
-
+	
 	struct NEXUS_GRAPHICS_API MaterialSpecification
 	{
+		uint32_t albedoMap, NormalMap, MetalicRoughnesMap;
+		MaterialParameters params;
+	};
+	
+	struct NEXUS_GRAPHICS_API MaterialTableSpecification
+	{
 		std::vector<TextureSpecification> textures;
-		std::vector<SamplerSpecification> samplers;
-		std::vector<TextureMapElement> texElements;
-		std::vector<MaterialElement> matElements;
+	//	std::vector<SamplerSpecification> samplers;
+		std::vector<MaterialSpecification> materials;
 	};
 
 	struct NEXUS_GRAPHICS_API MeshSpecification
 	{
 		MeshElement mesh;
 		std::vector<SubmeshElement> submeshes;
-		MaterialSpecification materials;
 	};
 }

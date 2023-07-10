@@ -2,15 +2,14 @@
 
 std::string Nexus::GetShaderStageTypeStringName(ShaderStage stage)
 {
-	switch (stage)
-	{
-	case Nexus::ShaderStage::Vertex:
-		return "Vertex Shader";
-	case Nexus::ShaderStage::Fragment:
-		return "Fragment Shader";
-	default:
-		return std::string();
-	}
+	std::string name;
+
+	if (Nexus::IsFlagSet(stage, Nexus::ShaderStage::Vertex))
+		name = "[Vertex] ";
+	if (Nexus::IsFlagSet(stage, Nexus::ShaderStage::Fragment))
+		name += "[Fragment]";
+	
+	return name;
 }
 
 std::string Nexus::GetBufferTypeStringName(BufferType Type)

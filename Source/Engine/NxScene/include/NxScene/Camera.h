@@ -14,8 +14,9 @@ namespace Nexus
 {
 	struct NEXUS_SCENE_API Camera
 	{
-		glm::mat4 projection;
-		glm::mat4 view;
+		glm::mat4 projection = glm::mat4(1.f);
+		glm::mat4 view = glm::mat4(1.f);
+		glm::vec3 position = glm::vec3(0.f); float null = 0.f;
 	};
 
 	enum class NEXUS_SCENE_API CameraBinding
@@ -41,7 +42,6 @@ namespace Nexus
 		// Key Binds
 		std::array<uint16_t, 7> m_KeyBinds;
 
-		glm::vec3 m_position = { 0.f,0.f,0.f };
 		glm::vec3 m_front = { 0.f,0.f,-1.f };
 		glm::vec3 m_up = { 0.f,1.f,0.f };
 		

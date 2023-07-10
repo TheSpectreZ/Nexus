@@ -24,7 +24,7 @@ void Nexus::CameraController::Update(float dt)
 	{
 		if (Module::Input::Get()->IsKeyPressed(m_KeyBinds[i]))
 		{
-			m_position += GetMovementMultiplier((CameraBinding)i) * dt * m_Speed;
+			m_Camera->position += GetMovementMultiplier((CameraBinding)i) * dt * m_Speed;
 		}
 	}
 
@@ -65,7 +65,7 @@ void Nexus::CameraController::Update(float dt)
 		}
 	}
 
-	m_Camera->view = glm::lookAt(m_position, m_position + m_front, m_up);
+	m_Camera->view = glm::lookAt(m_Camera->position, m_Camera->position + m_front, m_up);
 }
 
 glm::vec3 Nexus::CameraController::GetMovementMultiplier(CameraBinding binding)

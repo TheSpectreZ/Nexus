@@ -34,6 +34,7 @@ bool Nexus::Module::AssetManager::Import(AssetType type, const AssetFilePath& So
 	{
 	IMPORT_SWITCH(AssetType::Mesh,MeshAsset,Source, Asset, Bin)
 	IMPORT_SWITCH(AssetType::Texture,TextureAsset,Source,Asset,Bin)
+	IMPORT_SWITCH(AssetType::MaterialTable,MaterialTableAsset,Source,Asset,Bin)
 	default:
 		return false;
 	}
@@ -61,8 +62,9 @@ Nexus::Module::AssetLoadResult Nexus::Module::AssetManager::Load(AssetType type,
 
 	switch (type)
 	{
-	LOAD_SWITCH(AssetType::Mesh,MeshAsset)
+	LOAD_SWITCH(AssetType::Mesh, MeshAsset)
 	LOAD_SWITCH(AssetType::Texture, TextureAsset)
+	LOAD_SWITCH(AssetType::MaterialTable, MaterialTableAsset)
 	default:
 		return res;
 	}

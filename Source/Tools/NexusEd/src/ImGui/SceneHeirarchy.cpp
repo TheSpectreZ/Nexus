@@ -6,6 +6,7 @@
 
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "NxCore/Logger.h"
 
 namespace NexusEd::ImGuiUtils
 {
@@ -167,6 +168,21 @@ static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
 
 	ResourcePool::Get()->AllocateRenderableMesh( DynamicPointerCast<MeshAsset>(res.asset)->GetMeshSpecifications(), res.id );
 	component.handle = res.id;
+}
+
+static void LoadMaterial(const AssetFilePath& filepath, Component::Mesh& component)
+{
+	auto res = Module::AssetManager::Get()->Load(AssetType::MaterialTable, filepath);
+	if (!res.success)
+		return;
+
+	auto matTable = ResourcePool::Get()->AllocateMaterialTable(DynamicPointerCast<MaterialTableAsset>(res.asset)->GetMaterialTableSpecifications(), res.id);
+
+	auto mesh = ResourcePool::Get()->GetRenderableMesh(component.handle);
+	if(!mesh->SetMaterialTable(matTable))
+	{
+		NEXUS_LOG("Scene Heirarchy", "Failed to Assign Material Table %s", filepath.generic_string().c_str());
+	}
 }
 
 void NexusEd::SceneHeirarchy::SetContext(Ref<Scene> scene)
@@ -363,6 +379,21 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 				ImGui::EndPopup();
 			}
 
+			if (component.handle)
+			{
+				ImGui::Button("Assign Material Table", ImVec2(ImGui::GetContentRegionAvail().x, 50.f));
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+					{
+						const wchar_t* path = (const wchar_t*)payload->Data;
+						AssetFilePath file = path;
+						if (file.extension().string() == ".NxAsset")
+							LoadMaterial(file, component);
+					}
+					ImGui::EndDragDropTarget();
+				}
+			}
 		});
 
 	DrawComponent<Component::Script>("Script", en, [&](auto& component)
@@ -420,7 +451,7 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::DirectionalLight>("Directional Light", en, [&](auto& component)
 		{
-			ImGui::ColorEdit3("Color", glm::value_ptr(component.color), ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
+			ImGui::ColorEdit4("Color", glm::value_ptr(component.color), ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
 			ImGuiUtils::DrawVec3Control("Direction", component.direction, 1.f);
 		});
 	

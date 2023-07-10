@@ -101,7 +101,7 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 
 	// Pipeline
 	{
-		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/simple.glsl");
+		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/pbr.glsl");
 		m_shader = GraphicsInterface::CreateShader(shaderSpecs);
 
 		std::vector<VertexBindInfo> pipelineVertexBindInfo(1);
@@ -113,7 +113,7 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 			pipelineVertexBindInfo[0].stride = sizeof(MeshVertex);
 		}
 
-		std::vector<VertexAttribInfo> pipelineVertexAttribInfo(6);
+		std::vector<VertexAttribInfo> pipelineVertexAttribInfo(5);
 		{
 			pipelineVertexAttribInfo[0].binding = 0;
 			pipelineVertexAttribInfo[0].location = 0;
@@ -139,12 +139,6 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 			pipelineVertexAttribInfo[4].location = 4;
 			pipelineVertexAttribInfo[4].offset = sizeof(float) * 12;
 			pipelineVertexAttribInfo[4].format = VertexAttribInfo::ATTRIB_FORMAT_VEC2;
-
-			pipelineVertexAttribInfo[5].binding = 0;
-			pipelineVertexAttribInfo[5].location = 5;
-			pipelineVertexAttribInfo[5].offset = sizeof(float) * 14;
-			pipelineVertexAttribInfo[5].format = VertexAttribInfo::ATTRIB_FORMAT_VEC4;
-
 		}
 
 		PipelineSpecification pipelineSpecs{};

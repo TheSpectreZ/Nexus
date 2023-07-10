@@ -134,7 +134,7 @@ namespace Nexus
 			DirectionalLight(const DirectionalLight&) = default;
 
 			glm::vec3 direction = glm::vec3(1.f);
-			glm::vec3 color = glm::vec3(1.f);
+			glm::vec4 color = glm::vec4(1.f);
 		};
 
 		struct NEXUS_SCENE_API PointLight

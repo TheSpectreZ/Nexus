@@ -26,6 +26,8 @@ namespace Nexus::Utils
 			return "MeshAsset";
 		case Nexus::AssetType::Texture:
 			return "TextureAsset";
+		case Nexus::AssetType::MaterialTable:
+			return "MaterialTableAsset";
 		default:
 			return "Invalid";
 		}
@@ -37,21 +39,23 @@ namespace Nexus::Utils
 			return AssetType::Mesh;
 		else if (str == "TextureAsset")
 			return AssetType::Texture;
+		else if (str == "MaterialTableAsset")
+			return AssetType::MaterialTable;
 		else
 			return AssetType::None;
 	}
 
 	void SerializeMeshAsset(std::ofstream& outFile, const MeshSpecification& obj)
 	{
-		uint32_t numVertices = obj.mesh.Vertices.size();
+		uint32_t numVertices = (uint32_t)obj.mesh.Vertices.size();
 		outFile.write(reinterpret_cast<const char*>(&numVertices), sizeof(uint32_t));
 		outFile.write(reinterpret_cast<const char*>(obj.mesh.Vertices.data()), numVertices * sizeof(MeshVertex));
 
-		uint32_t numIndices = obj.mesh.Indices.size();
+		uint32_t numIndices = (uint32_t)obj.mesh.Indices.size();
 		outFile.write(reinterpret_cast<const char*>(&numIndices), sizeof(uint32_t));
 		outFile.write(reinterpret_cast<const char*>(obj.mesh.Indices.data()), numIndices * sizeof(uint32_t));
 
-		uint32_t numSubmeshes = obj.submeshes.size();
+		uint32_t numSubmeshes = (uint32_t)obj.submeshes.size();
 		outFile.write(reinterpret_cast<const char*>(&numSubmeshes), sizeof(uint32_t));
 		outFile.write(reinterpret_cast<const char*>(obj.submeshes.data()), numSubmeshes * sizeof(SubmeshElement));
 	}
@@ -98,6 +102,38 @@ namespace Nexus::Utils
 		delete[] data;
 	}
 	
+	void SerializeMaterialTableAsset(std::ofstream& outFile, const MaterialTableSpecification& obj)
+	{
+		uint32_t textureSize = (uint32_t)obj.textures.size();
+		outFile.write(reinterpret_cast<const char*>(&textureSize), sizeof(uint32_t));
+		
+		for (auto& t : obj.textures)
+			SerializeTextureAsset(outFile, t);
+
+		uint32_t materialSize = (uint32_t)obj.materials.size();
+		outFile.write(reinterpret_cast<const char*>(&materialSize), sizeof(uint32_t));
+
+		for (auto& m : obj.materials)
+			outFile.write(reinterpret_cast<const char*>(&m), sizeof(MaterialSpecification));
+	}
+
+	void DeserializeMaterialTableAsset(std::ifstream& inFile, MaterialTableSpecification& obj)
+	{
+		uint32_t textureSize;
+		inFile.read(reinterpret_cast<char*>(&textureSize), sizeof(uint32_t));
+		
+		obj.textures.resize(textureSize);
+		for (auto& t : obj.textures)
+			DeserializeTextureAsset(inFile, t);
+
+		uint32_t materialSize;
+		inFile.read(reinterpret_cast<char*>(&materialSize), sizeof(uint32_t));
+
+		obj.materials.resize(materialSize);
+		for (auto& m : obj.materials)
+			inFile.read(reinterpret_cast<char*>(&m), sizeof(MaterialSpecification));
+	}
+
 	bool GetUUIDFromAssetFile(const AssetFilePath& path, UUID& Id, std::stringstream* sstr)
 	{
 		std::ifstream fin(path);
@@ -122,8 +158,6 @@ namespace Nexus::Utils
 
 namespace Nexus::Importer
 {
-	#define FIND_VALUE_BY_NAME(data,name) data.values.find(name) != data.values.end()
-
 	void CalculateTangentAndBiTangent(Nexus::MeshVertex& v0, Nexus::MeshVertex& v1, Nexus::MeshVertex& v2, bool foundTangent, bool foundBiTangent)
 	{
 		glm::vec3 deltaPos1 = v1.position - v0.position;
@@ -433,99 +467,106 @@ namespace Nexus::Importer
 			{
 				auto& sm = specs->submeshes.emplace_back();
 				sm.materialIndex = key;
-				sm.VertexOff = specs->mesh.Vertices.size();
-				sm.VertexSize = value.Vertices.size();
-				sm.IndexOff = specs->mesh.Indices.size();
-				sm.IndexSize = value.Indices.size();
+				sm.VertexOff = (uint32_t)specs->mesh.Vertices.size();
+				sm.VertexSize = (uint32_t)value.Vertices.size();
+				sm.IndexOff = (uint32_t)specs->mesh.Indices.size();
+				sm.IndexSize = (uint32_t)value.Indices.size();
 
 				specs->mesh.Vertices.insert(specs->mesh.Vertices.end(), value.Vertices.begin(), value.Vertices.end());
 				specs->mesh.Indices.insert(specs->mesh.Indices.end(), value.Indices.begin(), value.Indices.end());
 			}
 		}
 
-		// Material
+		NEXUS_LOG("glTF Importer", "Mesh Successfully Loaded - %s", filepath.string().c_str());
+		return true;
+	}
+
+	bool LoadglTF(const AssetFilePath& filepath, MaterialTableSpecification* specs)
+	{
+		tinygltf::Model scene;
+		tinygltf::TinyGLTF Importer;
+
+		// Importing glTF
 		{
-			std::vector<std::string> images;
-			
-			for (auto& image : scene.images)
+			std::string error, warning;
+
+			bool glbFile = false;
+
+			if (filepath.extension().string() == ".glb")
+				glbFile = true;
+			else if (filepath.extension().string() != ".gltf")
 			{
-				images.emplace_back(image.uri);
+				specs = nullptr;
+				NEXUS_LOG("glTF Importer Error", "Incorrect File Extentsion");
+				return false;
 			}
 
-			for (auto& sampler : scene.samplers)
-			{
-				auto& s = specs->materials.samplers.emplace_back();
+			bool success = glbFile ? Importer.LoadBinaryFromFile(&scene, &error, &warning, filepath.string()) : Importer.LoadASCIIFromFile(&scene, &error, &warning, filepath.string());
 
-				s.Near = GetFilterMode(sampler.magFilter);
-				s.Far = GetFilterMode(sampler.minFilter);
-				s.U = GetWrapMode(sampler.wrapS);
-				s.V = GetWrapMode(sampler.wrapT);
-				s.W = s.V;
+			if (!warning.empty())
+			{
+				NEXUS_LOG("glTF Importer Error", "AssetImporter::glTF Warning - %s", warning.c_str());
 			}
 
-			for (auto& texture : scene.textures)
+			if (!error.empty())
 			{
-				auto& t = specs->materials.texElements.emplace_back();
-
-				t.textureId = texture.source;
-				t.samplerId = texture.sampler;
+				NEXUS_LOG("glTF Importer Error", "AssetImporter::glTF Error - %s", error.c_str());
 			}
 
-			for (auto& material : scene.materials)
+			if (!success)
 			{
-				auto& m = specs->materials.matElements.emplace_back();
-
-				if (FIND_VALUE_BY_NAME(material, "baseColorTexture"))
-				{
-					m.Maps[TextureMapType::Albedo] = material.values["baseColorTexture"].TextureIndex();
-					m.albedo = glm::vec4(1.f);
-				}
-
-				if (FIND_VALUE_BY_NAME(material, "metallicRoughnessTexture"))
-				{
-					m.Maps[TextureMapType::MetallicRoughness] = material.values["metallicRoughnessTexture"].TextureIndex();
-					
-					m.roughness = 1.f;
-					m.metalness = 1.f;
-				}
-				else
-				{
-					if (FIND_VALUE_BY_NAME(material, "roughnessFactor"))
-					{
-						m.roughness = (float)material.values["roughnessFactor"].Factor();
-					}
-
-					if (FIND_VALUE_BY_NAME(material, "metallicFactor"))
-					{
-						m.metalness = (float)material.values["metallicFactor"].Factor();
-					}
-				}
-
-				if (FIND_VALUE_BY_NAME(material, "normalTexture"))
-				{
-					m.Maps[TextureMapType::Normal] = material.values["normalTexture"].TextureIndex();
-				}
-
-				if (FIND_VALUE_BY_NAME(material, "baseColorFactor"))
-				{
-					m.albedo = glm::make_vec4(material.values["baseColorFactor"].ColorFactor().data());
-				}
-			}
-
-			specs->materials.textures.resize(images.size());
-			for (size_t i = 0; i < images.size(); i++)
-			{
-				AssetFilePath p = filepath.parent_path().generic_string() + "/" + images[i];
-				LoadTexture(p, &specs->materials.textures[i]);
+				NEXUS_LOG("glTF Importer Error", "AssetImporter::glTF Failed to Load File - %s", filepath.string().c_str());
+				return false;
 			}
 		}
 
-		NEXUS_LOG("glTF Importer", "Successfully Loaded File - %s", filepath.string().c_str());
+		// Material
+		{
+			
+			specs->textures.resize(scene.images.size());
+			for (size_t i = 0; i < scene.images.size(); i++)
+			{
+
+				AssetFilePath imagefile = filepath.parent_path().generic_string() + "/" + scene.images[i].uri;
+				if (!LoadTexture(imagefile, &specs->textures[i]))
+					NEXUS_LOG("Asset Importer: MaterialTable", "Failed To Load: %s", imagefile.generic_string().c_str());
+			}
+
+			//for (auto& sampler : scene.samplers)
+			//{
+			//	auto& s = specs->samplers.emplace_back();
+			//
+			//	s.Near = GetFilterMode(sampler.magFilter);
+			//	s.Far = GetFilterMode(sampler.minFilter);
+			//	s.U = GetWrapMode(sampler.wrapS);
+			//	s.V = GetWrapMode(sampler.wrapT);
+			//	s.W = s.V;
+			//}
+
+			for (auto& material : scene.materials)
+			{
+				auto& m = specs->materials.emplace_back();
+
+				m.albedoMap = material.pbrMetallicRoughness.baseColorTexture.index;
+				m.MetalicRoughnesMap = material.pbrMetallicRoughness.metallicRoughnessTexture.index;
+				m.NormalMap = material.normalTexture.index;
+				m.params.useNormal = 1.f;
+
+				m.params.albedoColor = glm::make_vec4(material.pbrMetallicRoughness.baseColorFactor.data());
+				m.params.metalness = (float)material.pbrMetallicRoughness.metallicFactor;
+				m.params.roughness = (float)material.pbrMetallicRoughness.roughnessFactor;
+			}
+		}
+
+		NEXUS_LOG("glTF Importer", "Material Successfully Loaded - %s", filepath.string().c_str());
 		return true;
 	}
 }
 
-bool Nexus::MeshAsset::Import(const AssetFilePath& sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath)
+#define IMPORT_PARAMS const AssetFilePath& sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath
+#define LOAD_PARAMS const AssetFilePath& AssetPath
+
+bool Nexus::MeshAsset::Import(IMPORT_PARAMS)
 {
 	MeshSpecification data;
 	if (!Importer::LoadglTF(sourcefilepath, &data))
@@ -578,7 +619,7 @@ bool Nexus::MeshAsset::Import(const AssetFilePath& sourcefilepath, const AssetFi
 	return true;
 }
 
-bool Nexus::MeshAsset::Load(const AssetFilePath& AssetPath)
+bool Nexus::MeshAsset::Load(LOAD_PARAMS)
 {
 	std::stringstream stream;
 	UUID Id(true);
@@ -609,15 +650,15 @@ bool Nexus::MeshAsset::Load(const AssetFilePath& AssetPath)
 	return true;
 }
 
-bool Nexus::TextureAsset::Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath)
+bool Nexus::TextureAsset::Import(IMPORT_PARAMS)
 {
 	TextureSpecification data{};
-	if (!Importer::LoadTexture(Sourcefilepath, &data))
+	if (!Importer::LoadTexture(sourcefilepath, &data))
 		return false;
 
 	UUID Id;
-	auto assetFile = AssetPath.string() + "\\" + Sourcefilepath.filename().stem().string() + AssetExtension;
-	auto binFile = BinPath.string() + "\\" + Sourcefilepath.filename().stem().string() + BinExtension;
+	auto assetFile = AssetPath.string() + "\\" + sourcefilepath.filename().stem().string() + AssetExtension;
+	auto binFile = BinPath.string() + "\\" + sourcefilepath.filename().stem().string() + BinExtension;
 
 	// Meta
 	{
@@ -629,7 +670,7 @@ bool Nexus::TextureAsset::Import(const AssetFilePath& Sourcefilepath, const Asse
 			{
 				out << YAML::Key << "Asset Ref";
 				out << YAML::BeginMap;
-				out << YAML::Key << "Asset Source" << YAML::Value << Sourcefilepath.string();
+				out << YAML::Key << "Asset Source" << YAML::Value << sourcefilepath.string();
 				out << YAML::Key << "Asset Bin" << YAML::Value << binFile;
 				out << YAML::EndMap;
 			}
@@ -661,7 +702,7 @@ bool Nexus::TextureAsset::Import(const AssetFilePath& Sourcefilepath, const Asse
 	return true;
 }
 
-bool Nexus::TextureAsset::Load(const AssetFilePath& AssetPath)
+bool Nexus::TextureAsset::Load(LOAD_PARAMS)
 {
 	std::stringstream stream;
 	UUID Id(false);
@@ -685,6 +726,90 @@ bool Nexus::TextureAsset::Load(const AssetFilePath& AssetPath)
 
 	while (inFile.peek() != EOF)
 		Utils::DeserializeTextureAsset(inFile, m_Specs);
+
+	inFile.close();
+
+	m_Name = AssetPath.filename().stem().generic_string();
+	return true;
+}
+
+bool Nexus::MaterialTableAsset::Import(IMPORT_PARAMS)
+{
+	MaterialTableSpecification data{};
+	if (!Importer::LoadglTF(sourcefilepath, &data))
+		return false;
+	
+	UUID Id;
+
+	auto assetFile = AssetPath.string() + "/" + sourcefilepath.filename().stem().string() + AssetExtension;
+	auto binFile = BinPath.string() + "/" + sourcefilepath.filename().stem().string() + BinExtension;
+
+	// Meta
+	{
+		YAML::Emitter out;
+		{
+			out << YAML::BeginMap;
+			out << YAML::Key << "Asset ID" << YAML::Value << Id.operator size_t	();
+			out << YAML::Key << "Asset Type" << YAML::Value << Utils::GetStringFromType(m_Type);
+			{
+				out << YAML::Key << "Asset Ref";
+				out << YAML::BeginMap;
+				out << YAML::Key << "Asset Source" << YAML::Value << sourcefilepath.string();
+				out << YAML::Key << "Asset Bin" << YAML::Value << binFile;
+				out << YAML::EndMap;
+			}
+			out << YAML::EndMap;
+		}
+
+		if (!std::filesystem::exists(AssetPath))
+			std::filesystem::create_directories(AssetPath);
+
+		std::ofstream fout(assetFile);
+		fout << out.c_str();
+	}
+
+	// Bin
+	{
+		if (!std::filesystem::exists(BinPath))
+			std::filesystem::create_directories(BinPath);
+
+		std::ofstream fout;
+		fout.open(binFile, std::ios::binary | std::ios::out);
+
+		if (!fout.is_open())
+			return false;
+
+		Utils::SerializeMaterialTableAsset(fout, data);
+		fout.close();
+	}
+
+	return true;
+}
+
+bool Nexus::MaterialTableAsset::Load(LOAD_PARAMS)
+{
+	std::stringstream stream;
+	UUID Id(true);
+
+	if (!Utils::GetUUIDFromAssetFile(AssetPath, Id, &stream))
+		return false;
+
+	YAML::Node data = YAML::Load(stream.str());
+
+	AssetType Type = Utils::GetTypeFromString(data["Asset Type"].as<std::string>());
+	if (Type != AssetType::MaterialTable)
+		return false;
+
+	auto ref = data["Asset Ref"];
+	auto binpath = ref["Asset Bin"].as<std::string>();
+
+	std::ifstream inFile(binpath, std::ios::binary);
+
+	if (!inFile.is_open())
+		return false;
+
+	while (inFile.peek() != EOF)
+		Utils::DeserializeMaterialTableAsset(inFile, m_Specs);
 
 	inFile.close();
 
