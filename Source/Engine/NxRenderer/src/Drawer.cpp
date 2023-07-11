@@ -110,7 +110,7 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 			pipelineVertexBindInfo[0].inputRate = VertexBindInfo::INPUT_RATE_VERTEX;
 
 			// Depends on Vertex
-			pipelineVertexBindInfo[0].stride = sizeof(MeshVertex);
+			pipelineVertexBindInfo[0].stride = sizeof(Meshing::Vertex);
 		}
 
 		std::vector<VertexAttribInfo> pipelineVertexAttribInfo(5);
@@ -146,7 +146,7 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 		pipelineSpecs.renderpass = m_pass;
 		pipelineSpecs.subpass = 0;
 		pipelineSpecs.multisampled = true;
-		pipelineSpecs.rasterizerInfo.cullMode = CullMode::Back;
+		pipelineSpecs.rasterizerInfo.cullMode = CullMode::None;
 		pipelineSpecs.rasterizerInfo.frontFace = FrontFaceType::Clockwise;
 		pipelineSpecs.rasterizerInfo.lineWidth = 1.f;
 		pipelineSpecs.rasterizerInfo.topology = TopologyType::TriangleList;

@@ -4,6 +4,8 @@
 #include "NxApplication/FileDialog.h"
 #include "NxAsset/Asset.h"
 
+#include "NxGraphics/Meshing.h"
+
 using namespace Nexus;
 
 void NexusEd::ContentBrowser::Initialize()
@@ -19,19 +21,29 @@ void NexusEd::ContentBrowser::Initialize()
 	m_Sampler = Nexus::GraphicsInterface::CreateSampler(samplerSpecs);
 	
 	{
-		Ref<TextureAsset> Asset = CreateRef<TextureAsset>();
-		Asset->Load("Resources/Icons/FileIcon.NxTex");
+		//MeshAsset::Import("res/Meshes/cube.gltf", "Resources/Meshes", "Resources/Bin", "Cube");
+		//MeshAsset::Import("res/Meshes/sphere.gltf", "Resources/Meshes", "Resources/Bin", "Sphere");
+		//MeshAsset::Import("res/Meshes/torus.gltf", "Resources/Meshes", "Resources/Bin", "Torus");
+		//MeshAsset::Import("res/Meshes/IcoSphere.gltf", "Resources/Meshes", "Resources/Bin", "IcoSphere");
+		//MeshAsset::Import("res/Meshes/cylinder.gltf", "Resources/Meshes", "Resources/Bin", "Cylinder");
 
-		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(Asset->GetTextureSpecifications(), Asset->GetID());
-		m_FileID = Context::Get()->CreateTextureId(Texture, m_Sampler);
+		//Importer::ImportGLTF("res/Meshes/cube.gltf", "Resources/Meshes","Cube");
+	}
+
+	{
+		//Ref<TextureAsset> Asset = CreateRef<TextureAsset>();
+		//Asset->Load("Resources/Icons/FileIcon.NxTex");
+		//
+		//Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(Asset->GetTextureSpecifications(), Asset->GetID());
+		//m_FileID = Context::Get()->CreateTextureId(Texture, m_Sampler);
 	}
 	
 	{
-		Ref<TextureAsset> Asset = CreateRef<TextureAsset>();
-		Asset->Load("Resources/Icons/FolderIcon.NxTex");
-
-		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(Asset->GetTextureSpecifications(), Asset->GetID());
-		m_FolderID = Context::Get()->CreateTextureId(Texture, m_Sampler);
+		//Ref<TextureAsset> Asset = CreateRef<TextureAsset>();
+		//Asset->Load("Resources/Icons/FolderIcon.NxTex");
+		//
+		//Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(Asset->GetTextureSpecifications(), Asset->GetID());
+		//m_FolderID = Context::Get()->CreateTextureId(Texture, m_Sampler);
 	}
 }
 
@@ -58,71 +70,6 @@ void NexusEd::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
 			ImGui::TreePop();
 		}
 	}
-}
-
-void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
-{
-	if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
-	{
-		ImGui::OpenPopup("ContentBrowserMenu");
-	}
-
-	if (ImGui::BeginPopup("ContentBrowserMenu"))
-	{
-		if (ImGui::MenuItem("Import Mesh"))
-			ImportMesh();
-
-		ImGui::EndPopup();
-	}
-
-	static float padding = 24.f;
-	static float thumbnailSize = 86.f;
-	static float cellsize = thumbnailSize + padding;
-
-	float panelWidth = ImGui::GetContentRegionAvail().x;
-
-	int columnCount = (int)(panelWidth / (cellsize));
-	columnCount = std::max(1, columnCount);
-
-	ImGui::Columns(columnCount, 0, false);
-
-	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
-
-	int i = 0;
-	for (auto& dir : std::filesystem::directory_iterator(path))
-	{
-		ImGui::PushID(i++);
-
-		const auto& p = dir.path();
-		auto filenameString = p.filename().string();
-
-		if (dir.is_directory())
-		{
-			Context::Get()->BindTextureId(m_FolderID);
-			if (ImGui::ImageButton(m_FolderID, { thumbnailSize,thumbnailSize }))
-			{
-				m_SelectedDirectory = p;
-			}
-		}
-		else 
-		{
-			Context::Get()->BindTextureId(m_FileID);
-			ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
-			
-			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-			{	
-				const wchar_t* itemPath = p.c_str();
-				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
-				ImGui::EndDragDropSource();
-			}
-		}
-		ImGui::TextWrapped(filenameString.c_str());
-
-		ImGui::PopID();
-		ImGui::NextColumn();
-	}
-	ImGui::PopStyleColor();
-	ImGui::Columns(1);
 }
 
 void NexusEd::ContentBrowser::SetContext(const std::string& projectRootPath)
@@ -170,16 +117,123 @@ void NexusEd::ContentBrowser::Render()
 	}
 
 	ImGui::End();
+
+	ImGui::ShowDemoWindow();
 }
 
-void NexusEd::ContentBrowser::ImportMesh()
+void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 {
-	AssetFilePath filePath = FileDialog::OpenFile("glTF Mesh (*.gltf)\0*.gltf\0");
-	if (filePath.empty())
+	static float padding = 24.f;
+	static float thumbnailSize = 86.f;
+	static float cellsize = thumbnailSize + padding;
+
+	float panelWidth = ImGui::GetContentRegionAvail().x;
+
+	int columnCount = (int)(panelWidth / (cellsize));
+	columnCount = std::max(1, columnCount);
+
+	ImGui::Columns(columnCount, 0, false);
+
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
+
+	int i = 0;
+	for (auto& dir : std::filesystem::directory_iterator(path))
 	{
-		NEXUS_LOG("Content Browser Import", "Failed - Invalid File: %s", filePath.c_str());
-		return;
+		ImGui::PushID(i++);
+
+		const auto& p = dir.path();
+		auto filenameString = p.filename().string();
+
+		if (dir.is_directory())
+		{
+			//Context::Get()->BindTextureId(m_FolderID);
+			//if (ImGui::ImageButton(m_FolderID, { thumbnailSize,thumbnailSize }))
+			if (ImGui::Button(p.string().c_str(), { thumbnailSize,thumbnailSize }))
+			{
+				m_SelectedDirectory = p;
+			}
+		}
+		else
+		{
+			//	Context::Get()->BindTextureId(m_FileID);
+				//ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
+			ImGui::Button(p.string().c_str(), { thumbnailSize,thumbnailSize });
+
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+			{
+				const wchar_t* itemPath = p.c_str();
+				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
+				ImGui::EndDragDropSource();
+			}
+		}
+		ImGui::TextWrapped(filenameString.c_str());
+
+		ImGui::PopID();
+		ImGui::NextColumn();
+	}
+	ImGui::PopStyleColor();
+	ImGui::Columns(1);
+
+	if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+		ImGui::OpenPopup("ContentBrowserMenu");
+
+	static bool enableGLTFImportModel = false;
+
+	if (ImGui::BeginPopup("ContentBrowserMenu"))
+	{
+		if (ImGui::MenuItem("Import glTF"))
+			enableGLTFImportModel = true;
+
+		ImGui::EndPopup();
 	}
 
-	MeshAsset::Import(filePath, m_CurrentDirectory, m_BinDirectory, filePath.parent_path().filename().stem().string());
+	if (enableGLTFImportModel)
+	{
+		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+		if (ImGui::Begin("GLTFImport"))
+		{
+			static AssetFilePath FilePath;
+			static char FileName[256];
+
+			ImGui::PushItemWidth(ImGui::GetContentRegionMax().x - 125.f);
+			ImGui::InputText("Name", FileName, sizeof(FileName));
+			ImGui::LabelText("Path", FilePath.generic_string().c_str());
+			ImGui::PopItemWidth();
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Browse",ImVec2(85.f,25.f)))
+			{
+				std::string path = FileDialog::OpenFile("glTF File(*.gltf)\0*.gltf\0");
+				if (!path.empty())
+				{
+					FilePath = path;
+				}
+			}
+
+			if (ImGui::Button("Import", ImVec2(85.f, 25.f)))
+			{
+				Importer::ImportGLTF(FilePath, m_CurrentDirectory, FileName);
+				
+				ImGui::CloseCurrentPopup();
+				FilePath.clear();
+				memset(FileName, 0, sizeof(FileName));
+				enableGLTFImportModel = false;
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button("Cancel", ImVec2(85.f, 25.f)))
+			{
+				ImGui::CloseCurrentPopup();
+				FilePath.clear();
+				memset(FileName, 0, sizeof(FileName));
+				enableGLTFImportModel = false;
+			}
+
+			ImGui::End();
+		}
+	}
+
 }

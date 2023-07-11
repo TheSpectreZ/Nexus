@@ -25,8 +25,7 @@ namespace Nexus
 		void Destroy();
 
 		void CreateEntityResource(UUID Id);
-		void CreateMaterialResource(const RenderableMaterial& material);
-
+		
 		Ref<Shader> m_Shader;
 		Ref<Scene> m_Scene;
 		Ref<Sampler> m_Sampler;

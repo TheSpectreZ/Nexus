@@ -1,5 +1,6 @@
 #pragma once
 #include "NxCore/UUID.h"	
+#include "NxGraphics/AssetSpecifications.h"
 #include "NxRenderer/RenderableMesh.h"
 #include "NxRenderer/GraphicsInterface.h"
 
@@ -23,12 +24,10 @@ namespace Nexus
 		void DeallocateUniformBuffer(UUID HashID);
 		
 		RESOURCE_METHOD_DECL(Texture,TextureSpecification,m_Textures)
-		RESOURCE_METHOD_DECL(RenderableMesh, MeshSpecification, m_RenderableMeshes)
-		RESOURCE_METHOD_DECL(MaterialTable, MaterialTableSpecification, m_MaterialTables)
+		RESOURCE_METHOD_DECL(RenderableMesh, std::vector<Meshing::Mesh>, m_RenderableMeshes)
 	private:
 		std::unordered_map<UUID, Ref<Buffer>> m_UniformBuffers;
 		std::unordered_map<UUID, Ref<Texture>> m_Textures;
 		std::unordered_map<UUID, Ref<RenderableMesh>> m_RenderableMeshes;
-		std::unordered_map<UUID, Ref<MaterialTable>> m_MaterialTables;
 	};
 }

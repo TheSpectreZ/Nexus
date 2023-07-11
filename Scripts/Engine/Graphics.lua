@@ -16,6 +16,7 @@ project "NxGraphics"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
+		IncludePath["tinygltf"],
 		IncludePath["NxCore"],
 		IncludePath["NxGraphics"],
 	}

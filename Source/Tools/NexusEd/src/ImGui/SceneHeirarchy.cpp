@@ -162,27 +162,29 @@ static void DrawComponent(const std::string& name, Nexus::Entity e, UIFuntion ui
 
 static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
 {
-	Ref<MeshAsset> asset = CreateRef<MeshAsset>();
-	if (!asset->Load(filepath))
-		return;
+	std::vector<Meshing::Mesh> meshes;
+	auto [res, id] = Importer::LoadMesh(filepath, meshes);
 
-	ResourcePool::Get()->AllocateRenderableMesh(asset->GetMeshSpecifications(), asset->GetID());
-	component.handle = asset->GetID();
+	if (res)
+	{
+		ResourcePool::Get()->AllocateRenderableMesh(meshes, id);
+		component.handle = id;
+	}
 }
 
 static void LoadMaterial(const AssetFilePath& filepath, Component::Mesh& component)
 {
-	Ref<MaterialTableAsset> asset = CreateRef<MaterialTableAsset>();
-	if (!asset->Load(filepath))
-		return;
-
-	auto matTable = ResourcePool::Get()->AllocateMaterialTable(asset->GetMaterialTableSpecifications(), asset->GetID());
-
-	auto mesh = ResourcePool::Get()->GetRenderableMesh(component.handle);
-	if(!mesh->SetMaterialTable(matTable))
-	{
-		NEXUS_LOG("Scene Heirarchy", "Failed to Assign Material Table %s", filepath.generic_string().c_str());
-	}
+	//Ref<MaterialTableAsset> asset = CreateRef<MaterialTableAsset>();
+	//if (!asset->Load(filepath))
+	//	return;
+	//
+	//auto matTable = ResourcePool::Get()->AllocateMaterialTable(asset->GetMaterialTableSpecifications(), asset->GetID());
+	//
+	//auto mesh = ResourcePool::Get()->GetRenderableMesh(component.handle);
+	//if(!mesh->SetMaterialTable(matTable))
+	//{
+	//	NEXUS_LOG("Scene Heirarchy", "Failed to Assign Material Table %s", filepath.generic_string().c_str());
+	//}
 }
 
 void NexusEd::SceneHeirarchy::SetContext(Ref<Scene> scene)
@@ -351,29 +353,27 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 				{
 					const wchar_t* path = (const wchar_t*)payload->Data;
-					AssetFilePath file = path;
-					if (file.extension().string() == ".NxMesh")
-						LoadMesh(file, component);	
+					LoadMesh(path, component);
 				}
 				ImGui::EndDragDropTarget();
 			}
 
 			if (ImGui::BeginPopup("Set Mesh"))
 			{
-				if (ImGui::MenuItem("Cube"))
-					LoadMesh("Resources/Meshes/Cube.NxMesh", component);
-
-				if (ImGui::MenuItem("Sphere"))
-					LoadMesh("Resources/Meshes/Sphere.NxMesh", component);
-
-				if (ImGui::MenuItem("IcoSphere"))
-					LoadMesh("Resources/Meshes/IcoSphere.NxMesh", component);
-
-				if (ImGui::MenuItem("Torus"))
-					LoadMesh("Resources/Meshes/Torus.NxMesh", component);
-
-				if (ImGui::MenuItem("Cylinder"))
-					LoadMesh("Resources/Meshes/Cylinder.NxMesh", component);
+				//if (ImGui::MenuItem("Cube"))
+				//	LoadMesh("Resources/Meshes/Cube.NxMesh", component);
+				//
+				//if (ImGui::MenuItem("Sphere"))
+				//	LoadMesh("Resources/Meshes/Sphere.NxMesh", component);
+				//
+				//if (ImGui::MenuItem("IcoSphere"))
+				//	LoadMesh("Resources/Meshes/IcoSphere.NxMesh", component);
+				//
+				//if (ImGui::MenuItem("Torus"))
+				//	LoadMesh("Resources/Meshes/Torus.NxMesh", component);
+				//
+				//if (ImGui::MenuItem("Cylinder"))
+				//	LoadMesh("Resources/Meshes/Cylinder.NxMesh", component);
 
 				ImGui::EndPopup();
 			}

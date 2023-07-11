@@ -1,6 +1,9 @@
 #pragma once
 #include <vector>
+#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
+
 #include "TypeImpls.h"
 #include "Texture.h"
 
@@ -20,8 +23,8 @@ namespace Nexus
 	
 	struct NEXUS_GRAPHICS_API SubmeshElement
 	{
-		uint32_t VertexOff, IndexOff;
-		uint32_t VertexSize, IndexSize;
+		uint32_t IndexOff;
+		uint32_t IndexSize;
 		uint32_t materialIndex;
 	};
 
@@ -79,5 +82,16 @@ namespace Nexus
 	{
 		MeshElement mesh;
 		std::vector<SubmeshElement> submeshes;
+	};
+
+	struct NEXUS_GRAPHICS_API AnimMeshVertex : public MeshVertex
+	{
+		glm::ivec4 joints;
+		glm::vec4 weights;
+	};
+
+	struct NEXUS_GRAPHICS_API AnimMeshSpecification
+	{
+
 	};
 }

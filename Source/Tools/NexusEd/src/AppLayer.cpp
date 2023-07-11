@@ -8,6 +8,8 @@
 #include "ImGui/Context.h"
 #include "imgui.h"
 
+#include "NxGraphics/Meshing.h"
+
 using namespace Nexus;
 
 void AppLayer::OnAttach()
@@ -79,6 +81,14 @@ void AppLayer::OnRender()
 		m_ContentBrowser.Render();
 		m_SceneHeirarchy.Render();
 		m_Viewport.Render();
+
+		ImGui::Begin("Setting");
+
+		static float speed = 5.f;
+		if (ImGui::DragFloat("Camera Speed", &speed, 5.f, 100.f))
+			m_EditorCameraController.SetSpeed(speed);
+
+		ImGui::End();
 
 		NexusEd::Context::Get()->EndFrame();
 	}

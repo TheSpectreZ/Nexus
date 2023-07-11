@@ -22,7 +22,7 @@ layout(set = 1,binding = 0) uniform TransformBuffer
 
 void main()
 {
-	OutPos = InNorm * InBiTang;
+	OutPos = InPos ;
     gl_Position = u_Camera.projection * u_Camera.view * u_Transform.model * vec4(InPos, 1.0);
 }
 
