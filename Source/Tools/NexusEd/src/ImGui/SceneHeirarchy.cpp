@@ -1,7 +1,7 @@
 #include "SceneHeirarchy.h"
 #include "NxApplication/FileDialog.h"
 #include "NxScene/Component.h"
-#include "NxAsset/Manager.h"
+#include "NxAsset/Asset.h"
 #include "NxRenderer/ResourcePool.h"
 
 #include "imgui.h"
@@ -162,21 +162,21 @@ static void DrawComponent(const std::string& name, Nexus::Entity e, UIFuntion ui
 
 static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
 {
-	auto res = Module::AssetManager::Get()->Load(AssetType::Mesh, filepath);
-	if (!res.success)
+	Ref<MeshAsset> asset = CreateRef<MeshAsset>();
+	if (!asset->Load(filepath))
 		return;
 
-	ResourcePool::Get()->AllocateRenderableMesh( DynamicPointerCast<MeshAsset>(res.asset)->GetMeshSpecifications(), res.id );
-	component.handle = res.id;
+	ResourcePool::Get()->AllocateRenderableMesh(asset->GetMeshSpecifications(), asset->GetID());
+	component.handle = asset->GetID();
 }
 
 static void LoadMaterial(const AssetFilePath& filepath, Component::Mesh& component)
 {
-	auto res = Module::AssetManager::Get()->Load(AssetType::MaterialTable, filepath);
-	if (!res.success)
+	Ref<MaterialTableAsset> asset = CreateRef<MaterialTableAsset>();
+	if (!asset->Load(filepath))
 		return;
 
-	auto matTable = ResourcePool::Get()->AllocateMaterialTable(DynamicPointerCast<MaterialTableAsset>(res.asset)->GetMaterialTableSpecifications(), res.id);
+	auto matTable = ResourcePool::Get()->AllocateMaterialTable(asset->GetMaterialTableSpecifications(), asset->GetID());
 
 	auto mesh = ResourcePool::Get()->GetRenderableMesh(component.handle);
 	if(!mesh->SetMaterialTable(matTable))
@@ -334,8 +334,7 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 				name = "No Mesh Assigned";
 			else
 			{
-				name = Module::AssetManager::Get()->
-					Retrive<Nexus::Asset>(AssetType::Mesh, component.handle)->GetName();
+				name = "Valid Mesh";
 			}
 
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 125.f);
@@ -353,7 +352,7 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 				{
 					const wchar_t* path = (const wchar_t*)payload->Data;
 					AssetFilePath file = path;
-					if (file.extension().string() == ".NxAsset")
+					if (file.extension().string() == ".NxMesh")
 						LoadMesh(file, component);	
 				}
 				ImGui::EndDragDropTarget();
@@ -362,38 +361,38 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			if (ImGui::BeginPopup("Set Mesh"))
 			{
 				if (ImGui::MenuItem("Cube"))
-					LoadMesh("Resources/Meshes/cube.NxAsset", component);
+					LoadMesh("Resources/Meshes/Cube.NxMesh", component);
 
 				if (ImGui::MenuItem("Sphere"))
-					LoadMesh("Resources/Meshes/sphere.NxAsset", component);
+					LoadMesh("Resources/Meshes/Sphere.NxMesh", component);
 
 				if (ImGui::MenuItem("IcoSphere"))
-					LoadMesh("Resources/Meshes/IcoSphere.NxAsset", component);
+					LoadMesh("Resources/Meshes/IcoSphere.NxMesh", component);
 
 				if (ImGui::MenuItem("Torus"))
-					LoadMesh("Resources/Meshes/torus.NxAsset", component);
+					LoadMesh("Resources/Meshes/Torus.NxMesh", component);
 
 				if (ImGui::MenuItem("Cylinder"))
-					LoadMesh("Resources/Meshes/cylinder.NxAsset", component);
+					LoadMesh("Resources/Meshes/Cylinder.NxMesh", component);
 
 				ImGui::EndPopup();
 			}
 
-			if (component.handle)
-			{
-				ImGui::Button("Assign Material Table", ImVec2(ImGui::GetContentRegionAvail().x, 50.f));
-				if (ImGui::BeginDragDropTarget())
-				{
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-					{
-						const wchar_t* path = (const wchar_t*)payload->Data;
-						AssetFilePath file = path;
-						if (file.extension().string() == ".NxAsset")
-							LoadMaterial(file, component);
-					}
-					ImGui::EndDragDropTarget();
-				}
-			}
+			//if (component.handle)
+			//{
+			//	ImGui::Button("Assign Material Table", ImVec2(ImGui::GetContentRegionAvail().x, 50.f));
+			//	if (ImGui::BeginDragDropTarget())
+			//	{
+			//		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			//		{
+			//			const wchar_t* path = (const wchar_t*)payload->Data;
+			//			AssetFilePath file = path;
+			//			if (file.extension().string() == ".NxAsset")
+			//				LoadMaterial(file, component);
+			//		}
+			//		ImGui::EndDragDropTarget();
+			//	}
+			//}
 		});
 
 	DrawComponent<Component::Script>("Script", en, [&](auto& component)

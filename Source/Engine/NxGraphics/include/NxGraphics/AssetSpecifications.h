@@ -16,7 +16,6 @@ namespace Nexus
 	{
 		glm::vec3 position, normal, tangent, bitangent;
 		glm::vec2 texCoord;
-		glm::vec4 color;
 	};
 	
 	struct NEXUS_GRAPHICS_API SubmeshElement
@@ -36,13 +35,6 @@ namespace Nexus
 	{
 		Extent extent;
 		void* pixeldata;
-
-		~TextureSpecification()
-		{
-			extent = { 0,0 };
-			if(pixeldata)
-				delete[] pixeldata;
-		}
 	};
 
 	struct NEXUS_GRAPHICS_API SamplerSpecification

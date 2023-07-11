@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <commdlg.h>
 #include <ShlObj_core.h>
+#include <codecvt>
 
 namespace Nexus::FileDialog
 {
@@ -79,11 +80,14 @@ std::string Nexus::FileDialog::SelectFolder()
 	if (lpItem != NULL)
 	{
 		SHGetPathFromIDList(lpItem, szDir);
+
+		int wideStrLength = static_cast<int>(wcslen(bInfo.pszDisplayName));
+		int bufferSize = WideCharToMultiByte(CP_UTF8, 0, bInfo.pszDisplayName, wideStrLength, nullptr, 0, nullptr, nullptr);
 		
-		std::wstring ws(bInfo.pszDisplayName);
-		std::string myVarS = std::string(ws.begin(), ws.end());
+		std::string result(bufferSize, '\0');
+		WideCharToMultiByte(CP_UTF8, 0, bInfo.pszDisplayName, wideStrLength, &result[0], bufferSize, nullptr, nullptr);
 		
-		return myVarS;
+		return result;
 	}
 
 	return std::string();

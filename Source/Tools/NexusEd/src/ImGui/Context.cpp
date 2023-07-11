@@ -385,6 +385,7 @@ ImTextureID NexusEd::Context::CreateTextureId(Nexus::Ref<Nexus::Texture> texture
 
 		return (ImTextureID)ImGui_ImplVulkan_AddTexture(samp, view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 	}
+	return (ImTextureID)nullptr;
 }
 
 void NexusEd::Context::DestroyTextureId(ImTextureID Id)

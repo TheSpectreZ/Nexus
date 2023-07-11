@@ -16,14 +16,15 @@ namespace NexusEd
 		void SetContext(const std::string& projectRootPath);
 		void Render();
 	private:
-		std::filesystem::path m_AssetDirectory, m_CurrentDirectory, m_SelectedDirectory;
+		std::filesystem::path m_AssetDirectory, m_BinDirectory, m_CurrentDirectory, m_SelectedDirectory;
 		
 		void DrawDirectoryNodes(std::filesystem::path path);
 		void DrawDirectoryFiles(std::filesystem::path path);
-		void DrawDirectoryFilesTopBar();
-
+		
 		ImTextureID m_FileID, m_FolderID;
 		Nexus::Ref<Nexus::Sampler> m_Sampler;
+
+		void ImportMesh();
 	};
 }
 

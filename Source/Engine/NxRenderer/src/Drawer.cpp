@@ -1,8 +1,8 @@
 #include "NxCore/Logger.h"
 #include "NxCore/Assertion.h"
+#include "NxCore/Input.h"
 #include "NxRenderer/Drawer.h"
 #include "NxRenderer/Renderer.h"
-#include "NxAsset/Manager.h"
 
 Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 {
@@ -101,7 +101,7 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 
 	// Pipeline
 	{
-		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/pbr.glsl");
+		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/simple.glsl");
 		m_shader = GraphicsInterface::CreateShader(shaderSpecs);
 
 		std::vector<VertexBindInfo> pipelineVertexBindInfo(1);
@@ -146,15 +146,18 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 		pipelineSpecs.renderpass = m_pass;
 		pipelineSpecs.subpass = 0;
 		pipelineSpecs.multisampled = true;
-		pipelineSpecs.rasterizerInfo.cullMode = CullMode::None;
+		pipelineSpecs.rasterizerInfo.cullMode = CullMode::Back;
 		pipelineSpecs.rasterizerInfo.frontFace = FrontFaceType::Clockwise;
 		pipelineSpecs.rasterizerInfo.lineWidth = 1.f;
 		pipelineSpecs.rasterizerInfo.topology = TopologyType::TriangleList;
-		pipelineSpecs.rasterizerInfo.polygonMode = PolygonMode::Fill;
 		pipelineSpecs.vertexBindInfo = pipelineVertexBindInfo;
 		pipelineSpecs.vertexAttribInfo = pipelineVertexAttribInfo;
 
-		m_pipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
+		pipelineSpecs.rasterizerInfo.polygonMode = PolygonMode::Fill;
+		m_TriPipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
+
+		pipelineSpecs.rasterizerInfo.polygonMode = PolygonMode::Line;
+		m_LinePipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
 	}
 
 	// Screen
@@ -173,8 +176,14 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 	}
 }
 
+// temporary
+static uint32_t mode = 1;
+
 void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 {
+	if (Module::Input::Get()->IsKeyPressed(Key::Backspace, false))
+		mode *= -1;
+
 	UUID Id = scene->GetId();
 	if (!m_RenderableScenes.contains(Id))
 		m_RenderableScenes[Id] = CreateRef<RenderableScene>(scene, m_shader);
@@ -184,7 +193,7 @@ void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 	auto commandQueue = Module::Renderer::Get()->GetCommandQueue();
 
 	commandQueue->BeginRenderPass(m_pass, m_fb);
-	commandQueue->BindPipeline(m_pipeline);
+	commandQueue->BindPipeline(mode == 1 ? m_TriPipeline : m_LinePipeline);
 	commandQueue->SetViewport(m_Viewport);
 	commandQueue->SetScissor(m_Scissor);
 

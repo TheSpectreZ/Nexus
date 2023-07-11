@@ -42,7 +42,7 @@ namespace Nexus
 		Ref<Framebuffer> m_fb;
 
 		Ref<Shader> m_shader;
-		Ref<Pipeline> m_pipeline;
+		Ref<Pipeline> m_TriPipeline, m_LinePipeline;
 
 		std::unordered_map<UUID, Ref<RenderableScene>> m_RenderableScenes;
 	};

@@ -1,6 +1,5 @@
 #include "Viewport.h"
 #include "Context.h"
-#include "NxAsset/Manager.h"
 #include "NxRenderer/Renderer.h"
 
 #include "NxVulkan/VkTexture.h"		

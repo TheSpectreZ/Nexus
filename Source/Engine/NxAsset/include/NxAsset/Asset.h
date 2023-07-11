@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <fstream>
+#include "NxCore/UUID.h"
 #include "NxGraphics/AssetSpecifications.h"
 
 #ifdef NEXUS_ASSET_SHARED_BUILD
@@ -27,20 +28,23 @@ namespace Nexus
 	{
 		friend class AssetManager;
 	public:
-		Asset(AssetType type) :m_Type(type), m_Name("Empty-Asset") {}
+		Asset(AssetType type) :m_Type(type), m_Name("Empty-Asset"),m_Id(UUID(true)) {}
 		virtual ~Asset() = default;
 
-		virtual bool Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath) { return false; };
 		virtual bool Load(const AssetFilePath& AssetPath) { return false; }
 
 		AssetType GetType() { return m_Type; }
 		std::string GetName() { return m_Name; }
+		UUID GetID() { return m_Id; }
 	protected:
+		UUID m_Id;
 		AssetType m_Type;
 		std::string m_Name;
 	};
 
-#define OVERRIDE_BASE_ASSET bool Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath) override; bool Load(const AssetFilePath& AssetPath) override;
+	// [To-Do] Think About using UUID as Bin File name for uniqueness
+
+#define OVERRIDE_BASE_ASSET static bool Import(const AssetFilePath& Sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath,const std::string& AssetName); bool Load(const AssetFilePath& AssetPath) override;
 
 	class NEXUS_ASSET_API MeshAsset : public Asset
 	{

@@ -4,7 +4,6 @@
 #include "NxRenderer/ResourcePool.h"
 #include "NxScene/Entity.h"
 #include "NxCore/Input.h"
-#include "NxAsset/Manager.h"
 
 #include "ImGui/Context.h"
 #include "imgui.h"
@@ -30,9 +29,6 @@ void AppLayer::OnAttach()
 		m_EditorCameraController.SetPerspectiveProjection(45.f, (float)extent.width, (float)extent.height, 0.1f, 1000.f);
 	}
 
-	//Module::AssetManager::Get()->Import(AssetType::Mesh, "Resources/Meshes/house/scene.gltf", "Projects/Assets/mesh/", "Projects/Binaries/Assets/mesh");
-	//Module::AssetManager::Get()->Import(AssetType::MaterialTable, "Resources/Meshes/house/scene.gltf", "Projects/Assets/Mat/", "Projects/Binaries/Assets/mat");
-
 	// Scene
 	{
 		m_EditorScene = CreateRef<Scene>();
@@ -57,12 +53,6 @@ void AppLayer::OnAttach()
 		m_SceneHeirarchy.SetContext(m_EditorScene);
 	}
 }
-
-/// 
-/// working on the Mesh Asset System - Implementing Submeshes and Materials
-/// Make the Serializer work
-/// Have the Asset Manager store the Renderable Meshes and Other ResourcePool stuff - The pool exists storing internal for stuff like uniforms and Samplers...
-/// 
 
 void AppLayer::OnUpdate(float dt)
 {

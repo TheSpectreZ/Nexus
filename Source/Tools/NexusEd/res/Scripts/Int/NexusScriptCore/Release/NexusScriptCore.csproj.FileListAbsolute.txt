@@ -1,0 +1,6 @@
+E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\Int\NexusScriptCore\Release\NexusScriptCore.csproj.AssemblyReference.cache
+E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\Int\NexusScriptCore\Release\NexusScriptCore.csproj.CoreCompileInputs.cache
+E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\Int\NexusScriptCore\Release\NexusScriptCore.dll
+E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\Int\NexusScriptCore\Release\NexusScriptCore.pdb
+E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\NexusScriptCore.dll
+E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\NexusScriptCore.pdb

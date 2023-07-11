@@ -13,7 +13,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "tiny_gltf.h"
 
-static std::string AssetExtension = ".NxAsset";
+static std::string MeshExtension = ".NxMesh";
+static std::string TextureExtension = ".NxTex";
+static std::string MaterialExtension = ".NxMat";
 static std::string BinExtension = ".NxBin";
 
 namespace Nexus::Utils
@@ -563,7 +565,7 @@ namespace Nexus::Importer
 	}
 }
 
-#define IMPORT_PARAMS const AssetFilePath& sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath
+#define IMPORT_PARAMS const AssetFilePath& sourcefilepath, const AssetFilePath& AssetPath, const AssetFilePath& BinPath,const std::string& AssetName
 #define LOAD_PARAMS const AssetFilePath& AssetPath
 
 bool Nexus::MeshAsset::Import(IMPORT_PARAMS)
@@ -574,8 +576,8 @@ bool Nexus::MeshAsset::Import(IMPORT_PARAMS)
 
 	UUID Id;
 	
-	auto assetFile = AssetPath.string() + "/" + sourcefilepath.filename().stem().string() + AssetExtension;
-	auto binFile = BinPath.string() + "/" + sourcefilepath.filename().stem().string() + BinExtension;
+	auto assetFile = AssetPath.generic_string() + "/" + AssetName + MeshExtension;
+	auto binFile = BinPath.generic_string() + "/" + AssetName + BinExtension;
 
 	// Meta
 	{
@@ -583,11 +585,11 @@ bool Nexus::MeshAsset::Import(IMPORT_PARAMS)
 		{
 			out << YAML::BeginMap;
 			out << YAML::Key << "Asset ID" << YAML::Value << Id.operator size_t	();
-			out << YAML::Key << "Asset Type" << YAML::Value << Utils::GetStringFromType(m_Type);
+			out << YAML::Key << "Asset Type" << YAML::Value << Utils::GetStringFromType(AssetType::Mesh);
 			{
 				out << YAML::Key << "Asset Ref";
 				out << YAML::BeginMap;
-				out << YAML::Key << "Asset Source" << YAML::Value << sourcefilepath.string();
+				out << YAML::Key << "Asset Source" << YAML::Value << sourcefilepath.generic_string();
 				out << YAML::Key << "Asset Bin" << YAML::Value << binFile;
 				out << YAML::EndMap;
 			}
@@ -646,6 +648,7 @@ bool Nexus::MeshAsset::Load(LOAD_PARAMS)
 	
 	inFile.close();
 	
+	m_Id = Id;
 	m_Name = AssetPath.filename().stem().generic_string();
 	return true;
 }
@@ -657,8 +660,8 @@ bool Nexus::TextureAsset::Import(IMPORT_PARAMS)
 		return false;
 
 	UUID Id;
-	auto assetFile = AssetPath.string() + "\\" + sourcefilepath.filename().stem().string() + AssetExtension;
-	auto binFile = BinPath.string() + "\\" + sourcefilepath.filename().stem().string() + BinExtension;
+	auto assetFile = AssetPath.generic_string() + "/" + AssetName + TextureExtension;
+	auto binFile = BinPath.generic_string() + "/" + AssetName + BinExtension;
 
 	// Meta
 	{
@@ -666,11 +669,11 @@ bool Nexus::TextureAsset::Import(IMPORT_PARAMS)
 		{
 			out << YAML::BeginMap;
 			out << YAML::Key << "Asset ID" << YAML::Value << Id.operator size_t();
-			out << YAML::Key << "Asset Type" << YAML::Value << Utils::GetStringFromType(m_Type);
+			out << YAML::Key << "Asset Type" << YAML::Value << Utils::GetStringFromType(AssetType::Texture);
 			{
 				out << YAML::Key << "Asset Ref";
 				out << YAML::BeginMap;
-				out << YAML::Key << "Asset Source" << YAML::Value << sourcefilepath.string();
+				out << YAML::Key << "Asset Source" << YAML::Value << sourcefilepath.generic_string();
 				out << YAML::Key << "Asset Bin" << YAML::Value << binFile;
 				out << YAML::EndMap;
 			}
@@ -729,6 +732,7 @@ bool Nexus::TextureAsset::Load(LOAD_PARAMS)
 
 	inFile.close();
 
+	m_Id = Id;
 	m_Name = AssetPath.filename().stem().generic_string();
 	return true;
 }
@@ -741,8 +745,8 @@ bool Nexus::MaterialTableAsset::Import(IMPORT_PARAMS)
 	
 	UUID Id;
 
-	auto assetFile = AssetPath.string() + "/" + sourcefilepath.filename().stem().string() + AssetExtension;
-	auto binFile = BinPath.string() + "/" + sourcefilepath.filename().stem().string() + BinExtension;
+	auto assetFile = AssetPath.generic_string() + "/" + AssetName + MaterialExtension;
+	auto binFile = BinPath.generic_string() + "/" + AssetName + BinExtension;
 
 	// Meta
 	{
@@ -750,11 +754,11 @@ bool Nexus::MaterialTableAsset::Import(IMPORT_PARAMS)
 		{
 			out << YAML::BeginMap;
 			out << YAML::Key << "Asset ID" << YAML::Value << Id.operator size_t	();
-			out << YAML::Key << "Asset Type" << YAML::Value << Utils::GetStringFromType(m_Type);
+			out << YAML::Key << "Asset Type" << YAML::Value << Utils::GetStringFromType(AssetType::MaterialTable);
 			{
 				out << YAML::Key << "Asset Ref";
 				out << YAML::BeginMap;
-				out << YAML::Key << "Asset Source" << YAML::Value << sourcefilepath.string();
+				out << YAML::Key << "Asset Source" << YAML::Value << sourcefilepath.generic_string();
 				out << YAML::Key << "Asset Bin" << YAML::Value << binFile;
 				out << YAML::EndMap;
 			}
@@ -813,6 +817,7 @@ bool Nexus::MaterialTableAsset::Load(LOAD_PARAMS)
 
 	inFile.close();
 
+	m_Id = Id;
 	m_Name = AssetPath.filename().stem().generic_string();
 	return true;
 }

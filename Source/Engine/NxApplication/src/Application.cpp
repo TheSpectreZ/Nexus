@@ -14,7 +14,6 @@
 #include "NxApplication/FileDialog.h"
 // Modules
 #include "NxCore/Input.h"
-#include "NxAsset/Manager.h"
 #include "NxRenderer/Renderer.h"
 
 namespace Nexus
@@ -95,8 +94,7 @@ void Nexus::Application::Init()
 	// Modules
 	{
 		Module::Input::Initialize(m_Window);
-		Module::AssetManager::Initialize();;
-
+		
 		Module::RendererCreateInfo rCreateInfo{};
 		rCreateInfo.apiType = m_AppSpecs.rApi;
 		rCreateInfo.window = &m_Window;
@@ -152,7 +150,6 @@ void Nexus::Application::Shut()
 	// Modules
 	{
 		Module::Renderer::Shutdown();
-		Module::AssetManager::Shutdown();
 		Module::Input::Shutdown();
 	}
 

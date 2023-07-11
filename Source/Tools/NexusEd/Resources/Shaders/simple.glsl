@@ -6,7 +6,6 @@ layout(location = 1) in vec3 InNorm;
 layout(location = 2) in vec3 InTang;
 layout(location = 3) in vec3 InBiTang;
 layout(location = 4) in vec2 InTexC;
-layout(location = 5) in vec4 InColor;
 
 layout(location = 0) out vec3 OutPos;
 
@@ -23,7 +22,7 @@ layout(set = 1,binding = 0) uniform TransformBuffer
 
 void main()
 {
-	OutPos = InPos;
+	OutPos = InNorm * InBiTang;
     gl_Position = u_Camera.projection * u_Camera.view * u_Transform.model * vec4(InPos, 1.0);
 }
 

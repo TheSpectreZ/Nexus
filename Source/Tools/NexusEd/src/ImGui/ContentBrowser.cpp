@@ -1,7 +1,8 @@
 #include "ContentBrowser.h"
 #include "Context.h"
-#include "NxApplication/Application.h"
-#include "NxAsset/Manager.h"
+#include "NxCore/Logger.h"
+#include "NxApplication/FileDialog.h"
+#include "NxAsset/Asset.h"
 
 using namespace Nexus;
 
@@ -17,13 +18,21 @@ void NexusEd::ContentBrowser::Initialize()
 	m_Sampler.reset();
 	m_Sampler = Nexus::GraphicsInterface::CreateSampler(samplerSpecs);
 	
-	Module::AssetLoadResult file = Module::AssetManager::Get()->Load(AssetType::Texture, "Projects/Assets/File.NxAsset");
-	Ref<Texture> filetexture = ResourcePool::Get()->AllocateTexture(DynamicPointerCast<TextureAsset>(file.asset)->GetTextureSpecifications(), file.id);
-	m_FileID = Context::Get()->CreateTextureId(filetexture, m_Sampler);
+	{
+		Ref<TextureAsset> Asset = CreateRef<TextureAsset>();
+		Asset->Load("Resources/Icons/FileIcon.NxTex");
+
+		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(Asset->GetTextureSpecifications(), Asset->GetID());
+		m_FileID = Context::Get()->CreateTextureId(Texture, m_Sampler);
+	}
 	
-	Module::AssetLoadResult folder = Module::AssetManager::Get()->Load(AssetType::Texture, "Projects/Assets/Folder.NxAsset");
-	Ref<Texture> foldertexture = ResourcePool::Get()->AllocateTexture(DynamicPointerCast<TextureAsset>(folder.asset)->GetTextureSpecifications(), folder.id);
-	m_FolderID = Context::Get()->CreateTextureId(foldertexture, m_Sampler);
+	{
+		Ref<TextureAsset> Asset = CreateRef<TextureAsset>();
+		Asset->Load("Resources/Icons/FolderIcon.NxTex");
+
+		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(Asset->GetTextureSpecifications(), Asset->GetID());
+		m_FolderID = Context::Get()->CreateTextureId(Texture, m_Sampler);
+	}
 }
 
 void NexusEd::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
@@ -53,6 +62,19 @@ void NexusEd::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
 
 void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 {
+	if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+	{
+		ImGui::OpenPopup("ContentBrowserMenu");
+	}
+
+	if (ImGui::BeginPopup("ContentBrowserMenu"))
+	{
+		if (ImGui::MenuItem("Import Mesh"))
+			ImportMesh();
+
+		ImGui::EndPopup();
+	}
+
 	static float padding = 24.f;
 	static float thumbnailSize = 86.f;
 	static float cellsize = thumbnailSize + padding;
@@ -105,7 +127,8 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 void NexusEd::ContentBrowser::SetContext(const std::string& projectRootPath)
 {
-	m_AssetDirectory = std::string(projectRootPath + "\\Assets"); 
+	m_AssetDirectory = std::filesystem::current_path() / "Resources";
+	m_BinDirectory = m_AssetDirectory / "Bin";
 	//[Note] Breaks when AssetDirectory is Root Directory for any Disk
 
 	m_CurrentDirectory = m_AssetDirectory;
@@ -127,6 +150,8 @@ void NexusEd::ContentBrowser::Render()
 		ImGui::TableSetColumnIndex(0);
 
 		ImGui::BeginChild("Folders");
+
+		ImGui::SetNextItemOpen(true);
 		if (ImGui::TreeNode(m_AssetDirectory.filename().string().c_str()))
 		{
 			m_CurrentDirectory = m_AssetDirectory;
@@ -144,8 +169,17 @@ void NexusEd::ContentBrowser::Render()
 		ImGui::EndTable();
 	}
 
-	auto w = Nexus::Application::Get()->GetWindow();
-	auto m = ImGui::GetContentRegionMax();
-	
 	ImGui::End();
+}
+
+void NexusEd::ContentBrowser::ImportMesh()
+{
+	AssetFilePath filePath = FileDialog::OpenFile("glTF Mesh (*.gltf)\0*.gltf\0");
+	if (filePath.empty())
+	{
+		NEXUS_LOG("Content Browser Import", "Failed - Invalid File: %s", filePath.c_str());
+		return;
+	}
+
+	MeshAsset::Import(filePath, m_CurrentDirectory, m_BinDirectory, filePath.parent_path().filename().stem().string());
 }
