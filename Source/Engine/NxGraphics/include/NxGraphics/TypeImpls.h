@@ -49,12 +49,12 @@ namespace Nexus
 
 	enum class NEXUS_GRAPHICS_API SamplerFilter
 	{
-		Nearest, Linear
+		Nearest = 1, Linear = 2
 	};
 
 	enum class NEXUS_GRAPHICS_API SamplerWrapMode
 	{
-		Repeat, Mirrored_Repeat, Clamped_To_Edge
+		Repeat = 1, Mirrored_Repeat = 2, Clamped_To_Edge = 3
 	};
 
 	std::string NEXUS_GRAPHICS_API GetShaderStageTypeStringName(ShaderStage stage);

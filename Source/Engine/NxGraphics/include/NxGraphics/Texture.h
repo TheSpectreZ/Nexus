@@ -1,13 +1,23 @@
 #pragma once
-#include "AssetSpecifications.h"
+#include "Meshing.h"
 
 namespace Nexus
 {
+	struct TextureSpecification
+	{
+		Meshing::Image image;
+	};
+
 	class Texture
 	{
 	public:
 		Texture() = default;
 		virtual ~Texture() = default;
+	};
+
+	struct SamplerSpecification
+	{
+		Meshing::Sampler sampler;
 	};
 
 	class Sampler

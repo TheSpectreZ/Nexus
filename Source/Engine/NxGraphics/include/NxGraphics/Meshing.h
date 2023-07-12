@@ -32,6 +32,9 @@ namespace Nexus
 		struct NEXUS_GRAPHICS_API Image
 		{
 			std::string fileName;
+
+			std::vector<uint8_t> pixels;
+			uint32_t width, height,channels;
 		};
 		
 		struct NEXUS_GRAPHICS_API Sampler
@@ -163,5 +166,4 @@ namespace Nexus
 		
 		bool NEXUS_GRAPHICS_API LoadSceneFromFile(const std::filesystem::path& filePath, Meshing::Scene* data);
 	}
-
 }

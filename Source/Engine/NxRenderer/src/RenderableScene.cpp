@@ -112,13 +112,13 @@ void Nexus::RenderableScene::Initialize()
 	// Sampler
 	{
 		SamplerSpecification specs{};
-		specs.Far = SamplerFilter::Linear;
-		specs.Near = SamplerFilter::Linear;
-		specs.U = SamplerWrapMode::Repeat;
-		specs.V = SamplerWrapMode::Repeat;
-		specs.W = SamplerWrapMode::Repeat;
+		specs.sampler.Far = SamplerFilter::Linear;
+		specs.sampler.Near = SamplerFilter::Linear;
+		specs.sampler.U = SamplerWrapMode::Repeat;
+		specs.sampler.V = SamplerWrapMode::Repeat;
+		specs.sampler.W = SamplerWrapMode::Repeat;
 
-		m_Sampler = GraphicsInterface::CreateSampler(specs);
+		m_Sampler = ResourcePool::Get()->GetSampler(specs);
 	}
 }
 

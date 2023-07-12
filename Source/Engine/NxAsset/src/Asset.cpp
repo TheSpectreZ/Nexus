@@ -7,6 +7,8 @@
 
 #include "NxAsset/Asset.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 #include "nlohmann/json.hpp"
 
 static std::string MeshExtension = ".NxMesh";
@@ -60,9 +62,37 @@ namespace Nexus::Utils
 		return true;
 	}
 
-	void ImportImage(const AssetFilePath& dstFolder, Meshing::Image* image)
+	bool ImportImage(const AssetFilePath& dstFolder, const Meshing::Image* image)
 	{
+		nlohmann::json Json;
+		Json["UUID"] = (uint64_t)UUID();
+		Json["AssetType"] = "Image";
 
+		nlohmann::json Image;
+		Image["ImageWidth"] = image->width;
+		Image["ImageHeight"] = image->height;
+		Image["ImageChannels"] = image->channels;
+
+		Json["Meta"] = Image;
+
+		std::string JsonDump = Json.dump(4);
+
+		AssetFilePath file = AssetFilePath(dstFolder.generic_string() + "/" + image->fileName + TextureExtension);
+
+		std::ofstream stream(file, std::ios::binary);
+		if (!stream.is_open())
+			return false;
+
+		uint32_t size = (uint32_t)JsonDump.size();
+		stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+		stream.write(JsonDump.c_str(), JsonDump.length());
+
+		size = image->width * image->height * image->channels;
+		stream.write(reinterpret_cast<const char*>(image->pixels.data()), size * sizeof(uint8_t));
+
+		stream.close();
+
+		return true;
 	}
 }
 
@@ -80,6 +110,31 @@ bool Nexus::Importer::ImportGLTF(const AssetFilePath& path, const AssetFilePath&
 		Utils::ImportImage(dstFolder, &Image);
 
 	return true;
+}
+
+bool NEXUS_ASSET_API Nexus::Importer::ImportImage(const AssetFilePath& path, const AssetFilePath& dstFolder, const std::string& Name)
+{
+	if (path.extension().string() != ".png" && path.extension().string() != ".jpg")
+		return false;
+	
+	Meshing::Image i;
+
+	int w, h, c;
+	auto pixels = stbi_load(path.generic_string().c_str(), &w, &h, &c, 4);
+
+	i.fileName = Name;
+	i.width = w;
+	i.height = h;
+	i.channels = 4;
+
+	i.pixels.resize((size_t)w * h * 4);
+	memcpy(i.pixels.data(), pixels, i.pixels.size() * sizeof(uint8_t));
+	stbi_image_free(pixels);
+
+	if (!std::filesystem::exists(dstFolder))
+		std::filesystem::create_directories(dstFolder);
+
+	return Utils::ImportImage(dstFolder, &i);
 }
 
 std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path, std::vector<Meshing::Mesh>& meshes)
@@ -140,6 +195,53 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path
 		}
 	}
 	stream.close();
+
+	return { true,Id };
+}
+
+std::pair<bool, Nexus::UUID>NEXUS_ASSET_API Nexus::Importer::LoadImage(const AssetFilePath& path,Meshing::Image& image)
+{
+	UUID Id(true);
+
+	if (path.extension().string() != TextureExtension)
+		return { false,Id };
+
+	std::ifstream stream(path, std::ios::binary);
+
+	if (!stream.is_open())
+		return { false,Id };
+
+	{
+		uint32_t jsonlen = 0;
+		stream.read(reinterpret_cast<char*>(&jsonlen), sizeof(uint32_t));
+
+		std::string JsonDump;
+		JsonDump.resize(jsonlen);
+		stream.read(&JsonDump[0], jsonlen);
+
+		nlohmann::json Json = nlohmann::json::parse(JsonDump);
+
+		if (!Json.contains("AssetType"))
+			return { false,Id };
+
+		auto type = Json["AssetType"].get<std::string>();
+		if (type != "Image")
+			return { false,Id };
+
+		auto uid = Json["UUID"].get<uint64_t>();
+		Id = UUID(uid);
+
+		auto& meta = Json["Meta"];
+
+		image.width = meta["ImageWidth"].get<uint32_t>();
+		image.height = meta["ImageHeight"].get<uint32_t>();
+		image.channels = meta["ImageChannels"].get<uint32_t>();
+
+		uint32_t size = image.width * image.height * image.channels;
+
+		image.pixels.resize(size);
+		stream.read(reinterpret_cast<char*>(image.pixels.data()), size * sizeof(uint8_t));
+	}
 
 	return { true,Id };
 }

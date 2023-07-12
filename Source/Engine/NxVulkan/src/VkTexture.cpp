@@ -4,7 +4,7 @@
 #include "NxVulkan/VkCommandQueue.h"
 
 Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
-	:m_Extent(info.extent)
+	:m_Extent(Extent(info.image.width, info.image.height))
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
 	Ref<VulkanPhysicalDevice> gpu = VulkanContext::Get()->GetPhysicalDeviceRef();
@@ -15,7 +15,7 @@ Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 		VkImageCreateInfo Info{};
 		Info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		Info.pNext = nullptr;
-		Info.extent = { info.extent.width,info.extent.height,1 };
+		Info.extent = { info.image.width,info.image.height,1 };
 		Info.arrayLayers = 1;
 		Info.flags = 0;
 		Info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -61,7 +61,7 @@ Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 
 	// Staging 
 	{
-		VkDeviceSize size = (VkDeviceSize)info.extent.width * info.extent.height * 4;
+		VkDeviceSize size = (VkDeviceSize)info.image.width * info.image.height * info.image.channels;
 
 		VkBufferCreateInfo Info{};
 		Info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -79,7 +79,7 @@ Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 
 		if (allocInfo.pMappedData)
 		{
-			memcpy(allocInfo.pMappedData, info.pixeldata, size);
+			memcpy(allocInfo.pMappedData, info.image.pixels.data(), size);
 		}
 	}
 
@@ -133,11 +133,11 @@ Nexus::VulkanSampler::VulkanSampler(const SamplerSpecification& specs)
 {
 	VkSamplerCreateInfo info{};
 	info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	info.magFilter = GetVulkanSamplerFilter(specs.Near);
-	info.minFilter = GetVulkanSamplerFilter(specs.Far);
-	info.addressModeU = GetVulkanSamplerWrapMode(specs.U);
-	info.addressModeV = GetVulkanSamplerWrapMode(specs.V);
-	info.addressModeW = GetVulkanSamplerWrapMode(specs.W);
+	info.magFilter = GetVulkanSamplerFilter(specs.sampler.Near);
+	info.minFilter = GetVulkanSamplerFilter(specs.sampler.Far);
+	info.addressModeU = GetVulkanSamplerWrapMode(specs.sampler.U);
+	info.addressModeV = GetVulkanSamplerWrapMode(specs.sampler.V);
+	info.addressModeW = GetVulkanSamplerWrapMode(specs.sampler.W);
 	info.anisotropyEnable = VK_TRUE;
 
 	VkPhysicalDeviceProperties Props;

@@ -342,7 +342,21 @@ bool Nexus::Meshing::LoadSceneFromFile(const std::filesystem::path& Filepath, Sc
 	for (auto& image : scene.images)
 	{
 		auto& i = data->images.emplace_back();
-		i.fileName = Filepath.parent_path().generic_string() + "/" + image.uri;
+		
+		std::filesystem::path path = Filepath.parent_path().generic_string() + "/" + image.uri;
+
+		int w, h, c;
+		auto pixels = stbi_load(path.generic_string().c_str(), &w, &h, &c, 4);
+		
+		i.height = h;
+		i.width = w;
+		i.channels = 4;
+		i.fileName = path.filename().stem().string();
+
+		i.pixels.resize((size_t)w* h* c);
+		memcpy(i.pixels.data(), pixels, i.pixels.size() * sizeof(uint8_t));
+
+		stbi_image_free(pixels);
 	}
 
 	// Samplers
@@ -371,8 +385,8 @@ bool Nexus::Meshing::LoadSceneFromFile(const std::filesystem::path& Filepath, Sc
 		m.Name = material.name;
 
 		m.metalicRoughness.albedoColor = glm::make_vec4(material.pbrMetallicRoughness.baseColorFactor.data());
-		m.metalicRoughness.metallic = material.pbrMetallicRoughness.metallicFactor;
-		m.metalicRoughness.roughness = material.pbrMetallicRoughness.roughnessFactor;
+		m.metalicRoughness.metallic = (float)material.pbrMetallicRoughness.metallicFactor;
+		m.metalicRoughness.roughness = (float)material.pbrMetallicRoughness.roughnessFactor;
 		
 		m.metalicRoughness.albedoTexture = material.pbrMetallicRoughness.baseColorTexture.index;
 		m.textureCoords.albedo = material.pbrMetallicRoughness.baseColorTexture.texCoord;

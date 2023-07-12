@@ -18,7 +18,9 @@ namespace Nexus
 	namespace Importer
 	{
 		bool NEXUS_ASSET_API ImportGLTF(const AssetFilePath& path, const AssetFilePath& destFolder, const std::string& Name);
+		bool NEXUS_ASSET_API ImportImage(const AssetFilePath& path, const AssetFilePath& destFolder, const std::string& Name);
 
 		std::pair<bool, UUID> NEXUS_ASSET_API LoadMesh(const AssetFilePath& path, std::vector<Meshing::Mesh>& meshes);
+		std::pair<bool, UUID> NEXUS_ASSET_API LoadImage(const AssetFilePath& path, Meshing::Image& image);
 	}
 }

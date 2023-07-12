@@ -11,14 +11,13 @@ using namespace Nexus;
 void NexusEd::ContentBrowser::Initialize()
 {
 	Nexus::SamplerSpecification samplerSpecs{};
-	samplerSpecs.Far = Nexus::SamplerFilter::Linear;
-	samplerSpecs.Near = Nexus::SamplerFilter::Linear;
-	samplerSpecs.U = Nexus::SamplerWrapMode::Repeat;
-	samplerSpecs.V = Nexus::SamplerWrapMode::Repeat;
-	samplerSpecs.W = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.sampler.Far = Nexus::SamplerFilter::Linear;
+	samplerSpecs.sampler.Near = Nexus::SamplerFilter::Linear;
+	samplerSpecs.sampler.U = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.sampler.V = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.sampler.W = Nexus::SamplerWrapMode::Repeat;
 
-	m_Sampler.reset();
-	m_Sampler = Nexus::GraphicsInterface::CreateSampler(samplerSpecs);
+	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
 	
 	{
 		//MeshAsset::Import("res/Meshes/cube.gltf", "Resources/Meshes", "Resources/Bin", "Cube");
@@ -31,19 +30,27 @@ void NexusEd::ContentBrowser::Initialize()
 	}
 
 	{
-		//Ref<TextureAsset> Asset = CreateRef<TextureAsset>();
-		//Asset->Load("Resources/Icons/FileIcon.NxTex");
-		//
-		//Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(Asset->GetTextureSpecifications(), Asset->GetID());
-		//m_FileID = Context::Get()->CreateTextureId(Texture, m_Sampler);
+		Importer::ImportImage("res/Icons/File.png", "Resources/Icons", "File");
+
+		Meshing::Image fileImage;
+		auto[res,id] = Importer::LoadImage("Resources/Icons/File.NxTex", fileImage);
+
+		TextureSpecification specs{ fileImage };
+
+		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(specs, id);
+		m_FileID = Context::Get()->CreateTextureId(Texture, m_Sampler);
 	}
 	
 	{
-		//Ref<TextureAsset> Asset = CreateRef<TextureAsset>();
-		//Asset->Load("Resources/Icons/FolderIcon.NxTex");
-		//
-		//Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(Asset->GetTextureSpecifications(), Asset->GetID());
-		//m_FolderID = Context::Get()->CreateTextureId(Texture, m_Sampler);
+		Importer::ImportImage("res/Icons/Folder.png", "Resources/Icons", "Folder");
+		
+		Meshing::Image folderImage;
+		auto [res, id] = Importer::LoadImage("Resources/Icons/Folder.NxTex", folderImage);
+		
+		TextureSpecification specs{ folderImage };
+
+		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(specs, id);
+		m_FolderID = Context::Get()->CreateTextureId(Texture, m_Sampler);
 	}
 }
 
@@ -146,19 +153,17 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 		if (dir.is_directory())
 		{
-			//Context::Get()->BindTextureId(m_FolderID);
-			//if (ImGui::ImageButton(m_FolderID, { thumbnailSize,thumbnailSize }))
-			if (ImGui::Button(p.string().c_str(), { thumbnailSize,thumbnailSize }))
+			Context::Get()->BindTextureId(m_FolderID);
+			if (ImGui::ImageButton(m_FolderID, { thumbnailSize,thumbnailSize }))
 			{
 				m_SelectedDirectory = p;
 			}
 		}
 		else
 		{
-			//	Context::Get()->BindTextureId(m_FileID);
-				//ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
-			ImGui::Button(p.string().c_str(), { thumbnailSize,thumbnailSize });
-
+			Context::Get()->BindTextureId(m_FileID);
+			ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
+			
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 			{
 				const wchar_t* itemPath = p.c_str();
