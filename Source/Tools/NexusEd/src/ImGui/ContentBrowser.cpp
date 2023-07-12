@@ -18,22 +18,8 @@ void NexusEd::ContentBrowser::Initialize()
 	samplerSpecs.sampler.W = Nexus::SamplerWrapMode::Repeat;
 
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
-	
-	{
-		//MeshAsset::Import("res/Meshes/cube.gltf", "Resources/Meshes", "Resources/Bin", "Cube");
-		//MeshAsset::Import("res/Meshes/sphere.gltf", "Resources/Meshes", "Resources/Bin", "Sphere");
-		//MeshAsset::Import("res/Meshes/torus.gltf", "Resources/Meshes", "Resources/Bin", "Torus");
-		//MeshAsset::Import("res/Meshes/IcoSphere.gltf", "Resources/Meshes", "Resources/Bin", "IcoSphere");
-		//MeshAsset::Import("res/Meshes/cylinder.gltf", "Resources/Meshes", "Resources/Bin", "Cylinder");
-
-		//Importer::ImportGLTF("res/Meshes/cube.gltf", "Resources/Meshes","Cube");
-
-		//Importer::ImportGLTF("res/Meshes/Trooper/scene.gltf", "Resources/Assets/Meshes", "Trooper");
-	}
 
 	{
-		Importer::ImportImage("res/Icons/File.png", "Resources/Icons", "File");
-
 		Meshing::Image fileImage;
 		auto[res,id] = Importer::LoadImage("Resources/Icons/File.NxTex", fileImage);
 
@@ -43,9 +29,7 @@ void NexusEd::ContentBrowser::Initialize()
 		m_FileID = Context::Get()->CreateTextureId(Texture, m_Sampler);
 	}
 	
-	{
-		Importer::ImportImage("res/Icons/Folder.png", "Resources/Icons", "Folder");
-		
+	{		
 		Meshing::Image folderImage;
 		auto [res, id] = Importer::LoadImage("Resources/Icons/Folder.NxTex", folderImage);
 		
@@ -213,6 +197,8 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 		ImGui::PopStyleVar(3);
 
 		static bool showDeleteModal = false;
+		static bool dontShowModal = false;
+
 		if (ImGui::BeginPopup("FileOptions"))
 		{
 			if (ImGui::MenuItem("Rename"))
@@ -226,7 +212,11 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 		if (showDeleteModal)
 		{
-			ImGui::OpenPopup("Delete ?");
+			if (!dontShowModal)
+				ImGui::OpenPopup("Delete ?");
+			else
+				std::filesystem::remove_all(p);
+
 			showDeleteModal = false;
 
 			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
@@ -248,6 +238,8 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 			if (ImGui::Button("Cancel", ImVec2(85.f, 25.f)))
 				ImGui::CloseCurrentPopup();
 			
+			ImGui::Checkbox("Don't Show This Again", &dontShowModal);
+
 			ImGui::EndPopup();
 		}
 		
@@ -302,21 +294,19 @@ void NexusEd::ContentBrowser::DrawImportOptions()
 		if (ImGui::Button("Import", ImVec2(85.f, 25.f)))
 		{
 			if (!FilePath.empty())
+			{
 				Importer::ImportGLTF(FilePath, m_CurrentDirectory, FileName);
 
-			ImGui::CloseCurrentPopup();
+				FilePath.clear();
+				memset(FileName, 0, sizeof(FileName));
 
-			FilePath.clear();
-			memset(FileName, 0, sizeof(FileName));
-
-			m_enableImportOptions = false;
+				m_enableImportOptions = false;
+			}
 		}
 
 		ImGui::SameLine();
 		if (ImGui::Button("Cancel", ImVec2(85.f, 25.f)))
 		{
-			ImGui::CloseCurrentPopup();
-			
 			FilePath.clear();
 			memset(FileName, 0, sizeof(FileName));
 

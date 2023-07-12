@@ -91,8 +91,8 @@ namespace Nexus
 				float roughness{ 0.5f };
 				float metallic{ 0.5f };
 
-				uint32_t albedoTexture = UINT32_MAX;
-				uint32_t metallicRoughnessTexture = UINT32_MAX;
+				uint64_t albedoTexture = UINT64_MAX;
+				uint64_t metallicRoughnessTexture = UINT64_MAX;
 			} metalicRoughness;
 
 			struct pbrSpecularGlossiness
@@ -102,14 +102,14 @@ namespace Nexus
 				glm::vec3 specular;
 				float glossiness;
 
-				uint32_t albedoTexture = UINT32_MAX;
-				uint32_t specularGlossinessTexture = UINT32_MAX;
+				uint64_t albedoTexture = UINT64_MAX;
+				uint64_t specularGlossinessTexture = UINT64_MAX;
 			} specularGlossiness;
 
-			uint32_t normalTexture = UINT32_MAX;
-			uint32_t occulsionTexture = UINT32_MAX;
+			uint64_t normalTexture = UINT64_MAX;
+			uint64_t occulsionTexture = UINT64_MAX;
 
-			uint32_t emissiveTexture = UINT32_MAX;
+			uint64_t emissiveTexture = UINT64_MAX;
 			glm::vec3 emissiveColor{0.f};
 		};
 

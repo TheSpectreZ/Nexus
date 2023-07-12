@@ -140,7 +140,7 @@ namespace Nexus::Utils
 		auto TexFolder = dstFolder.parent_path() / "Textures";
 		
 		AssetFilePath path = TexFolder;
-		if (material->specularGlossiness.albedoTexture != UINT32_MAX || material->metalicRoughness.albedoTexture != UINT32_MAX)
+		if (material->specularGlossiness.albedoTexture != UINT64_MAX || material->metalicRoughness.albedoTexture != UINT64_MAX)
 		{
 			if (material->specularGlossiness.support)
 				path /= AssetFilePath(textures[material->specularGlossiness.albedoTexture].image.fileName + TextureExtension);
@@ -149,39 +149,39 @@ namespace Nexus::Utils
 			Material["AlbedoMap"] = path.generic_string();
 		}
 
-		if (material->normalTexture != UINT32_MAX)
+		if (material->normalTexture != UINT64_MAX)
 		{
 			path = TexFolder / textures[material->normalTexture].image.fileName;
 			path += TextureExtension;
 			Material["NormalMap"] = path.generic_string();
 		}
 
-		if (material->occulsionTexture != UINT32_MAX)
+		if (material->occulsionTexture != UINT64_MAX)
 		{
 			path = TexFolder / textures[material->occulsionTexture].image.fileName;
 			path += TextureExtension;
 			Material["OcculsionMap"] = path.generic_string();
 		}
 
-		if(material->emissiveTexture != UINT32_MAX)
+		if(material->emissiveTexture != UINT64_MAX)
 		{
 			path = TexFolder / textures[material->emissiveTexture].image.fileName;
 			path += TextureExtension; 
 			Material["EmissiveMap"] = path.generic_string();
 		}
 
-		if(material->metalicRoughness.metallicRoughnessTexture != UINT32_MAX)
+		if(material->metalicRoughness.metallicRoughnessTexture != UINT64_MAX)
 		{
 			path = TexFolder / textures[material->metalicRoughness.metallicRoughnessTexture].image.fileName;
 			path += TextureExtension;
-			Material["MetallicRoughness"] = path.generic_string();
+			Material["MetallicRoughnessMap"] = path.generic_string();
 		}
 
-		if(material->specularGlossiness.specularGlossinessTexture != UINT32_MAX)
+		if(material->specularGlossiness.specularGlossinessTexture != UINT64_MAX)
 		{
 			path = TexFolder / textures[material->specularGlossiness.specularGlossinessTexture].image.fileName;
 			path += TextureExtension;
-			Material["MetallicRoughness"] = path.generic_string();
+			Material["SpecularGlossinessMap"] = path.generic_string();
 		}
 
 		glm::vec4 albedoColor;
@@ -212,7 +212,7 @@ namespace Nexus::Utils
 
 		std::string JsonDump = Json.dump(4);
 
-		AssetFilePath file = AssetFilePath(dstFolder.generic_string() + "/" + material->Name + TextureExtension);
+		AssetFilePath file = AssetFilePath(dstFolder.generic_string() + "/" + material->Name + MaterialExtension);
 
 		std::ofstream stream(file);
 		stream << JsonDump;
@@ -248,7 +248,7 @@ bool Nexus::Importer::ImportGLTF(const AssetFilePath& path, const AssetFilePath&
 	return true;
 }
 
-bool NEXUS_ASSET_API Nexus::Importer::ImportImage(const AssetFilePath& path, const AssetFilePath& dstFolder, const std::string& Name)
+bool Nexus::Importer::ImportImage(const AssetFilePath& path, const AssetFilePath& dstFolder, const std::string& Name)
 {
 	if (path.extension().string() != ".png" && path.extension().string() != ".jpg")
 		return false;
@@ -335,7 +335,7 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path
 	return { true,Id };
 }
 
-std::pair<bool, Nexus::UUID>NEXUS_ASSET_API Nexus::Importer::LoadImage(const AssetFilePath& path,Meshing::Image& image)
+std::pair<bool, Nexus::UUID> Nexus::Importer::LoadImage(const AssetFilePath& path,Meshing::Image& image)
 {
 	UUID Id(true);
 
@@ -380,4 +380,158 @@ std::pair<bool, Nexus::UUID>NEXUS_ASSET_API Nexus::Importer::LoadImage(const Ass
 	}
 
 	return { true,Id };
+}
+
+std::pair<bool, Nexus::UUID> Nexus::Importer::LoadTexture(const AssetFilePath& path, Meshing::Texture& texture)
+{
+	UUID Id(true);
+
+	if (path.extension().string() != TextureExtension)
+		return { false,Id };
+
+	std::ifstream stream(path, std::ios::binary);
+
+	if (!stream.is_open())
+		return { false,Id };
+
+	{
+		uint32_t jsonlen = 0;
+		stream.read(reinterpret_cast<char*>(&jsonlen), sizeof(uint32_t));
+
+		std::string JsonDump;
+		JsonDump.resize(jsonlen);
+		stream.read(&JsonDump[0], jsonlen);
+
+		nlohmann::json Json = nlohmann::json::parse(JsonDump);
+
+		if (!Json.contains("AssetType"))
+			return { false,Id };
+
+		auto type = Json["AssetType"].get<std::string>();
+		if (type != "Texture")
+			return { false,Id };
+
+		auto uid = Json["UUID"].get<uint64_t>();
+		Id = UUID(uid);
+
+		auto& meta = Json["Meta"];
+
+		texture.image.width = meta["Width"].get<uint32_t>();
+		texture.image.height = meta["Height"].get<uint32_t>();
+		texture.image.channels = meta["Channels"].get<uint32_t>();
+		texture.samplerHash = meta["Sampler"].get<uint32_t>();
+
+		uint32_t size = texture.image.width * texture.image.height * texture.image.channels;
+
+		texture.image.pixels.resize(size);
+		stream.read(reinterpret_cast<char*>(texture.image.pixels.data()), size * sizeof(uint8_t));
+	}
+
+	return { true,Id };
+}
+
+std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& path, Meshing::Material& material, std::unordered_map<uint32_t, Meshing::Texture>& textures)
+{
+	UUID Id(true);
+
+	if (path.extension().string() != MaterialExtension)
+		return { false,Id };
+
+	std::ifstream fin(path);
+
+	std::stringstream stream;
+	stream << fin.rdbuf();
+	fin.close();
+
+	nlohmann::json Json = nlohmann::json::parse(stream.str());
+
+	if (!Json.contains("AssetType"))
+		return { false,Id };
+
+	auto type = Json["AssetType"].get<std::string>();
+	if (type != "Material")
+		return { false,Id };
+
+	auto& meta = Json["Meta"];
+
+	material.specularGlossiness.support = meta["SpecularSupport"].get<bool>();
+	material.specularGlossiness.glossiness = meta["Glossiness"].get<float>();
+	material.metalicRoughness.roughness = meta["Roughness"].get<float>();
+	material.metalicRoughness.metallic = meta["Metalness"].get<float>();
+
+	material.emissiveColor.r = meta["EmissiveColor"]["r"].get<float>();
+	material.emissiveColor.g = meta["EmissiveColor"]["g"].get<float>();
+	material.emissiveColor.b = meta["EmissiveColor"]["b"].get<float>();
+	
+	material.specularGlossiness.specular.r = meta["Specular"]["r"].get<float>();
+	material.specularGlossiness.specular.g = meta["Specular"]["g"].get<float>();
+	material.specularGlossiness.specular.b = meta["Specular"]["b"].get<float>();
+
+	glm::vec4 albedo{};
+	albedo.r = meta["AlbedoColor"]["r"].get<float>();
+	albedo.g = meta["AlbedoColor"]["g"].get<float>();
+	albedo.b = meta["AlbedoColor"]["b"].get<float>();
+
+	material.specularGlossiness.aldeboColor = albedo;
+	material.metalicRoughness.albedoColor = albedo;
+
+	if (meta.contains("AlbedoMap"))
+	{
+		auto path = meta["AlbedoMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(path, textures[0]);
+
+		if (res)
+		{
+			if (material.specularGlossiness.support)
+				material.specularGlossiness.albedoTexture = UUID(Id);
+			else
+				material.metalicRoughness.albedoTexture = UUID(Id);
+		}
+	}
+
+	if (meta.contains("NormalMap"))
+	{
+		auto path = meta["NormalMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(path, textures[3]);
+
+		if (res)
+			material.normalTexture = UUID(Id);
+	}
+
+	if (meta.contains("OcculsionMap"))
+	{
+		auto path = meta["OcculsionMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(path, textures[4]);
+
+		if (res)
+			material.occulsionTexture = UUID(Id);
+	}
+	
+	if (meta.contains("EmissiveMap"))
+	{
+		auto path = meta["EmissiveMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(path, textures[5]);
+
+		if (res)
+			material.emissiveTexture = UUID(Id);
+	}
+	
+	if (meta.contains("MetallicRoughnessMap"))
+	{
+		auto path = meta["MetallicRoughnessMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(path, textures[1]);
+
+		if (res)
+			material.metalicRoughness.metallicRoughnessTexture = UUID(Id);
+	}
+
+	if (meta.contains("SpecularGlossinessMap"))
+	{
+		auto path = meta["SpecularGlossinessMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(path, textures[1]);
+
+		if (res)
+			material.specularGlossiness.specularGlossinessTexture = UUID(Id);
+	}
+
 }

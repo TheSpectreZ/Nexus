@@ -174,17 +174,10 @@ static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
 
 static void LoadMaterial(const AssetFilePath& filepath, Component::Mesh& component)
 {
-	//Ref<MaterialTableAsset> asset = CreateRef<MaterialTableAsset>();
-	//if (!asset->Load(filepath))
-	//	return;
-	//
-	//auto matTable = ResourcePool::Get()->AllocateMaterialTable(asset->GetMaterialTableSpecifications(), asset->GetID());
-	//
-	//auto mesh = ResourcePool::Get()->GetRenderableMesh(component.handle);
-	//if(!mesh->SetMaterialTable(matTable))
-	//{
-	//	NEXUS_LOG("Scene Heirarchy", "Failed to Assign Material Table %s", filepath.generic_string().c_str());
-	//}
+	std::unordered_map<uint32_t, Meshing::Texture> textures;
+	Meshing::Material material;
+	auto [res, id] = Importer::LoadMaterial(filepath, material, textures);
+
 }
 
 void NexusEd::SceneHeirarchy::SetContext(Ref<Scene> scene)
@@ -378,21 +371,19 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 				ImGui::EndPopup();
 			}
 
-			//if (component.handle)
-			//{
-			//	ImGui::Button("Assign Material Table", ImVec2(ImGui::GetContentRegionAvail().x, 50.f));
-			//	if (ImGui::BeginDragDropTarget())
-			//	{
-			//		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-			//		{
-			//			const wchar_t* path = (const wchar_t*)payload->Data;
-			//			AssetFilePath file = path;
-			//			if (file.extension().string() == ".NxAsset")
-			//				LoadMaterial(file, component);
-			//		}
-			//		ImGui::EndDragDropTarget();
-			//	}
-			//}
+			if (component.handle)
+			{
+				ImGui::Button("Assign Material", ImVec2(ImGui::GetContentRegionAvail().x, 50.f));
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+					{
+						const wchar_t* path = (const wchar_t*)payload->Data;
+						LoadMaterial(path, component);
+					}
+					ImGui::EndDragDropTarget();
+				}
+			}
 		});
 
 	DrawComponent<Component::Script>("Script", en, [&](auto& component)
