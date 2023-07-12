@@ -29,24 +29,46 @@ namespace Nexus
 			std::vector<Submesh> submeshes;
 		};
 
-		struct NEXUS_GRAPHICS_API Image
-		{
-			std::string fileName;
-
-			std::vector<uint8_t> pixels;
-			uint32_t width, height,channels;
-		};
-		
 		struct NEXUS_GRAPHICS_API Sampler
 		{
 			SamplerFilter Near;
 			SamplerFilter Far;
 			SamplerWrapMode U, V, W;
+
+			uint32_t GetHash()
+			{
+				uint32_t Id = 0;
+				Id += (uint32_t)Far * 1;
+				Id += (uint32_t)Near * 10;
+				Id += (uint32_t)U * 100;
+				Id += (uint32_t)V * 1000;
+				Id += (uint32_t)W * 10000;
+
+				return Id;
+			}
+
+			void ResolveHash(uint32_t HashId)
+			{
+				Far = (SamplerFilter)((HashId / 1) % 10);
+				Near = (SamplerFilter)((HashId / 10) % 10);
+				U = (SamplerWrapMode)((HashId / 100) % 10);
+				V = (SamplerWrapMode)((HashId / 1000) % 10);
+				W = (SamplerWrapMode)((HashId / 10000) % 10);
+			};
+		};
+
+		struct NEXUS_GRAPHICS_API Image
+		{
+			std::string fileName;
+
+			std::vector<uint8_t> pixels;
+			uint32_t width, height, channels;
 		};
 
 		struct NEXUS_GRAPHICS_API Texture
 		{
-			uint32_t Image, Sampler;
+			Image image;
+			uint32_t samplerHash;
 		};
 
 		struct NEXUS_GRAPHICS_API Material
@@ -86,7 +108,7 @@ namespace Nexus
 
 			uint32_t normalTexture = UINT32_MAX;
 			uint32_t occulsionTexture = UINT32_MAX;
-			
+
 			uint32_t emissiveTexture = UINT32_MAX;
 			glm::vec3 emissiveColor{0.f};
 		};
@@ -97,7 +119,7 @@ namespace Nexus
 
 			Node* parent;
 			std::vector<Node*> children;
-			
+
 			uint32_t Index;
 			uint32_t mesh;
 			int32_t skin = -1;
@@ -126,7 +148,7 @@ namespace Nexus
 
 				std::vector<float> input;
 				std::vector<glm::vec4> output;
-			} ;
+			};
 
 			struct Channel
 			{
@@ -135,7 +157,7 @@ namespace Nexus
 
 				Node* node;
 				uint32_t samplerIndex;
-			} ;
+			};
 
 			std::string Name;
 			std::vector<Sampler> samplers;
@@ -157,13 +179,12 @@ namespace Nexus
 			// Materials
 			std::vector<Material> materials;
 			std::vector<Texture> textures;
-			std::vector<Sampler> samplers;
-			std::vector<Image> images;
-			
+
 			// Animations
 			std::vector<Animation> animations;
 		};
-		
+
 		bool NEXUS_GRAPHICS_API LoadSceneFromFile(const std::filesystem::path& filePath, Meshing::Scene* data);
+
 	}
 }

@@ -112,7 +112,7 @@ bool Nexus::Meshing::LoadSceneFromFile(const std::filesystem::path& Filepath, Sc
 {
 	tinygltf::Model scene;
 
-	// Importing glTF
+	// Import
 	{
 		tinygltf::TinyGLTF Importer;
 		
@@ -338,44 +338,40 @@ bool Nexus::Meshing::LoadSceneFromFile(const std::filesystem::path& Filepath, Sc
 		}
 	}
 	
-	// Images
-	for (auto& image : scene.images)
-	{
-		auto& i = data->images.emplace_back();
-		
-		std::filesystem::path path = Filepath.parent_path().generic_string() + "/" + image.uri;
-
-		int w, h, c;
-		auto pixels = stbi_load(path.generic_string().c_str(), &w, &h, &c, 4);
-		
-		i.height = h;
-		i.width = w;
-		i.channels = 4;
-		i.fileName = path.filename().stem().string();
-
-		i.pixels.resize((size_t)w* h* c);
-		memcpy(i.pixels.data(), pixels, i.pixels.size() * sizeof(uint8_t));
-
-		stbi_image_free(pixels);
-	}
-
-	// Samplers
-	for (auto& sampler : scene.samplers)
-	{
-		auto& s = data->samplers.emplace_back();
-		s.Near = GetFilterMode(sampler.magFilter);
-		s.Far = GetFilterMode(sampler.minFilter);
-		s.U = GetWrapMode(sampler.wrapS);
-		s.V = GetWrapMode(sampler.wrapT);
-		s.W = s.V;
-	}
-
 	// Textures
 	for (auto& texture : scene.textures)
 	{
 		auto& t = data->textures.emplace_back();
-		t.Image = texture.source;
-		t.Sampler = texture.sampler;
+
+		auto& image = scene.images[texture.source];
+		{
+			std::filesystem::path path = Filepath.parent_path().generic_string() + "/" + image.uri;
+
+			int w, h, c;
+			auto pixels = stbi_load(path.generic_string().c_str(), &w, &h, &c, 4);
+
+			t.image.height = h;
+			t.image.width = w;
+			t.image.channels = 4;
+			t.image.fileName = path.filename().stem().string();
+
+			t.image.pixels.resize((size_t)w * h * c);
+			memcpy(t.image.pixels.data(), pixels, t.image.pixels.size() * sizeof(uint8_t));
+
+			stbi_image_free(pixels);
+		}
+
+		auto& sampler = scene.samplers[texture.sampler];
+		{
+			Sampler s{};
+			s.Near = GetFilterMode(sampler.magFilter);
+			s.Far = GetFilterMode(sampler.minFilter);
+			s.U = GetWrapMode(sampler.wrapS);
+			s.V = GetWrapMode(sampler.wrapT);
+			s.W = s.V;
+
+			t.samplerHash = s.GetHash();
+		}
 	}
 
 	// Materials

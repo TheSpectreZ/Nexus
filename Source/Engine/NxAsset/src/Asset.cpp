@@ -94,20 +94,156 @@ namespace Nexus::Utils
 
 		return true;
 	}
+
+	bool ImportTexture(const AssetFilePath& dstFolder, const Meshing::Texture* texture)
+	{
+		nlohmann::json Json;
+		Json["UUID"] = (uint64_t)UUID();
+		Json["AssetType"] = "Texture";
+
+		nlohmann::json Tex;
+		Tex["Width"] = texture->image.width;
+		Tex["Height"] = texture->image.height;
+		Tex["Channels"] = texture->image.channels;
+		Tex["Sampler"] = texture->samplerHash;
+
+		Json["Meta"] = Tex;
+
+		std::string JsonDump = Json.dump(4);
+
+		AssetFilePath file = AssetFilePath(dstFolder.generic_string() + "/" + texture->image.fileName + TextureExtension);
+
+		std::ofstream stream(file, std::ios::binary);
+		if (!stream.is_open())
+			return false;
+
+		uint32_t size = (uint32_t)JsonDump.size();
+		stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
+		stream.write(JsonDump.c_str(), JsonDump.length());
+
+		size = texture->image.width * texture->image.height * texture->image.channels;
+		stream.write(reinterpret_cast<const char*>(texture->image.pixels.data()), size * sizeof(uint8_t));
+
+		stream.close();
+
+		return true;
+	}
+
+	bool ImportMaterial(const AssetFilePath& dstFolder, const Meshing::Material* material, const std::vector<Meshing::Texture>& textures)
+	{
+		nlohmann::json Json;
+		Json["UUID"] = (uint64_t)UUID();
+		Json["AssetType"] = "Material";
+
+		nlohmann::json Material;
+
+		auto TexFolder = dstFolder.parent_path() / "Textures";
+		
+		AssetFilePath path = TexFolder;
+		if (material->specularGlossiness.albedoTexture != UINT32_MAX || material->metalicRoughness.albedoTexture != UINT32_MAX)
+		{
+			if (material->specularGlossiness.support)
+				path /= AssetFilePath(textures[material->specularGlossiness.albedoTexture].image.fileName + TextureExtension);
+			else
+				path /= AssetFilePath(textures[material->metalicRoughness.albedoTexture].image.fileName + TextureExtension);
+			Material["AlbedoMap"] = path.generic_string();
+		}
+
+		if (material->normalTexture != UINT32_MAX)
+		{
+			path = TexFolder / textures[material->normalTexture].image.fileName;
+			path += TextureExtension;
+			Material["NormalMap"] = path.generic_string();
+		}
+
+		if (material->occulsionTexture != UINT32_MAX)
+		{
+			path = TexFolder / textures[material->occulsionTexture].image.fileName;
+			path += TextureExtension;
+			Material["OcculsionMap"] = path.generic_string();
+		}
+
+		if(material->emissiveTexture != UINT32_MAX)
+		{
+			path = TexFolder / textures[material->emissiveTexture].image.fileName;
+			path += TextureExtension; 
+			Material["EmissiveMap"] = path.generic_string();
+		}
+
+		if(material->metalicRoughness.metallicRoughnessTexture != UINT32_MAX)
+		{
+			path = TexFolder / textures[material->metalicRoughness.metallicRoughnessTexture].image.fileName;
+			path += TextureExtension;
+			Material["MetallicRoughness"] = path.generic_string();
+		}
+
+		if(material->specularGlossiness.specularGlossinessTexture != UINT32_MAX)
+		{
+			path = TexFolder / textures[material->specularGlossiness.specularGlossinessTexture].image.fileName;
+			path += TextureExtension;
+			Material["MetallicRoughness"] = path.generic_string();
+		}
+
+		glm::vec4 albedoColor;
+		if (material->specularGlossiness.support)
+			albedoColor = material->specularGlossiness.aldeboColor;
+		else
+			albedoColor = material->metalicRoughness.albedoColor;
+
+		Material["SpecularSupport"] = material->specularGlossiness.support;
+		Material["AlbedoColor"]["r"] = albedoColor.x;
+		Material["AlbedoColor"]["g"] = albedoColor.y;
+		Material["AlbedoColor"]["b"] = albedoColor.z;
+		Material["AlbedoColor"]["a"] = albedoColor.w;
+
+		Material["Roughness"] = material->metalicRoughness.roughness;
+		Material["Metalness"] = material->metalicRoughness.metallic;
+		Material["Glossiness"] = material->specularGlossiness.glossiness;
+
+		Material["EmissiveColor"]["r"] = material->emissiveColor.x;
+		Material["EmissiveColor"]["g"] = material->emissiveColor.y;
+		Material["EmissiveColor"]["b"] = material->emissiveColor.z;
+		
+		Material["Specular"]["r"] = material->specularGlossiness.specular.x;
+		Material["Specular"]["g"] = material->specularGlossiness.specular.y;
+		Material["Specular"]["b"] = material->specularGlossiness.specular.z;
+
+		Json["Meta"] = Material;
+
+		std::string JsonDump = Json.dump(4);
+
+		AssetFilePath file = AssetFilePath(dstFolder.generic_string() + "/" + material->Name + TextureExtension);
+
+		std::ofstream stream(file);
+		stream << JsonDump;
+		return true;
+	}
 }
 
 bool Nexus::Importer::ImportGLTF(const AssetFilePath& path, const AssetFilePath& dstFolder,const std::string& Name)
 {
 	Meshing::Scene scene;
-	Meshing::LoadSceneFromFile(path, &scene);
+	if (!Meshing::LoadSceneFromFile(path, &scene))
+		return false;
 
 	if (!std::filesystem::exists(dstFolder))
 		std::filesystem::create_directories(dstFolder);
 
 	Utils::ImportMesh(dstFolder, scene.meshes, Name);
 
-	for (auto& Image : scene.images)
-		Utils::ImportImage(dstFolder, &Image);
+	auto TexFolder = dstFolder / "Textures";
+	if (!std::filesystem::exists(TexFolder))
+		std::filesystem::create_directories(TexFolder);
+
+	for (auto& Tex : scene.textures)
+		Utils::ImportTexture(TexFolder, &Tex);
+
+	auto MatFolder = dstFolder / "Materials";
+	if (!std::filesystem::exists(MatFolder))
+		std::filesystem::create_directories(MatFolder);
+
+	for (auto& Mat : scene.materials)
+		Utils::ImportMaterial(MatFolder, &Mat, scene.textures);
 
 	return true;
 }

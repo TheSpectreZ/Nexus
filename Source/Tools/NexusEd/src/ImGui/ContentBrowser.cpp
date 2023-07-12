@@ -27,6 +27,8 @@ void NexusEd::ContentBrowser::Initialize()
 		//MeshAsset::Import("res/Meshes/cylinder.gltf", "Resources/Meshes", "Resources/Bin", "Cylinder");
 
 		//Importer::ImportGLTF("res/Meshes/cube.gltf", "Resources/Meshes","Cube");
+
+		//Importer::ImportGLTF("res/Meshes/Trooper/scene.gltf", "Resources/Assets/Meshes", "Trooper");
 	}
 
 	{
@@ -69,8 +71,8 @@ void NexusEd::ContentBrowser::DrawDirectoryNodes(std::filesystem::path path)
 			ImGui::SetNextItemOpen(true, ImGuiCond_Always);
 			m_SelectedDirectory.clear();
 		}
-
-		if (ImGui::TreeNode(filenameString.c_str()))
+		
+		if (ImGui::TreeNodeEx(filenameString.c_str(),ImGuiTreeNodeFlags_Framed))
 		{
 			m_CurrentDirectory = p;
 			DrawDirectoryNodes(p);
@@ -105,13 +107,16 @@ void NexusEd::ContentBrowser::Render()
 
 		ImGui::BeginChild("Folders");
 
-		ImGui::SetNextItemOpen(true);
-		if (ImGui::TreeNode(m_AssetDirectory.filename().string().c_str()))
+		ImGui::SetNextItemOpen(true, ImGuiCond_FirstUseEver);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.f);
+		if (ImGui::TreeNodeEx(m_AssetDirectory.filename().string().c_str(), ImGuiTreeNodeFlags_Framed))
 		{
 			m_CurrentDirectory = m_AssetDirectory;
 			DrawDirectoryNodes(m_AssetDirectory);
 			ImGui::TreePop();
 		}
+		ImGui::PopStyleVar();
+
 		ImGui::EndChild();
 
 		ImGui::TableSetColumnIndex(1);
@@ -139,6 +144,7 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 	int columnCount = (int)(panelWidth / (cellsize));
 	columnCount = std::max(1, columnCount);
 
+
 	ImGui::Columns(columnCount, 0, false);
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -156,9 +162,15 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 		static int Renaming = -1;
 
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 4.f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, { 8.f,4.f });
+
 		if (dir.is_directory())
 		{
-			if (ImGui::ImageButton(filenameString.c_str(), m_FolderID, {thumbnailSize,thumbnailSize}))
+			ImGui::ImageButton(filenameString.c_str(), m_FolderID, { thumbnailSize,thumbnailSize });
+
+			if(ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 			{
 				m_SelectedDirectory = p;
 			}
@@ -177,6 +189,28 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 		if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right, false))
 			ImGui::OpenPopup("FileOptions");
+
+		if (Renaming != i)
+			ImGui::TextWrapped(filenameString.c_str());
+		else
+		{
+			static std::string input;
+			if (!input.size())
+				input.resize(256);
+
+			ImGui::SetKeyboardFocusHere();
+			if (ImGui::InputText("##FileNameInput", &input[0], input.size() + 1, ImGuiInputTextFlags_EnterReturnsTrue))
+			{
+				Renaming = -1;
+
+				AssetFilePath newPath = p.parent_path() / input;
+				input.clear();
+
+				std::filesystem::rename(p, newPath);
+			}
+		}
+
+		ImGui::PopStyleVar(3);
 
 		static bool showDeleteModal = false;
 		if (ImGui::BeginPopup("FileOptions"))
@@ -215,30 +249,6 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 				ImGui::CloseCurrentPopup();
 			
 			ImGui::EndPopup();
-		}
-
-		if (Renaming == i)
-		{
-			ImGui::SetKeyboardFocusHere();
-			
-			static std::string input;
-
-			if (!input.size())
-				input.resize(256);
-
-			if (ImGui::InputText("##FileNameInput", &input[0],input.size() + 1, ImGuiInputTextFlags_EnterReturnsTrue))
-			{
-				Renaming = -1;
-				
-				AssetFilePath newPath = p.parent_path() / input;
-				input.clear();
-				
-				std::filesystem::rename(p, newPath);
-			}
-		}
-		else
-		{
-			ImGui::TextWrapped(filenameString.c_str());
 		}
 		
 		ImGui::PopID();
