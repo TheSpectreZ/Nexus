@@ -24,7 +24,8 @@ namespace NexusEd
 		ImTextureID m_FileID, m_FolderID;
 		Nexus::Ref<Nexus::Sampler> m_Sampler;
 
-		void ImportMesh();
+		bool m_enableImportOptions = false;
+		void DrawImportOptions();
 	};
 }
 

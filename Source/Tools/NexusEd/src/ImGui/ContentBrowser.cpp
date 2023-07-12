@@ -124,8 +124,8 @@ void NexusEd::ContentBrowser::Render()
 	}
 
 	ImGui::End();
-
-	ImGui::ShowDemoWindow();
+	if (m_enableImportOptions)
+		DrawImportOptions();
 }
 
 void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
@@ -143,6 +143,9 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
 
+	Context::Get()->BindTextureId(m_FolderID);
+	Context::Get()->BindTextureId(m_FileID);
+	
 	int i = 0;
 	for (auto& dir : std::filesystem::directory_iterator(path))
 	{
@@ -151,18 +154,18 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 		const auto& p = dir.path();
 		auto filenameString = p.filename().string();
 
+		static int Renaming = -1;
+
 		if (dir.is_directory())
 		{
-			Context::Get()->BindTextureId(m_FolderID);
-			if (ImGui::ImageButton(m_FolderID, { thumbnailSize,thumbnailSize }))
+			if (ImGui::ImageButton(filenameString.c_str(), m_FolderID, {thumbnailSize,thumbnailSize}))
 			{
 				m_SelectedDirectory = p;
 			}
 		}
 		else
 		{
-			Context::Get()->BindTextureId(m_FileID);
-			ImGui::ImageButton(m_FileID, { thumbnailSize,thumbnailSize });
+			ImGui::ImageButton(filenameString.c_str(), m_FileID, {thumbnailSize,thumbnailSize});
 			
 			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
 			{
@@ -171,74 +174,145 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 				ImGui::EndDragDropSource();
 			}
 		}
-		ImGui::TextWrapped(filenameString.c_str());
 
+		if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right, false))
+			ImGui::OpenPopup("FileOptions");
+
+		static bool showDeleteModal = false;
+		if (ImGui::BeginPopup("FileOptions"))
+		{
+			if (ImGui::MenuItem("Rename"))
+				Renaming = i;
+
+			if (ImGui::MenuItem("Delete"))
+				showDeleteModal = true;
+
+			ImGui::EndPopup();
+		}
+
+		if (showDeleteModal)
+		{
+			ImGui::OpenPopup("Delete ?");
+			showDeleteModal = false;
+
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		}
+
+		if (ImGui::BeginPopupModal("Delete ?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::Text("Are you sure to delete this?");
+			
+			if (ImGui::Button("Delete", ImVec2(85.f, 25.f)))
+			{
+				std::filesystem::remove_all(p);
+				ImGui::CloseCurrentPopup();
+			}
+			
+			ImGui::SameLine();
+			
+			if (ImGui::Button("Cancel", ImVec2(85.f, 25.f)))
+				ImGui::CloseCurrentPopup();
+			
+			ImGui::EndPopup();
+		}
+
+		if (Renaming == i)
+		{
+			ImGui::SetKeyboardFocusHere();
+			
+			static std::string input;
+
+			if (!input.size())
+				input.resize(256);
+
+			if (ImGui::InputText("##FileNameInput", &input[0],input.size() + 1, ImGuiInputTextFlags_EnterReturnsTrue))
+			{
+				Renaming = -1;
+				
+				AssetFilePath newPath = p.parent_path() / input;
+				input.clear();
+				
+				std::filesystem::rename(p, newPath);
+			}
+		}
+		else
+		{
+			ImGui::TextWrapped(filenameString.c_str());
+		}
+		
 		ImGui::PopID();
 		ImGui::NextColumn();
 	}
+
 	ImGui::PopStyleColor();
 	ImGui::Columns(1);
 
-	if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
-		ImGui::OpenPopup("ContentBrowserMenu");
-
-	static bool enableGLTFImportModel = false;
+	if (!ImGui::IsAnyItemHovered() )
+	{
+		if (ImGui::IsWindowHovered() && ImGui::IsMouseReleased(ImGuiMouseButton_Right))
+			ImGui::OpenPopup("ContentBrowserMenu");
+	}
 
 	if (ImGui::BeginPopup("ContentBrowserMenu"))
 	{
 		if (ImGui::MenuItem("Import glTF"))
-			enableGLTFImportModel = true;
+			m_enableImportOptions = true;
+
+		if (ImGui::MenuItem("New Folder"))
+			std::filesystem::create_directory(m_CurrentDirectory / "New Folder");
 
 		ImGui::EndPopup();
 	}
+}
 
-	if (enableGLTFImportModel)
+void NexusEd::ContentBrowser::DrawImportOptions()
+{
+	if (ImGui::Begin("GLTFImport"))
 	{
-		ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-		ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		static AssetFilePath FilePath;
+		static char FileName[256];
 
-		if (ImGui::Begin("GLTFImport"))
+		ImGui::PushItemWidth(ImGui::GetContentRegionMax().x - 125.f);
+		ImGui::InputText("Name", FileName, sizeof(FileName));
+		ImGui::LabelText("Path", FilePath.generic_string().c_str());
+		ImGui::PopItemWidth();
+
+		ImGui::SameLine();
+
+		if (ImGui::Button("Browse", ImVec2(85.f, 25.f)))
 		{
-			static AssetFilePath FilePath;
-			static char FileName[256];
-
-			ImGui::PushItemWidth(ImGui::GetContentRegionMax().x - 125.f);
-			ImGui::InputText("Name", FileName, sizeof(FileName));
-			ImGui::LabelText("Path", FilePath.generic_string().c_str());
-			ImGui::PopItemWidth();
-
-			ImGui::SameLine();
-
-			if (ImGui::Button("Browse",ImVec2(85.f,25.f)))
+			std::string path = FileDialog::OpenFile("glTF File(*.gltf)\0*.gltf\0");
+			if (!path.empty())
 			{
-				std::string path = FileDialog::OpenFile("glTF File(*.gltf)\0*.gltf\0");
-				if (!path.empty())
-				{
-					FilePath = path;
-				}
+				FilePath = path;
 			}
-
-			if (ImGui::Button("Import", ImVec2(85.f, 25.f)))
-			{
-				Importer::ImportGLTF(FilePath, m_CurrentDirectory, FileName);
-				
-				ImGui::CloseCurrentPopup();
-				FilePath.clear();
-				memset(FileName, 0, sizeof(FileName));
-				enableGLTFImportModel = false;
-			}
-
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel", ImVec2(85.f, 25.f)))
-			{
-				ImGui::CloseCurrentPopup();
-				FilePath.clear();
-				memset(FileName, 0, sizeof(FileName));
-				enableGLTFImportModel = false;
-			}
-
-			ImGui::End();
 		}
-	}
 
+		if (ImGui::Button("Import", ImVec2(85.f, 25.f)))
+		{
+			if (!FilePath.empty())
+				Importer::ImportGLTF(FilePath, m_CurrentDirectory, FileName);
+
+			ImGui::CloseCurrentPopup();
+
+			FilePath.clear();
+			memset(FileName, 0, sizeof(FileName));
+
+			m_enableImportOptions = false;
+		}
+
+		ImGui::SameLine();
+		if (ImGui::Button("Cancel", ImVec2(85.f, 25.f)))
+		{
+			ImGui::CloseCurrentPopup();
+			
+			FilePath.clear();
+			memset(FileName, 0, sizeof(FileName));
+
+			m_enableImportOptions = false;
+		}
+
+		ImGui::End();
+	}
 }
