@@ -95,5 +95,61 @@ void Nexus::ResourcePool::Deallocate##Resource(UUID HashId)\
 		m_Member.erase(HashId);\
 }\
 
-RESOURCE_ALLOC_METHOD_GI_IMP(Texture,TextureSpecification,m_Textures)
-RESOURCE_ALLOC_METHOD_REF_IMP(RenderableMesh, std::vector<Meshing::Mesh>,m_RenderableMeshes)
+RESOURCE_ALLOC_METHOD_GI_IMP(Texture, TextureSpecification, m_Textures)
+RESOURCE_ALLOC_METHOD_REF_IMP(RenderableMesh, Meshing::Mesh, m_RenderableMeshes)
+
+Nexus::Ref<Nexus::RenderableMaterial> Nexus::ResourcePool::AllocateRenderableMaterial(const Meshing::Material& specs, std::unordered_map<uint8_t, Meshing::Texture>& textures, UUID HashId)
+{
+	if (!m_RenderableMaterials.contains(HashId))
+	{
+		TextureSpecification ts{};
+
+		if (textures.contains((uint8_t)TextureType::Albedo))
+		{
+			ts.image = textures[(uint8_t)TextureType::Albedo].image;
+			if (specs.specularGlossiness.support)
+				AllocateTexture(ts, specs.specularGlossiness.albedoTexture);
+			else
+				AllocateTexture(ts, specs.metalicRoughness.albedoTexture);
+		}
+
+		if (textures.contains((uint8_t)TextureType::Emissive))
+		{
+			ts.image = textures[(uint8_t)TextureType::Emissive].image;
+			AllocateTexture(ts, specs.emissiveTexture);
+		}
+
+		if (textures.contains((uint8_t)TextureType::Normal))
+		{
+			ts.image = textures[(uint8_t)TextureType::Normal].image;
+			AllocateTexture(ts, specs.normalTexture);
+		}
+
+		if (textures.contains((uint8_t)TextureType::Occulsion))
+		{
+			ts.image = textures[(uint8_t)TextureType::Occulsion].image;
+			AllocateTexture(ts, specs.occulsionTexture);
+		}
+
+		if (textures.contains((uint8_t)TextureType::SpecularGlossiness))
+		{
+			ts.image = textures[(uint8_t)TextureType::SpecularGlossiness].image;
+			AllocateTexture(ts, specs.specularGlossiness.specularGlossinessTexture);
+		}
+
+		if (textures.contains((uint8_t)TextureType::MetallicRoughness))
+		{
+			ts.image = textures[(uint8_t)TextureType::MetallicRoughness].image;
+			AllocateTexture(ts, specs.metalicRoughness.metallicRoughnessTexture);
+		}
+
+		m_RenderableMaterials[HashId] = CreateRef<RenderableMaterial>(specs);
+	}
+
+	return m_RenderableMaterials[HashId];
+}
+
+void Nexus::ResourcePool::DeallocateRenderableMaterial(UUID HashId)
+{
+	if (m_RenderableMaterials.contains(HashId)) m_RenderableMaterials.erase(HashId);
+}

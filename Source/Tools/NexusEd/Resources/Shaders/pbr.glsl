@@ -80,12 +80,15 @@ layout(set = 0, binding = 1) uniform sceneBuffer
 
 layout(set = 2, binding = 0) uniform MaterialBuffer
 {
-	vec4 AlbedoColor;
+	vec4 albedo;
+	vec3 emissive; float n0;
+	vec3 specular; float n1;
+	
 	float roughness;
 	float metalness;
-	float useNormal;
+	float glossiness;
 	
-	float nul;
+	float useNormal;
 } m_MaterialBuffer;
 
 layout(set = 2, binding = 1) uniform sampler2D albedoMap;
@@ -94,7 +97,7 @@ layout(set = 2, binding = 3) uniform sampler2D normalMap;
 
 vec3 GetMaterialColor()
 {
-	return texture(albedoMap, FragTexC).rgb * m_MaterialBuffer.AlbedoColor.rgb;
+	return texture(albedoMap, FragTexC).rgb * m_MaterialBuffer.albedo.rgb;
 }
 
 vec2 GetMetallicRoughness()

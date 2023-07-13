@@ -20,6 +20,7 @@ namespace Nexus
 		struct NEXUS_GRAPHICS_API Submesh
 		{
 			uint32_t indexOffset, indexSize;
+			uint64_t materialIndex = UINT64_MAX;
 		};
 
 		struct NEXUS_GRAPHICS_API Mesh
@@ -169,12 +170,12 @@ namespace Nexus
 
 		struct NEXUS_GRAPHICS_API Scene
 		{
+			// Static Mesh
+			Mesh mesh;
+
 			// Skeleton
 			std::vector<Node> nodes;
 			std::vector<Skin> skins;
-
-			// Static Mesh
-			std::vector<Mesh> meshes;
 
 			// Materials
 			std::vector<Material> materials;

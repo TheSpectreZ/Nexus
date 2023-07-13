@@ -16,7 +16,7 @@ namespace Nexus
 			glm::vec4 albedo;
 			glm::vec3 emissive;
 			glm::vec3 specular;
-			float metalness, roughness, glossiness;
+			float metalness, roughness, glossiness, useNormal;
 		} _factors;
 
 		std::unordered_map<TextureType, Ref<Texture>> _Maps;

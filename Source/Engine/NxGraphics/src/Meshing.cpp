@@ -149,192 +149,194 @@ bool Nexus::Meshing::LoadSceneFromFile(const std::filesystem::path& Filepath, Sc
 			return false;
 		}
 	}
-
+		
 	// Mesh
-	for (auto& mesh : scene.meshes)
 	{
+		size_t totalVertices = 0;
+		size_t totalIndices = 0;
+
 		std::unordered_map<uint32_t, std::vector<Vertex>> vertices;
 		std::unordered_map<uint32_t, std::vector<uint32_t>> indices;
 
-		auto& m = data->meshes.emplace_back();
-		
-		size_t totalVertices = 0;
-		size_t totalIndices = 0;
-		for (auto& primitive : mesh.primitives)
+		for (auto& mesh : scene.meshes)
 		{
-			bool foundTangent = false;
-			bool foundBiTangent = false;
-
-			// Vertices
-			const float* positionBuffer = nullptr;
-			const float* normalBuffer = nullptr;
-			const float* texCoordBuffer = nullptr;
-			const float* tangentBuffer = nullptr;
-			const float* bitangentBuffer = nullptr;
-
-			size_t vertexCount = 0;
-
-			auto p = primitive.attributes.find("POSITION");
-			if (p != primitive.attributes.end())
+			for (auto& primitive : mesh.primitives)
 			{
-				auto& accessor = scene.accessors[p->second];
+				bool foundTangent = false;
+				bool foundBiTangent = false;
+
+				// Vertices
+				const float* positionBuffer = nullptr;
+				const float* normalBuffer = nullptr;
+				const float* texCoordBuffer = nullptr;
+				const float* tangentBuffer = nullptr;
+				const float* bitangentBuffer = nullptr;
+
+				size_t vertexCount = 0;
+
+				auto p = primitive.attributes.find("POSITION");
+				if (p != primitive.attributes.end())
+				{
+					auto& accessor = scene.accessors[p->second];
+					auto& view = scene.bufferViews[accessor.bufferView];
+					positionBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+
+					vertexCount = accessor.count;
+				}
+
+				auto n = primitive.attributes.find("NORMAL");
+				if (n != primitive.attributes.end())
+				{
+					auto& accessor = scene.accessors[n->second];
+					auto& view = scene.bufferViews[accessor.bufferView];
+					normalBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+				}
+
+				auto t = primitive.attributes.find("TEXCOORD_0");
+				if (t != primitive.attributes.end())
+				{
+					auto& accessor = scene.accessors[t->second];
+					auto& view = scene.bufferViews[accessor.bufferView];
+					texCoordBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+				}
+
+				auto a = primitive.attributes.find("TANGENT");
+				if (a != primitive.attributes.end())
+				{
+					auto& accessor = scene.accessors[a->second];
+					auto& view = scene.bufferViews[accessor.bufferView];
+					tangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+					foundTangent = true;
+				}
+
+				auto b = primitive.attributes.find("BITANGENT");
+				if (b != primitive.attributes.end())
+				{
+					auto& accessor = scene.accessors[b->second];
+					auto& view = scene.bufferViews[accessor.bufferView];
+					bitangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+					foundBiTangent = true;
+				}
+
+				auto& smV = vertices[primitive.material];
+
+				auto prevSize = smV.size();
+				smV.resize(prevSize + vertexCount);
+
+				for (size_t i = 0; i < vertexCount; i++)
+				{
+					auto& vertex = smV[prevSize + i];
+
+					vertex.position = glm::make_vec3(&positionBuffer[i * 3]);
+
+					if (normalBuffer)
+						vertex.normal = glm::make_vec3(&normalBuffer[i * 3]);
+					else
+						vertex.normal = glm::vec3(0.f);
+
+					if (texCoordBuffer)
+						vertex.texCoord0 = glm::make_vec2(&texCoordBuffer[i * 2]);
+					else
+						vertex.texCoord0 = glm::vec2(0.f);
+
+					if (tangentBuffer)
+						vertex.tangent = glm::make_vec3(&tangentBuffer[i * 3]);
+
+					if (bitangentBuffer)
+						vertex.bitangent = glm::make_vec3(&bitangentBuffer[i * 3]);
+				}
+
+				auto& accessor = scene.accessors[primitive.indices];
 				auto& view = scene.bufferViews[accessor.bufferView];
-				positionBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
+				auto& buffer = scene.buffers[view.buffer];
 
-				vertexCount = accessor.count;
-			}
+				uint32_t* indexbuffer = nullptr;
+				uint32_t indexCount = (uint32_t)accessor.count;
 
-			auto n = primitive.attributes.find("NORMAL");
-			if (n != primitive.attributes.end())
-			{
-				auto& accessor = scene.accessors[n->second];
-				auto& view = scene.bufferViews[accessor.bufferView];
-				normalBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
-			}
+				auto& smI = indices[primitive.material];
+				prevSize = smI.size();
+				smI.resize(prevSize + indexCount);
 
-			auto t = primitive.attributes.find("TEXCOORD_0");
-			if (t != primitive.attributes.end())
-			{
-				auto& accessor = scene.accessors[t->second];
-				auto& view = scene.bufferViews[accessor.bufferView];
-				texCoordBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
-			}
+				if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
+				{
+					const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+					for (size_t index = 0; index < accessor.count; index += 3)
+					{
+						int a = buf[index];
+						int b = buf[index + 1];
+						int c = buf[index + 2];
 
-			auto a = primitive.attributes.find("TANGENT");
-			if (a != primitive.attributes.end())
-			{
-				auto& accessor = scene.accessors[a->second];
-				auto& view = scene.bufferViews[accessor.bufferView];
-				tangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
-				foundTangent = true;
-			}
+						smI[prevSize + index] = (uint32_t)totalVertices + a;
+						smI[prevSize + index + 1] = (uint32_t)totalVertices + b;
+						smI[prevSize + index + 2] = (uint32_t)totalVertices + c;
 
-			auto b = primitive.attributes.find("BITANGENT");
-			if (b != primitive.attributes.end())
-			{
-				auto& accessor = scene.accessors[b->second];
-				auto& view = scene.bufferViews[accessor.bufferView];
-				bitangentBuffer = reinterpret_cast<const float*>(&scene.buffers[view.buffer].data[accessor.byteOffset + view.byteOffset]);
-				foundBiTangent = true;
-			}
+						if (!foundTangent || !foundBiTangent)
+						{
+							CalculateTangentAndBiTangent(smV[a], smV[b], smV[c], foundTangent, foundBiTangent);
+						}
+					}
+				}
+				else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT)
+				{
+					const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+					for (size_t index = 0; index < accessor.count; index += 3)
+					{
+						int a = buf[index];
+						int b = buf[index + 1];
+						int c = buf[index + 2];
 
-			auto& smV = vertices[primitive.material];
+						smI[prevSize + index] = (uint32_t)totalVertices + a;
+						smI[prevSize + index + 1] = (uint32_t)totalVertices + b;
+						smI[prevSize + index + 2] = (uint32_t)totalVertices + c;
 
-			auto prevSize = smV.size();
-			smV.resize(prevSize + vertexCount);
+						if (!foundTangent || !foundBiTangent)
+						{
+							CalculateTangentAndBiTangent(smV[a], smV[b], smV[c], foundTangent, foundBiTangent);
+						}
+					}
+				}
+				else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE)
+				{
+					const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
+					for (size_t index = 0; index < accessor.count; index += 3)
+					{
+						int a = buf[index];
+						int b = buf[index + 1];
+						int c = buf[index + 2];
 
-			for (size_t i = 0; i < vertexCount; i++)
-			{
-				auto& vertex = smV[prevSize + i];
+						smI[prevSize + index] = (uint32_t)totalVertices + a;
+						smI[prevSize + index + 1] = (uint32_t)totalVertices + b;
+						smI[prevSize + index + 2] = (uint32_t)totalVertices + c;
 
-				vertex.position = glm::make_vec3(&positionBuffer[i * 3]);
-
-				if (normalBuffer)
-					vertex.normal = glm::make_vec3(&normalBuffer[i * 3]);
+						if (!foundTangent || !foundBiTangent)
+						{
+							CalculateTangentAndBiTangent(smV[a], smV[b], smV[c], foundTangent, foundBiTangent);
+						}
+					}
+				}
 				else
-					vertex.normal = glm::vec3(0.f);
-
-				if (texCoordBuffer)
-					vertex.texCoord0 = glm::make_vec2(&texCoordBuffer[i * 2]);
-				else
-					vertex.texCoord0 = glm::vec2(0.f);
-
-				if (tangentBuffer)
-					vertex.tangent = glm::make_vec3(&tangentBuffer[i * 3]);
-
-				if (bitangentBuffer)
-					vertex.bitangent = glm::make_vec3(&bitangentBuffer[i * 3]);
-			}
-
-			auto& accessor = scene.accessors[primitive.indices];
-			auto& view = scene.bufferViews[accessor.bufferView];
-			auto& buffer = scene.buffers[view.buffer];
-
-			uint32_t* indexbuffer = nullptr;
-			uint32_t indexCount = (uint32_t)accessor.count;
-			
-			auto& smI = indices[primitive.material];
-			prevSize = smI.size();
-			smI.resize(prevSize + indexCount);
-
-			if (accessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
-			{
-				const uint32_t* buf = reinterpret_cast<const uint32_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-				for (size_t index = 0; index < accessor.count; index += 3)
 				{
-					int a = buf[index];
-					int b = buf[index + 1];
-					int c = buf[index + 2];
-
-					smI[prevSize + index	] = (uint32_t)totalVertices + a;
-					smI[prevSize + index + 1] = (uint32_t)totalVertices + b;
-					smI[prevSize + index + 2] = (uint32_t)totalVertices + c;
-
-					if (!foundTangent || !foundBiTangent)
-					{
-						CalculateTangentAndBiTangent(smV[a], smV[b], smV[c], foundTangent, foundBiTangent);
-					}
+					auto err = "GLTF Indices Type Not Supported" + accessor.componentType;
+					NEXUS_ASSERT(true, err);
 				}
+
+				totalVertices += vertexCount;
+				totalIndices += indexCount;
 			}
-			else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT)
-			{
-				const uint16_t* buf = reinterpret_cast<const uint16_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-				for (size_t index = 0; index < accessor.count; index += 3)
-				{
-					int a = buf[index];
-					int b = buf[index + 1];
-					int c = buf[index + 2];
-
-					smI[prevSize + index	] = (uint32_t)totalVertices + a;
-					smI[prevSize + index + 1] = (uint32_t)totalVertices + b;
-					smI[prevSize + index + 2] = (uint32_t)totalVertices + c;
-
-					if (!foundTangent || !foundBiTangent)
-					{
-						CalculateTangentAndBiTangent(smV[a], smV[b], smV[c], foundTangent, foundBiTangent);
-					}
-				}
-			}
-			else if (accessor.componentType == TINYGLTF_PARAMETER_TYPE_UNSIGNED_BYTE)
-			{
-				const uint8_t* buf = reinterpret_cast<const uint8_t*>(&buffer.data[accessor.byteOffset + view.byteOffset]);
-				for (size_t index = 0; index < accessor.count; index += 3)
-				{
-					int a = buf[index];
-					int b = buf[index + 1];
-					int c = buf[index + 2];
-
-					smI[prevSize + index	] = (uint32_t)totalVertices + a;
-					smI[prevSize + index + 1] = (uint32_t)totalVertices + b;
-					smI[prevSize + index + 2] = (uint32_t)totalVertices + c;
-
-					if (!foundTangent || !foundBiTangent)
-					{
-						CalculateTangentAndBiTangent(smV[a], smV[b], smV[c], foundTangent, foundBiTangent);
-					}
-				}
-			}
-			else
-			{
-				auto err = "GLTF Indices Type Not Supported" + accessor.componentType;
-				NEXUS_ASSERT(true, err);
-			}
-
-			totalVertices += vertexCount;
-			totalIndices += indexCount;
 		}
 
-		m.vertices.reserve(totalVertices);
-		m.indices.reserve(totalIndices);
+		data->mesh.vertices.reserve(totalVertices);
+		data->mesh.indices.reserve(totalIndices);
 
 		for (auto& [k, vert] : vertices)
 		{
-			auto& sm = m.submeshes.emplace_back();
-			sm.indexOffset = (uint32_t)m.indices.size();
-			sm.indexSize = (uint32_t)indices[k].size();
+			auto& sm = data->mesh.submeshes.emplace_back();
 
-			m.vertices.insert(m.vertices.end(), vert.begin(), vert.end());
-			m.indices.insert(m.indices.end(), indices[k].begin(), indices[k].end());
+			sm.indexOffset = (uint32_t)data->mesh.indices.size();
+			sm.indexSize = (uint32_t)indices[k].size();
+			
+			data->mesh.vertices.insert(data->mesh.vertices.end(), vert.begin(), vert.end());
+			data->mesh.indices.insert(data->mesh.indices.end(), indices[k].begin(), indices[k].end());
 		}
 	}
 	

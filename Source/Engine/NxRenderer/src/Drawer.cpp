@@ -101,7 +101,7 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 
 	// Pipeline
 	{
-		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/simple.glsl");
+		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/pbr.glsl");
 		m_shader = GraphicsInterface::CreateShader(shaderSpecs);
 
 		std::vector<VertexBindInfo> pipelineVertexBindInfo(1);

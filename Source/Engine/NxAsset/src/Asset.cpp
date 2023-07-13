@@ -20,14 +20,16 @@ static std::string BinExtension = ".NxBin";
 
 namespace Nexus::Utils
 {
-	bool ImportMesh(const AssetFilePath& dstFolder, const std::vector<Meshing::Mesh>& meshes,const std::string& name)
+	bool ImportMesh(const AssetFilePath& dstFolder,Meshing::Mesh& mesh,const std::string& name)
 	{
 		nlohmann::json Json;
 		Json["UUID"] = (uint64_t)UUID();
 		Json["AssetType"] = "Mesh";
 		
 		nlohmann::json Mesh;
-		Mesh["MeshCount"] = meshes.size();
+		Mesh["VertexCount"] = mesh.vertices.size();
+		Mesh["IndexCount"] = mesh.indices.size();
+		Mesh["SubmeshCount"] = mesh.submeshes.size();
 
 		Json["Meta"] = Mesh;
 		
@@ -43,21 +45,10 @@ namespace Nexus::Utils
 		stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
 		stream.write(JsonDump.c_str(), JsonDump.length());
 		
-		for(auto& mesh : meshes)
-		{
-			size = (uint32_t)mesh.vertices.size();
-			stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
-			stream.write(reinterpret_cast<const char*>(mesh.vertices.data()), size * sizeof(Meshing::Vertex));
-			
-			size = (uint32_t)mesh.indices.size();
-			stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
-			stream.write(reinterpret_cast<const char*>(mesh.indices.data()), size * sizeof(uint32_t));
-			
-			size = (uint32_t)mesh.submeshes.size();
-			stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
-			stream.write(reinterpret_cast<const char*>(mesh.submeshes.data()), size * sizeof(Meshing::Submesh));
-		}
-
+		stream.write(reinterpret_cast<const char*>(mesh.vertices.data()), mesh.vertices.size() * sizeof(Meshing::Vertex));	
+		stream.write(reinterpret_cast<const char*>(mesh.indices.data()), mesh.indices.size() * sizeof(uint32_t));
+		stream.write(reinterpret_cast<const char*>(mesh.submeshes.data()), mesh.submeshes.size() * sizeof(Meshing::Submesh));
+		
 		stream.close();
 		return true;
 	}
@@ -121,18 +112,19 @@ namespace Nexus::Utils
 		stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
 		stream.write(JsonDump.c_str(), JsonDump.length());
 
-		size = texture->image.width * texture->image.height * texture->image.channels;
-		stream.write(reinterpret_cast<const char*>(texture->image.pixels.data()), size * sizeof(uint8_t));
+		stream.write(reinterpret_cast<const char*>(texture->image.pixels.data()), texture->image.pixels.size() * sizeof(uint8_t));
 
 		stream.close();
 
 		return true;
 	}
 
-	bool ImportMaterial(const AssetFilePath& dstFolder, const Meshing::Material* material, const std::vector<Meshing::Texture>& textures)
+	Nexus::UUID ImportMaterial(const AssetFilePath& dstFolder, const Meshing::Material* material, const std::vector<Meshing::Texture>& textures)
 	{
+		UUID uid;
+
 		nlohmann::json Json;
-		Json["UUID"] = (uint64_t)UUID();
+		Json["UUID"] = (uint64_t)uid;
 		Json["AssetType"] = "Material";
 
 		nlohmann::json Material;
@@ -216,7 +208,8 @@ namespace Nexus::Utils
 
 		std::ofstream stream(file);
 		stream << JsonDump;
-		return true;
+		
+		return uid;
 	}
 }
 
@@ -228,8 +221,6 @@ bool Nexus::Importer::ImportGLTF(const AssetFilePath& path, const AssetFilePath&
 
 	if (!std::filesystem::exists(dstFolder))
 		std::filesystem::create_directories(dstFolder);
-
-	Utils::ImportMesh(dstFolder, scene.meshes, Name);
 
 	auto TexFolder = dstFolder / "Textures";
 	if (!std::filesystem::exists(TexFolder))
@@ -244,6 +235,8 @@ bool Nexus::Importer::ImportGLTF(const AssetFilePath& path, const AssetFilePath&
 
 	for (auto& Mat : scene.materials)
 		Utils::ImportMaterial(MatFolder, &Mat, scene.textures);
+
+	Utils::ImportMesh(dstFolder, scene.mesh, Name);
 
 	return true;
 }
@@ -273,7 +266,7 @@ bool Nexus::Importer::ImportImage(const AssetFilePath& path, const AssetFilePath
 	return Utils::ImportImage(dstFolder, &i);
 }
 
-std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path, std::vector<Meshing::Mesh>& meshes)
+std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path, Meshing::Mesh& mesh)
 {
 	UUID Id(true);
 
@@ -306,30 +299,19 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path
 		Id = UUID(uid);
 
 		auto& meta = Json["Meta"];
-		auto meshCount = meta["MeshCount"].get<uint32_t>();
+		auto vc = meta["VertexCount"].get<uint32_t>();
+		auto ic = meta["IndexCount"].get<uint32_t>();
+		auto sc = meta["SubmeshCount"].get<uint32_t>();
 
-		meshes.resize(meshCount);
-		for (auto& mesh : meshes)
-		{
-			uint32_t numVertices = 0;
-			stream.read(reinterpret_cast<char*>(&numVertices), sizeof(uint32_t));
+		mesh.vertices.resize(vc);
+		mesh.indices.resize(ic);
+		mesh.submeshes.resize(sc);
 
-			mesh.vertices.resize(numVertices);
-			stream.read(reinterpret_cast<char*>(mesh.vertices.data()), numVertices * sizeof(Meshing::Vertex));
-
-			uint32_t numIndices = 0;
-			stream.read(reinterpret_cast<char*>(&numIndices), sizeof(uint32_t));
-
-			mesh.indices.resize(numIndices);
-			stream.read(reinterpret_cast<char*>(mesh.indices.data()), numIndices * sizeof(uint32_t));
-
-			uint32_t numSubmeshes = 0;
-			stream.read(reinterpret_cast<char*>(&numSubmeshes), sizeof(uint32_t));
-
-			mesh.submeshes.resize(numSubmeshes);
-			stream.read(reinterpret_cast<char*>(mesh.submeshes.data()), numSubmeshes * sizeof(Meshing::Submesh));
-		}
+		stream.read(reinterpret_cast<char*>(mesh.vertices.data()), vc * sizeof(Meshing::Vertex));
+		stream.read(reinterpret_cast<char*>(mesh.indices.data()), ic * sizeof(uint32_t));
+		stream.read(reinterpret_cast<char*>(mesh.submeshes.data()), sc * sizeof(Meshing::Submesh));
 	}
+
 	stream.close();
 
 	return { true,Id };
@@ -378,6 +360,7 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadImage(const AssetFilePath& pat
 		image.pixels.resize(size);
 		stream.read(reinterpret_cast<char*>(image.pixels.data()), size * sizeof(uint8_t));
 	}
+	stream.close();
 
 	return { true,Id };
 }
@@ -419,23 +402,28 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadTexture(const AssetFilePath& p
 		texture.image.width = meta["Width"].get<uint32_t>();
 		texture.image.height = meta["Height"].get<uint32_t>();
 		texture.image.channels = meta["Channels"].get<uint32_t>();
-		texture.samplerHash = meta["Sampler"].get<uint32_t>();
+
+		if (meta.contains("Sampler"))
+			texture.samplerHash = meta["Sampler"].get<uint32_t>();
+		else
+			texture.samplerHash = 11122; // Look up to Meshing::Sampler 
 
 		uint32_t size = texture.image.width * texture.image.height * texture.image.channels;
 
 		texture.image.pixels.resize(size);
 		stream.read(reinterpret_cast<char*>(texture.image.pixels.data()), size * sizeof(uint8_t));
 	}
+	stream.close();
 
 	return { true,Id };
 }
 
-std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& path, Meshing::Material& material, std::unordered_map<uint32_t, Meshing::Texture>& textures)
+std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& path, Meshing::Material& material, std::unordered_map<uint8_t, Meshing::Texture>& textures)
 {
-	UUID Id(true);
+	UUID UId(true);
 
 	if (path.extension().string() != MaterialExtension)
-		return { false,Id };
+		return { false,UId };
 
 	std::ifstream fin(path);
 
@@ -446,11 +434,14 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& 
 	nlohmann::json Json = nlohmann::json::parse(stream.str());
 
 	if (!Json.contains("AssetType"))
-		return { false,Id };
+		return { false,UId };
 
 	auto type = Json["AssetType"].get<std::string>();
 	if (type != "Material")
-		return { false,Id };
+		return { false,UId };
+
+	auto uid = Json["UUID"].get<uint64_t>();
+	UId = UUID(uid);
 
 	auto& meta = Json["Meta"];
 
@@ -477,8 +468,8 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& 
 
 	if (meta.contains("AlbedoMap"))
 	{
-		auto path = meta["AlbedoMap"].get<std::string>();
-		auto [res, Id] = LoadTexture(path, textures[0]);
+		auto Path = meta["AlbedoMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(Path, textures[0]);
 
 		if (res)
 		{
@@ -491,8 +482,8 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& 
 
 	if (meta.contains("NormalMap"))
 	{
-		auto path = meta["NormalMap"].get<std::string>();
-		auto [res, Id] = LoadTexture(path, textures[3]);
+		auto Path = meta["NormalMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(Path, textures[3]);
 
 		if (res)
 			material.normalTexture = UUID(Id);
@@ -500,8 +491,8 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& 
 
 	if (meta.contains("OcculsionMap"))
 	{
-		auto path = meta["OcculsionMap"].get<std::string>();
-		auto [res, Id] = LoadTexture(path, textures[4]);
+		auto Path = meta["OcculsionMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(Path, textures[4]);
 
 		if (res)
 			material.occulsionTexture = UUID(Id);
@@ -509,8 +500,8 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& 
 	
 	if (meta.contains("EmissiveMap"))
 	{
-		auto path = meta["EmissiveMap"].get<std::string>();
-		auto [res, Id] = LoadTexture(path, textures[5]);
+		auto Path = meta["EmissiveMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(Path, textures[5]);
 
 		if (res)
 			material.emissiveTexture = UUID(Id);
@@ -518,8 +509,8 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& 
 	
 	if (meta.contains("MetallicRoughnessMap"))
 	{
-		auto path = meta["MetallicRoughnessMap"].get<std::string>();
-		auto [res, Id] = LoadTexture(path, textures[1]);
+		auto Path = meta["MetallicRoughnessMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(Path, textures[1]);
 
 		if (res)
 			material.metalicRoughness.metallicRoughnessTexture = UUID(Id);
@@ -527,11 +518,12 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& 
 
 	if (meta.contains("SpecularGlossinessMap"))
 	{
-		auto path = meta["SpecularGlossinessMap"].get<std::string>();
-		auto [res, Id] = LoadTexture(path, textures[1]);
+		auto Path = meta["SpecularGlossinessMap"].get<std::string>();
+		auto [res, Id] = LoadTexture(Path, textures[1]);
 
 		if (res)
 			material.specularGlossiness.specularGlossinessTexture = UUID(Id);
 	}
 
+	return { true,UId };
 }

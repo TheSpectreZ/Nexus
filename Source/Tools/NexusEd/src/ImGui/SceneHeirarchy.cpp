@@ -162,22 +162,27 @@ static void DrawComponent(const std::string& name, Nexus::Entity e, UIFuntion ui
 
 static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
 {
-	std::vector<Meshing::Mesh> meshes;
-	auto [res, id] = Importer::LoadMesh(filepath, meshes);
+	Meshing::Mesh mesh;
+	auto [res, id] = Importer::LoadMesh(filepath, mesh);
 
 	if (res)
 	{
-		ResourcePool::Get()->AllocateRenderableMesh(meshes, id);
+		auto Mesh = ResourcePool::Get()->AllocateRenderableMesh(mesh, id);
 		component.handle = id;
 	}
 }
 
-static void LoadMaterial(const AssetFilePath& filepath, Component::Mesh& component)
+static UUID LoadMaterial(const AssetFilePath& filepath)
 {
-	std::unordered_map<uint32_t, Meshing::Texture> textures;
+	std::unordered_map<uint8_t, Meshing::Texture> textures;
 	Meshing::Material material;
 	auto [res, id] = Importer::LoadMaterial(filepath, material, textures);
 
+	if (!res)
+		return UUID(true);
+
+	ResourcePool::Get()->AllocateRenderableMaterial(material, textures, id);
+	return id;
 }
 
 void NexusEd::SceneHeirarchy::SetContext(Ref<Scene> scene)
@@ -328,9 +333,8 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			if (!component.handle)
 				name = "No Mesh Assigned";
 			else
-			{
 				name = "Valid Mesh";
-			}
+			
 
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 125.f);
 			ImGui::LabelText("Name", "%s", name.c_str());
@@ -373,17 +377,30 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 			if (component.handle)
 			{
-				ImGui::Button("Assign Material", ImVec2(ImGui::GetContentRegionAvail().x, 50.f));
-				if (ImGui::BeginDragDropTarget())
+				auto mesh = ResourcePool::Get()->GetRenderableMesh(component.handle);
+				auto& Submeshes = mesh->GetSubmeshes();
+				for (uint32_t i = 0; i < (uint32_t)Submeshes.size(); i++)
 				{
-					if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+					if (Submeshes[i].materialIndex == UINT64_MAX)
 					{
-						const wchar_t* path = (const wchar_t*)payload->Data;
-						LoadMaterial(path, component);
+						ImGui::LabelText("Invalid Material", "Submesh %i", i);
+						if (ImGui::BeginDragDropTarget())
+						{
+							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+							{
+								const wchar_t* path = (const wchar_t*)payload->Data;
+								Submeshes[i].materialIndex = LoadMaterial(path);
+							}
+							ImGui::EndDragDropTarget();
+						}
 					}
-					ImGui::EndDragDropTarget();
+					else
+					{
+						ImGui::LabelText("Valid Material", "Submesh %i", i);
+					}
 				}
 			}
+
 		});
 
 	DrawComponent<Component::Script>("Script", en, [&](auto& component)

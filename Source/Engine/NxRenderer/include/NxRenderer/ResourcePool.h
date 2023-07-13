@@ -1,6 +1,7 @@
 #pragma once
 #include "NxCore/UUID.h"	
 #include "NxRenderer/RenderableMesh.h"
+#include "NxRenderer/RenderableMaterial.h"
 #include "NxRenderer/GraphicsInterface.h"
 
 namespace Nexus
@@ -26,11 +27,16 @@ namespace Nexus
 		Ref<Sampler> GetSampler(const SamplerSpecification& specs);
 
 		RESOURCE_METHOD_DECL(Texture,TextureSpecification,m_Textures)
-		RESOURCE_METHOD_DECL(RenderableMesh, std::vector<Meshing::Mesh>, m_RenderableMeshes)
+		RESOURCE_METHOD_DECL(RenderableMesh, Meshing::Mesh, m_RenderableMeshes)
+		
+		Ref<RenderableMaterial> GetRenderableMaterial(UUID HashId) { return m_RenderableMaterials[HashId]; }
+		Ref<RenderableMaterial> AllocateRenderableMaterial(const Meshing::Material& specs, std::unordered_map<uint8_t, Meshing::Texture>& textures, UUID HashID);
+		void DeallocateRenderableMaterial(UUID HashID);
 	private:
 		std::unordered_map<UUID, Ref<Buffer>> m_UniformBuffers;
 		std::unordered_map<UUID, Ref<Texture>> m_Textures;
 		std::unordered_map<UUID, Ref<RenderableMesh>> m_RenderableMeshes;
+		std::unordered_map<UUID, Ref<RenderableMaterial>> m_RenderableMaterials;
 		
 		std::unordered_map<uint32_t, Ref<Sampler>> m_Samplers;
 	};

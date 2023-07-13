@@ -11,27 +11,21 @@
 
 namespace Nexus
 {
-	
 	class NEXUS_RENDERER_API RenderableMesh
 	{
-		struct Mesh
-		{
-			Ref<Buffer> vb, ib;
-			std::vector<Meshing::Submesh> sb;
-		};
-
 	public:
-		RenderableMesh(const std::vector<Meshing::Mesh>& meshes);
+		RenderableMesh(const Meshing::Mesh& mesh);
 		~RenderableMesh();
 
-		uint32_t GetMeshCount() { return (uint32_t)m_Meshes.size(); }
-		
-		Ref<Buffer> GetVertexBuffer(uint32_t index) { return m_Meshes[index].vb; }
-		Ref<Buffer> GetIndexBuffer(uint32_t index) { return m_Meshes[index].ib; }
+		Ref<Buffer> GetVertexBuffer() { return m_VB; }
+		Ref<Buffer> GetIndexBuffer() { return m_IB; }
 
-		std::vector<Meshing::Submesh> GetSubmeshes(uint32_t index) { return m_Meshes[index].sb; }
+		std::vector<Meshing::Submesh>& GetSubmeshes() { return m_Submeshes; }
 	private:
-		std::vector<Mesh> m_Meshes;
+		Ref<Buffer> m_VB;
+		Ref<Buffer> m_IB;
+
+		std::vector<Meshing::Submesh> m_Submeshes;
 	};
 
 }

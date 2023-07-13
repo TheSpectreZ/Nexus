@@ -17,19 +17,19 @@ void Nexus::RenderableScene::Prepare()
 	auto cameraBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform0.hashId);
 	cameraBuf->Update((void*)m_Scene->GetCamera());
 
-	//auto sceneBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform1.hashId);
-	//sceneBuf->Update((void*)&m_SceneBuffer);
-	//
-	//Entity entity;
-	//auto view = m_Scene->GetAllEntitiesWith<Component::DirectionalLight>();
-	//for (auto& e : view)
-	//{
-	//	entity = { e,m_Scene.get() };
-	//
-	//	auto& DL = entity.GetComponent<Component::DirectionalLight>();
-	//	m_SceneBuffer.lightDir = DL.direction;
-	//	m_SceneBuffer.lightCol = DL.color;
-	//}
+	Entity entity;
+	auto view = m_Scene->GetAllEntitiesWith<Component::DirectionalLight>();
+	for (auto& e : view)
+	{
+		entity = { e,m_Scene.get() };
+	
+		auto& DL = entity.GetComponent<Component::DirectionalLight>();
+		m_SceneBuffer.lightDir = DL.direction;
+		m_SceneBuffer.lightCol = DL.color;
+	}
+	
+	auto sceneBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform1.hashId);
+	sceneBuf->Update((void*)&m_SceneBuffer);
 }
 
 void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
@@ -57,31 +57,20 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 		auto RTMesh = ResourcePool::Get()->GetRenderableMesh(MeshHandle);
 
 		queue->BindShaderResourceHeap(m_Shader, PerEntityHeap[Identity.uuid]);
+		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
+		queue->BindIndexBuffer(RTMesh->GetIndexBuffer());
 
-		for (uint32_t index = 0; index < RTMesh->GetMeshCount(); index++)
+		for (auto& sb : RTMesh->GetSubmeshes())
 		{
-			queue->BindVertexBuffer(RTMesh->GetVertexBuffer(index));
+			if (sb.materialIndex != UINT64_MAX)
+			{
+				if (!PerMaterialHeap.contains(sb.materialIndex))
+					CreateMaterialResource(sb.materialIndex);
 
-			auto ib = RTMesh->GetIndexBuffer(index);
-
-			queue->BindIndexBuffer(ib);
-			queue->DrawIndices(ib->GetSize() / sizeof(uint32_t), 1, 0, 0, 0);
+				queue->BindShaderResourceHeap(m_Shader, PerMaterialHeap[sb.materialIndex]);
+				queue->DrawIndices(sb.indexSize, 1, sb.indexOffset, 0, 0);
+			}
 		}
-
-		//if (!RTMesh->GetMaterialTable())
-		//	return;
-		//
-		//auto& Materials = RTMesh->GetMaterialTable()->GetMaterials();
-		//
-		//for (auto& sm : RTMesh->GetSubmeshes())
-		//{
-		//	auto MatId = Materials[sm.materialIndex].m_Id;
-		//	if (!PerMaterialHeap.contains(MatId))
-		//		CreateMaterialResource(Materials[sm.materialIndex]);
-		//
-		//	queue->BindShaderResourceHeap(m_Shader, PerMaterialHeap[MatId]);
-		//	queue->DrawIndices(sm.IndexSize, 1, sm.IndexOff, 0, 0);
-		//}
 	}
 }
 
@@ -99,14 +88,14 @@ void Nexus::RenderableScene::Initialize()
 		PerSceneUniform0.binding = 0;
 		auto cbuff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform0);
 
-		//// Scene
-		//PerSceneUniform1.hashId = UUID();
-		//PerSceneUniform1.set = 0;
-		//PerSceneUniform1.binding = 1;
-		//auto sbuff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform1);
+		// Scene
+		PerSceneUniform1.hashId = UUID();
+		PerSceneUniform1.set = 0;
+		PerSceneUniform1.binding = 1;
+		auto sbuff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform1);
 
 		m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0.binding, cbuff);
-		//m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform1.binding, sbuff);
+		m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform1.binding, sbuff);
 	}
 
 	// Sampler
@@ -126,7 +115,7 @@ void Nexus::RenderableScene::Destroy()
 {
 	m_Shader->DeallocateShaderResourceHeap(PerSceneHeap);
 	ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform0.hashId);
-	//ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform1.hashId);
+	ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform1.hashId);
 
 	for (auto& [k, v] : PerEntityHeap)
 	{
@@ -136,13 +125,13 @@ void Nexus::RenderableScene::Destroy()
 	PerEntityHeap.clear();
 	PerEntityUniform.clear();
 	
-	//for (auto& [k, v] : PerMaterialHeap)
-	//{
-	//	m_Shader->DeallocateShaderResourceHeap(v);
-	//	ResourcePool::Get()->DeallocateUniformBuffer(PerMaterialUniform[k].hashId);
-	//}
-	//PerMaterialHeap.clear();
-	//PerMaterialUniform.clear();
+	for (auto& [k, v] : PerMaterialHeap)
+	{
+		m_Shader->DeallocateShaderResourceHeap(v);
+		ResourcePool::Get()->DeallocateUniformBuffer(PerMaterialUniform[k].hashId);
+	}
+	PerMaterialHeap.clear();
+	PerMaterialUniform.clear();
 }
 
 void Nexus::RenderableScene::CreateEntityResource(UUID Id)
@@ -163,5 +152,55 @@ void Nexus::RenderableScene::CreateEntityResource(UUID Id)
 	PerEntityUniform[Id] = uniformHandle;
 
 	m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
+}
+
+void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
+{
+	ResourceHeapHandle heapHandle{};
+	heapHandle.hashId = UUID();
+	heapHandle.set = 2;
+
+	m_Shader->AllocateShaderResourceHeap(heapHandle);
+	PerMaterialHeap[Id] = heapHandle;
+
+	UniformBufferHandle uniformHandle{};
+	uniformHandle.hashId = UUID();
+	uniformHandle.set = 2;
+	uniformHandle.binding = 0;
+
+	auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, uniformHandle);
+	PerMaterialUniform[Id] = uniformHandle;
+	m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
+	
+	Ref<RenderableMaterial> material = ResourcePool::Get()->GetRenderableMaterial(Id);
+	auto factors = material->GetParams()._factors;
+	buff->Update(&factors);
+
+	Ref<Sampler> sampler = ResourcePool::Get()->GetSampler(11122);
+	
+	CombinedImageSamplerHandle imageHandle;
+	imageHandle.set = 2;
+	imageHandle.sampler = sampler;
+
+	if(auto Tex = material->GetParams()._Maps[TextureType::Albedo]; Tex != nullptr)
+	{
+		imageHandle.binding = 1;
+		imageHandle.texture = material->GetParams()._Maps[TextureType::Albedo];
+		m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	}
+
+	if (auto Tex = material->GetParams()._Maps[TextureType::MetallicRoughness]; Tex != nullptr)
+	{
+		imageHandle.binding = 2;
+		imageHandle.texture = material->GetParams()._Maps[TextureType::MetallicRoughness];
+		m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	}
+
+	if (auto Tex = material->GetParams()._Maps[TextureType::Normal]; Tex != nullptr)
+	{
+		imageHandle.binding = 3;
+		imageHandle.texture = material->GetParams()._Maps[TextureType::Normal];
+		m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	}
 }
 
