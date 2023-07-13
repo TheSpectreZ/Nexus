@@ -18,6 +18,16 @@ void NexusEd::ContentBrowser::Initialize()
 	samplerSpecs.sampler.W = Nexus::SamplerWrapMode::Repeat;
 
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
+	
+	Importer::ImportImage("res/Textures/DefaultWhite.png", "Resources/Textures", "DefaultWhite");
+	{
+		Meshing::Image defaultImage;
+		auto [res, id] = Importer::LoadImage("Resources/Textures/DefaultWhite.NxTex", defaultImage);
+
+		TextureSpecification specs{ defaultImage };
+
+		ResourcePool::Get()->AllocateTexture(specs, UUID((uint64_t)0));
+	}
 
 	{
 		Meshing::Image fileImage;

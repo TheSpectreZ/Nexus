@@ -292,6 +292,7 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 		return;
 	}
 
+	vkQueueWaitIdle(m_RenderQueue);
 	vkBeginCommandBuffer(m_RenderCommandBuffer[m_FrameIndex], &m_CmdBeginInfo);
 	{
 		for (auto& i : m_TransferData.m_Textures)

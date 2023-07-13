@@ -70,6 +70,10 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 				queue->BindShaderResourceHeap(m_Shader, PerMaterialHeap[sb.materialIndex]);
 				queue->DrawIndices(sb.indexSize, 1, sb.indexOffset, 0, 0);
 			}
+			else
+			{
+
+			}
 		}
 	}
 }
@@ -182,25 +186,31 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	imageHandle.set = 2;
 	imageHandle.sampler = sampler;
 
-	if(auto Tex = material->GetParams()._Maps[TextureType::Albedo]; Tex != nullptr)
-	{
-		imageHandle.binding = 1;
+	UUID def = UUID((uint64_t)0);
+	Ref<Texture> defaultTex = ResourcePool::Get()->GetTexture(def);
+
+	if (auto Tex = material->GetParams()._Maps[TextureType::Albedo]; Tex != nullptr)
 		imageHandle.texture = material->GetParams()._Maps[TextureType::Albedo];
-		m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
-	}
+	else
+		imageHandle.texture = defaultTex;
+
+	imageHandle.binding = 1;
+	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 
 	if (auto Tex = material->GetParams()._Maps[TextureType::MetallicRoughness]; Tex != nullptr)
-	{
-		imageHandle.binding = 2;
 		imageHandle.texture = material->GetParams()._Maps[TextureType::MetallicRoughness];
-		m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
-	}
+	else
+		imageHandle.texture = defaultTex;
+
+	imageHandle.binding = 2;
+	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 
 	if (auto Tex = material->GetParams()._Maps[TextureType::Normal]; Tex != nullptr)
-	{
-		imageHandle.binding = 3;
 		imageHandle.texture = material->GetParams()._Maps[TextureType::Normal];
-		m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
-	}
+	else
+		imageHandle.texture = defaultTex;
+
+	imageHandle.binding = 3;
+	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 }
 

@@ -89,8 +89,8 @@ namespace Nexus
 			struct pbrMetallicRoughness
 			{
 				glm::vec4 albedoColor{1.f};
-				float roughness{ 0.5f };
-				float metallic{ 0.5f };
+				float roughness{ 1.f };
+				float metallic{ 1.f };
 
 				uint64_t albedoTexture = UINT64_MAX;
 				uint64_t metallicRoughnessTexture = UINT64_MAX;

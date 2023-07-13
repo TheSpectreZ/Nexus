@@ -381,23 +381,22 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 				auto& Submeshes = mesh->GetSubmeshes();
 				for (uint32_t i = 0; i < (uint32_t)Submeshes.size(); i++)
 				{
-					if (Submeshes[i].materialIndex == UINT64_MAX)
+					ImGui::LabelText("Material", "Submesh %i", i);
+					if (ImGui::BeginDragDropTarget())
 					{
-						ImGui::LabelText("Invalid Material", "Submesh %i", i);
-						if (ImGui::BeginDragDropTarget())
+						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
 						{
-							if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-							{
-								const wchar_t* path = (const wchar_t*)payload->Data;
-								Submeshes[i].materialIndex = LoadMaterial(path);
-							}
-							ImGui::EndDragDropTarget();
+							const wchar_t* path = (const wchar_t*)payload->Data;
+							Submeshes[i].materialIndex = LoadMaterial(path);
 						}
-					}
-					else
-					{
-						ImGui::LabelText("Valid Material", "Submesh %i", i);
-					}
+						ImGui::EndDragDropTarget();
+					}	
+					ImGui::SameLine();
+					
+					ImGui::PushID(i);
+					if (ImGui::Button("Reset"))
+						Submeshes[i].materialIndex = UINT64_MAX;
+					ImGui::PopID();
 				}
 			}
 

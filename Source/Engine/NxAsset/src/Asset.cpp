@@ -204,7 +204,14 @@ namespace Nexus::Utils
 
 		std::string JsonDump = Json.dump(4);
 
-		AssetFilePath file = AssetFilePath(dstFolder.generic_string() + "/" + material->Name + MaterialExtension);
+		std::string Name = material->Name;
+		if (Name.empty())
+			Name = "UnNamed-Material";
+
+		AssetFilePath file = AssetFilePath(dstFolder.generic_string() + "/" + Name + MaterialExtension);
+
+		if (std::filesystem::exists(file))
+			file.replace_filename(std::string(Name + "- Copy" + MaterialExtension));
 
 		std::ofstream stream(file);
 		stream << JsonDump;

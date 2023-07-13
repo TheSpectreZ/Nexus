@@ -14,8 +14,8 @@ namespace Nexus
 		struct ParamFactors
 		{
 			glm::vec4 albedo;
-			glm::vec3 emissive;
-			glm::vec3 specular;
+			glm::vec3 emissive; float n1;
+			glm::vec3 specular; float n2;
 			float metalness, roughness, glossiness, useNormal;
 		} _factors;
 
