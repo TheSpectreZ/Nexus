@@ -3,7 +3,7 @@ Nexus Engine is an exciting project that serves as a Game Engine and Rendering F
 
 ## Getting Started
 
-To begin working with Nexus, It is recommended to use **Visual Studio 2022** as the development environment, as it is the officially supported platform for this project. Follow the steps below to get started:
+To begin working with Nexus, It is recommended to use **Visual Studio 2022** as the development environment, as it is the officially supported platform for this project (Make Sure to have **Visual Studio Build** Tools Installed as well). Follow the steps below to get started:
 
 <ins>**1. Downloading the Repository**</ins>
 
