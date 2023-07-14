@@ -1,5 +1,5 @@
-#include "NxRenderer/Renderer.h"
-#include "NxRenderer/ResourcePool.h"
+#include "NxRenderEngine/Renderer.h"
+#include "NxRenderEngine/ResourcePool.h"
 
 Nexus::Module::Renderer* Nexus::Module::Renderer::s_Instance = nullptr;
 

@@ -1,4 +1,4 @@
-#include "NxRenderer/ResourcePool.h"
+#include "NxRenderEngine/ResourcePool.h"
 
 #include "NxCore/Assertion.h"
 
@@ -102,10 +102,15 @@ Nexus::Ref<Nexus::RenderableMaterial> Nexus::ResourcePool::AllocateRenderableMat
 {
 	if (!m_RenderableMaterials.contains(HashId))
 	{
+		std::unordered_map<TextureType, uint32_t> Samplers;
+
 		TextureSpecification ts{};
+		SamplerSpecification ss{};
 
 		if (textures.contains((uint8_t)TextureType::Albedo))
 		{
+			Samplers[TextureType::Albedo] = textures[(uint32_t)TextureType::Albedo].samplerHash;
+
 			ts.image = textures[(uint8_t)TextureType::Albedo].image;
 			if (specs.specularGlossiness.support)
 				AllocateTexture(ts, specs.specularGlossiness.albedoTexture);
@@ -115,35 +120,45 @@ Nexus::Ref<Nexus::RenderableMaterial> Nexus::ResourcePool::AllocateRenderableMat
 
 		if (textures.contains((uint8_t)TextureType::Emissive))
 		{
+			Samplers[TextureType::Emissive] = textures[(uint32_t)TextureType::Emissive].samplerHash;
+			
 			ts.image = textures[(uint8_t)TextureType::Emissive].image;
 			AllocateTexture(ts, specs.emissiveTexture);
 		}
 
 		if (textures.contains((uint8_t)TextureType::Normal))
 		{
+			Samplers[TextureType::Normal] = textures[(uint32_t)TextureType::Normal].samplerHash;
+
 			ts.image = textures[(uint8_t)TextureType::Normal].image;
 			AllocateTexture(ts, specs.normalTexture);
 		}
 
 		if (textures.contains((uint8_t)TextureType::Occulsion))
 		{
+			Samplers[TextureType::Occulsion] = textures[(uint32_t)TextureType::Occulsion].samplerHash;
+			
 			ts.image = textures[(uint8_t)TextureType::Occulsion].image;
 			AllocateTexture(ts, specs.occulsionTexture);
 		}
 
 		if (textures.contains((uint8_t)TextureType::SpecularGlossiness))
 		{
+			Samplers[TextureType::SpecularGlossiness] = textures[(uint32_t)TextureType::SpecularGlossiness].samplerHash;
+
 			ts.image = textures[(uint8_t)TextureType::SpecularGlossiness].image;
 			AllocateTexture(ts, specs.specularGlossiness.specularGlossinessTexture);
 		}
 
 		if (textures.contains((uint8_t)TextureType::MetallicRoughness))
 		{
+			Samplers[TextureType::MetallicRoughness] = textures[(uint32_t)TextureType::MetallicRoughness].samplerHash;
+
 			ts.image = textures[(uint8_t)TextureType::MetallicRoughness].image;
 			AllocateTexture(ts, specs.metalicRoughness.metallicRoughnessTexture);
 		}
 
-		m_RenderableMaterials[HashId] = CreateRef<RenderableMaterial>(specs);
+		m_RenderableMaterials[HashId] = CreateRef<RenderableMaterial>(specs, Samplers);
 	}
 
 	return m_RenderableMaterials[HashId];

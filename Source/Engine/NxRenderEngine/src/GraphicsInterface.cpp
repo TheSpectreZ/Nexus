@@ -1,4 +1,4 @@
-#include "NxRenderer/GraphicsInterface.h"
+#include "NxRenderEngine/GraphicsInterface.h"
 #include "NxCore/Assertion.h"
 
 #include "NxVulkan/VkContext.h"

@@ -2,7 +2,7 @@
 #include "NxApplication/FileDialog.h"
 #include "NxScene/Component.h"
 #include "NxAsset/Asset.h"
-#include "NxRenderer/ResourcePool.h"
+#include "NxRenderEngine/ResourcePool.h"
 
 #include "imgui.h"
 #include "imgui_internal.h"

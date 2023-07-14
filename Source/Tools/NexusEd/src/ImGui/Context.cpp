@@ -4,8 +4,8 @@
 #include "NxApplication/Application.h"
 #include "Context.h"
 
-#include "NxRenderer/GraphicsInterface.h"
-#include "NxRenderer/Renderer.h"
+#include "NxRenderEngine/GraphicsInterface.h"
+#include "NxRenderEngine/Renderer.h"
 
 #include "NxVulkan/VkCommandQueue.h"
 #include "NxVulkan/VkRenderpass.h"

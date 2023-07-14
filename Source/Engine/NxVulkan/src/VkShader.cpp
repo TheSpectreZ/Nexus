@@ -56,7 +56,7 @@ static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData
 		//uint32_t dimension = baseType.image.dim;
 		//uint32_t arraySize = type.array[0];
 
-		if (binding >= data->bindings[set].size())
+		while (binding >= data->bindings[set].size())
 			data->bindings[set].emplace_back();
 		
 		auto& ref = data->bindings[set].at(binding);

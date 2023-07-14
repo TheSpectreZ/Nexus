@@ -2,7 +2,7 @@
 #include <filesystem>
 #include "imgui.h"
 
-#include "NxRenderer/ResourcePool.h"	
+#include "NxRenderEngine/ResourcePool.h"	
 
 namespace NexusEd
 {

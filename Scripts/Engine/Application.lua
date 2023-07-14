@@ -22,7 +22,7 @@ project "NxApplication"
 		IncludePath["NxAsset"],
 		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
-		IncludePath["NxRenderer"],
+		IncludePath["NxRenderEngine"],
 		IncludePath["NxApplication"]
 	}
 
@@ -32,7 +32,7 @@ project "NxApplication"
 		"NxCore",
 		"NxScene",
 		"NxAsset",
-		"NxRenderer",
+		"NxRenderEngine",
 	}
 
 	defines "NEXUS_ENGINE_SHARED_BUILD"

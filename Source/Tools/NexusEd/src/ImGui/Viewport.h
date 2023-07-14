@@ -1,5 +1,5 @@
 #pragma once
-#include "NxRenderer/GraphicsInterface.h"
+#include "NxRenderEngine/GraphicsInterface.h"
 #include "glm/glm.hpp"
 #include "imgui.h"
 

@@ -1,8 +1,8 @@
 #include "NxCore/Logger.h"
 #include "NxCore/Assertion.h"
 #include "NxCore/Input.h"
-#include "NxRenderer/Drawer.h"
-#include "NxRenderer/Renderer.h"
+#include "NxRenderEngine/Drawer.h"
+#include "NxRenderEngine/Renderer.h"
 
 Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 {

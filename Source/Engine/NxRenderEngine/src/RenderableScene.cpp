@@ -1,5 +1,5 @@
-#include "NxRenderer/RenderableScene.h"
-#include "NxRenderer/ResourcePool.h"
+#include "NxRenderEngine/RenderableScene.h"
+#include "NxRenderEngine/ResourcePool.h"
 
 Nexus::RenderableScene::RenderableScene(Ref<Scene> scene, Ref<Shader> shader)
 	:m_Shader(shader),m_Scene(scene)
@@ -69,10 +69,6 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 
 				queue->BindShaderResourceHeap(m_Shader, PerMaterialHeap[sb.materialIndex]);
 				queue->DrawIndices(sb.indexSize, 1, sb.indexOffset, 0, 0);
-			}
-			else
-			{
-
 			}
 		}
 	}
@@ -184,33 +180,89 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	
 	CombinedImageSamplerHandle imageHandle;
 	imageHandle.set = 2;
-	imageHandle.sampler = sampler;
-
+	
 	UUID def = UUID((uint64_t)0);
 	Ref<Texture> defaultTex = ResourcePool::Get()->GetTexture(def);
 
-	if (auto Tex = material->GetParams()._Maps[TextureType::Albedo]; Tex != nullptr)
+	if (material->GetParams()._factors.useBaseColorMap > -1)
+	{
+		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Albedo]);
 		imageHandle.texture = material->GetParams()._Maps[TextureType::Albedo];
+	}
 	else
+	{
+		imageHandle.sampler = sampler;
 		imageHandle.texture = defaultTex;
+	}
 
 	imageHandle.binding = 1;
 	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 
-	if (auto Tex = material->GetParams()._Maps[TextureType::MetallicRoughness]; Tex != nullptr)
-		imageHandle.texture = material->GetParams()._Maps[TextureType::MetallicRoughness];
+	if (material->GetParams()._factors.pbrType == 1.f)
+	{
+		if (material->GetParams()._factors.useSurfaceMap > -1)
+		{
+			imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::MetallicRoughness]);
+			imageHandle.texture = material->GetParams()._Maps[TextureType::MetallicRoughness];
+		}
+	}
+	else if (material->GetParams()._factors.pbrType == 2.f)
+	{
+		if (material->GetParams()._factors.useSurfaceMap > -1)
+		{
+			imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::SpecularGlossiness]);
+			imageHandle.texture = material->GetParams()._Maps[TextureType::SpecularGlossiness];
+		}
+	}
 	else
+	{
+		imageHandle.sampler = sampler;
 		imageHandle.texture = defaultTex;
+	}
 
 	imageHandle.binding = 2;
 	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 
-	if (auto Tex = material->GetParams()._Maps[TextureType::Normal]; Tex != nullptr)
+	if (material->GetParams()._factors.useNormalMap > -1)
+	{
+		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Normal]);
 		imageHandle.texture = material->GetParams()._Maps[TextureType::Normal];
+	}
 	else
+	{
+		imageHandle.sampler = sampler;
 		imageHandle.texture = defaultTex;
+	}
 
 	imageHandle.binding = 3;
+	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	
+	if (material->GetParams()._factors.useOculsionMap > -1)
+	{
+		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Occulsion]);
+		imageHandle.texture = material->GetParams()._Maps[TextureType::Occulsion];
+	}
+	else
+	{
+		imageHandle.sampler = sampler;
+		imageHandle.texture = defaultTex;
+	}
+
+	imageHandle.binding = 4;
+	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	
+	if (material->GetParams()._factors.useEmissiveMap > -1)
+	{
+		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Emissive]);
+		imageHandle.texture = material->GetParams()._Maps[TextureType::Occulsion];
+	}
+	else
+	{
+		imageHandle.sampler = sampler;
+		imageHandle.texture = defaultTex;
+	}
+
+	imageHandle.binding = 4;
 	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 }
 

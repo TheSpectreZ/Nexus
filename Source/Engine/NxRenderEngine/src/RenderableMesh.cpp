@@ -1,5 +1,5 @@
-#include "NxRenderer/RenderableMesh.h"
-#include "NxRenderer/GraphicsInterface.h"
+#include "NxRenderEngine/RenderableMesh.h"
+#include "NxRenderEngine/GraphicsInterface.h"
 
 Nexus::RenderableMesh::RenderableMesh(const Meshing::Mesh& mesh)
 {

@@ -1,4 +1,4 @@
-project "NxRenderer"
+project "NxRenderEngine"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -25,7 +25,7 @@ project "NxRenderer"
 		IncludePath["NxScene"],
 		IncludePath["NxAsset"],
 
-		IncludePath["NxRenderer"],
+		IncludePath["NxRenderEngine"],
 	}
 
 	links

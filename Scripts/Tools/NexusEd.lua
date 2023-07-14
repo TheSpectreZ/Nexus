@@ -22,7 +22,7 @@ project "NexusEd"
 		"NxAsset",
 		"NxGraphics",
 		"NxVulkan",
-		"NxRenderer",
+		"NxRenderEngine",
 		"NxApplication"
 	}
 
@@ -38,7 +38,7 @@ project "NexusEd"
 		IncludePath["NxAsset"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxVulkan"],
-		IncludePath["NxRenderer"],
+		IncludePath["NxRenderEngine"],
 		IncludePath["NxApplication"]
 	}
 

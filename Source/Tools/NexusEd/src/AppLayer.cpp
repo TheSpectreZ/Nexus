@@ -1,7 +1,7 @@
 #include "AppLayer.h"
 #include "NxGraphics/TypeImpls.h"
-#include "NxRenderer/Renderer.h"
-#include "NxRenderer/ResourcePool.h"
+#include "NxRenderEngine/Renderer.h"
+#include "NxRenderEngine/ResourcePool.h"
 #include "NxScene/Entity.h"
 #include "NxCore/Input.h"
 

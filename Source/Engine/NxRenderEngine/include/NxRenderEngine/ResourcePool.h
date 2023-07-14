@@ -1,8 +1,8 @@
 #pragma once
 #include "NxCore/UUID.h"	
-#include "NxRenderer/RenderableMesh.h"
-#include "NxRenderer/RenderableMaterial.h"
-#include "NxRenderer/GraphicsInterface.h"
+#include "NxRenderEngine/RenderableMesh.h"
+#include "NxRenderEngine/RenderableMaterial.h"
+#include "NxRenderEngine/GraphicsInterface.h"
 
 namespace Nexus
 {

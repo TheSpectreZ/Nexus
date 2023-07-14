@@ -14,7 +14,7 @@
 #include "NxApplication/FileDialog.h"
 // Modules
 #include "NxCore/Input.h"
-#include "NxRenderer/Renderer.h"
+#include "NxRenderEngine/Renderer.h"
 
 namespace Nexus
 {

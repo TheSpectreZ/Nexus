@@ -1,7 +1,7 @@
 #include "Viewport.h"
 #include "Context.h"
-#include "NxRenderer/Renderer.h"
-#include "NxRenderer/ResourcePool.h"
+#include "NxRenderEngine/Renderer.h"
+#include "NxRenderEngine/ResourcePool.h"
 
 #include "NxVulkan/VkTexture.h"		
 #include "NxVulkan/VkFramebuffer.h"
