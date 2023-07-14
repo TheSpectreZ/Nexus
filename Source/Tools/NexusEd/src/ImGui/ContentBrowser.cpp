@@ -19,8 +19,8 @@ void NexusEd::ContentBrowser::Initialize()
 
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
 	
-	Importer::ImportImage("res/Textures/DefaultWhite.png", "Resources/Textures", "DefaultWhite");
 	{
+		//Importer::ImportImage("res/Textures/DefaultWhite.png", "Resources/Textures", "DefaultWhite");
 		Meshing::Image defaultImage;
 		auto [res, id] = Importer::LoadImage("Resources/Textures/DefaultWhite.NxTex", defaultImage);
 
@@ -138,7 +138,6 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 	int columnCount = (int)(panelWidth / (cellsize));
 	columnCount = std::max(1, columnCount);
 
-
 	ImGui::Columns(columnCount, 0, false);
 
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.f, 0.f, 0.f));
@@ -146,6 +145,14 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 	Context::Get()->BindTextureId(m_FolderID);
 	Context::Get()->BindTextureId(m_FileID);
 	
+	static AssetFilePath dragDropPayload, dragDropTarget;
+
+	static bool showDeleteModal = false;
+	static bool dontShowModal = false;
+
+	static int Renaming = -1;
+	static int PasteType = -1;
+
 	int i = 0;
 	for (auto& dir : std::filesystem::directory_iterator(path))
 	{
@@ -153,8 +160,6 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 		const auto& p = dir.path();
 		auto filenameString = p.filename().string();
-
-		static int Renaming = -1;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 4.f);
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 10.f);
@@ -168,6 +173,27 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 			{
 				m_SelectedDirectory = p;
 			}
+
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+			{
+				const wchar_t* itemPath = p.c_str();
+				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
+				ImGui::EndDragDropSource();
+			}
+
+			if (ImGui::BeginDragDropTarget())
+			{
+				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+				{
+					dragDropPayload = (const wchar_t*)payload->Data;
+					dragDropTarget = p;
+
+					if (!dragDropPayload.empty() && !dragDropTarget.empty())
+						ImGui::OpenPopup("DragDropPopup");
+				}
+				ImGui::EndDragDropTarget();
+			}
+
 		}
 		else
 		{
@@ -179,6 +205,35 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
 				ImGui::EndDragDropSource();
 			}
+		}
+
+		// Doesnt work with folders yet
+		if (ImGui::BeginPopup("DragDropPopup"))
+		{
+			if (ImGui::MenuItem("Copy"))
+			{
+				if (std::filesystem::is_directory(dragDropPayload))
+					dragDropTarget /= dragDropPayload.filename();
+
+				std::filesystem::copy(dragDropPayload, dragDropTarget, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+
+				dragDropPayload.clear();
+				dragDropTarget.clear();
+			}
+
+			if (ImGui::MenuItem("Move"))
+			{
+				if (std::filesystem::is_directory(dragDropPayload))
+					dragDropTarget /= dragDropPayload.filename();
+
+				std::filesystem::copy(dragDropPayload, dragDropTarget, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+				std::filesystem::remove_all(dragDropPayload);
+
+				dragDropPayload.clear();
+				dragDropTarget.clear();
+			}
+
+			ImGui::EndPopup();
 		}
 
 		if (ImGui::IsItemHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right, false))
@@ -206,9 +261,6 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 		ImGui::PopStyleVar(3);
 
-		static bool showDeleteModal = false;
-		static bool dontShowModal = false;
-
 		if (ImGui::BeginPopup("FileOptions"))
 		{
 			if (ImGui::MenuItem("Rename"))
@@ -216,6 +268,18 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 			if (ImGui::MenuItem("Delete"))
 				showDeleteModal = true;
+
+			if (ImGui::MenuItem("Copy"))
+			{
+				dragDropPayload = p;
+				PasteType = 0;
+			}
+
+			if (ImGui::MenuItem("Move"))
+			{
+				dragDropPayload = p;
+				PasteType = 1;
+			}
 
 			ImGui::EndPopup();
 		}
@@ -273,6 +337,23 @@ void NexusEd::ContentBrowser::DrawDirectoryFiles(std::filesystem::path path)
 
 		if (ImGui::MenuItem("New Folder"))
 			std::filesystem::create_directory(m_CurrentDirectory / "New Folder");
+
+		if (PasteType > -1 && ImGui::MenuItem("Paste"))
+		{
+			dragDropTarget = m_CurrentDirectory;
+
+			if (std::filesystem::is_directory(dragDropPayload))
+				dragDropTarget /= dragDropPayload.filename();
+
+			std::filesystem::copy(dragDropPayload, dragDropTarget, std::filesystem::copy_options::recursive | std::filesystem::copy_options::overwrite_existing);
+
+			if(PasteType == 1)
+				std::filesystem::remove_all(dragDropPayload);
+			
+			dragDropPayload.clear();
+			dragDropTarget.clear();
+			PasteType = -1;
+		}
 
 		ImGui::EndPopup();
 	}
