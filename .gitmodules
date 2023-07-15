@@ -1,9 +1,3 @@
-[submodule "Source/Dependencies/glfw"]
-	path = Source/Dependencies/glfw
-	url = https://github.com/glfw/glfw.git
-[submodule "Source/Dependencies/spdlog"]
-	path = Source/Dependencies/spdlog
-	url = https://github.com/gabime/spdlog.git
 [submodule "Source/Dependencies/VulkanMemoryAllocator"]
 	path = Source/Dependencies/VulkanMemoryAllocator
 	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
@@ -19,21 +13,9 @@
 [submodule "Source/Dependencies/yamlcpp"]
 	path = Source/Dependencies/yamlcpp
 	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "Source/Dependencies/glad"]
-	path = Source/Dependencies/glad
-	url = https://github.com/TheSpectreZ/glad.git
 [submodule "Source/Dependencies/nlohmannJson"]
 	path = Source/Dependencies/nlohmannJson
 	url = https://github.com/nlohmann/json.git
-[submodule "Source/Dependencies/openALsoft"]
-	path = Source/Dependencies/openALsoft
-	url = https://github.com/TheSpectreZ/openAL-Soft.git
-[submodule "Source/Dependencies/Assimp"]
-	path = Source/Dependencies/Assimp
-	url = https://github.com/TheSpectreZ/assimp.git
-[submodule "Source/Dependencies/assimp"]
-	path = Source/Dependencies/assimp
-	url = https://github.com/TheSpectreZ/assimp.git
 [submodule "Source/Dependencies/Jolt"]
 	path = Source/Dependencies/Jolt
 	url = https://github.com/jrouwe/JoltPhysics.git
@@ -43,3 +25,6 @@
 [submodule "Source/Dependencies/filewatch"]
 	path = Source/Dependencies/filewatch
 	url = https://github.com/ThomasMonkman/filewatch.git
+[submodule "Source/Dependencies/glfw"]
+	path = Source/Dependencies/glfw
+	url = https://github.com/glfw/glfw.git

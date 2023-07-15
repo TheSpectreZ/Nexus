@@ -16,7 +16,7 @@ project "yamlcpp"
 
 	includedirs
 	{
-		IncludeDir["yamlcpp"]
+		IncludePath["yamlcpp"]
 	}
 
     defines 

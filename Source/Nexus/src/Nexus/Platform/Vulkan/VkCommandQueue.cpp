@@ -128,7 +128,6 @@ void Nexus::VulkanCommandQueue::Shut()
 	vkDestroyCommandPool(m_Device->Get(), m_RenderCommandPool, nullptr);
 	vkDestroyCommandPool(m_Device->Get(), m_TransferCommandPool, nullptr);
 
-
 	NEXUS_LOG_TRACE("Vulkan Command Queue Destroyed");
 }
 

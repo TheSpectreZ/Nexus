@@ -1,5 +1,5 @@
 project "jolt"
-	kind "StaticLib"
+	kind "SharedLib"
 	language "C++"
     cppdialect "C++17"
 	location (vcxDir)
@@ -9,8 +9,8 @@ project "jolt"
 
     includedirs
     {
-        IncludeDir["jolt"],
-        IncludeDir["joltRoot"],
+        IncludePath["jolt"],
+        IncludePath["joltRoot"],
     }
 
 	files
@@ -20,6 +20,12 @@ project "jolt"
         (DepDir.."Jolt/Jolt/**.inl"),
         (DepDir.."Jolt/Jolt/**.gliffy"),
 	}
+    
+    defines
+    {
+        "JPH_SHARED_LIBRARY",
+        "JPH_BUILD_SHARED_LIBRARY",
+    }
 
 	filter "system:windows"
 		systemversion "latest"

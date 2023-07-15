@@ -21,33 +21,28 @@ project "imgui"
 		(DepDir.."imgui/imstb_truetype.h"),
 		(DepDir.."imgui/imgui_demo.cpp"),
 
-		(DepDir.."imgui/backends/imgui_impl_glfw.h"),
 		(DepDir.."imgui/backends/imgui_impl_glfw.cpp"),
-
-        (DepDir.."imgui/backends/imgui_impl_opengl3.h"),
-		(DepDir.."imgui/backends/imgui_impl_opengl3.cpp"),
-
-        (DepDir.."imgui/backends/imgui_impl_vulkan.h"),
-		(DepDir.."imgui/backends/imgui_impl_vulkan.cpp"),
+		(DepDir.."imgui/backends/imgui_impl_glfw.h"),
 	}
 
 	includedirs
 	{
-		IncludeDir["imgui"],
-		IncludeDir["glfw"],
+		IncludePath["glfw"],
+		IncludePath["imgui"],
 		
-		"$(VULKAN_SDK)/Include"
+		"$(VULKAN_SDK)/Include",
 	}
 
 	links
 	{
 		"glfw",
+		"legacy_stdio_definitions.lib",
 		"vulkan-1.lib"
 	}
 
 	libdirs
 	{
-		LibDir["vulkanSDK"]
+		"$(VULKAN_SDK)/Lib",
 	}
 
 	filter "system:windows"

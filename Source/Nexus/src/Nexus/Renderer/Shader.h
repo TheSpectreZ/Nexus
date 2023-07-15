@@ -6,10 +6,11 @@
 #include "Texture.h"
 #include <filesystem>
 
-typedef std::vector<uint32_t> SpirV;
 
 namespace Nexus
 {
+	typedef std::vector<uint32_t> SpirV;
+	
 	struct ResourceHeapHandle
 	{
 		uint64_t hashId;
