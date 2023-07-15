@@ -247,22 +247,22 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 		imageHandle.sampler = sampler;
 		imageHandle.texture = defaultTex;
 	}
-
+	
 	imageHandle.binding = 4;
 	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 	
-	if (material->GetParams()._factors.useEmissiveMap > -1)
-	{
-		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Emissive]);
-		imageHandle.texture = material->GetParams()._Maps[TextureType::Occulsion];
-	}
-	else
-	{
-		imageHandle.sampler = sampler;
-		imageHandle.texture = defaultTex;
-	}
-
-	imageHandle.binding = 4;
-	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	//if (material->GetParams()._factors.useEmissiveMap > -1)
+	//{
+	//	imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Emissive]);
+	//	imageHandle.texture = material->GetParams()._Maps[TextureType::Occulsion];
+	//}
+	//else
+	//{
+	//	imageHandle.sampler = sampler;
+	//	imageHandle.texture = defaultTex;
+	//}
+	//
+	//imageHandle.binding = 5;
+	//m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 }
 

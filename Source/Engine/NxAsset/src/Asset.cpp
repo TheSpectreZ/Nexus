@@ -41,7 +41,7 @@ namespace Nexus::Utils
 		if (!stream.is_open())
 			return false;
 
-		uint32_t size = (uint32_t)JsonDump.size();
+		uint32_t size = JsonDump.length();
 		stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
 		stream.write(JsonDump.c_str(), JsonDump.length());
 		
@@ -74,7 +74,7 @@ namespace Nexus::Utils
 		if (!stream.is_open())
 			return false;
 
-		uint32_t size = (uint32_t)JsonDump.size();
+		uint32_t size = JsonDump.length();
 		stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
 		stream.write(JsonDump.c_str(), JsonDump.length());
 
@@ -108,7 +108,7 @@ namespace Nexus::Utils
 		if (!stream.is_open())
 			return false;
 
-		uint32_t size = (uint32_t)JsonDump.size();
+		uint32_t size = JsonDump.length();
 		stream.write(reinterpret_cast<const char*>(&size), sizeof(uint32_t));
 		stream.write(JsonDump.c_str(), JsonDump.length());
 
@@ -526,7 +526,7 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMaterial(const AssetFilePath& 
 	if (meta.contains("SpecularGlossinessMap"))
 	{
 		auto Path = meta["SpecularGlossinessMap"].get<std::string>();
-		auto [res, Id] = LoadTexture(Path, textures[1]);
+		auto [res, Id] = LoadTexture(Path, textures[2]);
 
 		if (res)
 			material.specularGlossiness.specularGlossinessTexture = UUID(Id);

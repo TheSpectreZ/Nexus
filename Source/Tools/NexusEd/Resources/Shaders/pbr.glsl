@@ -80,34 +80,46 @@ layout(set = 0, binding = 1) uniform sceneBuffer
 
 layout(set = 2, binding = 0) uniform MaterialBuffer
 {
-	vec4 albedo;
+	vec4 baseColor;
 	vec3 emissive; float n0;
-	vec3 specular; float n1;
+	vec3 specular; 
 	
-	float roughness;
-	float metalness;
-	float glossiness;
-	
-	float useNormal;
+	int pbrType;
+	int useBaseColorMap;
+	int useSurfaceMap;
+	int useEmissiveMap;
+	int useNormalMap;
+	int useOculsionMap;
+
+	float metalness, roughness, glossiness;
 } m_MaterialBuffer;
 
-layout(set = 2, binding = 1) uniform sampler2D albedoMap;
-layout(set = 2, binding = 2) uniform sampler2D metallicRoughnessMap;
+layout(set = 2, binding = 1) uniform sampler2D baseColorMap;
+layout(set = 2, binding = 2) uniform sampler2D surfaceMap;
 layout(set = 2, binding = 3) uniform sampler2D normalMap;
+layout(set = 2, binding = 4) uniform sampler2D occulsionMap;
 
-vec3 GetMaterialColor()
-{
-	return texture(albedoMap, FragTexC).rgb * m_MaterialBuffer.albedo.rgb;
-}
+const float c_MinRoughness = 0.04;
 
-vec2 GetMetallicRoughness()
-{
-	return texture(metallicRoughnessMap, FragTexC).rg * vec2(m_MaterialBuffer.metalness, m_MaterialBuffer.roughness);
+const int PBR_WORKFLOW_METALLIC_ROUGHNESS = 1;
+const int PBR_WORKFLOW_SPECULAR_GLOSINESS = 2;
+
+float convertMetallic(vec3 diffuse, vec3 specular, float maxSpecular) {
+	float perceivedDiffuse = sqrt(0.299 * diffuse.r * diffuse.r + 0.587 * diffuse.g * diffuse.g + 0.114 * diffuse.b * diffuse.b);
+	float perceivedSpecular = sqrt(0.299 * specular.r * specular.r + 0.587 * specular.g * specular.g + 0.114 * specular.b * specular.b);
+	if (perceivedSpecular < c_MinRoughness) {
+		return 0.0;
+	}
+	float a = c_MinRoughness;
+	float b = perceivedDiffuse * (1.0 - maxSpecular) / (1.0 - c_MinRoughness) + perceivedSpecular - 2.0 * c_MinRoughness;
+	float c = c_MinRoughness - perceivedSpecular;
+	float D = max(b * b - 4.0 * a * c, 0.0);
+	return clamp((-b + sqrt(D)) / (2.0 * a), 0.0, 1.0);
 }
 
 vec3 GetNormal()
 {
-	if (m_MaterialBuffer.useNormal == 1.0)
+	if (m_MaterialBuffer.useNormalMap > 1)
 	{
 		vec3 normal = texture(normalMap, FragTexC).rgb;
 		normal = normal * 2.0 - 1.0;
@@ -176,13 +188,70 @@ vec3 Calculate_CookTorrance_SpecularComponent(vec3 viewDir, vec3 halfDir, vec3 l
 
 void main()
 {
-	vec3 albedo = GetMaterialColor();
-	vec2 metallicRoughness = GetMetallicRoughness();
+	float roughness;
+	float metallic;
+	vec3 diffuseColor;
+	vec4 baseColor;
+
+	vec3 f0 = vec3(0.04);
+
+	if (m_MaterialBuffer.useBaseColorMap > -1)
+		baseColor = texture(baseColorMap, FragTexC) * m_MaterialBuffer.baseColor;
+	else
+		baseColor =  m_MaterialBuffer.baseColor;
+	
+	if (m_MaterialBuffer.pbrType == PBR_WORKFLOW_METALLIC_ROUGHNESS)
+	{
+		roughness = m_MaterialBuffer.roughness;
+		metallic = m_MaterialBuffer.metalness;
+
+		if (m_MaterialBuffer.useSurfaceMap > -1) 
+		{
+			vec4 mrSample = texture(surfaceMap, FragTexC);
+			roughness = mrSample.g * roughness;
+			metallic = mrSample.b * metallic;
+		} 
+		else 
+		{
+			roughness = clamp(roughness, c_MinRoughness, 1.0);
+			metallic = clamp(metallic, 0.0, 1.0);
+		}
+	}
+
+	if (m_MaterialBuffer.pbrType == PBR_WORKFLOW_SPECULAR_GLOSINESS) 
+	{
+		vec3 specular;
+		if (m_MaterialBuffer.useSurfaceMap > -1) 
+		{
+			vec4 sgSample = texture(surfaceMap,FragTexC); 
+			roughness = 1.0 - sgSample.a;
+			specular = sgSample.rgb;
+		}
+		else
+		{
+			roughness = 0.0;
+		}
+
+		diffuseColor = baseColor.rgb;
+		
+		float maxSpecular = max(max(specular.r, specular.g), specular.b);
+
+		metallic = convertMetallic(diffuseColor.rgb, specular, maxSpecular);
+
+		vec3 baseColorDiffusePart = diffuseColor.rgb * ((1.0 - maxSpecular) / (1 - c_MinRoughness) / max(1 - metallic, Epsilon)) * m_MaterialBuffer.baseColor.rgb;
+		vec3 baseColorSpecularPart = specular - (vec3(c_MinRoughness) * (1 - metallic) * (1 / max(metallic, Epsilon))) * m_MaterialBuffer.specular.rgb;
+		baseColor = vec4(mix(baseColorDiffusePart, baseColorSpecularPart, metallic * metallic), baseColor.a);
+
+	}
+
+	diffuseColor = baseColor.rgb * (vec3(1.0) - f0);
+	diffuseColor *= 1.0 - metallic;
+
 	vec3 norm = GetNormal();
 
 	vec3 viewDir = normalize(u_CameraBuffer.position - FragPos);
 
-	vec3 F0 = mix(Fdielectric, albedo, metallicRoughness.r);
+	vec3 F0 = mix(Fdielectric, diffuseColor, metallic);
 
 	vec3 result = vec3(0.0);
 
@@ -197,8 +266,8 @@ void main()
 
 		vec3 Fresnel = Calculate_Fresnel(F0, viewDir, halfDir);
 
-		vec3 diffuse = Calculate_Lambertian_DiffuseComponent(albedo, Fresnel);
-		vec3 specular = Calculate_CookTorrance_SpecularComponent(viewDir, halfDir, lightVector, norm, Fresnel, metallicRoughness.g);
+		vec3 diffuse = Calculate_Lambertian_DiffuseComponent(diffuseColor, Fresnel);
+		vec3 specular = Calculate_CookTorrance_SpecularComponent(viewDir, halfDir, lightVector, norm, Fresnel, roughness);
 
 		float attenuation = 0.0;
 		{
@@ -223,10 +292,17 @@ void main()
 
 		vec3 Fresnel = Calculate_Fresnel(F0, viewDir, halfDir);
 
-		vec3 diffuse = Calculate_Lambertian_DiffuseComponent(albedo, Fresnel);
-		vec3 specular = Calculate_CookTorrance_SpecularComponent(viewDir, halfDir, m_sceneBuffer.SceneLightDirection.rgb, norm, Fresnel, metallicRoughness.g);
+		vec3 diffuse = Calculate_Lambertian_DiffuseComponent(diffuseColor, Fresnel);
+		vec3 specular = Calculate_CookTorrance_SpecularComponent(viewDir, halfDir, m_sceneBuffer.SceneLightDirection.rgb, norm, Fresnel, roughness);
 
 		result += (diffuse + specular) * m_sceneBuffer.SceneLightColor.rgb * max(dot(m_sceneBuffer.SceneLightDirection.rgb, norm), 0.0);
+	}
+
+	const float u_OcclusionStrength = 1.0f;
+	if (m_MaterialBuffer.useOculsionMap > -1)
+	{
+		float ao = texture(occulsionMap,FragTexC).r;
+		result = mix(result, result * ao, u_OcclusionStrength);
 	}
 
 	// Tone Mapping

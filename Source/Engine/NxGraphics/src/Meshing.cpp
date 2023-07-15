@@ -357,7 +357,7 @@ bool Nexus::Meshing::LoadSceneFromFile(const std::filesystem::path& Filepath, Sc
 			t.image.channels = 4;
 			t.image.fileName = path.filename().stem().string();
 
-			t.image.pixels.resize((size_t)w * h * c);
+			t.image.pixels.resize((size_t)w * h * 4);
 			memcpy(t.image.pixels.data(), pixels, t.image.pixels.size() * sizeof(uint8_t));
 
 			stbi_image_free(pixels);
