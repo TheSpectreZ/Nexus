@@ -27,4 +27,5 @@ Feel free to explore the Nexus Game Engine and contribute to its development. If
 
 Here's a sneak peek of the current state of the engine's editor:
 
-![Screenshot 2023-05-19 125434](https://github.com/TheSpectreZ/Nexus/assets/122666662/c05b0fcc-6feb-4736-9897-effdb5ff1b4e)
+![image](https://github.com/TheSpectreZ/Nexus/assets/122666662/1f484bb1-cef8-4e8f-9e47-5342f9d5e9f6)
+
