@@ -10,6 +10,7 @@ namespace Nexus
 		{
 			case Nexus::ShaderResourceType::Uniform: return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 			case Nexus::ShaderResourceType::SampledImage: return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			case Nexus::ShaderResourceType::StorageImage: return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
 			default: return VK_DESCRIPTOR_TYPE_MAX_ENUM;
 		}
 	}
@@ -22,6 +23,8 @@ namespace Nexus
 			return VK_SHADER_STAGE_VERTEX_BIT;
 		case Nexus::ShaderStage::Fragment:
 			return VK_SHADER_STAGE_FRAGMENT_BIT;
+		case Nexus::ShaderStage::Compute:
+			return VK_SHADER_STAGE_COMPUTE_BIT;
 		default:
 			return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
 		}
@@ -37,7 +40,7 @@ Nexus::VulkanShaderResourceHeapLayout::VulkanShaderResourceHeapLayout(const std:
 	for (uint32_t i = 0; i < bindings.size(); i++)
 	{
 		bindings[i].binding = m_Bindings[i].bindPoint;
-		bindings[i].descriptorCount = 1;
+		bindings[i].descriptorCount = m_Bindings[i].arrayCount;
 		bindings[i].pImmutableSamplers = nullptr;
 		bindings[i].stageFlags = GetVulkanShaderStageFlag(m_Bindings[i].stage);
 		bindings[i].descriptorType = GetVulkanShaderResourceType(m_Bindings[i].type);
@@ -80,7 +83,7 @@ Nexus::VulkanShaderResourcePool::VulkanShaderResourcePool(Ref<ShaderResourceHeap
 	createInfo.flags = 0; // [To-Do] Make This Configurable
 	createInfo.poolSizeCount = (uint32_t)poolSizes.size();
 	createInfo.pPoolSizes = poolSizes.data();
-
+	
 	_VKR = vkCreateDescriptorPool(VulkanContext::Get()->GetDeviceRef()->Get(), &createInfo, nullptr, &m_pool);
 	CHECK_HANDLE(m_pool, VkDescriptorSetPool);
 	NEXUS_LOG("Vulkan"," Descriptor Set Pool Created");

@@ -18,6 +18,7 @@ project "NxRenderEngine"
 		"$(VULKAN_SDK)/Include",
 		IncludePath["VMA"],
 		IncludePath["entt"],
+		IncludePath["stb"],
 
 		IncludePath["NxCore"],
 		IncludePath["NxVulkan"],

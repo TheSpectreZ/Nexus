@@ -102,59 +102,79 @@ Nexus::Ref<Nexus::RenderableMaterial> Nexus::ResourcePool::AllocateRenderableMat
 {
 	if (!m_RenderableMaterials.contains(HashId))
 	{
-		std::unordered_map<TextureType, uint32_t> Samplers;
+		std::unordered_map<TextureMapType, uint32_t> Samplers;
 
 		TextureSpecification ts{};
-		SamplerSpecification ss{};
+		ts.format = TextureFormat::RGBA8_SRGB;
+		ts.type = TextureType::TwoDim;
+		ts.usage = TextureUsage::ShaderSampled;
 
-		if (textures.contains((uint8_t)TextureType::Albedo))
+		if (textures.contains((uint8_t)TextureMapType::Albedo))
 		{
-			Samplers[TextureType::Albedo] = textures[(uint32_t)TextureType::Albedo].samplerHash;
+			Samplers[TextureMapType::Albedo] = textures[(uint32_t)TextureMapType::Albedo].samplerHash;
 
-			ts.image = textures[(uint8_t)TextureType::Albedo].image;
+			auto& albedo = textures[(uint8_t)TextureMapType::Albedo].image;
+			ts.extent = { albedo.width,albedo.height };
+			ts.pixels = albedo.pixels.data();
+
 			if (specs.specularGlossiness.support)
 				AllocateTexture(ts, specs.specularGlossiness.albedoTexture);
 			else
 				AllocateTexture(ts, specs.metalicRoughness.albedoTexture);
 		}
 
-		if (textures.contains((uint8_t)TextureType::Emissive))
+		if (textures.contains((uint8_t)TextureMapType::Emissive))
 		{
-			Samplers[TextureType::Emissive] = textures[(uint32_t)TextureType::Emissive].samplerHash;
+			Samplers[TextureMapType::Emissive] = textures[(uint32_t)TextureMapType::Emissive].samplerHash;
 			
-			ts.image = textures[(uint8_t)TextureType::Emissive].image;
+			auto& albedo = textures[(uint8_t)TextureMapType::Emissive].image;
+			ts.extent = { albedo.width,albedo.height };
+			ts.pixels = albedo.pixels.data();
+
 			AllocateTexture(ts, specs.emissiveTexture);
 		}
 
-		if (textures.contains((uint8_t)TextureType::Normal))
+		if (textures.contains((uint8_t)TextureMapType::Normal))
 		{
-			Samplers[TextureType::Normal] = textures[(uint32_t)TextureType::Normal].samplerHash;
+			Samplers[TextureMapType::Normal] = textures[(uint32_t)TextureMapType::Normal].samplerHash;
 
-			ts.image = textures[(uint8_t)TextureType::Normal].image;
+			auto& albedo = textures[(uint8_t)TextureMapType::Normal].image;
+			ts.extent = { albedo.width,albedo.height };
+			ts.pixels = albedo.pixels.data();
+
 			AllocateTexture(ts, specs.normalTexture);
 		}
 
-		if (textures.contains((uint8_t)TextureType::Occulsion))
+		if (textures.contains((uint8_t)TextureMapType::Occulsion))
 		{
-			Samplers[TextureType::Occulsion] = textures[(uint32_t)TextureType::Occulsion].samplerHash;
+			Samplers[TextureMapType::Occulsion] = textures[(uint32_t)TextureMapType::Occulsion].samplerHash;
 			
-			ts.image = textures[(uint8_t)TextureType::Occulsion].image;
+			auto& albedo = textures[(uint8_t)TextureMapType::Occulsion].image;
+			ts.extent = { albedo.width,albedo.height };
+			ts.pixels = albedo.pixels.data();
+
 			AllocateTexture(ts, specs.occulsionTexture);
 		}
 
-		if (textures.contains((uint8_t)TextureType::SpecularGlossiness))
+		if (textures.contains((uint8_t)TextureMapType::SpecularGlossiness))
 		{
-			Samplers[TextureType::SpecularGlossiness] = textures[(uint32_t)TextureType::SpecularGlossiness].samplerHash;
+			Samplers[TextureMapType::SpecularGlossiness] = textures[(uint32_t)TextureMapType::SpecularGlossiness].samplerHash;
 
-			ts.image = textures[(uint8_t)TextureType::SpecularGlossiness].image;
+			auto& albedo = textures[(uint8_t)TextureMapType::SpecularGlossiness].image;
+			ts.extent = { albedo.width,albedo.height };
+			ts.pixels = albedo.pixels.data();
+
 			AllocateTexture(ts, specs.specularGlossiness.specularGlossinessTexture);
 		}
 
-		if (textures.contains((uint8_t)TextureType::MetallicRoughness))
+		if (textures.contains((uint8_t)TextureMapType::MetallicRoughness))
 		{
-			Samplers[TextureType::MetallicRoughness] = textures[(uint32_t)TextureType::MetallicRoughness].samplerHash;
+			Samplers[TextureMapType::MetallicRoughness] = textures[(uint32_t)TextureMapType::MetallicRoughness].samplerHash;
 
-			ts.image = textures[(uint8_t)TextureType::MetallicRoughness].image;
+			auto& albedo = textures[(uint8_t)TextureMapType::MetallicRoughness].image;
+			ts.extent = { albedo.width,albedo.height };
+			ts.pixels = albedo.pixels.data();
+
 			AllocateTexture(ts, specs.metalicRoughness.metallicRoughnessTexture);
 		}
 
@@ -167,4 +187,17 @@ Nexus::Ref<Nexus::RenderableMaterial> Nexus::ResourcePool::AllocateRenderableMat
 void Nexus::ResourcePool::DeallocateRenderableMaterial(UUID HashId)
 {
 	if (m_RenderableMaterials.contains(HashId)) m_RenderableMaterials.erase(HashId);
+}
+
+Nexus::Ref<Nexus::Environment> Nexus::ResourcePool::AllocateEnvironment(UUID HashID)
+{
+	if (!m_Environments.contains(HashID))
+		m_Environments[HashID] = CreateRef<Environment>();
+
+	return m_Environments[HashID];
+}
+
+void Nexus::ResourcePool::DeallocateEnvironment(UUID HashID)
+{
+	if (m_Environments.contains(HashID)) m_Environments.erase(HashID);
 }

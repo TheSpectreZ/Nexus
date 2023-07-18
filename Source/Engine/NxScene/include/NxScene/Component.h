@@ -128,6 +128,14 @@ namespace Nexus
 			float Radius = 0.5f;
 		};
 
+		struct NEXUS_SCENE_API Environment
+		{
+			Environment() : handle(true) {}
+			Environment(const Environment&) = default;
+
+			UUID handle;
+		};
+
 		struct NEXUS_SCENE_API DirectionalLight
 		{
 			DirectionalLight() = default;

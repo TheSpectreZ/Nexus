@@ -1,5 +1,6 @@
 #include "NxRenderEngine/Renderer.h"
 #include "NxRenderEngine/ResourcePool.h"
+#include "NxRenderEngine/EnvironmentBuilder.h"	
 
 Nexus::Module::Renderer* Nexus::Module::Renderer::s_Instance = nullptr;
 
@@ -17,10 +18,12 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 	s_Instance->m_CommandQueue->Initialize();
 
 	ResourcePool::Initialize();
+	EnvironmentBuilder::Initialize();
 }
 
 void Nexus::Module::Renderer::Shutdown()
 {	
+	EnvironmentBuilder::Shutdown();
 	ResourcePool::Shutdown();
 
 	s_Instance->m_CommandQueue->Shutdown();
@@ -43,6 +46,11 @@ void Nexus::Module::Renderer::Begin()
 void Nexus::Module::Renderer::End()
 {
 	m_CommandQueue->EndRenderQueue();
+}
+
+void Nexus::Module::Renderer::WaitForRenderer()
+{
+	m_Context->WaitForDevice();
 }
 
 void Nexus::Module::Renderer::FlushRender()

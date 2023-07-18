@@ -14,6 +14,7 @@ namespace NexusEd
 
 		void DrawEntityNode(entt::entity e);
 		void DrawComponents(entt::entity e);
+		void DrawRootEntity();
 	};
 
 	namespace ImGuiUtils

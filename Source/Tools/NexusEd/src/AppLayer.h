@@ -19,7 +19,7 @@ public:
 	~AppLayer() override = default;
 private:
 	Nexus::Ref<Nexus::ForwardDrawer> m_ForwardDrawer;
-	
+	ImTextureID m_ID;
 	glm::vec2 m_ViewportSize;
 	NexusEd::Viewport m_Viewport;
 	NexusEd::ContentBrowser m_ContentBrowser;

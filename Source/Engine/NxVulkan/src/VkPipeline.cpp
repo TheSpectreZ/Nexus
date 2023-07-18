@@ -74,7 +74,8 @@ namespace Nexus
 
 }
 
-Nexus::VulkanPipeline::VulkanPipeline(const PipelineSpecification& i)
+Nexus::VulkanPipeline::VulkanPipeline(const GraphicsPipelineSpecification& i)
+    :m_bindpoint(PipelineBindPoint::Graphics)
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
     Ref<VulkanPhysicalDevice> gpu = VulkanContext::Get()->GetPhysicalDeviceRef();
@@ -217,7 +218,7 @@ Nexus::VulkanPipeline::VulkanPipeline(const PipelineSpecification& i)
     depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
     depthStencilState.depthTestEnable = VK_TRUE;
     depthStencilState.depthWriteEnable = VK_TRUE;
-    depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS;
+    depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
     depthStencilState.depthBoundsTestEnable = VK_FALSE;
     depthStencilState.minDepthBounds = 0.0f;
     depthStencilState.maxDepthBounds = 1.0f;
@@ -260,6 +261,27 @@ Nexus::VulkanPipeline::VulkanPipeline(const PipelineSpecification& i)
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
     _VKR = vkCreateGraphicsPipelines(device->Get(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline);
+    CHECK_HANDLE(m_Pipeline, VkPipeline);
+    NEXUS_LOG("Vulkan", "Pipeline Created");
+}
+
+Nexus::VulkanPipeline::VulkanPipeline(const ComputePipelineSpecification& i)
+    :m_bindpoint(PipelineBindPoint::Compute)
+{
+    Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
+    Ref<VulkanShader> shader = DynamicPointerCast<VulkanShader>(i.shader);
+
+    VkShaderModule compShaderModule = shader->GetModule(VK_SHADER_STAGE_COMPUTE_BIT);
+
+    VkComputePipelineCreateInfo pipelineInfo = {};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+    pipelineInfo.stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+    pipelineInfo.stage.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+    pipelineInfo.stage.module = compShaderModule;
+    pipelineInfo.stage.pName = "main";
+    pipelineInfo.layout = shader->GetPipelineLayout();
+
+    _VKR = vkCreateComputePipelines(device->Get(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &m_Pipeline);
     CHECK_HANDLE(m_Pipeline, VkPipeline);
     NEXUS_LOG("Vulkan", "Pipeline Created");
 }

@@ -5,7 +5,13 @@ namespace Nexus
 {
 	struct TextureSpecification
 	{
-		Meshing::Image image;
+		Extent extent;
+		void* pixels;
+		bool now = false;
+		TextureType type;
+		TextureUsage usage;
+		TextureFormat format;
+		uint32_t mipCount = 1;
 	};
 
 	class Texture
@@ -13,6 +19,8 @@ namespace Nexus
 	public:
 		Texture() = default;
 		virtual ~Texture() = default;
+
+		virtual void PrepareForRender() = 0;
 	};
 
 	struct SamplerSpecification

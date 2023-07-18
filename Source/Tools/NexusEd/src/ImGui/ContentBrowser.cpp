@@ -3,7 +3,7 @@
 #include "NxCore/Logger.h"
 #include "NxApplication/FileDialog.h"
 #include "NxAsset/Asset.h"
-
+#include "NxRenderEngine/EnvironmentBuilder.h"
 #include "NxGraphics/Meshing.h"
 
 using namespace Nexus;
@@ -20,11 +20,22 @@ void NexusEd::ContentBrowser::Initialize()
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
 	
 	{
+		Meshing::Mesh mesh;
+		auto [res, Id] = Importer::LoadMesh("Resources/Meshes/Cube.NxMesh", mesh);
+		ResourcePool::Get()->AllocateRenderableMesh(mesh, UUID((uint64_t)0));
+	}
+
+	{
 		//Importer::ImportImage("res/Textures/DefaultWhite.png", "Resources/Textures", "DefaultWhite");
 		Meshing::Image defaultImage;
 		auto [res, id] = Importer::LoadImage("Resources/Textures/DefaultWhite.NxTex", defaultImage);
 
-		TextureSpecification specs{ defaultImage };
+		TextureSpecification specs{};
+		specs.extent = { defaultImage.width,defaultImage.height };
+		specs.pixels = defaultImage.pixels.data();
+		specs.format = TextureFormat::RGBA8_SRGB;
+		specs.type = TextureType::TwoDim;
+		specs.usage = TextureUsage::ShaderSampled;
 
 		ResourcePool::Get()->AllocateTexture(specs, UUID((uint64_t)0));
 	}
@@ -33,7 +44,13 @@ void NexusEd::ContentBrowser::Initialize()
 		Meshing::Image fileImage;
 		auto[res,id] = Importer::LoadImage("Resources/Icons/File.NxTex", fileImage);
 
-		TextureSpecification specs{ fileImage };
+		TextureSpecification specs{};
+		specs.extent = { fileImage.width,fileImage.height };
+		specs.pixels = fileImage.pixels.data();
+		specs.format = TextureFormat::RGBA8_SRGB;
+		specs.type = TextureType::TwoDim;
+		specs.usage = TextureUsage::ShaderSampled;
+
 
 		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(specs, id);
 		m_FileID = Context::Get()->CreateTextureId(Texture, m_Sampler);
@@ -43,7 +60,13 @@ void NexusEd::ContentBrowser::Initialize()
 		Meshing::Image folderImage;
 		auto [res, id] = Importer::LoadImage("Resources/Icons/Folder.NxTex", folderImage);
 		
-		TextureSpecification specs{ folderImage };
+		TextureSpecification specs{};
+		specs.extent = { folderImage.width,folderImage.height };
+		specs.pixels = folderImage.pixels.data();
+		specs.format = TextureFormat::RGBA8_SRGB;
+		specs.type = TextureType::TwoDim;
+		specs.usage = TextureUsage::ShaderSampled;
+
 
 		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(specs, id);
 		m_FolderID = Context::Get()->CreateTextureId(Texture, m_Sampler);
@@ -377,9 +400,7 @@ void NexusEd::ContentBrowser::DrawImportOptions()
 		{
 			std::string path = FileDialog::OpenFile("glTF File(*.gltf)\0*.gltf\0");
 			if (!path.empty())
-			{
 				FilePath = path;
-			}
 		}
 
 		if (ImGui::Button("Import", ImVec2(85.f, 25.f)))
@@ -387,7 +408,7 @@ void NexusEd::ContentBrowser::DrawImportOptions()
 			if (!FilePath.empty())
 			{
 				Importer::ImportGLTF(FilePath, m_CurrentDirectory, FileName);
-
+	
 				FilePath.clear();
 				memset(FileName, 0, sizeof(FileName));
 

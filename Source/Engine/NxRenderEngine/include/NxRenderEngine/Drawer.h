@@ -41,8 +41,8 @@ namespace Nexus
 		Ref<Renderpass> m_pass;
 		Ref<Framebuffer> m_fb;
 
-		Ref<Shader> m_shader;
-		Ref<Pipeline> m_TriPipeline, m_LinePipeline;
+		Ref<Shader> m_PbrShader,m_SkyboxShader;
+		Ref<Pipeline> m_PBR_FillPipeline, m_PBR_LinePipeline, m_SkyboxPipeline;
 
 		std::unordered_map<UUID, Ref<RenderableScene>> m_RenderableScenes;
 	};

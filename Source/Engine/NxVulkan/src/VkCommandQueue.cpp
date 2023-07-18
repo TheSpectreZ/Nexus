@@ -40,6 +40,7 @@ void Nexus::VulkanCommandQueue::Initialize()
 	m_RenderQueue = m_Device->GetGraphicsQueue();
 	m_PresentQueue = m_Device->GetPresentQueue();
 	m_TransferQueue = m_Device->GetTransferQueue();
+	m_ComputeQueue = m_Device->GetComputeQueue();
 
 	// Command Pools
 	{
@@ -56,6 +57,11 @@ void Nexus::VulkanCommandQueue::Initialize()
 
 		_VKR = vkCreateCommandPool(m_Device->Get(), &Info, nullptr, &m_TransferCommandPool);
 		CHECK_HANDLE(m_TransferCommandPool, VkCommandPool);
+
+		Info.queueFamilyIndex = m_Device->GetQueueFamilyIndices().Compute;
+
+		_VKR = vkCreateCommandPool(m_Device->Get(), &Info, nullptr, &m_ComputeCommandPool);
+		CHECK_HANDLE(m_ComputeCommandPool, VkCommandPool);
 	}
 
 	// Command Buffers
@@ -74,6 +80,11 @@ void Nexus::VulkanCommandQueue::Initialize()
 		aInfo.commandPool = m_TransferCommandPool;
 		m_TransferCommandBuffer.resize(aInfo.commandBufferCount);
 		_VKR = vkAllocateCommandBuffers(m_Device->Get(), &aInfo, m_TransferCommandBuffer.data());
+		CHECK_LOG_VKR;
+		
+		aInfo.commandPool = m_ComputeCommandPool;
+		m_ComputeCommandBuffer.resize(aInfo.commandBufferCount);
+		_VKR = vkAllocateCommandBuffers(m_Device->Get(), &aInfo, m_ComputeCommandBuffer.data());
 		CHECK_LOG_VKR;
 	}
 
@@ -119,10 +130,10 @@ void Nexus::VulkanCommandQueue::Initialize()
 		m_RenderSubmitInfo.waitSemaphoreCount = 1;
 		m_RenderSubmitInfo.pWaitDstStageMask = &m_RenderWaitStageFlag;
 
-		m_TransferSubmitInfo = {};
-		m_TransferSubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		m_TransferSubmitInfo.pNext = nullptr;
-		m_TransferSubmitInfo.commandBufferCount = 1;
+		m_SubmitInfo = {};
+		m_SubmitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		m_SubmitInfo.pNext = nullptr;
+		m_SubmitInfo.commandBufferCount = 1;
 
 		m_PresentInfo = {};
 		m_PresentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -137,6 +148,7 @@ void Nexus::VulkanCommandQueue::Initialize()
 
 	m_RenderQueueIndex = m_Device->GetQueueFamilyIndices().Graphics;
 	m_TransferQueueIndex = m_Device->GetQueueFamilyIndices().Transfer;
+	m_ComputeQueueIndex = m_Device->GetQueueFamilyIndices().Compute;
 
 	NEXUS_LOG("Vulkan", "Command Queue Created");
 }
@@ -154,6 +166,20 @@ void Nexus::VulkanCommandQueue::Shutdown()
 	vkDestroyCommandPool(m_Device->Get(), m_TransferCommandPool, nullptr);
 
 	NEXUS_LOG("Vulkan", "Command Queue Destroyed");
+}
+
+void Nexus::VulkanCommandQueue::StartComputeQueue()
+{
+	vkBeginCommandBuffer(m_ComputeCommandBuffer[m_FrameIndex], &m_CmdBeginInfo);
+}
+
+void Nexus::VulkanCommandQueue::FlushComputeQueue()
+{
+	m_SubmitInfo.pCommandBuffers = &m_ComputeCommandBuffer[m_FrameIndex];
+	vkEndCommandBuffer(m_ComputeCommandBuffer[m_FrameIndex]);
+	_VKR = vkQueueSubmit(m_ComputeQueue, 1, &m_SubmitInfo, nullptr);
+	CHECK_LOG_VKR;
+	vkQueueWaitIdle(m_ComputeQueue);
 }
 
 void Nexus::VulkanCommandQueue::BeginRenderQueue()
@@ -282,8 +308,8 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 	}
 	vkEndCommandBuffer(m_TransferCommandBuffer[m_FrameIndex]);
 
-	m_TransferSubmitInfo.pCommandBuffers = &m_TransferCommandBuffer[m_FrameIndex];
-	_VKR = vkQueueSubmit(m_TransferQueue, 1, &m_TransferSubmitInfo, nullptr);
+	m_SubmitInfo.pCommandBuffers = &m_TransferCommandBuffer[m_FrameIndex];
+	_VKR = vkQueueSubmit(m_TransferQueue, 1, &m_SubmitInfo, nullptr);
 	vkQueueWaitIdle(m_TransferQueue);
 
 	if (m_RenderQueueIndex == m_TransferQueueIndex)
@@ -318,8 +344,8 @@ void Nexus::VulkanCommandQueue::FlushTransferQueue()
 	}
 	vkEndCommandBuffer(m_RenderCommandBuffer[m_FrameIndex]);
 
-	m_TransferSubmitInfo.pCommandBuffers = &m_RenderCommandBuffer[m_FrameIndex];
-	_VKR = vkQueueSubmit(m_RenderQueue, 1, &m_TransferSubmitInfo, nullptr);
+	m_SubmitInfo.pCommandBuffers = &m_RenderCommandBuffer[m_FrameIndex];
+	_VKR = vkQueueSubmit(m_RenderQueue, 1, &m_SubmitInfo, nullptr);
 	vkQueueWaitIdle(m_RenderQueue);
 
 	m_TransferData.Clear();
@@ -348,18 +374,25 @@ void Nexus::VulkanCommandQueue::EndRenderPass()
 	vkCmdEndRenderPass(m_RenderCommandBuffer[m_FrameIndex]);
 }
 
-void Nexus::VulkanCommandQueue::BindShaderResourceHeap(Ref<Shader> shader, ResourceHeapHandle handle)
+void Nexus::VulkanCommandQueue::BindShaderResourceHeap(Ref<Shader> shader, ResourceHeapHandle handle,PipelineBindPoint bind)
 {
 	Ref<VulkanShader> vks = DynamicPointerCast<VulkanShader>(shader);
-
 	VkDescriptorSet& Set = vks->m_SetResource[handle.set].Heaps[handle.hashId].Get();
-	vkCmdBindDescriptorSets(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, vks->m_Layout, handle.set, 1, &Set, 0, nullptr);
+
+	if (bind == PipelineBindPoint::Graphics)
+		vkCmdBindDescriptorSets(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, vks->m_Layout, handle.set, 1, &Set, 0, nullptr);
+	else
+		vkCmdBindDescriptorSets(m_ComputeCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_COMPUTE, vks->m_Layout, handle.set, 1, &Set, 0, nullptr);
 }
 
 void Nexus::VulkanCommandQueue::BindPipeline(Ref<Pipeline> pipeline)
 {
 	Ref<VulkanPipeline> Vkp = DynamicPointerCast<VulkanPipeline>(pipeline);
-	vkCmdBindPipeline(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, Vkp->Get());
+	
+	if (Vkp->GetBindPoint() == PipelineBindPoint::Graphics)
+		vkCmdBindPipeline(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_GRAPHICS, Vkp->Get());
+	else
+		vkCmdBindPipeline(m_ComputeCommandBuffer[m_FrameIndex], VK_PIPELINE_BIND_POINT_COMPUTE, Vkp->Get());
 }
 
 void Nexus::VulkanCommandQueue::SetScissor(Scissor scissor)
@@ -382,6 +415,35 @@ void Nexus::VulkanCommandQueue::SetViewport(Viewport viewport)
 	vkCmdSetViewport(m_RenderCommandBuffer[m_FrameIndex], 0, 1, &m_Viewport);
 }
 
+void Nexus::VulkanCommandQueue::SetPushConstant(Ref<Shader> shader,PipelineBindPoint bindPoint, ShaderStage stage, void* data)
+{
+	Ref<VulkanShader> sh = DynamicPointerCast<VulkanShader>(shader);
+
+	VkCommandBuffer& cmd = bindPoint == PipelineBindPoint::Graphics ? m_RenderCommandBuffer[m_FrameIndex] : m_ComputeCommandBuffer[m_FrameIndex];
+	
+	VkShaderStageFlags flag = VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+	
+	switch (stage)
+	{
+	case Nexus::ShaderStage::Vertex:
+		flag = VK_SHADER_STAGE_VERTEX_BIT;
+		break;
+	case Nexus::ShaderStage::Fragment:
+		flag = VK_SHADER_STAGE_FRAGMENT_BIT;
+		break;
+	case Nexus::ShaderStage::Compute:
+		flag = VK_SHADER_STAGE_COMPUTE_BIT;
+		break;
+	default:
+		break;
+	}
+
+	uint32_t offset = sh->m_ReflectionData.ranges[stage].offset;
+	uint32_t size = sh->m_ReflectionData.ranges[stage].size;
+
+	vkCmdPushConstants(cmd, sh->GetPipelineLayout(), flag, offset, size, data);
+}
+
 void Nexus::VulkanCommandQueue::TransferBufferToGPU(VulkanBuffer* buffer)
 {
 	m_TransferData.m_Buffer.push_back(buffer);
@@ -390,6 +452,92 @@ void Nexus::VulkanCommandQueue::TransferBufferToGPU(VulkanBuffer* buffer)
 void Nexus::VulkanCommandQueue::TransferTextureToGPU(VulkanTexture* texture)
 {
 	m_TransferData.m_Textures.push_back(texture);
+}
+
+void Nexus::VulkanCommandQueue::TransferTextureToGPU_Now(VulkanTexture* texture)
+{
+	vkBeginCommandBuffer(m_RenderCommandBuffer[m_FrameIndex], &m_CmdBeginInfo);
+
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.pNext = nullptr;
+	barrier.image = texture->m_Image;
+	barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = texture->m_MipCount;
+	barrier.subresourceRange.baseArrayLayer =0;
+	barrier.subresourceRange.layerCount = texture->m_ArrayLayerCount;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.srcAccessMask = 0;
+	barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+	vkCmdPipelineBarrier(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+	VkBufferImageCopy copy{};
+
+	copy.bufferOffset = 0;
+	copy.bufferRowLength = 0;
+	copy.bufferImageHeight = 0;
+
+	copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	copy.imageSubresource.mipLevel = 0;
+	copy.imageSubresource.baseArrayLayer =0;
+	copy.imageSubresource.layerCount = texture->m_ArrayLayerCount;
+
+	copy.imageOffset = { 0, 0, 0 };
+	copy.imageExtent = { texture->m_Extent.width,texture->m_Extent.height,1 };
+
+	vkCmdCopyBufferToImage(m_RenderCommandBuffer[m_FrameIndex], texture->m_StagingBuffer, texture->m_Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy);
+
+	barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+	barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+	barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+	vkCmdPipelineBarrier(m_RenderCommandBuffer[m_FrameIndex], VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+	vkEndCommandBuffer(m_RenderCommandBuffer[m_FrameIndex]);
+	
+	m_SubmitInfo.pCommandBuffers = &m_RenderCommandBuffer[m_FrameIndex];
+	_VKR = vkQueueSubmit(m_RenderQueue, 1, &m_SubmitInfo, nullptr);
+	vkQueueWaitIdle(m_RenderQueue);
+}
+
+void Nexus::VulkanCommandQueue::TransitionTextureLayout_Now(VulkanTexture* texture, VkImageLayout layout,VkAccessFlags flags,VkPipelineStageFlags stage, PipelineBindPoint bindPoint)
+{
+	VkCommandBuffer& cmd = bindPoint == PipelineBindPoint::Graphics ? m_RenderCommandBuffer[m_FrameIndex] : m_ComputeCommandBuffer[m_FrameIndex];
+
+	vkBeginCommandBuffer(cmd, &m_CmdBeginInfo);
+
+	VkImageMemoryBarrier barrier{};
+	barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+	barrier.pNext = nullptr;
+	barrier.image = texture->m_Image;
+	barrier.oldLayout = texture->m_CurrentLayout;
+	barrier.newLayout = layout;
+	barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+	barrier.subresourceRange.baseMipLevel = 0;
+	barrier.subresourceRange.levelCount = texture->m_MipCount;
+	barrier.subresourceRange.baseArrayLayer = 0;
+	barrier.subresourceRange.layerCount = texture->m_ArrayLayerCount;
+	barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+	barrier.srcAccessMask = 0;
+	barrier.dstAccessMask = flags;
+
+	vkCmdPipelineBarrier(cmd, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+	vkEndCommandBuffer(cmd);
+
+	VkQueue queue = bindPoint == PipelineBindPoint::Graphics ? m_RenderQueue : m_ComputeQueue;	
+	m_SubmitInfo.pCommandBuffers = &cmd;
+	_VKR = vkQueueSubmit(queue, 1, &m_SubmitInfo, nullptr);
+	vkQueueWaitIdle(queue);
 }
 
 void Nexus::VulkanCommandQueue::BindVertexBuffer(Ref<Buffer> buffer)
@@ -412,4 +560,9 @@ void Nexus::VulkanCommandQueue::BindIndexBuffer(Ref<Buffer> buffer)
 void Nexus::VulkanCommandQueue::DrawIndices(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance)
 {
 	vkCmdDrawIndexed(m_RenderCommandBuffer[m_FrameIndex], IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);
+}
+
+void Nexus::VulkanCommandQueue::Dispatch(uint32_t xWorkers, uint32_t yWorkers, uint32_t zWorkers)
+{
+	vkCmdDispatch(m_ComputeCommandBuffer[m_FrameIndex], xWorkers, yWorkers, zWorkers);
 }

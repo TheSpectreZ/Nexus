@@ -8,8 +8,6 @@
 #include "ImGui/Context.h"
 #include "imgui.h"
 
-#include "NxGraphics/Meshing.h"
-
 using namespace Nexus;
 
 void AppLayer::OnAttach()
@@ -40,6 +38,10 @@ void AppLayer::OnAttach()
 		light.AddComponent<Component::DirectionalLight>();
 
 		auto entity = m_EditorScene->CreateEntity("Mesh");
+
+		auto& root = m_EditorScene->GetRootEntity();
+		root.environment.handle = UUID();
+		EnvironmentBuilder::Build("Resources/Textures/pink_sunrise_2k.hdr", root.environment.handle);
 	}
 
 	// Editor
@@ -53,6 +55,8 @@ void AppLayer::OnAttach()
 		m_ContentBrowser.SetContext("Projects");
 
 		m_SceneHeirarchy.SetContext(m_EditorScene);
+
+		m_ID = NexusEd::Context::Get()->CreateTextureId(EnvironmentBuilder::GetBRDFLut(), ResourcePool::Get()->GetSampler(11122));
 	}
 }
 
@@ -87,6 +91,9 @@ void AppLayer::OnRender()
 		static float speed = 5.f;
 		if (ImGui::DragFloat("Camera Speed", &speed, 5.f, 100.f))
 			m_EditorCameraController.SetSpeed(speed);
+
+		NexusEd::Context::Get()->BindTextureId(m_ID);
+		ImGui::Image(m_ID, ImVec2(256, 256));
 
 		ImGui::End();
 

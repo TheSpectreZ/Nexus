@@ -10,6 +10,7 @@ namespace NexusEd
 	{
 		friend class Viewport;
 		friend class ContentBrowser;
+		friend class SceneHeirarchy;
 		static Context* s_Instance;
 	public:
 		static Context* Get() { return s_Instance; }
@@ -19,6 +20,10 @@ namespace NexusEd
 
 		void BeginFrame();
 		void EndFrame();
+		
+		ImTextureID CreateTextureId(Nexus::Ref<Nexus::Texture> texture, Nexus::Ref<Nexus::Sampler> sampler);
+		void DestroyTextureId(ImTextureID Id);
+		void BindTextureId(ImTextureID Id);
 	private:
 		void ImplFonts();
 		void ImplStyles();
@@ -29,9 +34,6 @@ namespace NexusEd
 		void ImplVulkanInit();
 		void ImplVulkanShut();
 
-		ImTextureID CreateTextureId(Nexus::Ref<Nexus::Texture> texture, Nexus::Ref<Nexus::Sampler> sampler);
-		void DestroyTextureId(ImTextureID Id);
-		void BindTextureId(ImTextureID Id);
 		uint32_t GetFrameIndex();
 	};
 }

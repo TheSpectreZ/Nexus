@@ -8,6 +8,8 @@ std::string Nexus::GetShaderStageTypeStringName(ShaderStage stage)
 		name = "[Vertex] ";
 	if (Nexus::IsFlagSet(stage, Nexus::ShaderStage::Fragment))
 		name += "[Fragment]";
+	if (Nexus::IsFlagSet(stage, Nexus::ShaderStage::Compute))
+		name += "[Compute]";
 	
 	return name;
 }
@@ -33,7 +35,11 @@ std::string Nexus::GetShaderResourceTypeStringName(ShaderResourceType Type)
 		return "Uniform Buffer";
 	case Nexus::ShaderResourceType::SampledImage:
 		return "Sampled Image";
+	case Nexus::ShaderResourceType::SeperateImage:
+		return "Seperate Image";
+	case Nexus::ShaderResourceType::StorageImage:
+		return "Storage Image";
 	default:
-		return std::string();
+		return "None";
 	}
 }

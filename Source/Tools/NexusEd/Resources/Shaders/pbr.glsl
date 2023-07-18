@@ -73,8 +73,9 @@ layout(set = 0, binding = 1) uniform sceneBuffer
 	float pointLightCount;
 	vec4 SceneLightColor;
 
-	vec4 n1,n2;
-
+	int useIBL;
+	vec3 n1;
+	
 	PointLight lights[10];
 } m_sceneBuffer;
 
@@ -93,6 +94,10 @@ layout(set = 2, binding = 0) uniform MaterialBuffer
 
 	float metalness, roughness, glossiness;
 } m_MaterialBuffer;
+
+layout(set = 0, binding = 2) uniform sampler2D BRDFLutMap;
+layout(set = 0, binding = 3) uniform samplerCube IrradianceMap;
+layout(set = 0, binding = 4) uniform samplerCube SpecularMap;
 
 layout(set = 2, binding = 1) uniform sampler2D baseColorMap;
 layout(set = 2, binding = 2) uniform sampler2D surfaceMap;
@@ -139,6 +144,11 @@ const vec3 Fdielectric = vec3(0.01); // Constant normal Incidence Frensel Factor
 vec3 Calculate_Fresnel(vec3 F0, vec3 viewDir, vec3 halfDir)
 {
 	return F0 + (vec3(1) - F0) * pow((1 - max(dot(viewDir, halfDir), 0.0)), 5.0);
+}
+
+vec3 Calculate_Fresnel_Roughness( vec3 F0, vec3 viewDir, vec3 halfDir, float roughness) 
+{
+    return F0 + (max(vec3(1.0-roughness), F0) - F0) * pow((1 - max(dot(viewDir, halfDir), 0.0)), 5.0);
 }
 
 vec3 Calculate_Lambertian_DiffuseComponent(vec3 materialColor, vec3 Fresnel)
@@ -298,6 +308,32 @@ void main()
 		result += (diffuse + specular) * m_sceneBuffer.SceneLightColor.rgb * max(dot(m_sceneBuffer.SceneLightDirection.rgb, norm), 0.0);
 	}
 
+	// IBL
+	{
+		vec3 irradiance = texture(IrradianceMap, norm).rgb;
+
+		vec3 F = Calculate_Fresnel_Roughness( F0,viewDir, norm, roughness );
+		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metallic);
+
+		vec3 diffuseIBL = kd * diffuseColor * irradiance;
+
+		// Specular reflection vector.
+		float cosLo = max(dot(norm,viewDir),0.0);
+		vec3 R = reflect(-viewDir, norm);
+
+		int specularTextureLevels = textureQueryLevels(SpecularMap);
+		vec3 specularIrradiance = textureLod(SpecularMap, R, roughness * specularTextureLevels).rgb;
+
+		// Split-sum approximation factors for Cook-Torrance specular BRDF.
+		vec2 specularBRDF = texture(BRDFLutMap, vec2(cosLo, roughness)).rg;
+
+		// Total specular IBL contribution.
+		vec3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;		
+
+		// Add the diffuse component to the result
+		result += (diffuseIBL + specularIBL) ;
+	}
+
 	const float u_OcclusionStrength = 1.0f;
 	if (m_MaterialBuffer.useOculsionMap > -1)
 	{
@@ -307,7 +343,7 @@ void main()
 
 	// Tone Mapping
 	result = vec3(1.0) - exp(-result * Exposure);
-
+	
 	// Gamma Correction
 	result = pow(result, vec3(1.0 / Gamma));
 

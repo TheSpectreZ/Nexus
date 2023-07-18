@@ -1,8 +1,8 @@
 #include "NxRenderEngine/RenderableScene.h"
 #include "NxRenderEngine/ResourcePool.h"
 
-Nexus::RenderableScene::RenderableScene(Ref<Scene> scene, Ref<Shader> shader)
-	:m_Shader(shader),m_Scene(scene)
+Nexus::RenderableScene::RenderableScene(Ref<Scene> scene, Ref<Shader> pbr,Ref<Shader> skybox)
+	:m_pbrShader(pbr),m_skyBoxShader(skybox), m_Scene(scene)
 {
 	Initialize();
 }
@@ -17,24 +17,64 @@ void Nexus::RenderableScene::Prepare()
 	auto cameraBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform0.hashId);
 	cameraBuf->Update((void*)m_Scene->GetCamera());
 
-	Entity entity;
-	auto view = m_Scene->GetAllEntitiesWith<Component::DirectionalLight>();
-	for (auto& e : view)
+	auto& rootEntity = m_Scene->GetRootEntity();
+
+	auto& DL = rootEntity.directionalLight;
+	m_SceneBuffer.lightDir = DL.direction;
+	m_SceneBuffer.lightCol = DL.color;
+	
+	auto& Env = rootEntity.environment;
+	if (Env.handle && m_SceneBuffer.useIBL < 0)
 	{
-		entity = { e,m_Scene.get() };
-	
-		auto& DL = entity.GetComponent<Component::DirectionalLight>();
-		m_SceneBuffer.lightDir = DL.direction;
-		m_SceneBuffer.lightCol = DL.color;
+		m_SceneBuffer.useIBL = 1;
+		// Cause this works as getter too... [To-Do : Make this more sensible]
+		auto env = ResourcePool::Get()->AllocateEnvironment(Env.handle);
+
+		ImageHandle handle{};
+		handle.set = 0;
+		handle.binding = 3;
+		handle.texture = env->IrradianceMap;
+		handle.sampler = ResourcePool::Get()->GetSampler(11122);
+		handle.Type = ShaderResourceType::SampledImage;
+		
+		m_pbrShader->BindTextureWithResourceHeap(PerSceneHeap, handle);
+		
+		handle.binding = 4;
+		handle.texture = env->specularMap;
+		
+		m_pbrShader->BindTextureWithResourceHeap(PerSceneHeap, handle);
+
+		handle.binding = 1;
+		handle.texture = env->envMap;
+
+		m_skyBoxShader->BindTextureWithResourceHeap(SkyBoxHeap, handle);
 	}
-	
+
 	auto sceneBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform1.hashId);
 	sceneBuf->Update((void*)&m_SceneBuffer);
 }
 
-void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
+void Nexus::RenderableScene::DrawSkybox(Ref<CommandQueue> queue)
 {
-	queue->BindShaderResourceHeap(m_Shader, PerSceneHeap);
+	auto& root = m_Scene->GetRootEntity();
+	if (!root.environment.handle)
+		return;
+
+	queue->BindShaderResourceHeap(m_skyBoxShader, SkyBoxHeap, PipelineBindPoint::Graphics);
+	
+	static UUID nulId = UUID((uint64_t)0);
+	auto RTMesh = ResourcePool::Get()->GetRenderableMesh(nulId);
+
+	auto Ib = RTMesh->GetIndexBuffer();
+
+	queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
+	queue->BindIndexBuffer(Ib);
+	queue->DrawIndices(Ib->GetSize() / sizeof(uint32_t), 1, 0, 0, 0);
+}
+
+void Nexus::RenderableScene::DrawScene(Ref<CommandQueue> queue)
+{
+	queue->BindShaderResourceHeap(m_pbrShader, PerSceneHeap, PipelineBindPoint::Graphics);
 
 	Entity entity;
 	auto view = m_Scene->GetAllEntitiesWith<Component::Mesh>();
@@ -56,7 +96,7 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 		
 		auto RTMesh = ResourcePool::Get()->GetRenderableMesh(MeshHandle);
 
-		queue->BindShaderResourceHeap(m_Shader, PerEntityHeap[Identity.uuid]);
+		queue->BindShaderResourceHeap(m_pbrShader, PerEntityHeap[Identity.uuid],PipelineBindPoint::Graphics);
 		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
 		queue->BindIndexBuffer(RTMesh->GetIndexBuffer());
 
@@ -67,7 +107,7 @@ void Nexus::RenderableScene::Draw(Ref<CommandQueue> queue)
 				if (!PerMaterialHeap.contains(sb.materialIndex))
 					CreateMaterialResource(sb.materialIndex);
 
-				queue->BindShaderResourceHeap(m_Shader, PerMaterialHeap[sb.materialIndex]);
+				queue->BindShaderResourceHeap(m_pbrShader, PerMaterialHeap[sb.materialIndex], PipelineBindPoint::Graphics);
 				queue->DrawIndices(sb.indexSize, 1, sb.indexOffset, 0, 0);
 			}
 		}
@@ -80,46 +120,53 @@ void Nexus::RenderableScene::Initialize()
 	{
 		PerSceneHeap.hashId = UUID();
 		PerSceneHeap.set = 0;
-		m_Shader->AllocateShaderResourceHeap(PerSceneHeap);
+		m_pbrShader->AllocateShaderResourceHeap(PerSceneHeap);
 
 		// Camera
 		PerSceneUniform0.hashId = UUID();
 		PerSceneUniform0.set = 0;
 		PerSceneUniform0.binding = 0;
-		auto cbuff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform0);
+		auto cbuff = ResourcePool::Get()->AllocateUniformBuffer(m_pbrShader, PerSceneUniform0);
 
 		// Scene
 		PerSceneUniform1.hashId = UUID();
 		PerSceneUniform1.set = 0;
 		PerSceneUniform1.binding = 1;
-		auto sbuff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, PerSceneUniform1);
+		auto sbuff = ResourcePool::Get()->AllocateUniformBuffer(m_pbrShader, PerSceneUniform1);
 
-		m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0.binding, cbuff);
-		m_Shader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform1.binding, sbuff);
+		m_pbrShader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0.binding, cbuff);
+		m_pbrShader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform1.binding, sbuff);
+
+		ImageHandle handle{};
+		handle.set = 0;
+		handle.binding = 2;
+		handle.texture = EnvironmentBuilder::GetBRDFLut();
+		handle.sampler = ResourcePool::Get()->GetSampler(11122);
+		handle.Type = ShaderResourceType::SampledImage;
+
+		m_pbrShader->BindTextureWithResourceHeap(PerSceneHeap, handle);
 	}
 
-	// Sampler
+	// Skybox
 	{
-		SamplerSpecification specs{};
-		specs.sampler.Far = SamplerFilter::Linear;
-		specs.sampler.Near = SamplerFilter::Linear;
-		specs.sampler.U = SamplerWrapMode::Repeat;
-		specs.sampler.V = SamplerWrapMode::Repeat;
-		specs.sampler.W = SamplerWrapMode::Repeat;
+		SkyBoxHeap.hashId = UUID();
+		SkyBoxHeap.set = 0;
+		m_skyBoxShader->AllocateShaderResourceHeap(SkyBoxHeap);
 
-		m_Sampler = ResourcePool::Get()->GetSampler(specs);
+		auto buffer = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform0.hashId);
+		m_skyBoxShader->BindUniformWithResourceHeap(SkyBoxHeap, 0, buffer);
 	}
 }
 
 void Nexus::RenderableScene::Destroy()
 {
-	m_Shader->DeallocateShaderResourceHeap(PerSceneHeap);
+	m_pbrShader->DeallocateShaderResourceHeap(PerSceneHeap);
 	ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform0.hashId);
 	ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform1.hashId);
 
 	for (auto& [k, v] : PerEntityHeap)
 	{
-		m_Shader->DeallocateShaderResourceHeap(v);
+		m_pbrShader->DeallocateShaderResourceHeap(v);
 		ResourcePool::Get()->DeallocateUniformBuffer(PerEntityUniform[k].hashId);
 	}
 	PerEntityHeap.clear();
@@ -127,7 +174,7 @@ void Nexus::RenderableScene::Destroy()
 	
 	for (auto& [k, v] : PerMaterialHeap)
 	{
-		m_Shader->DeallocateShaderResourceHeap(v);
+		m_pbrShader->DeallocateShaderResourceHeap(v);
 		ResourcePool::Get()->DeallocateUniformBuffer(PerMaterialUniform[k].hashId);
 	}
 	PerMaterialHeap.clear();
@@ -140,18 +187,18 @@ void Nexus::RenderableScene::CreateEntityResource(UUID Id)
 	heapHandle.hashId = UUID();
 	heapHandle.set = 1;
 
-	m_Shader->AllocateShaderResourceHeap(heapHandle);
+	m_pbrShader->AllocateShaderResourceHeap(heapHandle);
 	PerEntityHeap[Id] = heapHandle;
 
 	UniformBufferHandle uniformHandle{};
 	uniformHandle.hashId = UUID();
 	uniformHandle.set = 1;
 	uniformHandle.binding = 0;
-
-	auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, uniformHandle);
+	
+	auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_pbrShader, uniformHandle);
 	PerEntityUniform[Id] = uniformHandle;
 
-	m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
+	m_pbrShader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
 }
 
 void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
@@ -160,7 +207,7 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	heapHandle.hashId = UUID();
 	heapHandle.set = 2;
 
-	m_Shader->AllocateShaderResourceHeap(heapHandle);
+	m_pbrShader->AllocateShaderResourceHeap(heapHandle);
 	PerMaterialHeap[Id] = heapHandle;
 
 	UniformBufferHandle uniformHandle{};
@@ -168,9 +215,9 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	uniformHandle.set = 2;
 	uniformHandle.binding = 0;
 
-	auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_Shader, uniformHandle);
+	auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_pbrShader, uniformHandle);
 	PerMaterialUniform[Id] = uniformHandle;
-	m_Shader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
+	m_pbrShader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
 	
 	Ref<RenderableMaterial> material = ResourcePool::Get()->GetRenderableMaterial(Id);
 	auto factors = material->GetParams()._factors;
@@ -178,7 +225,8 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 
 	Ref<Sampler> sampler = ResourcePool::Get()->GetSampler(11122);
 	
-	CombinedImageSamplerHandle imageHandle;
+	ImageHandle	imageHandle;
+	imageHandle.Type = ShaderResourceType::SampledImage;
 	imageHandle.set = 2;
 	
 	UUID def = UUID((uint64_t)0);
@@ -186,8 +234,8 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 
 	if (material->GetParams()._factors.useBaseColorMap > -1)
 	{
-		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Albedo]);
-		imageHandle.texture = material->GetParams()._Maps[TextureType::Albedo];
+		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureMapType::Albedo]);
+		imageHandle.texture = material->GetParams()._Maps[TextureMapType::Albedo];
 	}
 	else
 	{
@@ -196,22 +244,22 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	}
 
 	imageHandle.binding = 1;
-	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	m_pbrShader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 
 	if (material->GetParams()._factors.pbrType == 1.f)
 	{
 		if (material->GetParams()._factors.useSurfaceMap > -1)
 		{
-			imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::MetallicRoughness]);
-			imageHandle.texture = material->GetParams()._Maps[TextureType::MetallicRoughness];
+			imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureMapType::MetallicRoughness]);
+			imageHandle.texture = material->GetParams()._Maps[TextureMapType::MetallicRoughness];
 		}
 	}
 	else if (material->GetParams()._factors.pbrType == 2.f)
 	{
 		if (material->GetParams()._factors.useSurfaceMap > -1)
 		{
-			imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::SpecularGlossiness]);
-			imageHandle.texture = material->GetParams()._Maps[TextureType::SpecularGlossiness];
+			imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureMapType::SpecularGlossiness]);
+			imageHandle.texture = material->GetParams()._Maps[TextureMapType::SpecularGlossiness];
 		}
 	}
 	else
@@ -221,12 +269,12 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	}
 
 	imageHandle.binding = 2;
-	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	m_pbrShader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 
 	if (material->GetParams()._factors.useNormalMap > -1)
 	{
-		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Normal]);
-		imageHandle.texture = material->GetParams()._Maps[TextureType::Normal];
+		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureMapType::Normal]);
+		imageHandle.texture = material->GetParams()._Maps[TextureMapType::Normal];
 	}
 	else
 	{
@@ -235,12 +283,12 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	}
 
 	imageHandle.binding = 3;
-	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	m_pbrShader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 	
 	if (material->GetParams()._factors.useOculsionMap > -1)
 	{
-		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Occulsion]);
-		imageHandle.texture = material->GetParams()._Maps[TextureType::Occulsion];
+		imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureMapType::Occulsion]);
+		imageHandle.texture = material->GetParams()._Maps[TextureMapType::Occulsion];
 	}
 	else
 	{
@@ -249,12 +297,12 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	}
 	
 	imageHandle.binding = 4;
-	m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	m_pbrShader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 	
 	//if (material->GetParams()._factors.useEmissiveMap > -1)
 	//{
-	//	imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureType::Emissive]);
-	//	imageHandle.texture = material->GetParams()._Maps[TextureType::Occulsion];
+	//	imageHandle.sampler = ResourcePool::Get()->GetSampler(material->GetParams()._Samplers[TextureMapType::Emissive]);
+	//	imageHandle.texture = material->GetParams()._Maps[TextureMapType::Occulsion];
 	//}
 	//else
 	//{
@@ -263,6 +311,6 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	//}
 	//
 	//imageHandle.binding = 5;
-	//m_Shader->BindTextureWithResourceHeap(heapHandle, imageHandle);
+	//m_pbrShader->BindTextureWithResourceHeap(heapHandle, imageHandle);
 }
 

@@ -102,7 +102,10 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 	// Pipeline
 	{
 		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/pbr.glsl");
-		m_shader = GraphicsInterface::CreateShader(shaderSpecs);
+		m_PbrShader = GraphicsInterface::CreateShader(shaderSpecs);
+
+		shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/skybox.glsl");
+		m_SkyboxShader = GraphicsInterface::CreateShader(shaderSpecs);
 
 		std::vector<VertexBindInfo> pipelineVertexBindInfo(1);
 		{
@@ -141,8 +144,8 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 			pipelineVertexAttribInfo[4].format = VertexAttribInfo::ATTRIB_FORMAT_VEC2;
 		}
 
-		PipelineSpecification pipelineSpecs{};
-		pipelineSpecs.shader = m_shader;
+		GraphicsPipelineSpecification pipelineSpecs{};
+		pipelineSpecs.shader = m_PbrShader;
 		pipelineSpecs.renderpass = m_pass;
 		pipelineSpecs.subpass = 0;
 		pipelineSpecs.multisampled = true;
@@ -153,11 +156,18 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 		pipelineSpecs.vertexBindInfo = pipelineVertexBindInfo;
 		pipelineSpecs.vertexAttribInfo = pipelineVertexAttribInfo;
 
-		pipelineSpecs.rasterizerInfo.polygonMode = PolygonMode::Fill;
-		m_TriPipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
-
 		pipelineSpecs.rasterizerInfo.polygonMode = PolygonMode::Line;
-		m_LinePipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
+		m_PBR_LinePipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
+
+		pipelineSpecs.rasterizerInfo.polygonMode = PolygonMode::Fill;
+		m_PBR_FillPipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
+
+		for (uint32_t i = 0; i < 4; i++)
+			pipelineVertexAttribInfo.pop_back();
+
+		pipelineSpecs.vertexAttribInfo = pipelineVertexAttribInfo;
+		pipelineSpecs.shader = m_SkyboxShader;
+		m_SkyboxPipeline = GraphicsInterface::CreatePipeline(pipelineSpecs);
 	}
 
 	// Screen
@@ -186,18 +196,25 @@ void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 
 	UUID Id = scene->GetId();
 	if (!m_RenderableScenes.contains(Id))
-		m_RenderableScenes[Id] = CreateRef<RenderableScene>(scene, m_shader);
+		m_RenderableScenes[Id] = CreateRef<RenderableScene>(scene, m_PbrShader,m_SkyboxShader);
 
 	m_RenderableScenes[Id]->Prepare();
 
 	auto commandQueue = Module::Renderer::Get()->GetCommandQueue();
 
 	commandQueue->BeginRenderPass(m_pass, m_fb);
-	commandQueue->BindPipeline(mode == 1 ? m_TriPipeline : m_LinePipeline);
+
+	commandQueue->BindPipeline(m_SkyboxPipeline);
 	commandQueue->SetViewport(m_Viewport);
 	commandQueue->SetScissor(m_Scissor);
 
-	m_RenderableScenes[Id]->Draw(commandQueue);
+	m_RenderableScenes[Id]->DrawSkybox(commandQueue);
+
+	commandQueue->BindPipeline(mode == 1 ? m_PBR_FillPipeline : m_PBR_LinePipeline);
+	commandQueue->SetViewport(m_Viewport);
+	commandQueue->SetScissor(m_Scissor);
+
+	m_RenderableScenes[Id]->DrawScene(commandQueue);
 
 	commandQueue->EndRenderPass();
 }

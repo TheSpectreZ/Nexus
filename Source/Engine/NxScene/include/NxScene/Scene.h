@@ -46,7 +46,17 @@ namespace Nexus
 		}
 
 		Entity GetEntityWithUUID(UUID id);
+
+		struct RootEntity
+		{
+			Component::DirectionalLight directionalLight;
+			Component::Environment environment;
+		};
+
+		RootEntity& GetRootEntity() { return m_RoomEntity; }
 	private:
+		RootEntity m_RoomEntity;
+
 		UUID m_Id;
 		Camera* m_Camera;
 		entt::registry m_registry;

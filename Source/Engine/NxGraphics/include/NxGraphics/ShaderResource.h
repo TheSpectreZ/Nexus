@@ -5,7 +5,7 @@ namespace Nexus
 {
 	struct ShaderResouceHeapLayoutBinding
 	{
-		uint32_t bindPoint, bufferSize;
+		uint32_t bindPoint, bufferSize, arrayCount;
 		ShaderResourceType type;
 		ShaderStage stage;
 	};

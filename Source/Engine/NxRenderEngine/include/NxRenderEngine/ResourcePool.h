@@ -3,6 +3,7 @@
 #include "NxRenderEngine/RenderableMesh.h"
 #include "NxRenderEngine/RenderableMaterial.h"
 #include "NxRenderEngine/GraphicsInterface.h"
+#include "NxRenderEngine/EnvironmentBuilder.h"	
 
 namespace Nexus
 {
@@ -31,12 +32,17 @@ namespace Nexus
 		
 		Ref<RenderableMaterial> GetRenderableMaterial(UUID HashId) { return m_RenderableMaterials[HashId]; }
 		Ref<RenderableMaterial> AllocateRenderableMaterial(const Meshing::Material& specs, std::unordered_map<uint8_t, Meshing::Texture>& textures, UUID HashID);
-		void DeallocateRenderableMaterial(UUID HashID);
+		void DeallocateRenderableMaterial(UUID HashID);;
+
+		Ref<Environment> AllocateEnvironment(UUID HashID);
+		void DeallocateEnvironment(UUID HashID);
 	private:
 		std::unordered_map<UUID, Ref<Buffer>> m_UniformBuffers;
 		std::unordered_map<UUID, Ref<Texture>> m_Textures;
 		std::unordered_map<UUID, Ref<RenderableMesh>> m_RenderableMeshes;
 		std::unordered_map<UUID, Ref<RenderableMaterial>> m_RenderableMaterials;
+		
+		std::unordered_map<UUID, Ref<Environment>> m_Environments;
 		
 		std::unordered_map<uint32_t, Ref<Sampler>> m_Samplers;
 	};

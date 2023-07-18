@@ -42,7 +42,7 @@ namespace Nexus
 		uint32_t offset, size;
 	};
 
-	struct PipelineSpecification
+	struct GraphicsPipelineSpecification
 	{
 		Ref<Shader> shader;
 		Ref<Renderpass> renderpass;
@@ -52,6 +52,13 @@ namespace Nexus
 		std::vector<VertexBindInfo> vertexBindInfo;
 		RasterizerInfo rasterizerInfo;
 	};
+
+	struct ComputePipelineSpecification
+	{
+		Ref<Shader> shader;
+	};
+
+	enum class PipelineBindPoint { Graphics, Compute };
 
 	class Pipeline
 	{

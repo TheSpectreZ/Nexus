@@ -3,7 +3,7 @@
 #include "NxScene/Component.h"
 #include "NxAsset/Asset.h"
 #include "NxRenderEngine/ResourcePool.h"
-
+#include "Context.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "NxCore/Logger.h"
@@ -219,6 +219,11 @@ void NexusEd::SceneHeirarchy::Render()
 		DrawComponents(m_SelectedEntity);
 	}
 	ImGui::End();
+
+	ImGui::Begin("Scene");
+	if (m_Scene)
+		DrawRootEntity();
+	ImGui::End();
 }
 
 void NexusEd::SceneHeirarchy::DrawEntityNode(entt::entity e)
@@ -291,7 +296,6 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			DisplayAddComponentEntry<Component::SphereCollider>("SphereCollider", en);
 			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
 			DisplayAddComponentEntry<Component::CapsuleCollider>("CapsuleCollider", en);
-			DisplayAddComponentEntry<Component::DirectionalLight>("DirectionalLight", en);
 			DisplayAddComponentEntry<Component::PointLight>("PointLight", en);
 			ImGui::EndPopup();
 		}
@@ -454,12 +458,6 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			ImGui::DragFloat("Bottom-Radius", &component.BottomRadius);
 			ImGui::DragFloat("Half-Height", &component.HalfHeight);
 		});
-
-	DrawComponent<Component::DirectionalLight>("Directional Light", en, [&](auto& component)
-		{
-			ImGui::ColorEdit4("Color", glm::value_ptr(component.color), ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
-			ImGuiUtils::DrawVec3Control("Direction", component.direction, 1.f);
-		});
 	
 	DrawComponent<Component::PointLight>("Point Light", en, [&](auto& component)
 		{
@@ -468,4 +466,45 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			ImGui::DragFloat("Intensity", &component.intensity, 0.1f, 0.1f);
 			ImGui::DragFloat("Falloff", &component.falloff, 0.1f, 0.1f);
 		});
+}
+
+void NexusEd::SceneHeirarchy::DrawRootEntity()
+{
+	auto& root = m_Scene->GetRootEntity();
+
+	{
+		auto& dl = root.directionalLight;
+		ImGui::ColorEdit4("Color", glm::value_ptr(dl.color), ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_Float);
+		ImGuiUtils::DrawVec3Control("Direction", dl.direction, 1.f);
+	}
+
+	{
+		auto& env = root.environment;
+		ImGui::Button("Set Environment", ImVec2(100.f, 75.f));
+
+		static bool justLoaded = false;
+
+		if (ImGui::BeginDragDropTarget())
+		{
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+			{
+				const wchar_t* path = (const wchar_t*)payload->Data;
+				AssetFilePath file = path;
+
+				UUID Id;
+				auto Env = EnvironmentBuilder::Build(file.generic_string(), Id);
+				if (Env)
+				{
+					env.handle = Id;
+					justLoaded = true;
+				}
+			}
+			ImGui::EndDragDropTarget();
+		}
+
+		if (env.handle)
+		{
+			Ref<Environment> environment = ResourcePool::Get()->AllocateEnvironment(env.handle);
+		}
+	}
 }

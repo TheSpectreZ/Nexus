@@ -27,7 +27,8 @@ namespace Nexus
 
 	struct NEXUS_VULKAN_API ReflectionData
 	{
-		std::unordered_map<uint32_t, std::vector<Nexus::ShaderResouceHeapLayoutBinding>> bindings;
+		std::unordered_map<uint32_t, std::unordered_map<uint32_t,Nexus::ShaderResouceHeapLayoutBinding>> bindings;
+		std::unordered_map<ShaderStage, VkPushConstantRange> ranges;
 	};
 
 	class NEXUS_VULKAN_API VulkanShader : public Shader
@@ -43,12 +44,12 @@ namespace Nexus
 		void GetShaderResourceHeapLayoutBinding(ShaderResouceHeapLayoutBinding*& heap, uint32_t set,uint32_t binding) override;
 
 		void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle, uint32_t binding, Ref<Buffer> buffer) override;
-		void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texture) override;
+		void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, ImageHandle texture) override;
 		
 		VkShaderModule GetModule(VkShaderStageFlagBits flag);
 		VkPipelineLayout GetPipelineLayout() { return m_Layout; }
 	private:
-		VkShaderModule m_VertexModule, m_FragmentModule;	
+		std::unordered_map<ShaderStage,VkShaderModule> m_Modules;	
 		std::unordered_map<uint32_t, SetResource> m_SetResource;
 		ReflectionData m_ReflectionData;
 		VkPipelineLayout m_Layout;

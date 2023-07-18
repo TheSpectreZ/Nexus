@@ -12,11 +12,37 @@
 #include "spirv_cross/spirv_glsl.hpp"
 #include "spirv_cross/spirv_reflect.hpp"
 
+static VkShaderStageFlags GetVulkanShaderStage(Nexus::ShaderStage stage)
+{
+	switch (stage)
+	{
+	case Nexus::ShaderStage::Vertex:
+		return VK_SHADER_STAGE_VERTEX_BIT;
+	case Nexus::ShaderStage::Fragment:
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+	case Nexus::ShaderStage::Compute:
+		return VK_SHADER_STAGE_COMPUTE_BIT;
+	default:
+		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+	}
+}
+
 static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData* data, Nexus::ShaderStage stage)
 {
 	spirv_cross::CompilerGLSL reflector(*spirV);
-	
+
 	spirv_cross::ShaderResources resources = reflector.get_shader_resources();
+
+	for (const auto& resource : resources.push_constant_buffers)
+	{
+		auto& bufferType = reflector.get_type(resource.base_type_id);
+		uint32_t size = (uint32_t)reflector.get_declared_struct_size(bufferType);
+		
+		auto& ref = data->ranges[stage];
+		ref.size = size;
+		ref.stageFlags = GetVulkanShaderStage(stage);
+		ref.offset = 0;
+	}
 	
 	// Uniform Buffers
 	for (const auto& resource : resources.uniform_buffers)
@@ -25,7 +51,6 @@ static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData
 
 		if (activeBuffers.size())
 		{
-			
 			auto& bufferType = reflector.get_type(resource.base_type_id);
 			//int32_t memberCount = (int32_t)bufferType.member_types.size();
 			uint32_t size = (uint32_t)reflector.get_declared_struct_size(bufferType);
@@ -33,14 +58,12 @@ static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData
 			uint32_t binding = reflector.get_decoration(resource.id, spv::DecorationBinding);
 			uint32_t set = reflector.get_decoration(resource.id, spv::DecorationDescriptorSet);
 
-			if (binding >= data->bindings[set].size())
-				data->bindings[set].emplace_back();
-
-			auto& ref = data->bindings[set].at(binding);
+			auto& ref = data->bindings[set][binding];
 			ref.bindPoint = binding;
 			ref.stage = ref.stage | stage;
 			ref.type = Nexus::ShaderResourceType::Uniform;
 			ref.bufferSize = size;
+			ref.arrayCount = 1;
 		}
 	}
 
@@ -51,18 +74,37 @@ static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData
 		uint32_t set = reflector.get_decoration(resource.id, spv::DecorationDescriptorSet);
 
 		//auto& baseType = reflector.get_type(resource.base_type_id);
-		//auto& type = reflector.get_type(resource.type_id);
 
 		//uint32_t dimension = baseType.image.dim;
-		//uint32_t arraySize = type.array[0];
-
-		while (binding >= data->bindings[set].size())
-			data->bindings[set].emplace_back();
 		
-		auto& ref = data->bindings[set].at(binding);
+		auto& type = reflector.get_type(resource.type_id);
+		uint32_t arraySize = type.array[0];
+
+		auto& ref = data->bindings[set][binding];
 		ref.bindPoint = binding;
 		ref.stage = ref.stage | stage;
 		ref.type = Nexus::ShaderResourceType::SampledImage;
+		ref.arrayCount = arraySize > 0 ? arraySize : 1;
+		ref.bufferSize = 0;
+	}
+	
+	// Storage Images
+	for (const auto& resource : resources.storage_images)
+	{
+		uint32_t binding = reflector.get_decoration(resource.id, spv::DecorationBinding);
+		uint32_t set = reflector.get_decoration(resource.id, spv::DecorationDescriptorSet);
+
+		//auto& baseType = reflector.get_type(resource.base_type_id);
+		auto& type = reflector.get_type(resource.type_id);
+		uint32_t arraySize = type.array[0];
+
+		//uint32_t dimension = baseType.image.dim;
+
+		auto& ref = data->bindings[set][binding];
+		ref.bindPoint = binding;
+		ref.stage = ref.stage | stage;
+		ref.type = Nexus::ShaderResourceType::StorageImage;
+		ref.arrayCount = arraySize > 0 ? arraySize : 1;
 		ref.bufferSize = 0;
 	}
 }
@@ -76,24 +118,21 @@ Nexus::VulkanShader::VulkanShader(const ShaderSpecification& specs)
 		Info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 		Info.pNext = nullptr;
 		Info.flags = 0;
-		Info.codeSize = (uint32_t)specs.vertexData.size() * sizeof(uint32_t);
-		Info.pCode = specs.vertexData.data();
 
-		_VKR = vkCreateShaderModule(device, &Info, nullptr, &m_VertexModule);
-		CHECK_HANDLE(m_VertexModule, VkShaderModule);
+		for (auto& [k, v] : specs.spirv)
+		{
+			Info.codeSize = (uint32_t)v.size() * sizeof(uint32_t);
+			Info.pCode = v.data();
 
-		Info.codeSize = (uint32_t)specs.fragmentData.size() * sizeof(uint32_t);
-		Info.pCode = specs.fragmentData.data();
+			_VKR = vkCreateShaderModule(device, &Info, nullptr, &m_Modules[k]);
+			CHECK_HANDLE(m_Modules[k], VkShaderModule);
 
-		_VKR = vkCreateShaderModule(device, &Info, nullptr, &m_FragmentModule);
-		CHECK_HANDLE(m_FragmentModule, VkShaderModule);
+			GenerateReflections(&v, &m_ReflectionData, k);
+		}
 	}
 
 	NEXUS_LOG("Vulkan","Shader Created : %s", specs.filepath.c_str());
 
-	GenerateReflections(&specs.vertexData, &m_ReflectionData, Nexus::ShaderStage::Vertex);
-	GenerateReflections(&specs.fragmentData, &m_ReflectionData, Nexus::ShaderStage::Fragment);
-	
 	// Heap Layouts and Pool
 	{
 		NEXUS_LOG("Vulkan", "=================");
@@ -101,17 +140,26 @@ Nexus::VulkanShader::VulkanShader(const ShaderSpecification& specs)
 
 		for (auto& [set, bindings] : m_ReflectionData.bindings)
 		{
-			for (auto& b : bindings)
+			std::vector< ShaderResouceHeapLayoutBinding> shBinds;
+			for (uint32_t i = 0; i < bindings.size(); i++)
 			{
-				NEXUS_LOG("Vulkan","Set: %i | BindPoint : %i, Type : %s, ShaderStage : %s",set, b.bindPoint, GetShaderResourceTypeStringName(b.type).c_str(), GetShaderStageTypeStringName(b.stage).c_str());
+				shBinds.emplace_back(bindings[i]);
+				NEXUS_LOG("Vulkan","Set: %i | BindPoint : %i, Type : %s, ShaderStage : %s",set, bindings[i].bindPoint, GetShaderResourceTypeStringName(bindings[i].type).c_str(), GetShaderStageTypeStringName(bindings[i].stage).c_str());
 			}
-			m_SetResource[set].HeapLayout = CreateRef<VulkanShaderResourceHeapLayout>(bindings);
+			m_SetResource[set].HeapLayout = CreateRef<VulkanShaderResourceHeapLayout>(shBinds);
 			
 			auto& pool = m_SetResource[set].HeapPools.emplace_back();
 			pool = CreateRef<VulkanShaderResourcePool>(m_SetResource[set].HeapLayout, maxHeapCountPerPool);
 			NEXUS_LOG("Vulkan", "");
 		}
-		NEXUS_LOG("\nVulkan", "=================\n");
+
+		for (auto& [k,r] : m_ReflectionData.ranges)
+		{
+			NEXUS_LOG("Vulkan", "PushConstant, Size : %i", r.size);
+		}
+
+		NEXUS_LOG("Vulkan", "");
+		NEXUS_LOG("Vulkan", "=================\n");
 	}
 
 	/////////////////////////////////
@@ -122,8 +170,12 @@ Nexus::VulkanShader::VulkanShader(const ShaderSpecification& specs)
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
-		pipelineLayoutInfo.pPushConstantRanges = nullptr;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
+		std::vector<VkPushConstantRange> ranges{};
+		for (auto& [k, r] : m_ReflectionData.ranges)
+			ranges.push_back(r);
+
+		pipelineLayoutInfo.pPushConstantRanges = ranges.data();
+		pipelineLayoutInfo.pushConstantRangeCount = (uint32_t)ranges.size();
 
 		std::vector<VkDescriptorSetLayout> layouts;
 
@@ -147,8 +199,8 @@ Nexus::VulkanShader::~VulkanShader()
 {
 	VkDevice device = VulkanContext::Get()->GetDeviceRef()->Get();
 
-	vkDestroyShaderModule(device, m_VertexModule, nullptr);
-	vkDestroyShaderModule(device, m_FragmentModule, nullptr);
+	for(auto& [k,v] : m_Modules)
+		vkDestroyShaderModule(device, v, nullptr);
 
 	vkDestroyPipelineLayout(device, m_Layout, nullptr);
 	NEXUS_LOG("Vulkan", "Shader Pipeline Destroyed");
@@ -261,28 +313,39 @@ void Nexus::VulkanShader::BindUniformWithResourceHeap(ResourceHeapHandle heapHan
 	NEXUS_LOG("Vulkan", "Uniform Buffer Binded With Resource Heap: %i|%i : %i", heapHandle.set, binding, Info.range);
 }
 
-void Nexus::VulkanShader::BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texHandle)
+void Nexus::VulkanShader::BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, ImageHandle texHandle)
 {
 	Ref<VulkanTexture> texture = DynamicPointerCast<VulkanTexture>(texHandle.texture);
-	Ref<VulkanSampler> sampler = DynamicPointerCast<VulkanSampler>(texHandle.sampler);
-
-	VkDescriptorImageInfo Info{};
-	Info.imageView = texture->Get();
-	Info.sampler = sampler->Get();
-	Info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 	VkWriteDescriptorSet write{};
 	write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 	write.pNext = nullptr;
-	write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	
+	VkDescriptorImageInfo Info{};
+	Info.imageView = texture->Get(texHandle.miplevel);
+	
+	if (texHandle.Type == ShaderResourceType::SampledImage)
+	{
+		Ref<VulkanSampler> sampler = DynamicPointerCast<VulkanSampler>(texHandle.sampler);
+		Info.sampler = sampler->Get();
+		Info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	}
+	else
+	{
+		Info.sampler = nullptr;
+		Info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	}
+
+	write.pImageInfo = &Info;
 	write.descriptorCount = 1;
-	write.dstArrayElement = 0;
+	write.dstArrayElement = texHandle.miplevel;
 	write.dstSet = m_SetResource[heapHandle.set].Heaps[heapHandle.hashId].Get();
 	write.dstBinding = texHandle.binding;
-	write.pImageInfo = &Info;
 	write.pBufferInfo = nullptr;
 	write.pTexelBufferView = nullptr;
-
+	
 	vkUpdateDescriptorSets(VulkanContext::Get()->GetDeviceRef()->Get(), 1, &write, 0, nullptr);
 
 	NEXUS_LOG("Vulkan", "Texture Binded With Resource Heap: %i|%i", heapHandle.set, texHandle.binding);
@@ -293,9 +356,11 @@ VkShaderModule Nexus::VulkanShader::GetModule(VkShaderStageFlagBits flag)
 	switch (flag)
 	{
 	case VK_SHADER_STAGE_VERTEX_BIT:
-		return m_VertexModule;
+		return m_Modules[ShaderStage::Vertex];
 	case VK_SHADER_STAGE_FRAGMENT_BIT:
-		return m_FragmentModule;
+		return m_Modules[ShaderStage::Fragment];
+	case VK_SHADER_STAGE_COMPUTE_BIT:
+		return m_Modules[ShaderStage::Compute];
 	default:
 		NEXUS_ASSERT(1, "This Shader Type is Currently not Supported");
 		return nullptr;

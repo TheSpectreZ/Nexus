@@ -27,7 +27,10 @@ namespace Nexus::GraphicsInterface
 	Ref<Shader> NEXUS_RENDERER_API CreateShader(const ShaderSpecification& specs);
 	Ref<Renderpass> NEXUS_RENDERER_API CreateRenderpass(const RenderpassSpecification& specs);
 	Ref<Framebuffer> NEXUS_RENDERER_API CreateFramebuffer(const FramebufferSpecification& specs);
-	Ref<Pipeline> NEXUS_RENDERER_API CreatePipeline(const PipelineSpecification& specs);
+	
+	Ref<Pipeline> NEXUS_RENDERER_API CreatePipeline(const GraphicsPipelineSpecification& specs);
+	Ref<Pipeline> NEXUS_RENDERER_API CreatePipeline(const ComputePipelineSpecification& specs);
+	
 	Ref<Buffer> NEXUS_RENDERER_API CreateBuffer(const BufferSpecification& specs);
 	Ref<Texture> NEXUS_RENDERER_API CreateTexture(const TextureSpecification& specs);
 	Ref<Sampler> NEXUS_RENDERER_API CreateSampler(const SamplerSpecification& specs);

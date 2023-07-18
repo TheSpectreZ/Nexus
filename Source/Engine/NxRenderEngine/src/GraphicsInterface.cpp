@@ -57,7 +57,12 @@ Nexus::Ref<Nexus::Framebuffer> Nexus::GraphicsInterface::CreateFramebuffer(const
 	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanFramebuffer>(specs));
 }
 
-Nexus::Ref<Nexus::Pipeline> Nexus::GraphicsInterface::CreatePipeline(const PipelineSpecification& specs)
+Nexus::Ref<Nexus::Pipeline> Nexus::GraphicsInterface::CreatePipeline(const GraphicsPipelineSpecification& specs)
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanPipeline>(specs));
+}
+
+Nexus::Ref<Nexus::Pipeline> Nexus::GraphicsInterface::CreatePipeline(const ComputePipelineSpecification& specs)
 {
 	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanPipeline>(specs));
 }

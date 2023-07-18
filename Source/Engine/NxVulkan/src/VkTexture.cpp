@@ -4,7 +4,7 @@
 #include "NxVulkan/VkCommandQueue.h"
 
 Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
-	:m_Extent(Extent(info.image.width, info.image.height))
+	:m_Extent(Extent(info.extent.width, info.extent.height))
 {
 	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
 	Ref<VulkanPhysicalDevice> gpu = VulkanContext::Get()->GetPhysicalDeviceRef();
@@ -12,22 +12,76 @@ Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 
 	// Image
 	{
+		m_MipCount = info.mipCount;
+		m_CurrentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		m_ArrayLayerCount = 1;
+
 		VkImageCreateInfo Info{};
 		Info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		Info.pNext = nullptr;
-		Info.extent = { info.image.width,info.image.height,1 };
+		Info.extent = { info.extent.width,info.extent.height,1 };
 		Info.arrayLayers = 1;
-		Info.flags = 0;
-		Info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		Info.mipLevels = 1;
+		Info.mipLevels = info.mipCount;
 		Info.pQueueFamilyIndices = nullptr;
 		Info.queueFamilyIndexCount = 0;
 		Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		Info.tiling = VK_IMAGE_TILING_OPTIMAL;
-		Info.imageType = VK_IMAGE_TYPE_2D;
 		Info.samples = VK_SAMPLE_COUNT_1_BIT;
-		Info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-		Info.format = VK_FORMAT_R8G8B8A8_SRGB; 
+		Info.initialLayout = m_CurrentLayout;
+		Info.flags = 0;
+
+		switch (info.type)
+		{
+		case TextureType::TwoDim:
+			Info.imageType = VK_IMAGE_TYPE_2D;
+			break;
+		case TextureType::ThreeDim:
+			Info.imageType = VK_IMAGE_TYPE_3D;
+			break;
+		case TextureType::Cube:
+		{
+			m_ArrayLayerCount = 6;
+			Info.arrayLayers = 6;
+			Info.imageType = VK_IMAGE_TYPE_2D;
+			Info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+			break;
+		}
+		default:
+			break;
+		};
+
+		switch (info.format)
+		{
+		case TextureFormat::RGBA8_SRGB:
+			Info.format = VK_FORMAT_R8G8B8A8_SRGB;
+			break;
+		case TextureFormat::RG16_SFLOAT:
+			Info.format = VK_FORMAT_R16G16_SFLOAT;
+			break;
+		case TextureFormat::RG32_SFLOAT:
+			Info.format = VK_FORMAT_R32G32_SFLOAT;
+			break;
+		case TextureFormat::RGBA16_SFLOAT:
+			Info.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+			break;
+		case TextureFormat::RGBA32_SFLOAT:
+			Info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+			break;
+		default:
+			break;
+		};
+
+		switch (info.usage)
+		{
+		case TextureUsage::ShaderSampled:
+			Info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+			break;
+		case TextureUsage::StorageWrite	:
+			Info.usage = VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+			break;
+		default:
+			break;
+		}
 
 		VmaAllocationCreateInfo aInfo{};
 		aInfo.usage = VMA_MEMORY_USAGE_AUTO;
@@ -36,32 +90,78 @@ Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 		CHECK_HANDLE(m_Image, VkImage);
 	}
 
-	// View
+	m_Views.resize(info.mipCount);
+	for (uint32_t i = 0; i < info.mipCount; i++)
 	{
 		VkImageViewCreateInfo Info{};
 		Info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		Info.pNext = nullptr;
 		Info.flags = 0;
-		Info.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		Info.image = m_Image;
 		Info.components.r = VK_COMPONENT_SWIZZLE_R;
 		Info.components.g = VK_COMPONENT_SWIZZLE_G;
 		Info.components.b = VK_COMPONENT_SWIZZLE_B;
 		Info.components.a = VK_COMPONENT_SWIZZLE_A;
 		Info.subresourceRange.layerCount = 1;
-		Info.subresourceRange.levelCount = 1;
+		Info.subresourceRange.levelCount = info.mipCount;
 		Info.subresourceRange.baseArrayLayer = 0;
 		Info.subresourceRange.baseMipLevel = 0;
-		Info.format = VK_FORMAT_R8G8B8A8_SRGB;
 		Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		
+		switch (info.type)
+		{
+		case TextureType::TwoDim:
+			Info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			break;
+		case TextureType::ThreeDim:
+			Info.viewType = VK_IMAGE_VIEW_TYPE_3D;
+			break;
+		case TextureType::Cube:
+		{
+			Info.subresourceRange.layerCount = 6;
+			Info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
+			break;
+		}
+		default:
+			break;
+		};
 
-		_VKR = vkCreateImageView(device->Get(), &Info, nullptr, &m_View);
-		CHECK_HANDLE(m_View, VkImageView);
+		switch (info.format)
+		{
+		case TextureFormat::RGBA8_SRGB:
+			Info.format = VK_FORMAT_R8G8B8A8_SRGB;
+			break;
+		case TextureFormat::RG16_SFLOAT:
+			Info.format = VK_FORMAT_R16G16_SFLOAT;
+			break;
+		case TextureFormat::RG32_SFLOAT:
+			Info.format = VK_FORMAT_R32G32_SFLOAT;
+			break;
+		case TextureFormat::RGBA16_SFLOAT:
+			Info.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+			break;
+		case TextureFormat::RGBA32_SFLOAT:
+			Info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+			break;
+		default:
+			break;
+		};
+
+		_VKR = vkCreateImageView(device->Get(), &Info, nullptr, &m_Views[i]);
+		CHECK_HANDLE(m_Views[i], VkImageView);
 	}
 
-	// Staging 
+	m_StagingBuffer = nullptr;
+	m_StagingAlloc = nullptr;
+
+	if (info.usage == TextureUsage::ShaderSampled) // Staging
 	{
-		VkDeviceSize size = (VkDeviceSize)info.image.width * info.image.height * info.image.channels;
+		VkDeviceSize size = (VkDeviceSize)info.extent.width * info.extent.height * 4;
+
+		if (info.format == TextureFormat::RGBA32_SFLOAT)
+			size *= sizeof(float);
+		else
+			size *= sizeof(uint8_t);
 
 		VkBufferCreateInfo Info{};
 		Info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -79,11 +179,20 @@ Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 
 		if (allocInfo.pMappedData)
 		{
-			memcpy(allocInfo.pMappedData, info.image.pixels.data(), size);
+			memcpy(allocInfo.pMappedData, info.pixels, size);
 		}
-	}
 
-	VulkanCommandQueue::Get()->TransferTextureToGPU(this);
+		if(info.now)
+			VulkanCommandQueue::Get()->TransferTextureToGPU_Now(this);
+		else
+			VulkanCommandQueue::Get()->TransferTextureToGPU(this);
+
+	}
+	else if (info.usage == TextureUsage::StorageWrite)
+	{
+		VulkanCommandQueue::Get()->TransitionTextureLayout_Now(this, VK_IMAGE_LAYOUT_GENERAL, VK_ACCESS_SHADER_WRITE_BIT, VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT, PipelineBindPoint::Compute);
+		m_CurrentLayout = VK_IMAGE_LAYOUT_GENERAL;
+	}
 
 	NEXUS_LOG("Vulkan", "Texture Created");
 }
@@ -95,10 +204,17 @@ Nexus::VulkanTexture::~VulkanTexture()
 	if (m_StagingBuffer != nullptr)
 		vmaDestroyBuffer(device->GetAllocator(), m_StagingBuffer, m_StagingAlloc);
 
-	vmaDestroyImage(device->GetAllocator(), m_Image, m_Alloc);
-	vkDestroyImageView(device->Get(), m_View, nullptr);
+	for(auto& v : m_Views)
+		vkDestroyImageView(device->Get(), v, nullptr);
 
+	vmaDestroyImage(device->GetAllocator(), m_Image, m_Alloc);
 	NEXUS_LOG("Vulkan", "Texture Destroyed");
+}
+
+void Nexus::VulkanTexture::PrepareForRender()
+{
+	VulkanCommandQueue::Get()->TransitionTextureLayout_Now(this, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_ACCESS_SHADER_READ_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, PipelineBindPoint::Graphics);
+	m_CurrentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 }
 
 VkFilter GetVulkanSamplerFilter(Nexus::SamplerFilter filter)

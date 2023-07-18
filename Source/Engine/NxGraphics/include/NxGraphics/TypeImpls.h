@@ -33,7 +33,7 @@ namespace Nexus
 
 	enum class NEXUS_GRAPHICS_API ShaderStage
 	{
-		None = 0,Vertex = 1, Fragment = 2
+		None = 0, Vertex = 1, Fragment = 2, Compute = 4
 	};
 	ENUM_FLAG_OPERATORS(ShaderStage)
 	
@@ -42,9 +42,30 @@ namespace Nexus
 		Vertex, Index, Uniform, Storage
 	};
 
+	enum class NEXUS_GRAPHICS_API TextureType
+	{
+		TwoDim, ThreeDim, Cube
+	};
+
+	enum class NEXUS_GRAPHICS_API TextureUsage
+	{
+		ShaderSampled, StorageWrite, StorageRead
+	};
+
+	enum class NEXUS_GRAPHICS_API TextureFormat
+	{
+		RGBA8_SRGB,
+		
+		RG16_SFLOAT,
+		RG32_SFLOAT,
+
+		RGBA16_SFLOAT,
+		RGBA32_SFLOAT,
+	};
+
 	enum class NEXUS_GRAPHICS_API ShaderResourceType
 	{
-		Uniform, SampledImage
+		None, Uniform, SampledImage, StorageImage, SeperateImage
 	};
 
 	enum class NEXUS_GRAPHICS_API SamplerFilter

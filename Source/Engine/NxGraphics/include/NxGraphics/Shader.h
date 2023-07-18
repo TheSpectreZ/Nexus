@@ -29,18 +29,19 @@ namespace Nexus
 		uint32_t binding;
 	};
 
-	struct CombinedImageSamplerHandle
+	struct ImageHandle
 	{
 		Ref<Texture> texture;
 		Ref<Sampler> sampler;
+		ShaderResourceType Type;
 		uint32_t set;
 		uint32_t binding;
+		uint32_t miplevel = 0;
 	};
 
 	struct ShaderSpecification
 	{
-		SpirV vertexData;
-		SpirV fragmentData;
+		std::unordered_map<ShaderStage, SpirV> spirv;
 		std::string filepath;
 	};
 
@@ -55,7 +56,7 @@ namespace Nexus
 		virtual void GetShaderResourceHeapLayoutBinding(ShaderResouceHeapLayoutBinding*& layout,uint32_t set,uint32_t binding) = 0;
 
 		virtual void BindUniformWithResourceHeap(ResourceHeapHandle heapHandle,uint32_t binding, Ref<Buffer> buffer) = 0;
-		virtual void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, CombinedImageSamplerHandle texture) = 0;
+		virtual void BindTextureWithResourceHeap(ResourceHeapHandle heapHandle, ImageHandle texture) = 0;
 	};
 
 	namespace ShaderCompiler

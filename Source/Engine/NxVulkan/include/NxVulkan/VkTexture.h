@@ -17,12 +17,16 @@ namespace Nexus
 		VulkanTexture(const TextureSpecification& Specs);
 		~VulkanTexture() override;
 
-		VkImageView Get() { return m_View; }
+		void PrepareForRender() override;
+
+		VkImageView Get(uint32_t index = 0) { return m_Views[index]; }
 	private:
+		uint32_t m_ArrayLayerCount, m_MipCount;
 		Extent m_Extent;
+		VkImageLayout m_CurrentLayout;
 
 		VkImage m_Image;
-		VkImageView m_View;
+		std::vector<VkImageView> m_Views;
 		VmaAllocation m_Alloc;
 
 		VkBuffer m_StagingBuffer;

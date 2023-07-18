@@ -15,11 +15,12 @@ namespace Nexus
 	class NEXUS_RENDERER_API RenderableScene
 	{
 	public:
-		RenderableScene(Ref<Scene> scene, Ref<Shader> shader);
+		RenderableScene(Ref<Scene> scene, Ref<Shader> pbrShader, Ref<Shader> skyboxShader);
 		~RenderableScene();
 
 		void Prepare();
-		void Draw(Ref<CommandQueue> queue);
+		void DrawSkybox(Ref<CommandQueue> queue);
+		void DrawScene(Ref<CommandQueue> queue);
 	private:
 		void Initialize();
 		void Destroy();
@@ -27,10 +28,11 @@ namespace Nexus
 		void CreateEntityResource(UUID Id);
 		void CreateMaterialResource(UUID Id);
 		
-		Ref<Shader> m_Shader;
+		Ref<Shader> m_pbrShader, m_skyBoxShader;
 		Ref<Scene> m_Scene;
-		Ref<Sampler> m_Sampler;
-
+		
+		ResourceHeapHandle SkyBoxHeap;
+		
 		ResourceHeapHandle PerSceneHeap;
 		UniformBufferHandle PerSceneUniform0;
 		UniformBufferHandle PerSceneUniform1;
@@ -60,7 +62,8 @@ namespace Nexus
 			glm::vec3 lightDir;
 			float pLightCount = 0.f;
 			glm::vec4 lightCol;
-			glm::vec4 null;
+			int useIBL = -1;
+			glm::vec3 null;
 
 			struct pointLightBuffer
 			{

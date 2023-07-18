@@ -4,7 +4,7 @@
 
 namespace Nexus
 {
-	enum class TextureType : uint8_t
+	enum class TextureMapType : uint8_t
 	{
 		Albedo = 0,MetallicRoughness = 1,SpecularGlossiness = 2,Normal = 3,Occulsion = 4,Emissive = 5,
 	};
@@ -27,14 +27,14 @@ namespace Nexus
 			float metalness, roughness, glossiness;
 		} _factors;
 
-		std::unordered_map<TextureType, uint32_t> _Samplers;
-		std::unordered_map<TextureType, Ref<Texture>> _Maps;
+		std::unordered_map<TextureMapType, uint32_t> _Samplers;
+		std::unordered_map<TextureMapType, Ref<Texture>> _Maps;
 	};
 
 	class RenderableMaterial
 	{
 	public:
-		RenderableMaterial(const Meshing::Material& params, const std::unordered_map<TextureType, uint32_t>& Samplers);
+		RenderableMaterial(const Meshing::Material& params, const std::unordered_map<TextureMapType, uint32_t>& Samplers);
 		~RenderableMaterial() = default;
 
 		MaterialParameters GetParams() { return m_Params; }

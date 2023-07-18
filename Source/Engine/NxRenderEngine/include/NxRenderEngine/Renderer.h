@@ -36,6 +36,8 @@ namespace Nexus::Module
 		void FlushTransfer();
 		void FlushRender();
 
+		void WaitForRenderer();
+
 		Renderer() = default;
 		~Renderer() = default;
 
