@@ -14,6 +14,7 @@ public:
 		m_AppSpecs.Window_height = 900;
 		m_AppSpecs.rApi = Nexus::RendererAPI::VULKAN;
 		m_AppSpecs.EnableRendererSubmodules = true;
+		m_AppSpecs.EnableScriptEngine = true;
 
 		PushLayer(new AppLayer(commandLine));
 	}

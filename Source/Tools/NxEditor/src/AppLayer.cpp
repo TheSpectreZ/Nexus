@@ -7,6 +7,7 @@
 #include "NxCore/Input.h"
 #include "NxApplication/FileDialog.h"
 #include "NxApplication/Application.h"
+#include "NxScriptEngine/ScriptEngine.h"	
 #include "NxImGui/Context.h"
 #include "imgui.h"
 
@@ -17,9 +18,9 @@ AppLayer::AppLayer(std::string& projectPath)
 	m_ViewportSize = { 0.f,0.f };
 
 	if (projectPath.empty())
-		projectPath = "Sandbox/Sandbox.NxProj";
-	
-	LoadProject(projectPath);
+		m_ProjectPath = "Sandbox/Sandbox.NxProj";
+	else
+		m_ProjectPath = projectPath;
 }
 
 void AppLayer::OnAttach()
@@ -67,10 +68,10 @@ void AppLayer::OnAttach()
 		m_Viewport.SetContext(m_ForwardDrawer->GetFramebuffer(), m_ForwardDrawer->GetResolveIndex());
 
 		m_ContentBrowser.Initialize();
-		m_ContentBrowser.SetContext(m_projectSpecs.RootPath);
-
 		m_SceneHeirarchy.SetContext(m_EditorScene);
 	}
+
+	LoadProject(m_ProjectPath);
 }
 
 void AppLayer::OnUpdate(float dt)
@@ -84,6 +85,8 @@ void AppLayer::OnUpdate(float dt)
 	}
 
 	m_EditorCameraController.Update(dt);
+
+	ScriptEngine::OnSceneUpdate(dt);
 }
 
 void AppLayer::OnRender()
@@ -143,9 +146,22 @@ void AppLayer::RenderSettingPanel()
 
 void AppLayer::LoadProject(const std::string& path)
 {
-	if (Nexus::ProjectSerializer::DeSerialize(path, m_projectSpecs))
+	if (Nexus::ProjectSerializer::DeSerialize(path, m_ProjectSpecs))
 	{
-		m_ContentBrowser.SetContext(m_projectSpecs.RootPath);
+		m_ContentBrowser.SetContext(m_ProjectSpecs.RootPath);
+
+		auto ScriptDllPath = m_ProjectSpecs.RootPath + "/Scripts/Bin/";
+
+#ifdef NEXUS_DEBUG
+		ScriptDllPath += "Debug/";
+#elif NEXUS_RELEASE
+		ScriptDllPath += "Release/";
+#elif NEXUS_DIST
+		ScriptDllPath += "Dist/";
+#endif // NEXUS_DEBUG
+
+		ScriptDllPath += m_ProjectSpecs.Name + ".dll";
+		ScriptEngine::SetAppAssemblyFilepath(ScriptDllPath);
 	}
 }
 
@@ -159,7 +175,9 @@ void AppLayer::RenderTopMenuBarPanel()
 			{
 				std::string path = Nexus::FileDialog::OpenFile("Nexus Project (*.nxProject)\0*.nxProject\0");
 				if (!path.empty())
+				{
 					LoadProject(path);
+				}
 			}
 			ImGui::EndMenu();
 		}

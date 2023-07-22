@@ -2,6 +2,8 @@
 #define NOMINMAX
 #include <Windows.h>
 #include <cstdint>	
+#include <vector>
+#include <functional>
 // Application
 #include "Layer.h"
 #include "ApplicationSpecifications.h"
@@ -40,6 +42,7 @@ namespace Nexus
 		void PopLayer(Layer* layer);
 	private:
 		Window m_Window;
+		std::vector<std::function<void()>> m_MainThreadQueue;
 	};
 
 }

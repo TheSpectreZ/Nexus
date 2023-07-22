@@ -15,6 +15,7 @@
 // Modules
 #include "NxCore/Input.h"
 #include "NxRenderEngine/Renderer.h"
+#include "NxScriptEngine/ScriptEngine.h"
 
 namespace Nexus
 {
@@ -103,6 +104,9 @@ void Nexus::Application::Init()
 		rCreateInfo.initSubmodules = m_AppSpecs.EnableRendererSubmodules;
 		
 		Module::Renderer::Initialize(rCreateInfo);	
+
+		if (m_AppSpecs.EnableScriptEngine)
+			ScriptEngine::Initialize();
 	}
 }
 
@@ -152,6 +156,9 @@ void Nexus::Application::Shut()
 {
 	// Modules
 	{
+		if (m_AppSpecs.EnableScriptEngine)
+			ScriptEngine::Shutdown();
+
 		Module::Renderer::Shutdown();
 		Module::Input::Shutdown();
 	}

@@ -20,7 +20,8 @@ public:
 	void OnWindowResize(int width, int height) override;
 	~AppLayer() override = default;
 private:
-	Nexus::ProjectSpecifications m_projectSpecs;
+	std::string m_ProjectPath;
+	Nexus::ProjectSpecifications m_ProjectSpecs;
 
 	Nexus::Ref<Nexus::ForwardDrawer> m_ForwardDrawer;
 	
