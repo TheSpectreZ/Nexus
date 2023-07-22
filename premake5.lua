@@ -31,5 +31,7 @@ workspace "Nexus-Engine"
     group ""
 
     group "Tools"
-        include "Scripts/Tools/NexusEd.lua"
+        include "Scripts/Tools/NxImGui.lua"
+        include "Scripts/Tools/NxEditor.lua"
+        include "Scripts/Tools/NxLauncher.lua"
     group ""

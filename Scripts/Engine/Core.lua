@@ -16,6 +16,7 @@ project "NxCore"
 	includedirs
 	{
 		IncludePath["glfw"],
+		IncludePath["nlohmannJson"],
 		IncludePath["NxCore"]
 	}
 

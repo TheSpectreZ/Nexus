@@ -1,5 +1,5 @@
-project "NexusEd"
-	kind "WindowedApp"
+project "NxImGui"
+	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
 	location (SrcDir.."Tools/%{prj.name}")
@@ -9,42 +9,42 @@ project "NexusEd"
 
 	files
 	{
-		(SrcDir.."Tools/%{prj.name}/src/**.h"),
+		(SrcDir.."Tools/%{prj.name}/include/%{prj.name}/**.h"),
 		(SrcDir.."Tools/%{prj.name}/src/**.cpp")
+	}
+
+	includedirs
+	{
+		"$(VULKAN_SDK)/Include",
+		IncludePath["imgui"],
+		IncludePath["VMA"],
+
+		IncludePath["NxImGui"],
+
+		IncludePath["NxCore"],
+		IncludePath["NxVulkan"],
+		IncludePath["NxGraphics"],
+		IncludePath["NxRenderEngine"],
 	}
 
 	links
 	{
 		"vulkan-1.lib",
 		"imgui",
+
 		"NxCore",
-		"NxScene",
-		"NxAsset",
-		"NxGraphics",
 		"NxVulkan",
 		"NxRenderEngine",
-		"NxApplication"
-	}
-
-	includedirs
-	{
-		"$(VULKAN_SDK)/Include",
-		IncludePath["entt"],
-		IncludePath["imgui"],
-		IncludePath["VMA"],
-
-		IncludePath["NxCore"],
-		IncludePath["NxScene"],
-		IncludePath["NxAsset"],
-		IncludePath["NxGraphics"],
-		IncludePath["NxVulkan"],
-		IncludePath["NxRenderEngine"],
-		IncludePath["NxApplication"]
 	}
 
 	libdirs
 	{
 		"$(VULKAN_SDK)/Lib"
+	}
+
+	defines
+	{
+		"NEXUS_IMGUI_SHARED_BUILD"
 	}
 
 	filter "system:windows"

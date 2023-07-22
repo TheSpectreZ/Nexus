@@ -1,5 +1,5 @@
 project "imgui"
-	kind "StaticLib"
+	kind "SharedLib"
 	language "C++"
 	location (vcxDir)
     staticruntime "Off"
@@ -44,6 +44,8 @@ project "imgui"
 	{
 		"$(VULKAN_SDK)/Lib",
 	}
+
+	defines "IMGUI_EXPORT"
 
 	filter "system:windows"
 		systemversion "latest"
