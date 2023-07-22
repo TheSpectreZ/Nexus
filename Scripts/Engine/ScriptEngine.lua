@@ -1,4 +1,4 @@
-project "NxApplication"
+project "NxScriptEngine"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -16,33 +16,41 @@ project "NxApplication"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
+		IncludePath["mono"],
 		IncludePath["entt"],
-		IncludePath["glfw"],
+		IncludePath["filewatch"],
+
 		IncludePath["NxCore"],
-		IncludePath["NxAsset"],
 		IncludePath["NxScene"],
-		IncludePath["NxGraphics"],
-		IncludePath["NxRenderEngine"],
 		IncludePath["NxScriptEngine"],
-		IncludePath["NxApplication"]
 	}
 
 	links
 	{
-		"glfw",
 		"NxCore",
 		"NxScene",
-		"NxAsset",
-		"NxRenderEngine",
-		"NxScriptEngine",
+		"libmono-static-sgen.lib"
 	}
 
-	defines "NEXUS_ENGINE_SHARED_BUILD"
+	libdirs
+	{
+		(VenDir.."Mono/lib/%{cfg.buildcfg}")
+	}
+
+	defines "NEXUS_SCRIPT_ENGINE_SHARED_BUILD"
 
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
 		disablewarnings { "4251" }
+		links
+        {
+            "Ws2_32.lib",
+            "Winmm.lib",
+            "Version.lib",
+            "Bcrypt.lib",
+        }
+
 
 	filter "configurations:Debug"
 		optimize "Off"
