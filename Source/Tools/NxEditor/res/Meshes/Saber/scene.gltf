@@ -1,0 +1,550 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 2714,
+      "max": [
+        53.616397857666016,
+        30.52902603149414,
+        360.97845458984375
+      ],
+      "min": [
+        -31.00004005432129,
+        -57.522300720214844,
+        -54.72374725341797
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 32568,
+      "componentType": 5126,
+      "count": 2714,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2714,
+      "max": [
+        1.0024685859680176,
+        1.0885992050170898
+      ],
+      "min": [
+        -0.2487177848815918,
+        -0.26102209091186523
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 5328,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 65136,
+      "componentType": 5126,
+      "count": 2611,
+      "max": [
+        54.61640167236328,
+        39.425743103027344,
+        344.3921813964844
+      ],
+      "min": [
+        -39.42573165893555,
+        -47.75604248046875,
+        -84.22299194335938
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 96468,
+      "componentType": 5126,
+      "count": 2611,
+      "max": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -1.0,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 21712,
+      "componentType": 5126,
+      "count": 2611,
+      "max": [
+        1.0277777910232544,
+        1.435282588005066
+      ],
+      "min": [
+        -0.014920281246304512,
+        -0.03133466839790344
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 21312,
+      "componentType": 5125,
+      "count": 5574,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 127800,
+      "componentType": 5126,
+      "count": 320,
+      "max": [
+        62.88165283203125,
+        5.571565628051758,
+        163.45877075195313
+      ],
+      "min": [
+        50.66215133666992,
+        -6.049877643585205,
+        101.77161407470703
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 131640,
+      "componentType": 5126,
+      "count": 320,
+      "max": [
+        1.0,
+        0.9562717080116272,
+        0.9094702005386353
+      ],
+      "min": [
+        -1.0,
+        -0.9562714695930481,
+        -0.9094697833061218
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 42600,
+      "componentType": 5126,
+      "count": 320,
+      "max": [
+        1.0000001192092896,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 43608,
+      "componentType": 5125,
+      "count": 1200,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 135480,
+      "componentType": 5126,
+      "count": 73,
+      "max": [
+        22.897775650024414,
+        22.55020523071289,
+        124.24952697753906
+      ],
+      "min": [
+        -22.898067474365234,
+        -22.54987144470215,
+        -1000.5093994140625
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 136356,
+      "componentType": 5126,
+      "count": 73,
+      "max": [
+        1.0,
+        0.9848029017448425,
+        1.8212821828456072e-07
+      ],
+      "min": [
+        -1.0,
+        -0.98481285572052,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 45160,
+      "componentType": 5126,
+      "count": 73,
+      "max": [
+        0.9924039244651794,
+        1.0
+      ],
+      "min": [
+        0.007596075534820557,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 48408,
+      "componentType": 5125,
+      "count": 378,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "Anthony Yanez (https://sketchfab.com/paulyanez)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/darth-vaders-lightsaber-star-wars-3f1e0aeb31b04ba1abacac107d8cadc6",
+      "title": "Darth Vader's Lightsaber (Star Wars)"
+    },
+    "generator": "Sketchfab-12.66.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 49920,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 45744,
+      "byteOffset": 49920,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 137232,
+      "byteOffset": 95664,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 232896,
+      "uri": "scene.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "textures/02_-_Default_baseColor.jpeg"
+    },
+    {
+      "uri": "textures/07_-_Default_baseColor.jpeg"
+    },
+    {
+      "uri": "textures/13_-_Default_baseColor.jpeg"
+    },
+    {
+      "uri": "textures/15_-_Default_baseColor.jpeg"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "02_-_Default",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.12560605140000003
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "07_-_Default",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 1
+        },
+        "metallicFactor": 0.7895454638,
+        "roughnessFactor": 0.8929713596
+      }
+    },
+    {
+      "doubleSided": true,
+      "name": "13_-_Default",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 2
+        },
+        "metallicFactor": 0.8865151608,
+        "roughnessFactor": 0.0
+      }
+    },
+    {
+      "doubleSided": true,
+      "emissiveFactor": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "name": "15_-_Default",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 3
+        },
+        "metallicFactor": 0.5956060699,
+        "roughnessFactor": 0.10742423320000005
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Darth Vader Hilt_02 - Default_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Darth Vader Hilt_07 - Default_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 5,
+            "POSITION": 4,
+            "TEXCOORD_0": 6
+          },
+          "indices": 7,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Darth Vader Hilt_13 - Default_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 9,
+            "POSITION": 8,
+            "TEXCOORD_0": 10
+          },
+          "indices": 11,
+          "material": 2,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Darth Vader Blade_15 - Default_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 13,
+            "POSITION": 12,
+            "TEXCOORD_0": 14
+          },
+          "indices": 15,
+          "material": 3,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Darth Vader's Lightsaber.FBX"
+    },
+    {
+      "children": [
+        3
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "matrix": [
+        1.6292068449885733e-07,
+        -1.6653345369377348e-16,
+        0.9999999999999867,
+        0.0,
+        -0.9999999999999829,
+        -8.742277679552046e-08,
+        1.6292068438783502e-07,
+        0.0,
+        8.742277685103161e-08,
+        -0.9999999999999961,
+        -1.4432899320127035e-14,
+        0.0,
+        -0.618927001953125,
+        218.01608276367188,
+        5.507110595703125,
+        1.0
+      ],
+      "name": "Darth Vader Hilt"
+    },
+    {
+      "mesh": 0,
+      "name": "Darth Vader Hilt_02 - Default_0"
+    },
+    {
+      "mesh": 1,
+      "name": "Darth Vader Hilt_07 - Default_0"
+    },
+    {
+      "mesh": 2,
+      "name": "Darth Vader Hilt_13 - Default_0"
+    },
+    {
+      "children": [
+        8
+      ],
+      "matrix": [
+        0.5089102983474558,
+        -8.291201491314235e-08,
+        1.0384101346488796e-07,
+        0.0,
+        8.291194250271158e-08,
+        0.5089100599288607,
+        1.6450771466251222e-07,
+        0.0,
+        -2.338940409491437e-07,
+        -3.7054124381039305e-07,
+        1.14628171920768,
+        0.0,
+        -1.811981201171875e-05,
+        -0.2456664741039276,
+        -86.36056518554688,
+        1.0
+      ],
+      "name": "Darth Vader Blade"
+    },
+    {
+      "mesh": 3,
+      "name": "Darth Vader Blade_15 - Default_0"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9987,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    }
+  ]
+}

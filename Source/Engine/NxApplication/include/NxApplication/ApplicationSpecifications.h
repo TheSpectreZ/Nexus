@@ -18,7 +18,7 @@ namespace Nexus
 		bool Vsync = true;
 		bool MultiSampling = false;
 		bool EnableScriptEngine = false;
-		bool LoadDefaultAssets = false;
+		bool EnableRendererSubmodules = false;
 
 		RendererAPI rApi;
 		PhysicsAPI pApi;

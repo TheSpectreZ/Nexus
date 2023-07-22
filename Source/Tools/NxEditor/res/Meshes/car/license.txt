@@ -1,0 +1,11 @@
+Model Information:
+* title:	Pony Cartoon
+* source:	https://sketchfab.com/3d-models/pony-cartoon-885d9f60b3a9429bb4077cfac5653cf9
+* author:	Slava Z. (https://sketchfab.com/slava)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Pony Cartoon" (https://sketchfab.com/3d-models/pony-cartoon-885d9f60b3a9429bb4077cfac5653cf9) by Slava Z. (https://sketchfab.com/slava) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

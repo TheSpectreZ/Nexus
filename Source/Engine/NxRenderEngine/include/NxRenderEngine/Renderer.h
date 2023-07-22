@@ -19,6 +19,8 @@ namespace Nexus::Module
 		Window* window;
 		void* HInstance;
 		std::function<void()> resizeCallback;
+
+		bool initSubmodules = false;
 	};
 
 	class NEXUS_RENDERER_API Renderer

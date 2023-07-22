@@ -100,6 +100,7 @@ void Nexus::Application::Init()
 		rCreateInfo.window = &m_Window;
 		rCreateInfo.HInstance = s_Data->hInst;
 		rCreateInfo.resizeCallback = NEXUS_BIND_FN(Application::ResizeCallback, this);
+		rCreateInfo.initSubmodules = m_AppSpecs.EnableRendererSubmodules;
 		
 		Module::Renderer::Initialize(rCreateInfo);	
 	}
@@ -137,6 +138,8 @@ void Nexus::Application::Run()
 
 		Module::Renderer::Get()->FlushRender();
 	}
+
+	Module::Renderer::Get()->WaitForRenderer();
 
 	for (auto& l : s_Data->layerStack)
 	{

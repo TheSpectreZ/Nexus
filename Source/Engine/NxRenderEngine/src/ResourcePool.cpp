@@ -11,9 +11,6 @@ void Nexus::ResourcePool::Initialize()
 
 void Nexus::ResourcePool::Shutdown()
 {
-	s_Instance->m_Textures.clear();
-	s_Instance->m_RenderableMeshes.clear();
-	s_Instance->m_UniformBuffers.clear();
 	delete s_Instance;
 }
 

@@ -1,0 +1,9 @@
+{
+    "Name": "Sandbox",
+    "Path": "Sandbox",
+    "Project": "v1.0.0",
+    "Render_Settings": {
+        "Enable_HDR": false,
+        "Enable_MSAA": true
+    }
+}

@@ -17,8 +17,11 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 	s_Instance->m_CommandQueue = GraphicsInterface::CreateCommandQueue(Info.resizeCallback);
 	s_Instance->m_CommandQueue->Initialize();
 
-	ResourcePool::Initialize();
-	EnvironmentBuilder::Initialize();
+	if(Info.initSubmodules)
+	{
+		ResourcePool::Initialize();
+		EnvironmentBuilder::Initialize();
+	}
 }
 
 void Nexus::Module::Renderer::Shutdown()
