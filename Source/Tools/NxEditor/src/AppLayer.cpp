@@ -21,6 +21,9 @@ AppLayer::AppLayer(std::string& projectPath)
 		m_ProjectPath = "Sandbox/Sandbox.NxProj";
 	else
 		m_ProjectPath = projectPath;
+
+	m_IsScenePlaying = false;
+	m_IsScenePaused = false;
 }
 
 void AppLayer::OnAttach()
@@ -47,14 +50,13 @@ void AppLayer::OnAttach()
 		m_EditorScene = CreateRef<Scene>();
 		m_EditorScene->SetCamera(&m_EditorCamera);
 
-		auto light = m_EditorScene->CreateEntity("Light");
-		light.AddComponent<Component::DirectionalLight>();
-
-		auto entity = m_EditorScene->CreateEntity("Mesh");
-
 		auto& root = m_EditorScene->GetRootEntity();
 		root.environment.handle = UUID();
 		EnvironmentBuilder::Build("Resources/Textures/pink_sunrise_2k.hdr", root.environment.handle);
+
+		auto entity = m_EditorScene->CreateEntity("Mesh");
+		entity.AddComponent<Nexus::Component::Mesh>();
+		entity.AddComponent<Nexus::Component::Script>("Sandbox.TestPlayer");
 	}
 
 	// Editor
@@ -86,13 +88,13 @@ void AppLayer::OnUpdate(float dt)
 
 	m_EditorCameraController.Update(dt);
 
-	ScriptEngine::OnSceneUpdate(dt);
+	if (m_IsScenePlaying && !m_IsScenePaused)
+		ScriptEngine::OnSceneUpdate(dt);
 }
 
 void AppLayer::OnRender()
 {
-	// Game
-	m_ForwardDrawer->Draw(m_EditorScene);
+	m_ForwardDrawer->Draw(m_IsScenePlaying ? m_RuntimeScene : m_EditorScene);
 
 	// Editor
 	{
@@ -100,6 +102,7 @@ void AppLayer::OnRender()
 
 		m_ContentBrowser.Render();
 		m_SceneHeirarchy.Render();
+
 		m_Viewport.Render();
 
 		RenderSettingPanel();
@@ -111,7 +114,8 @@ void AppLayer::OnRender()
 
 void AppLayer::OnDetach()
 {
-	m_EditorScene->Clear();
+	m_EditorScene.reset();
+	m_RuntimeScene.reset();
 	m_ForwardDrawer.reset();
 
 	// Editor
@@ -179,6 +183,41 @@ void AppLayer::RenderTopMenuBarPanel()
 					LoadProject(path);
 				}
 			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Script"))
+		{
+			if (ImGui::MenuItem("Play"))
+			{
+				if (!m_IsScenePlaying)
+				{
+					m_RuntimeScene = m_EditorScene->Duplicate();
+
+					ScriptEngine::OnSceneStart(m_RuntimeScene);
+					m_IsScenePlaying = true;
+
+				}
+			}
+
+			if (ImGui::MenuItem("Stop"))
+			{
+				if (m_IsScenePlaying)
+				{
+					m_RuntimeScene.reset();
+					ScriptEngine::OnSceneStop();
+					m_IsScenePlaying = false;
+				}
+			}
+
+			if (ImGui::MenuItem("Pause/Resume"))
+			{
+				m_IsScenePaused = !m_IsScenePaused;
+			}
+
+			if (ImGui::MenuItem("Reload Scripts"))
+				ScriptEngine::ReloadAssembly();
+			
 			ImGui::EndMenu();
 		}
 

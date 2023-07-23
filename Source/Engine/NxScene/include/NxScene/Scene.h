@@ -16,7 +16,7 @@ namespace Nexus
 	public:
 		Scene();
 		~Scene();
-
+		
 		UUID GetId() { return m_Id; }
 
 		Ref<Scene> Duplicate();

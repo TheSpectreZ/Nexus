@@ -32,6 +32,10 @@ Nexus::Ref<Nexus::Scene> Nexus::Scene::Duplicate()
 {
 	Ref<Scene> newScene = CreateRef<Scene>();
 	
+	newScene->m_Id = m_Id;
+	newScene->m_Camera = m_Camera;
+	newScene->m_RoomEntity = m_RoomEntity;
+	
 	Entity entity, newEntity;
 	auto entities = m_registry.view<Component::Identity>();
 	for (auto& e : entities)
@@ -39,8 +43,8 @@ Nexus::Ref<Nexus::Scene> Nexus::Scene::Duplicate()
 		entity = { e,this };
 		newEntity = { newScene->m_registry.create(),newScene.get() };
 
-		auto& i = newEntity.AddComponent<Component::Identity>(entity.GetComponent<Component::Identity>());
-		newScene->m_EntityMap[i.uuid] = newEntity;
+		auto& Id = newEntity.AddComponent<Component::Identity>(entity.GetComponent<Component::Identity>());
+		newScene->m_EntityMap[Id.uuid] = newEntity;
 
 		newEntity.AddComponent<Component::Tag>(entity.GetComponent<Component::Tag>());
 		newEntity.AddComponent<Component::Transform>(entity.GetComponent<Component::Transform>());

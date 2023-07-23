@@ -5,32 +5,39 @@
 #include "mono/metadata/assembly.h"
 #include "mono/metadata/object.h"
 #include "mono/metadata/attrdefs.h"
-#include "FileWatch.hpp"
 #include "NxScene/Entity.h"
 #include "NxCore/Assertion.h"
 #include "NxCore/Logger.h"
+
+//#include "FileWatch.hpp"
+
 #include <filesystem>
 #include <format>
 
 Nexus::ScriptEngine* Nexus::ScriptEngine::s_Instance = nullptr;
 
-static Nexus::Scope<filewatch::FileWatch<std::string>> s_ScriptEngineFilewatcher;
-static std::vector<std::function<void()>>* s_ThreadQueue;
+struct ScriptEngineData
+{
+ //   Nexus::Scope<filewatch::FileWatch<std::string>> ScriptEngineFilewatcher;
+    std::vector<std::function<void()>>* MainThreadQueuePtr;
+};
 
-void Nexus::ScriptEngine::Init(const ScriptEngineSpecification& specs)
+static ScriptEngineData* s_Data;
+
+void Nexus::ScriptEngine::Initialize(const ScriptEngineSpecification& specs)
 {
     s_Instance = new ScriptEngine();
-    s_ThreadQueue = specs._MainThreadQueuePtr;
+    s_Data = new ScriptEngineData;
+
     s_Instance->InitMono();
     ScriptGlue::BindInternalCalls();
 }
 
-void Nexus::ScriptEngine::Shut()
+void Nexus::ScriptEngine::Shutdown()
 {
     s_Instance->ShutdownMono();
 
-    s_ScriptEngineFilewatcher.reset();
-    s_ThreadQueue = nullptr;
+    delete s_Data;
     delete s_Instance;
 }
 
@@ -38,22 +45,22 @@ void Nexus::ScriptEngine::SetAppAssemblyFilepath(const std::string& filepath)
 {
     s_Instance->m_AppAsseblyPath = filepath;
 
-    s_ScriptEngineFilewatcher.reset();
-
-    s_ScriptEngineFilewatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath, [&](const std::string& path, const filewatch::Event eventType)
-        {
-            NEXUS_LOG("Filewatcher","Watched File: {0} - {1}", path, (uint32_t)eventType);
-
-            if (!s_Instance->m_AssemblyReloadPending && eventType == filewatch::Event::added || eventType == filewatch::Event::modified)
-            {
-                s_Instance->m_AssemblyReloadPending = true;
-
-                using namespace std::chrono_literals;
-                std::this_thread::sleep_for(500ms);
-
-                s_ThreadQueue->push_back([]() {ScriptEngine::ReloadAssembly(); });
-            }
-        });
+   // s_Data->ScriptEngineFilewatcher.reset();
+   //
+   // s_Data->ScriptEngineFilewatcher = CreateScope<filewatch::FileWatch<std::string>>(filepath, [&](const std::string& path, const filewatch::Event eventType)
+   //     {
+   //         NEXUS_LOG("Filewatcher","Watched File: {0} - {1}", path, (uint32_t)eventType);
+   //
+   //         if (!s_Instance->m_AssemblyReloadPending && eventType == filewatch::Event::added || eventType == filewatch::Event::modified)
+   //         {
+   //             s_Instance->m_AssemblyReloadPending = true;
+   //
+   //             using namespace std::chrono_literals;
+   //             std::this_thread::sleep_for(500ms);
+   //
+   //             s_Data->MainThreadQueuePtr->push_back([]() {ScriptEngine::ReloadAssembly(); });
+   //         }
+   //     });
 
     if (std::filesystem::exists(filepath))
         ReloadAssembly();
@@ -73,7 +80,7 @@ void Nexus::ScriptEngine::ReloadAssembly()
 
 void Nexus::ScriptEngine::OnSceneStart(Ref<Scene> scene)
 {
-    s_Instance->m_scene = scene;;
+    s_Instance->m_scene = scene;
 
     Nexus::Entity entity;
     auto view = scene->m_registry.view<Nexus::Component::Script>();
@@ -111,7 +118,7 @@ void Nexus::ScriptEngine::OnSceneStop()
         v.InVokeOnDestroy();
     }
     s_Instance->m_EntityScriptInstances.clear();
-    s_Instance->m_scene = nullptr;
+    s_Instance->m_scene.reset();
 }
 
 void Nexus::ScriptEngine::InitMono()
@@ -157,7 +164,7 @@ void Nexus::ScriptEngine::PrintAssemblyTypes(MonoAssembly* assembly, const char*
     const MonoTableInfo* typeDefinitionsTable = mono_image_get_table_info(image, MONO_TABLE_TYPEDEF);
     int32_t numTypes = mono_table_info_get_rows(typeDefinitionsTable);
 
-    NEXUS_LOG("Script Engine", "Printing Assembly Types: {0}", name);
+    NEXUS_LOG("Script Engine", "Printing Assembly Types: %s", name);
     for (int32_t i = 0; i < numTypes; i++)
     {
         uint32_t cols[MONO_TYPEDEF_SIZE];
@@ -192,7 +199,7 @@ void Nexus::ScriptEngine::LoadAppAssemblyClasses()
 
         std::string Fullname;
         if (strlen(nameSpace) != 0)
-            Fullname = std::format("%s.%s", nameSpace, name);
+            Fullname = std::format("{}.{}", nameSpace, name);
         else
             Fullname = name;
 
@@ -206,7 +213,7 @@ void Nexus::ScriptEngine::LoadAppAssemblyClasses()
             std::string key = nameSpace + std::string(".") + name;
 
             m_EntityClasses[key] = ScriptClass(cl);
-            NEXUS_LOG("Script Engine", "Loaded: {0}", key);
+            NEXUS_LOG("Script Engine", "Loaded: %s", key);
         }
     }
     NEXUS_LOG("Script Engine", "");

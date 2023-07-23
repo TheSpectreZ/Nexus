@@ -28,11 +28,13 @@ private:
 	glm::vec2 m_ViewportSize;
 	NexusEd::Viewport m_Viewport;
 	NexusEd::ContentBrowser m_ContentBrowser;
-	NexusEd::SceneHeirarchy m_SceneHeirarchy;
+	NexusEd::SceneHeirarchy m_SceneHeirarchy, m_TempSH;
 
 	Nexus::Camera m_EditorCamera;
 	Nexus::CameraController m_EditorCameraController;
-	Nexus::Ref<Nexus::Scene> m_EditorScene;
+	
+	bool m_IsScenePlaying = false, m_IsScenePaused;
+	Nexus::Ref<Nexus::Scene> m_EditorScene, m_RuntimeScene;
 
 	void LoadProject(const std::string& path);
 

@@ -1,8 +1,8 @@
 #include "NxRenderEngine/RenderableScene.h"
 #include "NxRenderEngine/ResourcePool.h"
 
-Nexus::RenderableScene::RenderableScene(Ref<Scene> scene, Ref<Shader> pbr,Ref<Shader> skybox)
-	:m_pbrShader(pbr),m_skyBoxShader(skybox), m_Scene(scene)
+Nexus::RenderableScene::RenderableScene(Ref<Shader> pbr,Ref<Shader> skybox)
+	:m_pbrShader(pbr),m_skyBoxShader(skybox)
 {
 	Initialize();
 }
@@ -12,12 +12,12 @@ Nexus::RenderableScene::~RenderableScene()
 	Destroy();
 }
 
-void Nexus::RenderableScene::Prepare()
+void Nexus::RenderableScene::Prepare(Ref<Scene> scene)
 {
 	auto cameraBuf = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform0.hashId);
-	cameraBuf->Update((void*)m_Scene->GetCamera());
+	cameraBuf->Update((void*)scene->GetCamera());
 
-	auto& rootEntity = m_Scene->GetRootEntity();
+	auto& rootEntity = scene->GetRootEntity();
 
 	auto& DL = rootEntity.directionalLight;
 	m_SceneBuffer.lightDir = DL.direction;
@@ -56,10 +56,6 @@ void Nexus::RenderableScene::Prepare()
 
 void Nexus::RenderableScene::DrawSkybox(Ref<CommandQueue> queue)
 {
-	auto& root = m_Scene->GetRootEntity();
-	if (!root.environment.handle)
-		return;
-
 	queue->BindShaderResourceHeap(m_skyBoxShader, SkyBoxHeap, PipelineBindPoint::Graphics);
 	
 	static UUID nulId = UUID((uint64_t)0);
@@ -72,15 +68,15 @@ void Nexus::RenderableScene::DrawSkybox(Ref<CommandQueue> queue)
 	queue->DrawIndices(Ib->GetSize() / sizeof(uint32_t), 1, 0, 0, 0);
 }
 
-void Nexus::RenderableScene::DrawScene(Ref<CommandQueue> queue)
+void Nexus::RenderableScene::DrawScene(Ref<CommandQueue> queue, Ref<Scene> scene)
 {
 	queue->BindShaderResourceHeap(m_pbrShader, PerSceneHeap, PipelineBindPoint::Graphics);
 
 	Entity entity;
-	auto view = m_Scene->GetAllEntitiesWith<Component::Mesh>();
+	auto view = scene->GetAllEntitiesWith<Component::Mesh>();
 	for (auto& e : view)
 	{
-		entity = { e,m_Scene.get() };
+		entity = { e,scene.get() };
 
 		auto MeshHandle = entity.GetComponent<Component::Mesh>().handle;
 		if (!MeshHandle)
@@ -99,8 +95,8 @@ void Nexus::RenderableScene::DrawScene(Ref<CommandQueue> queue)
 		queue->BindShaderResourceHeap(m_pbrShader, PerEntityHeap[Identity.uuid],PipelineBindPoint::Graphics);
 		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
 		queue->BindIndexBuffer(RTMesh->GetIndexBuffer());
-
-		for (auto& sb : RTMesh->GetSubmeshes())
+	
+	for (auto& sb : RTMesh->GetSubmeshes())
 		{
 			if (sb.materialIndex != UINT64_MAX)
 			{

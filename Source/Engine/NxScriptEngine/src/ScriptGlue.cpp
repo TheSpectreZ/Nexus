@@ -24,11 +24,15 @@ namespace Nexus
 	{
 		std::string_view name = typeid(Component).name();
 		size_t it = name.find_last_of(":");
-		std::string_view component = name.substr(it + 1);
-		std::string ComponentName = std::format("Nexus.%sComponent", component);
+		std::string component = std::string(name.substr(it + 1));
+		std::string ComponentName = std::format("Nexus.{}Component", component.c_str());
 
 		MonoType* managedType = mono_reflection_type_from_name(ComponentName.data(), Image);
-		NEXUS_ASSERT((managedType == nullptr), "ScriptEngine: Could Find Component");
+		if (managedType == nullptr)
+		{
+			NEXUS_LOG("Script Engine", "ScriptEngine: Could Find Component");
+			return;
+		}
 
 		s_HasComponentFuncs[managedType] = [](Entity e) {return e.HasComponent<Component>(); };
 	}

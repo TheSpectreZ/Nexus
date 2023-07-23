@@ -15,12 +15,12 @@ namespace Nexus
 	class NEXUS_RENDERER_API RenderableScene
 	{
 	public:
-		RenderableScene(Ref<Scene> scene, Ref<Shader> pbrShader, Ref<Shader> skyboxShader);
+		RenderableScene(Ref<Shader> pbrShader, Ref<Shader> skyboxShader);
 		~RenderableScene();
 
-		void Prepare();
+		void Prepare(Ref<Scene> scene);
 		void DrawSkybox(Ref<CommandQueue> queue);
-		void DrawScene(Ref<CommandQueue> queue);
+		void DrawScene(Ref<CommandQueue> queue,Ref<Scene> scene);
 	private:
 		void Initialize();
 		void Destroy();
@@ -29,7 +29,6 @@ namespace Nexus
 		void CreateMaterialResource(UUID Id);
 		
 		Ref<Shader> m_pbrShader, m_skyBoxShader;
-		Ref<Scene> m_Scene;
 		
 		ResourceHeapHandle SkyBoxHeap;
 		

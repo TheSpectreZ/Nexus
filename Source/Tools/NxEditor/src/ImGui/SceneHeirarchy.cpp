@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include "NxCore/Logger.h"
+#include "NxScriptEngine/ScriptEngine.h"
 
 namespace NexusEd::ImGuiUtils
 {
@@ -276,7 +277,6 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	if (en.HasComponent<Component::Tag>())
 	{
-
 		auto& Tag = en.GetComponent<Component::Tag>();
 
 		char buffer[256];
@@ -310,6 +310,7 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 		ImGui::PopItemWidth();
 	}
 
+	if(en.HasComponent<Component::Transform>())
 	{
 		const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap
 			| ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_FramePadding;
@@ -346,7 +347,6 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			else
 				name = "Valid Mesh";
 			
-
 			ImGui::PushItemWidth(ImGui::GetContentRegionAvail().x - 125.f);
 			ImGui::LabelText("Name", "%s", name.c_str());
 			ImGui::PopItemWidth();
@@ -415,7 +415,44 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::Script>("Script", en, [&](auto& component)
 		{
-			
+			bool scriptClassExists = ScriptEngine::EntityClassExists(component.name);
+
+			static char buffer[64];
+			strcpy_s(buffer, sizeof(buffer), component.name.c_str());
+
+			if (!scriptClassExists)
+				ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.2f, 0.3f, 1.f));
+
+			if (ImGui::InputText("ClassName", buffer, sizeof(buffer)))
+			{
+				component.name = buffer;
+			}
+
+			if (!scriptClassExists)
+				ImGui::PopStyleColor();
+
+			if (scriptClassExists)
+			{
+				UUID id = en.GetComponent<Component::Identity>().uuid;
+
+				if (ScriptEngine::EntityInstanceExists(id))
+				{
+					ScriptInstance* instance = ScriptEngine::GetEntityScriptInstance(id);
+					const auto& fields = instance->GetScriptClass()->GetFields();
+
+					for (const auto& [k, v] : fields)
+					{
+						if (v.Type == ScriptFieldType::Float)
+						{
+							auto value = instance->GetFieldValue<float>(k);
+							if (ImGui::DragFloat(k.c_str(), &value))
+							{
+								instance->SetFieldValue(k, (void*)&value);
+							}
+						}
+					}
+				}
+			}
 		});
 
 	DrawComponent<Component::RigidBody>("Rigid Body", en, [&](auto& component)

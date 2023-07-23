@@ -105,8 +105,11 @@ void Nexus::Application::Init()
 		
 		Module::Renderer::Initialize(rCreateInfo);	
 
+		ScriptEngineSpecification sCreateInfo{};
+		sCreateInfo._MainThreadQueuePtr = &m_MainThreadQueue;
+
 		if (m_AppSpecs.EnableScriptEngine)
-			ScriptEngine::Initialize();
+			ScriptEngine::Initialize(sCreateInfo);
 	}
 }
 

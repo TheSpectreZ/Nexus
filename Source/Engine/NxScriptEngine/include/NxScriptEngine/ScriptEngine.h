@@ -19,18 +19,18 @@ extern "C" {
 
 namespace Nexus
 {
-	enum class ScriptFieldType
+	enum class NEXUS_SCRIPT_ENGINE_API ScriptFieldType
 	{
 		None, Float, Double, UInt, Int, Bool, Vec2, Vec3, Vec4
 	};
 
-	struct ScriptField
+	struct NEXUS_SCRIPT_ENGINE_API ScriptField
 	{
 		ScriptFieldType Type;
 		MonoClassField* Field;
 	};
 
-	class ScriptClass
+	class NEXUS_SCRIPT_ENGINE_API ScriptClass
 	{
 		friend class ScriptInstance;
 	public:
@@ -47,7 +47,7 @@ namespace Nexus
 		std::unordered_map<std::string, ScriptField> m_Fields;
 	};
 
-	class ScriptInstance
+	class NEXUS_SCRIPT_ENGINE_API ScriptInstance
 	{
 		friend class ScriptEngine;
 	public:
@@ -79,20 +79,20 @@ namespace Nexus
 		inline static char s_FieldValueBuffer[8];
 	};
 
-	struct ScriptEngineSpecification
+	struct NEXUS_SCRIPT_ENGINE_API ScriptEngineSpecification
 	{
 		std::vector<std::function<void()>> * _MainThreadQueuePtr;
 	};
 
-	class ScriptEngine
+	class NEXUS_SCRIPT_ENGINE_API ScriptEngine
 	{
 		friend class ScriptClass;
 		friend class ScriptInstance;
 		friend class ScriptGlue;
 		static ScriptEngine* s_Instance;
 	public:
-		static void Init(const ScriptEngineSpecification& specs);
-		static void Shut();
+		static void Initialize(const ScriptEngineSpecification& specs);
+		static void Shutdown();
 
 		static void SetAppAssemblyFilepath(const std::string& filepath);
 		static void ReloadAssembly();
