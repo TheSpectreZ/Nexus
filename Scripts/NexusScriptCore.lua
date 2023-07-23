@@ -7,8 +7,8 @@ project "NexusScriptCore"
     dotnetframework "4.7.2"
     location (RootPath.."/Source/%{prj.name}")
 
-    targetdir (RootPath.."/Source/NexusEditor/Resources/Scripts")
-    objdir (RootPath.."/Source/NexusEditor/Resources/Scripts/Int/%{prj.name}")
+    targetdir (RootPath.."/Source/Tools/NxEditor/Resources/Scripts")
+    objdir (RootPath.."/Source/Tools/NxEditor/Resources/Scripts/Int/%{prj.name}")
 
     files
     {

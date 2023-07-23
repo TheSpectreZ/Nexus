@@ -27,6 +27,10 @@ workspace "Nexus-Engine"
         include "Scripts/Engine/Asset.lua"
     group ""
     
+    group "Script-Core"
+        include "Scripts/NexusScriptCore.lua"
+    group ""
+
     group "Platform"
         include "Scripts/Engine/Vulkan.lua"
     group ""
