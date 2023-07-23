@@ -20,3 +20,9 @@
 /Source/NexusEditor/Sandbox/Scripts/Bin
 /Source/NexusEditor/Sandbox/Scripts/Bin-Int
 /Source/**/Logs
+
+/.vs/Nexus-Engine
+/Source/Tools/NxEditor/Sandbox/.vs/Sandbox
+
+/Source/Tools/NxEditor/Resources/Scripts
+/Source/Tools/NxEditor/Sandbox/Scripts/
