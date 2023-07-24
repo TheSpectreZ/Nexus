@@ -24,6 +24,8 @@ void Nexus::RenderableScene::Prepare(Ref<Scene> scene)
 	m_SceneBuffer.lightCol = DL.color;
 	
 	auto& Env = rootEntity.environment;
+	m_SceneBuffer.exposure = Env.exposure;
+
 	if (Env.handle && m_SceneBuffer.useIBL < 0)
 	{
 		m_SceneBuffer.useIBL = 1;

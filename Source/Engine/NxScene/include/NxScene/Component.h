@@ -132,10 +132,11 @@ namespace Nexus
 
 		struct NEXUS_SCENE_API Environment
 		{
-			Environment() : handle(true) {}
+			Environment() : handle(true),exposure(1.f) {}
 			Environment(const Environment&) = default;
 
 			UUID handle;
+			float exposure;
 		};
 
 		struct NEXUS_SCENE_API DirectionalLight

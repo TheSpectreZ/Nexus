@@ -504,31 +504,6 @@ void NexusEd::SceneHeirarchy::DrawRootEntity()
 
 	{
 		auto& env = root.environment;
-		ImGui::Button("Set Environment", ImVec2(100.f, 75.f));
-
-		static bool justLoaded = false;
-
-		if (ImGui::BeginDragDropTarget())
-		{
-			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-			{
-				const wchar_t* path = (const wchar_t*)payload->Data;
-				AssetFilePath file = path;
-
-				UUID Id;
-				auto Env = EnvironmentBuilder::Build(file.generic_string(), Id);
-				if (Env)
-				{
-					env.handle = Id;
-					justLoaded = true;
-				}
-			}
-			ImGui::EndDragDropTarget();
-		}
-
-		if (env.handle)
-		{
-			Ref<Environment> environment = ResourcePool::Get()->AllocateEnvironment(env.handle);
-		}
+		ImGui::DragFloat("Exposure", &env.exposure, 0.1f, 0.1f);
 	}
 }

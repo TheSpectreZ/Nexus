@@ -62,7 +62,8 @@ namespace Nexus
 			float pLightCount = 0.f;
 			glm::vec4 lightCol;
 			int useIBL = -1;
-			glm::vec3 null;
+			float exposure;
+			glm::vec2 null;
 
 			struct pointLightBuffer
 			{

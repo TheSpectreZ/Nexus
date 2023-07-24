@@ -74,7 +74,8 @@ layout(set = 0, binding = 1) uniform sceneBuffer
 	vec4 SceneLightColor;
 
 	int useIBL;
-	vec3 n1;
+	float exposure;
+	vec2 n1;
 	
 	PointLight lights[10];
 } m_sceneBuffer;
@@ -136,7 +137,6 @@ vec3 GetNormal()
 }
 
 const float Gamma = 2.2;
-const float Exposure = 1.0;
 const float PI = 3.141592;
 const float Epsilon = 0.00001;
 const vec3 Fdielectric = vec3(0.01); // Constant normal Incidence Frensel Factor for all Dielectrics
@@ -342,7 +342,7 @@ void main()
 	}
 
 	// Tone Mapping
-	result = vec3(1.0) - exp(-result * Exposure);
+	result = vec3(1.0) - exp(-result * m_sceneBuffer.exposure);
 	
 	// Gamma Correction
 	result = pow(result, vec3(1.0 / Gamma));
