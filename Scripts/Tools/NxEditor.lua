@@ -23,6 +23,7 @@ project "NxEditor"
 		"NxGraphics",
 		"NxVulkan",
 		"NxRenderEngine",
+		"NxPhysicsEngine",
 		"NxApplication",
 		"NxScriptEngine",
 
@@ -42,6 +43,7 @@ project "NxEditor"
 		IncludePath["NxGraphics"],
 		IncludePath["NxVulkan"],
 		IncludePath["NxRenderEngine"],
+		IncludePath["NxPhysicsEngine"],
 		IncludePath["NxScriptEngine"],
 		IncludePath["NxApplication"],
 

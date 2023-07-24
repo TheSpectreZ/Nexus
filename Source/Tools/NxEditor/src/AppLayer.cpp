@@ -8,6 +8,7 @@
 #include "NxApplication/FileDialog.h"
 #include "NxApplication/Application.h"
 #include "NxScriptEngine/ScriptEngine.h"	
+#include "NxPhysicsEngine/PhysicsEngine.h"
 #include "NxImGui/Context.h"
 #include "imgui.h"
 
@@ -89,7 +90,10 @@ void AppLayer::OnUpdate(float dt)
 	m_EditorCameraController.Update(dt);
 
 	if (m_IsScenePlaying && !m_IsScenePaused)
+	{
 		ScriptEngine::OnSceneUpdate(dt);
+		PhysicsEngine::OnSceneUpdate(dt);
+	}
 }
 
 void AppLayer::OnRender()
@@ -195,6 +199,7 @@ void AppLayer::RenderTopMenuBarPanel()
 					m_RuntimeScene = m_EditorScene->Duplicate();
 
 					ScriptEngine::OnSceneStart(m_RuntimeScene);
+					PhysicsEngine::OnSceneStart(m_RuntimeScene);
 					m_IsScenePlaying = true;
 
 				}
@@ -206,6 +211,7 @@ void AppLayer::RenderTopMenuBarPanel()
 				{
 					m_RuntimeScene.reset();
 					ScriptEngine::OnSceneStop();
+					PhysicsEngine::OnSceneStop();
 					m_IsScenePlaying = false;
 				}
 			}

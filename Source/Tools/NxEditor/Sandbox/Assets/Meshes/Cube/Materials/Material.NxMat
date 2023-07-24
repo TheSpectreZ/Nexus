@@ -1,0 +1,26 @@
+{
+    "AssetType": "Material",
+    "Meta": {
+        "AlbedoColor": {
+            "a": 1.0,
+            "b": 1.0,
+            "g": 1.0,
+            "r": 1.0
+        },
+        "EmissiveColor": {
+            "b": 0.0,
+            "g": 0.0,
+            "r": 0.0
+        },
+        "Glossiness": 0.0,
+        "Metalness": 0.5,
+        "Roughness": 0.4000000059604645,
+        "Specular": {
+            "b": 0.0,
+            "g": 0.0,
+            "r": 0.0
+        },
+        "SpecularSupport": false
+    },
+    "UUID": 15705860035538347824
+}

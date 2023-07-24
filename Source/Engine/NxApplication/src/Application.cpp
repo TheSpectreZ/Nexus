@@ -16,6 +16,7 @@
 #include "NxCore/Input.h"
 #include "NxRenderEngine/Renderer.h"
 #include "NxScriptEngine/ScriptEngine.h"
+#include "NxPhysicsEngine/PhysicsEngine.h"
 
 namespace Nexus
 {
@@ -110,6 +111,8 @@ void Nexus::Application::Init()
 
 		if (m_AppSpecs.EnableScriptEngine)
 			ScriptEngine::Initialize(sCreateInfo);
+
+		PhysicsEngine::Initialize();
 	}
 }
 
@@ -159,6 +162,8 @@ void Nexus::Application::Shut()
 {
 	// Modules
 	{
+		PhysicsEngine::Shutdown();
+
 		if (m_AppSpecs.EnableScriptEngine)
 			ScriptEngine::Shutdown();
 

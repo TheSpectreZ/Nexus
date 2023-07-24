@@ -23,6 +23,7 @@ project "NxApplication"
 		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
+		IncludePath["NxPhysicsEngine"],
 		IncludePath["NxScriptEngine"],
 		IncludePath["NxApplication"]
 	}
@@ -34,6 +35,7 @@ project "NxApplication"
 		"NxScene",
 		"NxAsset",
 		"NxRenderEngine",
+		"NxPhysicsEngine",
 		"NxScriptEngine",
 	}
 

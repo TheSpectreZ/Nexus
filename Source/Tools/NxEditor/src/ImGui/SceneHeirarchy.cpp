@@ -307,7 +307,9 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			DisplayAddComponentEntry<Component::BoxCollider>("BoxCollider", en);
 			DisplayAddComponentEntry<Component::SphereCollider>("SphereCollider", en);
 			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
+			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
 			DisplayAddComponentEntry<Component::CapsuleCollider>("CapsuleCollider", en);
+			DisplayAddComponentEntry<Component::PlaneCollider>("PlaneCollider", en);
 			DisplayAddComponentEntry<Component::PointLight>("PointLight", en);
 			ImGui::EndPopup();
 		}
@@ -478,8 +480,7 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::CapsuleCollider>("Capsule Collider", en, [&](auto& component)
 		{
-			ImGui::DragFloat("Top-Radius", &component.TopRadius);
-			ImGui::DragFloat("Bottom-Radius", &component.BottomRadius);
+			ImGui::DragFloat("Radius", &component.Radius);
 			ImGui::DragFloat("Half-Height", &component.HalfHeight);
 		});
 	
