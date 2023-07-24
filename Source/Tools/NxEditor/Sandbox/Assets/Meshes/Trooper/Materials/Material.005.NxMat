@@ -1,0 +1,28 @@
+{
+    "AssetType": "Material",
+    "Meta": {
+        "AlbedoColor": {
+            "a": 1.0,
+            "b": 0.6831716299057007,
+            "g": 0.6831716299057007,
+            "r": 0.6831716299057007
+        },
+        "EmissiveColor": {
+            "b": 0.0,
+            "g": 0.0,
+            "r": 0.0
+        },
+        "Glossiness": 0.0,
+        "MetallicRoughnessMap": "Sandbox/Assets/Meshes/Trooper/Textures/Material.005_metallicRoughness.NxTex",
+        "Metalness": 1.0,
+        "NormalMap": "Sandbox/Assets/Meshes/Trooper/Textures/Material.005_normal.NxTex",
+        "Roughness": 1.0,
+        "Specular": {
+            "b": 0.0,
+            "g": 0.0,
+            "r": 0.0
+        },
+        "SpecularSupport": false
+    },
+    "UUID": 15755810331381833303
+}

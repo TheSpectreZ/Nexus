@@ -161,18 +161,6 @@ static void DrawComponent(const std::string& name, Nexus::Entity e, UIFuntion ui
 	}
 }
 
-static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
-{
-	Meshing::Mesh mesh;
-	auto [res, id] = Importer::LoadMesh(filepath, mesh);
-
-	if (res)
-	{
-		auto Mesh = ResourcePool::Get()->AllocateRenderableMesh(mesh, id);
-		component.handle = id;
-	}
-}
-
 static UUID LoadMaterial(const AssetFilePath& filepath)
 {
 	std::unordered_map<uint8_t, Meshing::Texture> textures;
@@ -185,6 +173,23 @@ static UUID LoadMaterial(const AssetFilePath& filepath)
 	ResourcePool::Get()->AllocateRenderableMaterial(material, textures, id);
 	return id;
 }
+
+static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
+{
+	Meshing::Mesh mesh;
+	std::unordered_map<uint32_t, std::string> paths;
+	auto [res, id] = Importer::LoadMesh(filepath, mesh, &paths);
+
+	if (res)
+	{
+		auto Mesh = ResourcePool::Get()->AllocateRenderableMesh(mesh, id);
+		component.handle = id;
+
+		for (auto& [k, v] : paths)
+			component.materialTable[k] = LoadMaterial(v);
+	}
+}
+
 
 void NexusEd::SceneHeirarchy::SetContext(Ref<Scene> scene)
 {
@@ -384,31 +389,6 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 				//	LoadMesh("Resources/Meshes/Cylinder.NxMesh", component);
 
 				ImGui::EndPopup();
-			}
-
-			if (component.handle)
-			{
-				auto mesh = ResourcePool::Get()->GetRenderableMesh(component.handle);
-				auto& Submeshes = mesh->GetSubmeshes();
-				for (uint32_t i = 0; i < (uint32_t)Submeshes.size(); i++)
-				{
-					ImGui::LabelText("Material", "Submesh %i", i);
-					if (ImGui::BeginDragDropTarget())
-					{
-						if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
-						{
-							const wchar_t* path = (const wchar_t*)payload->Data;
-							Submeshes[i].materialIndex = LoadMaterial(path);
-						}
-						ImGui::EndDragDropTarget();
-					}	
-					ImGui::SameLine();
-					
-					ImGui::PushID(i);
-					if (ImGui::Button("Reset"))
-						Submeshes[i].materialIndex = UINT64_MAX;
-					ImGui::PopID();
-				}
 			}
 
 		});

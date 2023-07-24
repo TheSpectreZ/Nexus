@@ -78,8 +78,8 @@ void Nexus::RenderableScene::DrawScene(Ref<CommandQueue> queue, Ref<Scene> scene
 	{
 		entity = { e,scene.get() };
 
-		auto MeshHandle = entity.GetComponent<Component::Mesh>().handle;
-		if (!MeshHandle)
+		auto& MeshComponent = entity.GetComponent<Component::Mesh>();
+		if (!MeshComponent.handle)
 			continue;
 		
 		auto& Identity = entity.GetComponent<Component::Identity>();
@@ -90,22 +90,20 @@ void Nexus::RenderableScene::DrawScene(Ref<CommandQueue> queue, Ref<Scene> scene
 		auto buff = ResourcePool::Get()->GetUniformBuffer(PerEntityUniform[Identity.uuid].hashId);
 		buff->Update(glm::value_ptr(Transform));
 		
-		auto RTMesh = ResourcePool::Get()->GetRenderableMesh(MeshHandle);
+		auto RTMesh = ResourcePool::Get()->GetRenderableMesh(MeshComponent.handle);
 
 		queue->BindShaderResourceHeap(m_pbrShader, PerEntityHeap[Identity.uuid],PipelineBindPoint::Graphics);
 		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
 		queue->BindIndexBuffer(RTMesh->GetIndexBuffer());
 	
-	for (auto& sb : RTMesh->GetSubmeshes())
+		for (auto& sb : RTMesh->GetSubmeshes())
 		{
-			if (sb.materialIndex != UINT64_MAX)
-			{
-				if (!PerMaterialHeap.contains(sb.materialIndex))
-					CreateMaterialResource(sb.materialIndex);
+			auto matIndex = MeshComponent.materialTable.at(sb.materialIndex);
+			if (!PerMaterialHeap.contains(matIndex))
+				CreateMaterialResource(matIndex);
 
-				queue->BindShaderResourceHeap(m_pbrShader, PerMaterialHeap[sb.materialIndex], PipelineBindPoint::Graphics);
-				queue->DrawIndices(sb.indexSize, 1, sb.indexOffset, 0, 0);
-			}
+			queue->BindShaderResourceHeap(m_pbrShader, PerMaterialHeap[matIndex], PipelineBindPoint::Graphics);
+			queue->DrawIndices(sb.indexSize, 1, sb.indexOffset, 0, 0);
 		}
 	}
 }

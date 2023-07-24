@@ -20,7 +20,7 @@ static std::string BinExtension = ".NxBin";
 
 namespace Nexus::Utils
 {
-	bool ImportMesh(const AssetFilePath& dstFolder,Meshing::Mesh& mesh,const std::string& name)
+	bool ImportMesh(const AssetFilePath& dstFolder,Meshing::Mesh& mesh,const std::string& name, const std::unordered_map<uint32_t, std::string>& materialTable)
 	{
 		nlohmann::json Json;
 		Json["UUID"] = (uint64_t)UUID();
@@ -32,6 +32,15 @@ namespace Nexus::Utils
 		Mesh["SubmeshCount"] = mesh.submeshes.size();
 
 		Json["Meta"] = Mesh;
+
+		if (!materialTable.empty())
+		{
+			nlohmann::json MaterialTable;
+			for (auto& [k, v] : materialTable)
+				MaterialTable[std::to_string(k)] = v;
+			
+			Json["Material_Table"] = MaterialTable;
+		}
 		
 		std::string JsonDump = Json.dump(4);
 
@@ -119,7 +128,7 @@ namespace Nexus::Utils
 		return true;
 	}
 
-	Nexus::UUID ImportMaterial(const AssetFilePath& dstFolder, const Meshing::Material* material, const std::vector<Meshing::Texture>& textures)
+	std::string ImportMaterial(const AssetFilePath& dstFolder, const Meshing::Material* material, const std::vector<Meshing::Texture>& textures)
 	{
 		UUID uid;
 
@@ -206,7 +215,7 @@ namespace Nexus::Utils
 
 		std::string Name = material->Name;
 		if (Name.empty())
-			Name = "UnNamed-Material";
+			Name = std::to_string(uid.operator size_t());
 
 		AssetFilePath file = AssetFilePath(dstFolder.generic_string() + "/" + Name + MaterialExtension);
 
@@ -216,7 +225,7 @@ namespace Nexus::Utils
 		std::ofstream stream(file);
 		stream << JsonDump;
 		
-		return uid;
+		return file.generic_string();
 	}
 }
 
@@ -240,10 +249,15 @@ bool Nexus::Importer::ImportGLTF(const AssetFilePath& path, const AssetFilePath&
 	if (!std::filesystem::exists(MatFolder))
 		std::filesystem::create_directories(MatFolder);
 
+	std::unordered_map<uint32_t, std::string> materialTable;
+	uint32_t i = 0;
 	for (auto& Mat : scene.materials)
-		Utils::ImportMaterial(MatFolder, &Mat, scene.textures);
+	{
+		auto path = Utils::ImportMaterial(MatFolder, &Mat, scene.textures);
+		materialTable[i++] = path;
+	}
 
-	Utils::ImportMesh(dstFolder, scene.mesh, Name);
+	Utils::ImportMesh(dstFolder, scene.mesh, Name, materialTable);
 
 	return true;
 }
@@ -273,7 +287,7 @@ bool Nexus::Importer::ImportImage(const AssetFilePath& path, const AssetFilePath
 	return Utils::ImportImage(dstFolder, &i);
 }
 
-std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path, Meshing::Mesh& mesh)
+std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path, Meshing::Mesh& mesh, std::unordered_map<uint32_t, std::string>* materialTablePtr)
 {
 	UUID Id(true);
 
@@ -309,6 +323,18 @@ std::pair<bool, Nexus::UUID> Nexus::Importer::LoadMesh(const AssetFilePath& path
 		auto vc = meta["VertexCount"].get<uint32_t>();
 		auto ic = meta["IndexCount"].get<uint32_t>();
 		auto sc = meta["SubmeshCount"].get<uint32_t>();
+
+		if (materialTablePtr && Json.contains("Material_Table"))
+		{
+			auto& table = Json["Material_Table"];
+
+			for (const auto& entry : table.items())
+			{
+				uint32_t key = std::stoul(entry.key());
+				std::string value = entry.value();
+				materialTablePtr->emplace(key, value);
+			}
+		}
 
 		mesh.vertices.resize(vc);
 		mesh.indices.resize(ic);

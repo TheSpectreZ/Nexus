@@ -334,6 +334,7 @@ bool Nexus::Meshing::LoadSceneFromFile(const std::filesystem::path& Filepath, Sc
 
 			sm.indexOffset = (uint32_t)data->mesh.indices.size();
 			sm.indexSize = (uint32_t)indices[k].size();
+			sm.materialIndex = k;
 			
 			data->mesh.vertices.insert(data->mesh.vertices.end(), vert.begin(), vert.end());
 			data->mesh.indices.insert(data->mesh.indices.end(), indices[k].begin(), indices[k].end());

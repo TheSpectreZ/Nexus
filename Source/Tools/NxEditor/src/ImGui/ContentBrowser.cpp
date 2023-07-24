@@ -22,7 +22,7 @@ void NexusEd::ContentBrowser::Initialize()
 	
 	{
 		Meshing::Mesh mesh;
-		auto [res, Id] = Importer::LoadMesh("Resources/Meshes/Cube.NxMesh", mesh);
+		auto [res, Id] = Importer::LoadMesh("Resources/Meshes/Cube.NxMesh", mesh,nullptr);
 		ResourcePool::Get()->AllocateRenderableMesh(mesh, UUID((uint64_t)0));
 	}
 

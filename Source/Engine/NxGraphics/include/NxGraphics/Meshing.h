@@ -20,7 +20,7 @@ namespace Nexus
 		struct NEXUS_GRAPHICS_API Submesh
 		{
 			uint32_t indexOffset, indexSize;
-			uint64_t materialIndex = UINT64_MAX;
+			uint32_t materialIndex;
 		};
 
 		struct NEXUS_GRAPHICS_API Mesh

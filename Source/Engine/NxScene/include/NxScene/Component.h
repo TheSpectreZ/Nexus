@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <unordered_map>
 #include "NxCore/UUID.h"
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -65,6 +66,7 @@ namespace Nexus
 			Mesh(UUID UUID);
 
 			UUID handle;
+			std::unordered_map<uint32_t, UUID> materialTable;
 		};
 
 		struct NEXUS_SCENE_API Script
