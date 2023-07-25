@@ -12,14 +12,10 @@
 
 #define PVD_HOST "127.0.0.1"
 
-glm::vec3 Px_glmVec3(physx::PxVec3 vect)
+template<typename A,typename B> 
+A ConvertVec3(const B& b)
 {
-	return { vect.x,vect.y,vect.z };
-}
-
-glm::quat Px_glmQuat(physx::PxQuat quat)
-{
-	return { quat.x,quat.y,quat.z,quat.w };
+	return { b.x,b.y,b.z };
 }
 
 struct PhysicsEngineData
@@ -111,11 +107,22 @@ void Nexus::PhysicsEngine::OnSceneUpdate(float dt)
 		for (auto& [e, a] : s_Data->m_actors)
 		{
 			entity = { entt::entity(e),s_Data->m_currentScenePtr };
+
+			uint32_t size = a->getNbShapes();
+			std::vector<physx::PxShape*> shapes(size);
+			a->getShapes(shapes.data(), size);
+
 			physx::PxTransform pxTransform = a->getGlobalPose();
 			
+			if (!shapes.empty())
+			{
+				for(auto sh : shapes)
+					pxTransform *= sh->getLocalPose();
+			}
+			
 			auto& tc = entity.GetComponent<Component::Transform>();
-			tc.Translation = Px_glmVec3(pxTransform.p);
-			tc.SetRotation(Px_glmQuat(pxTransform.q));
+			tc.Translation = ConvertVec3<glm::vec3>(pxTransform.p);
+			tc.SetRotation(glm::quat(pxTransform.q.w, pxTransform.q.x, pxTransform.q.y, pxTransform.q.z));
 		}
 	}
 }
@@ -123,55 +130,72 @@ void Nexus::PhysicsEngine::OnSceneUpdate(float dt)
 void Nexus::PhysicsEngine::OnSceneStop()
 {
 	s_Data->m_scene->release();
+	s_Data->m_currentScenePtr = nullptr;
+	s_Data->m_actors.clear();
 }
 
 void Nexus::PhysicsEngine::CreateRigidbody(Entity e)
 {
+	auto& tc = e.GetComponent<Component::Transform>();
+	auto quat = tc.GetRotation();
+	physx::PxTransform transform = physx::PxTransform(ConvertVec3<physx::PxVec3>(tc.Translation), physx::PxQuat(quat.x, quat.y, quat.z, quat.w));
+
 	if (e.HasComponent<Component::PlaneCollider>())
 	{
-		auto& tc = e.GetComponent<Component::Transform>();
+		physx::PxPlaneGeometry geometry;
+		physx::PxShape* shape = s_Data->m_physics->createShape(geometry, *s_Data->m_defaultMaterial);
 
-		auto normal = glm::vec3(glm::toMat3(tc.GetRotation())[2]);
-		auto position = glm::length(tc.Translation);
-
-		physx::PxRigidStatic* plane = physx::PxCreatePlane(*s_Data->m_physics,
-			physx::PxPlane(normal.x, normal.y, normal.z, position), 
-			*s_Data->m_defaultMaterial);
-		
-		s_Data->m_scene->addActor(*plane);
-		//s_Data->m_actors[(uint32_t)e] = plane;
-
+		physx::PxRigidStatic* actor = s_Data->m_physics->createRigidStatic(transform);
+		actor->attachShape(*shape);
+		s_Data->m_scene->addActor(*actor);
 		return;
 	}
+
+	physx::PxRigidActor* actor = nullptr;
+	physx::PxMaterial* material = nullptr;
+
+	auto& rb = e.GetComponent<Component::RigidBody>();
+	material = s_Data->m_physics->createMaterial(rb.friction, rb.friction, rb.restitution);
+
+	switch (rb.motionType)
+	{
+	case Component::RigidBody::MotionType::Static:
+		actor = s_Data->m_physics->createRigidStatic(transform);
+		break;
+	case Component::RigidBody::MotionType::Dynamic:
+		actor = s_Data->m_physics->createRigidDynamic(transform);
+		physx::PxRigidBodyExt::updateMassAndInertia((physx::PxRigidBody&)*actor, 10.f);
+		s_Data->m_actors[(uint32_t)e] = actor;
+		break;
+	default:
+		return;
+	}
+	s_Data->m_scene->addActor(*actor);
 
 	if (e.HasComponent<Component::BoxCollider>())
 	{
 		auto& bc = e.GetComponent<Component::BoxCollider>();
-
 		auto geometry = physx::PxBoxGeometry(bc.HalfExtent.x, bc.HalfExtent.y, bc.HalfExtent.z);
-		physx::PxShape* shape = s_Data->m_physics->createShape(geometry, *s_Data->m_defaultMaterial);
-	
-		auto& tc = e.GetComponent<Component::Transform>();
 		
-		physx::PxTransform transform = physx::PxTransform(physx::PxVec3(tc.Translation.x, tc.Translation.y, tc.Translation.z));
+		physx::PxShape* shape = s_Data->m_physics->createShape(geometry, *material);
+		actor->attachShape(*shape);
+	}
 
-		auto& rb = e.GetComponent<Component::RigidBody>();
-		if (rb.motionType == Component::RigidBody::MotionType::Dynamic)
-		{
-			physx::PxRigidDynamic* body = s_Data->m_physics->createRigidDynamic(transform);
-			body->attachShape(*shape);
+	if (e.HasComponent<Component::SphereCollider>())
+	{
+		auto& sc = e.GetComponent<Component::SphereCollider>();
+		auto geometry = physx::PxSphereGeometry(sc.Radius);
 
-			physx::PxRigidBodyExt::updateMassAndInertia(*body, 10.f);
-			s_Data->m_scene->addActor(*body);
-			s_Data->m_actors[(uint32_t)e] = body;
-		}
-		else
-		{
-			physx::PxRigidStatic* body = s_Data->m_physics->createRigidStatic(transform);
-			body->attachShape(*shape);
-			s_Data->m_scene->addActor(*body);
-		}
+		physx::PxShape* shape = s_Data->m_physics->createShape(geometry, *material);
+		actor->attachShape(*shape);
+	}
 
-		return;
+	if (e.HasComponent<Component::CapsuleCollider>())
+	{
+		auto& cc = e.GetComponent<Component::CapsuleCollider>();
+		auto geometry = physx::PxCapsuleGeometry(cc.Radius, cc.HalfHeight);
+
+		physx::PxShape* shape = s_Data->m_physics->createShape(geometry, *material);
+		actor->attachShape(*shape);
 	}
 }
