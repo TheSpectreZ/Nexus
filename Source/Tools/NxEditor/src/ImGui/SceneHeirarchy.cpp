@@ -174,19 +174,22 @@ static UUID LoadMaterial(const AssetFilePath& filepath)
 	return id;
 }
 
-static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component)
+static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component,bool loadMat = true)
 {
 	Meshing::Mesh mesh;
 	std::unordered_map<uint32_t, std::string> paths;
-	auto [res, id] = Importer::LoadMesh(filepath, mesh, &paths);
+	auto [res, id] = Importer::LoadMesh(filepath, mesh, (loadMat) ? &paths : nullptr);
 
 	if (res)
 	{
 		auto Mesh = ResourcePool::Get()->AllocateRenderableMesh(mesh, id);
 		component.handle = id;
 
-		for (auto& [k, v] : paths)
-			component.materialTable[k] = LoadMaterial(v);
+		if(loadMat)
+		{
+			for (auto& [k, v] : paths)
+				component.materialTable[k] = LoadMaterial(v);
+		}
 	}
 }
 
@@ -304,10 +307,9 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			DisplayAddComponentEntry<Component::Mesh>("Mesh", en);
 			DisplayAddComponentEntry<Component::Script>("Script", en);
 			DisplayAddComponentEntry<Component::RigidBody>("RigidBody", en);
+			DisplayAddComponentEntry<Component::PlaneCollider>("PlaneCollider", en);
 			DisplayAddComponentEntry<Component::BoxCollider>("BoxCollider", en);
 			DisplayAddComponentEntry<Component::SphereCollider>("SphereCollider", en);
-			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
-			DisplayAddComponentEntry<Component::CylinderCollider>("CylinderCollider", en);
 			DisplayAddComponentEntry<Component::CapsuleCollider>("CapsuleCollider", en);
 			DisplayAddComponentEntry<Component::PlaneCollider>("PlaneCollider", en);
 			DisplayAddComponentEntry<Component::PointLight>("PointLight", en);
@@ -375,20 +377,20 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 			if (ImGui::BeginPopup("Set Mesh"))
 			{
-				//if (ImGui::MenuItem("Cube"))
-				//	LoadMesh("Resources/Meshes/Cube.NxMesh", component);
-				//
-				//if (ImGui::MenuItem("Sphere"))
-				//	LoadMesh("Resources/Meshes/Sphere.NxMesh", component);
-				//
-				//if (ImGui::MenuItem("IcoSphere"))
-				//	LoadMesh("Resources/Meshes/IcoSphere.NxMesh", component);
-				//
-				//if (ImGui::MenuItem("Torus"))
-				//	LoadMesh("Resources/Meshes/Torus.NxMesh", component);
-				//
-				//if (ImGui::MenuItem("Cylinder"))
-				//	LoadMesh("Resources/Meshes/Cylinder.NxMesh", component);
+				if (ImGui::MenuItem("Cube"))
+					LoadMesh("Resources/Meshes/Cube.NxMesh", component, false);
+				
+				if (ImGui::MenuItem("Sphere"))
+					LoadMesh("Resources/Meshes/Sphere.NxMesh", component, false);
+				
+				if (ImGui::MenuItem("IcoSphere"))
+					LoadMesh("Resources/Meshes/Icophere.NxMesh", component, false);
+				
+				if (ImGui::MenuItem("Torus"))
+					LoadMesh("Resources/Meshes/Torus.NxMesh", component, false);
+				
+				if (ImGui::MenuItem("Cylinder"))
+					LoadMesh("Resources/Meshes/Cylinder.NxMesh", component, false);
 
 				ImGui::EndPopup();
 			}
@@ -440,7 +442,7 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 	DrawComponent<Component::RigidBody>("Rigid Body", en, [&](auto& component)
 		{
 			static const char* types[3] = { "Static","Dynamic","Kinematic" };
-			static uint32_t typeIndex = 0;
+			uint32_t typeIndex = (uint32_t)component.motionType;
 
 			if (ImGui::BeginCombo("MotionType",types[typeIndex]))
 			{
@@ -464,7 +466,7 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 
 	DrawComponent<Component::BoxCollider>("Box Collider", en, [&](auto& component)
 		{
-			ImGuiUtils::DrawVec3Control("Half-Extent", component.HalfExtent, 0.5f);
+			ImGuiUtils::DrawVec3Control("Half-Extent", component.HalfExtent,1.f);
 		});
 
 	DrawComponent<Component::SphereCollider>("Sphere Collider", en, [&](auto& component)
@@ -472,10 +474,8 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			ImGui::DragFloat("Radius", &component.Radius);
 		});
 
-	DrawComponent<Component::CylinderCollider>("Cylinder Collider", en, [&](auto& component)
+	DrawComponent<Component::PlaneCollider>("Plane Collider", en, [&](auto& component)
 		{
-			ImGui::DragFloat("Radius", &component.Radius);
-			ImGui::DragFloat("Half-Height", &component.HalfHeight);
 		});
 
 	DrawComponent<Component::CapsuleCollider>("Capsule Collider", en, [&](auto& component)

@@ -12,6 +12,8 @@ namespace Nexus
 	Ref<Resource> Allocate##Resource(const Specs& specs,UUID HashID);\
 	void Deallocate##Resource(UUID HashID);
 
+#define DEFAULT_RESOURCE (uint64_t)0
+
 	class NEXUS_RENDERER_API ResourcePool
 	{
 		static ResourcePool* s_Instance;

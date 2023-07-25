@@ -20,16 +20,21 @@ void NexusEd::ContentBrowser::Initialize()
 
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
 	
-	{
+	// To-Do: Do this is Asset Manager
+	{	
+		//{
+		//	Importer::ImportGLTF("res/Meshes/sphere.gltf", "Resources/Meshes", "Sphere");
+		//	Importer::ImportGLTF("res/Meshes/torus.gltf", "Resources/Meshes", "Torus");
+		//	Importer::ImportGLTF("res/Meshes/cylinder.gltf", "Resources/Meshes", "Cylinder");
+		//	Importer::ImportGLTF("res/Meshes/IcoSphere.gltf", "Resources/Meshes", "Icosphere");
+		//}
+
 		Meshing::Mesh mesh;
 		auto [res, Id] = Importer::LoadMesh("Resources/Meshes/Cube.NxMesh", mesh,nullptr);
-		ResourcePool::Get()->AllocateRenderableMesh(mesh, UUID((uint64_t)0));
-	}
-
-	{
-		//Importer::ImportImage("res/Textures/DefaultWhite.png", "Resources/Textures", "DefaultWhite");
+		ResourcePool::Get()->AllocateRenderableMesh(mesh, DEFAULT_RESOURCE);
+	
 		Meshing::Image defaultImage;
-		auto [res, id] = Importer::LoadImage("Resources/Textures/DefaultWhite.NxTex", defaultImage);
+		auto [res1, id] = Importer::LoadImage("Resources/Textures/DefaultWhite.NxTex", defaultImage);
 
 		TextureSpecification specs{};
 		specs.extent = { defaultImage.width,defaultImage.height };
@@ -38,7 +43,15 @@ void NexusEd::ContentBrowser::Initialize()
 		specs.type = TextureType::TwoDim;
 		specs.usage = TextureUsage::ShaderSampled;
 
-		ResourcePool::Get()->AllocateTexture(specs, UUID((uint64_t)0));
+		ResourcePool::Get()->AllocateTexture(specs, DEFAULT_RESOURCE);
+
+		Meshing::Material defMaterial;
+		defMaterial.Name = "Default";
+		defMaterial.metalicRoughness.albedoColor = { 1.f,1.f,1.f,1.f };
+		defMaterial.metalicRoughness.metallic = 0.5f;
+		defMaterial.metalicRoughness.roughness = 0.5f;
+		std::unordered_map<uint8_t, Meshing::Texture> empty;
+		ResourcePool::Get()->AllocateRenderableMaterial(defMaterial,empty, DEFAULT_RESOURCE);
 	}
 
 	{

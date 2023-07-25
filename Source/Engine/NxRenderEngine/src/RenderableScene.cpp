@@ -98,14 +98,22 @@ void Nexus::RenderableScene::DrawScene(Ref<CommandQueue> queue, Ref<Scene> scene
 		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
 		queue->BindIndexBuffer(RTMesh->GetIndexBuffer());
 	
-		for (auto& sb : RTMesh->GetSubmeshes())
+		if (MeshComponent.materialTable.empty())
 		{
-			auto matIndex = MeshComponent.materialTable.at(sb.materialIndex);
-			if (!PerMaterialHeap.contains(matIndex))
-				CreateMaterialResource(matIndex);
+			queue->BindShaderResourceHeap(m_pbrShader, DefaultMaterialHeap, PipelineBindPoint::Graphics);
+			queue->DrawIndices(RTMesh->GetIndexBuffer()->GetSize() / sizeof(uint32_t), 1, 0, 0, 0);
+		}
+		else
+		{
+			for (auto& sb : RTMesh->GetSubmeshes())
+			{
+				auto matIndex = MeshComponent.materialTable.at(sb.materialIndex);
+				if (!PerMaterialHeap.contains(matIndex))
+					CreateMaterialResource(matIndex);
 
-			queue->BindShaderResourceHeap(m_pbrShader, PerMaterialHeap[matIndex], PipelineBindPoint::Graphics);
-			queue->DrawIndices(sb.indexSize, 1, sb.indexOffset, 0, 0);
+				queue->BindShaderResourceHeap(m_pbrShader, PerMaterialHeap[matIndex], PipelineBindPoint::Graphics);
+				queue->DrawIndices(sb.indexSize, 1, sb.indexOffset, 0, 0);
+			}
 		}
 	}
 }
@@ -133,6 +141,7 @@ void Nexus::RenderableScene::Initialize()
 		m_pbrShader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0.binding, cbuff);
 		m_pbrShader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform1.binding, sbuff);
 
+		// Environment
 		ImageHandle handle{};
 		handle.set = 0;
 		handle.binding = 2;
@@ -141,6 +150,23 @@ void Nexus::RenderableScene::Initialize()
 		handle.Type = ShaderResourceType::SampledImage;
 
 		m_pbrShader->BindTextureWithResourceHeap(PerSceneHeap, handle);
+
+		// Default Material
+		DefaultMaterialHeap.hashId = UUID();
+		DefaultMaterialHeap.set = 2;
+
+		m_pbrShader->AllocateShaderResourceHeap(DefaultMaterialHeap);
+		
+		DefaultMaterialUniform.hashId = UUID();
+		DefaultMaterialUniform.set = 2;
+		DefaultMaterialUniform.binding = 0;
+
+		auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_pbrShader, DefaultMaterialUniform);
+		m_pbrShader->BindUniformWithResourceHeap(DefaultMaterialHeap, DefaultMaterialUniform.binding, buff);
+
+		Ref<RenderableMaterial> material = ResourcePool::Get()->GetRenderableMaterial(DEFAULT_RESOURCE);
+		auto factors = material->GetParams()._factors;
+		buff->Update(&factors);
 	}
 
 	// Skybox
@@ -225,8 +251,7 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	imageHandle.Type = ShaderResourceType::SampledImage;
 	imageHandle.set = 2;
 	
-	UUID def = UUID((uint64_t)0);
-	Ref<Texture> defaultTex = ResourcePool::Get()->GetTexture(def);
+	Ref<Texture> defaultTex = ResourcePool::Get()->GetTexture(DEFAULT_RESOURCE);
 
 	if (material->GetParams()._factors.useBaseColorMap > -1)
 	{
