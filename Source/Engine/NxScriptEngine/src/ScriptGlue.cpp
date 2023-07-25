@@ -229,34 +229,6 @@ namespace Nexus::InternalCalls
 
 #pragma endregion
 
-#pragma region CylinderColliderComponent
-
-	float CylinderColliderComponent_GetRadius(UUID id)
-	{
-		Entity en = ScriptEngine::GetSceneContext()->GetEntityWithUUID(id);
-		return en.GetComponent<Component::CylinderCollider>().Radius;
-	}
-
-	void CylinderColliderComponent_SetRadius(UUID id, float& radius)
-	{
-		Entity en = ScriptEngine::GetSceneContext()->GetEntityWithUUID(id);
-		en.GetComponent<Component::CylinderCollider>().Radius = radius;
-	}
-
-	float CylinderColliderComponent_GetHalfHeight(UUID id)
-	{
-		Entity en = ScriptEngine::GetSceneContext()->GetEntityWithUUID(id);
-		return en.GetComponent<Component::CylinderCollider>().HalfHeight;
-	}
-
-	void CylinderColliderComponent_SetHalfHeight(UUID id, float& halfheight)
-	{
-		Entity en = ScriptEngine::GetSceneContext()->GetEntityWithUUID(id);
-		en.GetComponent<Component::CylinderCollider>().HalfHeight = halfheight;
-	}
-
-#pragma endregion
-
 }
 
 void Nexus::ScriptGlue::BindComponents()
@@ -301,10 +273,4 @@ void Nexus::ScriptGlue::BindInternalCalls()
 	REGISTER_INTERNAL_CALL(CapsuleColliderComponent_SetRadius);
 	REGISTER_INTERNAL_CALL(CapsuleColliderComponent_GetHalfHeight);
 	REGISTER_INTERNAL_CALL(CapsuleColliderComponent_SetHalfHeight);
-
-	REGISTER_INTERNAL_CALL(CylinderColliderComponent_GetRadius);
-	REGISTER_INTERNAL_CALL(CylinderColliderComponent_SetRadius);
-	REGISTER_INTERNAL_CALL(CylinderColliderComponent_GetHalfHeight);
-	REGISTER_INTERNAL_CALL(CylinderColliderComponent_SetHalfHeight);
-
 }

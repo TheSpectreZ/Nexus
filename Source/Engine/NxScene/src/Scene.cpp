@@ -54,7 +54,6 @@ Nexus::Ref<Nexus::Scene> Nexus::Scene::Duplicate()
 		COPY_ENTITY_COMPONENT(entity, newEntity, Component::BoxCollider);
 		COPY_ENTITY_COMPONENT(entity, newEntity, Component::SphereCollider);
 		COPY_ENTITY_COMPONENT(entity, newEntity, Component::CapsuleCollider);
-		COPY_ENTITY_COMPONENT(entity, newEntity, Component::CylinderCollider);
 		COPY_ENTITY_COMPONENT(entity, newEntity, Component::PlaneCollider);
 		COPY_ENTITY_COMPONENT(entity, newEntity, Component::RigidBody);
 		COPY_ENTITY_COMPONENT(entity, newEntity, Component::DirectionalLight);
@@ -115,7 +114,6 @@ Nexus::Entity Nexus::Scene::DuplicateEntity(Entity entity)
 	COPY_ENTITY_COMPONENT(entity, newEntity, Component::BoxCollider);
 	COPY_ENTITY_COMPONENT(entity, newEntity, Component::SphereCollider);
 	COPY_ENTITY_COMPONENT(entity, newEntity, Component::CapsuleCollider);
-	COPY_ENTITY_COMPONENT(entity, newEntity, Component::CylinderCollider);
 	COPY_ENTITY_COMPONENT(entity, newEntity, Component::RigidBody);
 	COPY_ENTITY_COMPONENT(entity, newEntity, Component::DirectionalLight);
 	COPY_ENTITY_COMPONENT(entity, newEntity, Component::PointLight);

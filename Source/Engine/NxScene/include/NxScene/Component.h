@@ -120,15 +120,6 @@ namespace Nexus
 			float HalfHeight = 0.5f;
 		};
 
-		struct NEXUS_SCENE_API CylinderCollider
-		{
-			CylinderCollider() = default;
-			CylinderCollider(const CylinderCollider&) = default;
-
-			float HalfHeight = 0.5f;
-			float Radius = 0.5f;
-		};
-
 		struct NEXUS_SCENE_API PlaneCollider
 		{
 			PlaneCollider() = default;
