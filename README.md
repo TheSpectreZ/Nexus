@@ -25,8 +25,10 @@ Before building the engine, you need to set up some dependencies. Follow these i
 
 Feel free to explore the Nexus Game Engine and contribute to its development. If you encounter any issues or have suggestions, please open a new [issue](https://github.com/TheSpectreZ/Nexus/issues) on the GitHub repository.
 
+---
 Here's a sneak peek of the current state of the engine's editor:
 
-![image](https://github.com/TheSpectreZ/Nexus/assets/122666662/37fafb39-0b10-4b40-baa8-d741ea6b25af)
+
+https://github.com/TheSpectreZ/Nexus/assets/122666662/cd899f85-8e21-4464-b862-571f28e9c3c2
 
 
