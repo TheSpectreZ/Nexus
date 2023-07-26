@@ -1,30 +1,6 @@
-[submodule "Source/Dependencies/VulkanMemoryAllocator"]
-	path = Source/Dependencies/VulkanMemoryAllocator
-	url = https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-[submodule "Source/Dependencies/stb"]
-	path = Source/Dependencies/stb
-	url = https://github.com/nothings/stb.git
 [submodule "Source/Dependencies/imgui"]
 	path = Source/Dependencies/imgui
 	url = https://github.com/ocornut/imgui.git
-[submodule "Source/Dependencies/entt"]
-	path = Source/Dependencies/entt
-	url = https://github.com/skypjack/entt.git
-[submodule "Source/Dependencies/yamlcpp"]
-	path = Source/Dependencies/yamlcpp
-	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "Source/Dependencies/nlohmannJson"]
-	path = Source/Dependencies/nlohmannJson
-	url = https://github.com/nlohmann/json.git
-[submodule "Source/Dependencies/Jolt"]
-	path = Source/Dependencies/Jolt
-	url = https://github.com/jrouwe/JoltPhysics.git
-[submodule "Source/Dependencies/tinygltf"]
-	path = Source/Dependencies/tinygltf
-	url = https://github.com/syoyo/tinygltf.git
-[submodule "Source/Dependencies/filewatch"]
-	path = Source/Dependencies/filewatch
-	url = https://github.com/ThomasMonkman/filewatch.git
 [submodule "Source/Dependencies/glfw"]
 	path = Source/Dependencies/glfw
 	url = https://github.com/glfw/glfw.git
