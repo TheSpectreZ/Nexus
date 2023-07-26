@@ -8,7 +8,7 @@
 #include "NxAsset/Asset.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "stb/stb_image.h"
 #include "nlohmann/json.hpp"
 
 static std::string MeshExtension = ".NxMesh";

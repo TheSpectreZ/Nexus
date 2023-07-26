@@ -2,10 +2,16 @@
 #include "NxCore/Logger.h"
 #include "NxCore/Assertion.h"
 
-#define TINYGLTF_IMPLEMENTATION
-#define TINYGLTF_NO_STB_IMAGE_WRITE
 #define STB_IMAGE_IMPLEMENTATION
-#include "tiny_gltf.h" 
+#include "stb/stb_image.h"
+
+#include "nlohmann/json.hpp"
+
+#define TINYGLTF_NO_INCLUDE_JSON
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE
+#define TINYGLTF_NO_STB_IMAGE_WRITE
+#define TINYGLTF_IMPLEMENTATION
+#include "tinyglTF/tiny_gltf.h"
 
 #include "glm/gtc/type_ptr.hpp"
 
