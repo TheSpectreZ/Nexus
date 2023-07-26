@@ -33,10 +33,9 @@ project "NxEditor"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
-		IncludePath["entt"],
+		IncludePath["utils"],
 		IncludePath["imgui"],
-		IncludePath["VMA"],
-
+		
 		IncludePath["NxCore"],
 		IncludePath["NxScene"],
 		IncludePath["NxAsset"],

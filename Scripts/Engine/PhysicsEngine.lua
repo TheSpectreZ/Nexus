@@ -15,9 +15,8 @@ project "NxPhysicsEngine"
 
 	includedirs
 	{
-		"$(VULKAN_SDK)/Include",
+		IncludePath["utils"],
 		IncludePath["physx"],
-		IncludePath["entt"],
 
 		IncludePath["NxCore"],
 		IncludePath["NxScene"],

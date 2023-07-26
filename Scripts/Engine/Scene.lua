@@ -15,8 +15,7 @@ project "NxScene"
 
 	includedirs
 	{
-		"$(VULKAN_SDK)/Include",
-		IncludePath["entt"],
+		IncludePath["utils"],
 
 		IncludePath["NxCore"],
 		IncludePath["NxScene"],

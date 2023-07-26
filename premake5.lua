@@ -12,9 +12,8 @@ workspace "Nexus-Engine"
 
     group "Dependencies"
         include "Scripts/Dependencies/imgui.lua"
-        include "Scripts/Dependencies/yamlcpp.lua"
-        include "Scripts/Dependencies/jolt.lua"
         include "Scripts/Dependencies/glfw.lua"
+        include "Scripts/Dependencies/utils.lua"
     group ""
 
     group "Nexus"

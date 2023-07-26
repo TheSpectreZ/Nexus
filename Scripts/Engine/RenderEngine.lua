@@ -16,9 +16,7 @@ project "NxRenderEngine"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
-		IncludePath["VMA"],
-		IncludePath["entt"],
-		IncludePath["stb"],
+		IncludePath["utils"],
 
 		IncludePath["NxCore"],
 		IncludePath["NxVulkan"],
