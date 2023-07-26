@@ -44,6 +44,6 @@ namespace Nexus
 		Ref<Shader> m_PbrShader,m_SkyboxShader;
 		Ref<Pipeline> m_PBR_FillPipeline, m_PBR_LinePipeline, m_SkyboxPipeline;
 
-		std::unordered_map<UUID, Ref<RenderableScene>> m_RenderableScenes;
+		//std::unordered_map<UUID, Ref<RenderableScene>> m_RenderableScenes;
 	};
 }

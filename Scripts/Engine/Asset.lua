@@ -18,14 +18,18 @@ project "NxAsset"
 		IncludePath["utils"],
         
 		IncludePath["NxCore"],
+		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
+		IncludePath["NxRenderEngine"],
+
 		IncludePath["NxAsset"]
 	}
 
 	links
 	{
         "NxCore",
-		"NxGraphics"
+        "NxScene",
+		"NxRenderEngine"
 	}
 
 	defines 

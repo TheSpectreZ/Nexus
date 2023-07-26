@@ -1,6 +1,13 @@
 #pragma once
+#include "NxCore/Object.h"
 #include "NxGraphics/Meshing.h"
 #include "NxGraphics/Texture.h"
+
+#ifdef NEXUS_RENDERER_SHARED_BUILD
+#define NEXUS_RENDERER_API __declspec(dllexport)
+#else
+#define NEXUS_RENDERER_API __declspec(dllimport)
+#endif // NEXUS_RENDERER_SHARED_BUILD
 
 namespace Nexus
 {
@@ -31,13 +38,16 @@ namespace Nexus
 		std::unordered_map<TextureMapType, Ref<Texture>> _Maps;
 	};
 
-	class RenderableMaterial
+	class NEXUS_RENDERER_API RenderableMaterial : public BaseAsset
 	{
 	public:
-		RenderableMaterial(const Meshing::Material& params, const std::unordered_map<TextureMapType, uint32_t>& Samplers);
+		RenderableMaterial(const MaterialParameters& params);
 		~RenderableMaterial() = default;
 
 		MaterialParameters GetParams() { return m_Params; }
+
+		std::string GetAssetTypeString() override { return "MaterialAsset"; }
+		uint8_t GetAssetTypeIndex() override { return 2; }
 	private:
 		MaterialParameters m_Params;
 	};

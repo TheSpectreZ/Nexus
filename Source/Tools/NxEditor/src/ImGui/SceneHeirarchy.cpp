@@ -2,6 +2,9 @@
 #include "NxApplication/FileDialog.h"
 #include "NxScene/Component.h"
 #include "NxAsset/Asset.h"
+#include "NxAsset/Manager.h"	
+#include "NxRenderEngine/RenderableMaterial.h"
+#include "NxRenderEngine/RenderableMesh.h"
 #include "NxRenderEngine/ResourcePool.h"
 #include "NxImGui/Context.h"
 #include "imgui.h"
@@ -170,7 +173,7 @@ static UUID LoadMaterial(const AssetFilePath& filepath)
 	if (!res)
 		return UUID(true);
 
-	ResourcePool::Get()->AllocateRenderableMaterial(material, textures, id);
+	Manager::Get()->Allocate<RenderableMaterial>(id, material, textures);
 	return id;
 }
 
@@ -182,7 +185,7 @@ static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component,bo
 
 	if (res)
 	{
-		auto Mesh = ResourcePool::Get()->AllocateRenderableMesh(mesh, id);
+		auto Mesh = Manager::Get()->Allocate<RenderableMesh>(id, mesh);
 		component.handle = id;
 
 		if(loadMat)

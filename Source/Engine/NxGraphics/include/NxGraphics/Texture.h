@@ -1,4 +1,5 @@
 #pragma once
+#include "NxCore/Object.h"	
 #include "Meshing.h"
 
 namespace Nexus
@@ -14,13 +15,16 @@ namespace Nexus
 		uint32_t mipCount = 1;
 	};
 
-	class Texture
+	class NEXUS_GRAPHICS_API Texture : public BaseAsset
 	{
 	public:
 		Texture() = default;
 		virtual ~Texture() = default;
 
-		virtual void PrepareForRender() = 0;
+		std::string GetAssetTypeString() override { return "TextureAsset"; }
+		uint8_t GetAssetTypeIndex() override { return 3; }
+
+		virtual void PrepareForRender() {};
 	};
 
 	struct SamplerSpecification
@@ -28,7 +32,7 @@ namespace Nexus
 		Meshing::Sampler sampler;
 	};
 
-	class Sampler
+	class NEXUS_GRAPHICS_API Sampler
 	{
 	public:
 		Sampler() = default;

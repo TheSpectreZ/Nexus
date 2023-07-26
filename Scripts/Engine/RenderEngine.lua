@@ -22,8 +22,7 @@ project "NxRenderEngine"
 		IncludePath["NxVulkan"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxScene"],
-		IncludePath["NxAsset"],
-
+		
 		IncludePath["NxRenderEngine"],
 	}
 
@@ -33,7 +32,6 @@ project "NxRenderEngine"
 		"NxGraphics",
 		"NxVulkan",
 		"NxScene",
-		"NxAsset"
 	}
 
 	defines 

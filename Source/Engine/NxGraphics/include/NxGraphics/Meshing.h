@@ -10,33 +10,33 @@ namespace Nexus
 {
 	namespace Meshing
 	{
-		struct NEXUS_GRAPHICS_API Vertex
+		struct Vertex
 		{
 			glm::vec3 position, normal, tangent, bitangent;
 			glm::vec2 texCoord0, texCoord1;
 			glm::ivec4 joints; glm::vec4 weights;
 		};
 
-		struct NEXUS_GRAPHICS_API Submesh
+		struct Submesh
 		{
 			uint32_t indexOffset, indexSize;
 			uint32_t materialIndex;
 		};
 
-		struct NEXUS_GRAPHICS_API Mesh
+		struct Mesh
 		{
 			std::vector<Vertex> vertices;
 			std::vector<uint32_t> indices;
 			std::vector<Submesh> submeshes;
 		};
 
-		struct NEXUS_GRAPHICS_API Sampler
+		struct Sampler
 		{
 			SamplerFilter Near;
 			SamplerFilter Far;
 			SamplerWrapMode U, V, W;
 
-			uint32_t GetHash()
+			uint32_t GetHash() const
 			{
 				uint32_t Id = 0;
 				Id += (uint32_t)Far * 1;
@@ -58,7 +58,7 @@ namespace Nexus
 			};
 		};
 
-		struct NEXUS_GRAPHICS_API Image
+		struct Image
 		{
 			std::string fileName;
 
@@ -66,13 +66,13 @@ namespace Nexus
 			uint32_t width, height, channels;
 		};
 
-		struct NEXUS_GRAPHICS_API Texture
+		struct Texture
 		{
 			Image image;
 			uint32_t samplerHash;
 		};
 
-		struct NEXUS_GRAPHICS_API Material
+		struct Material
 		{
 			std::string Name;
 			struct TexCoords
@@ -114,7 +114,7 @@ namespace Nexus
 			glm::vec3 emissiveColor{0.f};
 		};
 
-		struct NEXUS_GRAPHICS_API Node
+		struct Node
 		{
 			std::string name;
 
@@ -132,7 +132,7 @@ namespace Nexus
 			glm::mat4 matrix{1.f};
 		};
 
-		struct NEXUS_GRAPHICS_API Skin
+		struct Skin
 		{
 			std::string Name;
 			Node* skeletonRoot = nullptr;
@@ -140,7 +140,7 @@ namespace Nexus
 			std::vector<glm::mat4> InverseBindMatrices;
 		};
 
-		struct NEXUS_GRAPHICS_API Animation
+		struct Animation
 		{
 			struct Sampler
 			{
@@ -168,7 +168,7 @@ namespace Nexus
 			float end = FLT_MIN;
 		};
 
-		struct NEXUS_GRAPHICS_API Scene
+		struct Scene
 		{
 			// Static Mesh
 			Mesh mesh;
@@ -184,8 +184,5 @@ namespace Nexus
 			// Animations
 			std::vector<Animation> animations;
 		};
-
-		bool NEXUS_GRAPHICS_API LoadSceneFromFile(const std::filesystem::path& filePath, Meshing::Scene* data);
-
 	}
 }
