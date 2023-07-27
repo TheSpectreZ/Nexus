@@ -60,8 +60,7 @@ void Nexus::RenderableScene::DrawSkybox(Ref<CommandQueue> queue)
 {
 	queue->BindShaderResourceHeap(m_skyBoxShader, SkyBoxHeap, PipelineBindPoint::Graphics);
 	
-	static UUID nulId = UUID((uint64_t)0);
-	auto RTMesh = ResourcePool::Get()->GetRenderableMesh(nulId);
+	auto RTMesh = ResourcePool::Get()->GetAsset<RenderableMesh>(DEFAULT_MESH_RESOURCE);
 
 	auto Ib = RTMesh->GetIndexBuffer();
 
@@ -92,7 +91,7 @@ void Nexus::RenderableScene::DrawScene(Ref<CommandQueue> queue, Ref<Scene> scene
 		auto buff = ResourcePool::Get()->GetUniformBuffer(PerEntityUniform[Identity.uuid].hashId);
 		buff->Update(glm::value_ptr(Transform));
 		
-		auto RTMesh = ResourcePool::Get()->GetRenderableMesh(MeshComponent.handle);
+		auto RTMesh = ResourcePool::Get()->GetAsset<RenderableMesh>(MeshComponent.handle);
 
 		queue->BindShaderResourceHeap(m_pbrShader, PerEntityHeap[Identity.uuid],PipelineBindPoint::Graphics);
 		queue->BindVertexBuffer(RTMesh->GetVertexBuffer());
@@ -164,7 +163,7 @@ void Nexus::RenderableScene::Initialize()
 		auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_pbrShader, DefaultMaterialUniform);
 		m_pbrShader->BindUniformWithResourceHeap(DefaultMaterialHeap, DefaultMaterialUniform.binding, buff);
 
-		Ref<RenderableMaterial> material = ResourcePool::Get()->GetRenderableMaterial(DEFAULT_RESOURCE);
+		Ref<RenderableMaterial> material = ResourcePool::Get()->GetAsset<RenderableMaterial>(DEFAULT_MATERIAL_RESOURCE);
 		auto factors = material->GetParams()._factors;
 		buff->Update(&factors);
 	}
@@ -241,7 +240,7 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	PerMaterialUniform[Id] = uniformHandle;
 	m_pbrShader->BindUniformWithResourceHeap(heapHandle, uniformHandle.binding, buff);
 	
-	Ref<RenderableMaterial> material = ResourcePool::Get()->GetRenderableMaterial(Id);
+	Ref<RenderableMaterial> material = ResourcePool::Get()->GetAsset<RenderableMaterial>(Id);
 	auto factors = material->GetParams()._factors;
 	buff->Update(&factors);
 
@@ -251,7 +250,7 @@ void Nexus::RenderableScene::CreateMaterialResource(UUID Id)
 	imageHandle.Type = ShaderResourceType::SampledImage;
 	imageHandle.set = 2;
 	
-	Ref<Texture> defaultTex = ResourcePool::Get()->GetTexture(DEFAULT_RESOURCE);
+	Ref<Texture> defaultTex = ResourcePool::Get()->GetAsset<Texture>(DEFAULT_TEXTURE_RESOURCE);
 
 	if (material->GetParams()._factors.useBaseColorMap > -1)
 	{

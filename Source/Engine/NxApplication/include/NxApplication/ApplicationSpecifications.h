@@ -11,6 +11,9 @@ namespace Nexus
 		
 		bool Vsync = true;
 		bool MultiSampling = false;
+
+		bool EnablePhysicsEngine = false;
+		bool EnableAssetManager = false;
 		bool EnableScriptEngine = false;
 		bool EnableRendererSubmodules = false;
 

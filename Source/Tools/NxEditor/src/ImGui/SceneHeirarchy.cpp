@@ -173,7 +173,7 @@ static UUID LoadMaterial(const AssetFilePath& filepath)
 	if (!res)
 		return UUID(true);
 
-	Manager::Get()->Allocate<RenderableMaterial>(id, material, textures);
+	Module::AssetManager::Get()->Allocate<RenderableMaterial>(id, material, textures);
 	return id;
 }
 
@@ -185,7 +185,7 @@ static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component,bo
 
 	if (res)
 	{
-		auto Mesh = Manager::Get()->Allocate<RenderableMesh>(id, mesh);
+		auto Mesh = Module::AssetManager::Get()->Allocate<RenderableMesh>(id, mesh);
 		component.handle = id;
 
 		if(loadMat)

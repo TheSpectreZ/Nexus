@@ -195,10 +195,10 @@ void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 		mode *= -1;
 
 	UUID Id = scene->GetId();
-	//if (!m_RenderableScenes.contains(Id))
-	//	m_RenderableScenes[Id] = CreateRef<RenderableScene>(m_PbrShader,m_SkyboxShader);
-	//
-	//m_RenderableScenes[Id]->Prepare(scene);
+	if (!m_RenderableScenes.contains(Id))
+		m_RenderableScenes[Id] = CreateRef<RenderableScene>(m_PbrShader,m_SkyboxShader);
+	
+	m_RenderableScenes[Id]->Prepare(scene);
 
 	auto commandQueue = Module::Renderer::Get()->GetCommandQueue();
 
@@ -208,14 +208,14 @@ void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 	commandQueue->SetViewport(m_Viewport);
 	commandQueue->SetScissor(m_Scissor);
 
-	//if (scene->GetRootEntity().environment.handle)
-	//	m_RenderableScenes[Id]->DrawSkybox(commandQueue);
-	//
+	if (scene->GetRootEntity().environment.handle)
+		m_RenderableScenes[Id]->DrawSkybox(commandQueue);
+	
 	commandQueue->BindPipeline(mode == 1 ? m_PBR_FillPipeline : m_PBR_LinePipeline);
 	commandQueue->SetViewport(m_Viewport);
 	commandQueue->SetScissor(m_Scissor);
 
-	//m_RenderableScenes[Id]->DrawScene(commandQueue,scene);
+	m_RenderableScenes[Id]->DrawScene(commandQueue,scene);
 
 	commandQueue->EndRenderPass();
 }

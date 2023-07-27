@@ -34,7 +34,7 @@ void NexusEd::ContentBrowser::Initialize()
 		specs.type = TextureType::TwoDim;
 		specs.usage = TextureUsage::ShaderSampled;
 
-		Ref<Texture> Texture = Manager::Get()->Allocate<Nexus::Texture>(id, specs);
+		Ref<Texture> Texture = Module::AssetManager::Get()->Allocate<Nexus::Texture>(id, specs);
 		m_FileID = NxImGui::Context::CreateTextureID(Texture, m_Sampler);
 	}
 	
@@ -49,7 +49,7 @@ void NexusEd::ContentBrowser::Initialize()
 		specs.type = TextureType::TwoDim;
 		specs.usage = TextureUsage::ShaderSampled;
 
-		Ref<Texture> Texture = Manager::Get()->Allocate<Nexus::Texture>(id, specs);
+		Ref<Texture> Texture = Module::AssetManager::Get()->Allocate<Nexus::Texture>(id, specs);
 		m_FolderID = NxImGui::Context::CreateTextureID(Texture, m_Sampler);
 	}
 }

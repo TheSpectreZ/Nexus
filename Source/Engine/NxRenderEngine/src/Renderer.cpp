@@ -19,7 +19,6 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 
 	if(Info.initSubmodules)
 	{
-		ResourcePool::Initialize();
 		EnvironmentBuilder::Initialize();
 	}
 }
@@ -27,8 +26,7 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 void Nexus::Module::Renderer::Shutdown()
 {	
 	EnvironmentBuilder::Shutdown();
-	ResourcePool::Shutdown();
-
+	
 	s_Instance->m_CommandQueue->Shutdown();
 	s_Instance->m_CommandQueue.reset();
 

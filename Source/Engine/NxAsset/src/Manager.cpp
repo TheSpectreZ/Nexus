@@ -1,17 +1,19 @@
 #include "NxAsset/Manager.h"
 #include "NxAsset/Asset.h"
 
-Nexus::Manager* Nexus::Manager::s_Instance = nullptr;
+Nexus::Module::AssetManager* Nexus::Module::AssetManager::s_Instance = nullptr;
 
-void Nexus::Manager::Initialize()
+void Nexus::Module::AssetManager::Initialize()
 {
-	s_Instance = new Manager;
+	s_Instance = new AssetManager;
+	s_Instance->m_RenderEnginePool = CreateRef<ResourcePool>();
 
 	// Mesh
 	{
 		Meshing::Mesh mesh;
 		auto [res, Id] = Importer::LoadMesh("Resources/Meshes/Cube.NxMesh", mesh, nullptr);
-		s_Instance->Allocate<RenderableMesh>(DEFAULT_RESOURCE, mesh);
+
+		s_Instance->m_RenderEnginePool->AllocateAsset<RenderableMesh>(DEFAULT_MESH_RESOURCE, mesh);
 	}
 
 	// Material
@@ -21,11 +23,11 @@ void Nexus::Manager::Initialize()
 		params._factors.roughness = 0.5f;
 		params._factors.metalness = 0.5f;
 
-		s_Instance->Allocate<RenderableMaterial>(DEFAULT_RESOURCE, params);
+		s_Instance->m_RenderEnginePool->AllocateAsset<RenderableMaterial>(DEFAULT_MATERIAL_RESOURCE, params);
 	}
 
+	// Texture
 	{
-		
 		Meshing::Image defaultImage;
 		auto [res1, id] = Importer::Loadimage("Resources/Textures/DefaultWhite.NxTex", defaultImage);
 
@@ -36,22 +38,11 @@ void Nexus::Manager::Initialize()
 		specs.type = TextureType::TwoDim;
 		specs.usage = TextureUsage::ShaderSampled;
 
-		s_Instance->Allocate<Texture>(DEFAULT_RESOURCE, specs);
+		s_Instance->m_RenderEnginePool->AllocateAsset<Texture>(DEFAULT_TEXTURE_RESOURCE, specs);
 	}
 }
 
-void Nexus::Manager::Shutdown()
+void Nexus::Module::AssetManager::Shutdown()
 {
 	delete s_Instance;
 }
-
-bool Nexus::Manager::Has(UUID Id)
-{
-	return m_AssetPool.contains(Id);
-}
-
-void Nexus::Manager::Free(UUID Id)
-{
-	m_AssetPool.erase(Id);
-}
-

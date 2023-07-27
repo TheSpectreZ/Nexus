@@ -14,6 +14,7 @@
 #include "NxApplication/FileDialog.h"
 // Modules
 #include "NxCore/Input.h"
+#include "NxAsset/Manager.h"
 #include "NxRenderEngine/Renderer.h"
 #include "NxScriptEngine/ScriptEngine.h"
 #include "NxPhysicsEngine/PhysicsEngine.h"
@@ -106,13 +107,19 @@ void Nexus::Application::Init()
 		
 		Module::Renderer::Initialize(rCreateInfo);	
 
-		ScriptEngineSpecification sCreateInfo{};
-		sCreateInfo._MainThreadQueuePtr = &m_MainThreadQueue;
+		if (m_AppSpecs.EnableAssetManager)
+			Module::AssetManager::Initialize();
+
+		if (m_AppSpecs.EnablePhysicsEngine)
+			PhysicsEngine::Initialize();
 
 		if (m_AppSpecs.EnableScriptEngine)
-			ScriptEngine::Initialize(sCreateInfo);
+		{
+			ScriptEngineSpecification sCreateInfo{};
+			sCreateInfo._MainThreadQueuePtr = &m_MainThreadQueue;
 
-		PhysicsEngine::Initialize();
+			ScriptEngine::Initialize(sCreateInfo);
+		}
 	}
 }
 
@@ -162,10 +169,14 @@ void Nexus::Application::Shut()
 {
 	// Modules
 	{
-		PhysicsEngine::Shutdown();
-
 		if (m_AppSpecs.EnableScriptEngine)
 			ScriptEngine::Shutdown();
+
+		if (m_AppSpecs.EnablePhysicsEngine)
+			PhysicsEngine::Shutdown();
+
+		if (m_AppSpecs.EnableAssetManager)
+			Module::AssetManager::Shutdown();
 
 		Module::Renderer::Shutdown();
 		Module::Input::Shutdown();
