@@ -16,7 +16,7 @@ project "NxGraphics"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
-		IncludePath["tinygltf"],
+		IncludePath["utils"],
 		IncludePath["NxCore"],
 		IncludePath["NxGraphics"],
 	}
@@ -43,7 +43,7 @@ project "NxGraphics"
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
-		disablewarnings { "4251" }
+		disablewarnings { "4251","4275" }
 
 	filter "configurations:Debug"
 		links { "shaderc_combinedd.lib" }

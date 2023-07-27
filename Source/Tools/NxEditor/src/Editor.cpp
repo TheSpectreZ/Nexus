@@ -13,8 +13,11 @@ public:
 		m_AppSpecs.Window_Width = 1600;
 		m_AppSpecs.Window_height = 900;
 		m_AppSpecs.rApi = Nexus::RendererAPI::VULKAN;
+
 		m_AppSpecs.EnableRendererSubmodules = true;
 		m_AppSpecs.EnableScriptEngine = true;
+		m_AppSpecs.EnableAssetManager = true;
+		m_AppSpecs.EnablePhysicsEngine = true;
 
 		PushLayer(new AppLayer(commandLine));
 	}

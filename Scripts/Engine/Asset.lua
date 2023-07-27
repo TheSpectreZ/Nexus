@@ -15,22 +15,21 @@ project "NxAsset"
 
 	includedirs
 	{
-		"$(VULKAN_SDK)/Include",
-        IncludePath["stb"],
-        IncludePath["tinygltf"],
-        IncludePath["yamlcpp"],
-        IncludePath["nlohmannJson"],
+		IncludePath["utils"],
         
 		IncludePath["NxCore"],
+		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
+		IncludePath["NxRenderEngine"],
+
 		IncludePath["NxAsset"]
 	}
 
 	links
 	{
-		"yamlcpp",
         "NxCore",
-		"NxGraphics"
+        "NxScene",
+		"NxRenderEngine"
 	}
 
 	defines 

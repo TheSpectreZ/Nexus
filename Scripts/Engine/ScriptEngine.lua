@@ -15,11 +15,9 @@ project "NxScriptEngine"
 
 	includedirs
 	{
-		"$(VULKAN_SDK)/Include",
+		IncludePath["utils"],
 		IncludePath["mono"],
-		IncludePath["entt"],
-		IncludePath["filewatch"],
-
+		
 		IncludePath["NxCore"],
 		IncludePath["NxScene"],
 		IncludePath["NxScriptEngine"],

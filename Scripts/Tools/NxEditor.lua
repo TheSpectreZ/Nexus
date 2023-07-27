@@ -23,6 +23,7 @@ project "NxEditor"
 		"NxGraphics",
 		"NxVulkan",
 		"NxRenderEngine",
+		"NxPhysicsEngine",
 		"NxApplication",
 		"NxScriptEngine",
 
@@ -32,16 +33,16 @@ project "NxEditor"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
-		IncludePath["entt"],
+		IncludePath["utils"],
 		IncludePath["imgui"],
-		IncludePath["VMA"],
-
+		
 		IncludePath["NxCore"],
 		IncludePath["NxScene"],
 		IncludePath["NxAsset"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxVulkan"],
 		IncludePath["NxRenderEngine"],
+		IncludePath["NxPhysicsEngine"],
 		IncludePath["NxScriptEngine"],
 		IncludePath["NxApplication"],
 

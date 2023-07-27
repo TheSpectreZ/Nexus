@@ -16,16 +16,13 @@ project "NxRenderEngine"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
-		IncludePath["VMA"],
-		IncludePath["entt"],
-		IncludePath["stb"],
+		IncludePath["utils"],
 
 		IncludePath["NxCore"],
 		IncludePath["NxVulkan"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxScene"],
-		IncludePath["NxAsset"],
-
+		
 		IncludePath["NxRenderEngine"],
 	}
 
@@ -35,7 +32,6 @@ project "NxRenderEngine"
 		"NxGraphics",
 		"NxVulkan",
 		"NxScene",
-		"NxAsset"
 	}
 
 	defines 

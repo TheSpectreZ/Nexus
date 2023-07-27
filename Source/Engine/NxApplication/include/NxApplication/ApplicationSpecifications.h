@@ -3,12 +3,6 @@
 
 namespace Nexus
 {
-	enum PhysicsAPI
-	{
-		PhysicsAPI_None,
-		PhysicsAPI_Jolt
-	};
-
 	struct ApplicationSpecifications
 	{
 		int Window_Width;
@@ -17,10 +11,12 @@ namespace Nexus
 		
 		bool Vsync = true;
 		bool MultiSampling = false;
+
+		bool EnablePhysicsEngine = false;
+		bool EnableAssetManager = false;
 		bool EnableScriptEngine = false;
 		bool EnableRendererSubmodules = false;
 
 		RendererAPI rApi;
-		PhysicsAPI pApi;
 	};
 }

@@ -4,7 +4,7 @@
 #include "NxCore/Logger.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+#include "stb/stb_image.h"
 
 Nexus::EnvironmentBuilder* Nexus::EnvironmentBuilder::s_Instance = nullptr;
 

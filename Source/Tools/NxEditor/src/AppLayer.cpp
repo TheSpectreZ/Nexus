@@ -5,9 +5,11 @@
 #include "NxScene/Entity.h"
 #include "NxCore/ProjectSerializer.h"
 #include "NxCore/Input.h"
+#include "NxCore/Logger.h"
 #include "NxApplication/FileDialog.h"
 #include "NxApplication/Application.h"
 #include "NxScriptEngine/ScriptEngine.h"	
+#include "NxPhysicsEngine/PhysicsEngine.h"
 #include "NxImGui/Context.h"
 #include "imgui.h"
 
@@ -89,7 +91,10 @@ void AppLayer::OnUpdate(float dt)
 	m_EditorCameraController.Update(dt);
 
 	if (m_IsScenePlaying && !m_IsScenePaused)
+	{
 		ScriptEngine::OnSceneUpdate(dt);
+		PhysicsEngine::OnSceneUpdate(dt);
+	}
 }
 
 void AppLayer::OnRender()
@@ -195,8 +200,9 @@ void AppLayer::RenderTopMenuBarPanel()
 					m_RuntimeScene = m_EditorScene->Duplicate();
 
 					ScriptEngine::OnSceneStart(m_RuntimeScene);
+					PhysicsEngine::OnSceneStart(m_RuntimeScene);
 					m_IsScenePlaying = true;
-
+					NEXUS_LOG("Editor", "Started Editor Scene");
 				}
 			}
 
@@ -206,13 +212,16 @@ void AppLayer::RenderTopMenuBarPanel()
 				{
 					m_RuntimeScene.reset();
 					ScriptEngine::OnSceneStop();
+					PhysicsEngine::OnSceneStop();
 					m_IsScenePlaying = false;
+					NEXUS_LOG("Editor", "Stopped Editor Scene");
 				}
 			}
 
 			if (ImGui::MenuItem("Pause/Resume"))
 			{
 				m_IsScenePaused = !m_IsScenePaused;
+				NEXUS_LOG("Editor", "Paused Editor Scene");
 			}
 
 			if (ImGui::MenuItem("Reload Scripts"))

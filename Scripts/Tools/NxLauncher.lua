@@ -26,11 +26,10 @@ project "NxLauncher"
 
 	includedirs
 	{
-		"$(VULKAN_SDK)/Include",
 		IncludePath["imgui"],
+		IncludePath["utils"],
 	
 		IncludePath["NxCore"],
-		
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
 		IncludePath["NxApplication"],

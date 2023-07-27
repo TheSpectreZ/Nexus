@@ -16,15 +16,15 @@ project "NxImGui"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
+		IncludePath["utils"],
 		IncludePath["imgui"],
-		IncludePath["VMA"],
-
-		IncludePath["NxImGui"],
 
 		IncludePath["NxCore"],
 		IncludePath["NxVulkan"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
+		
+		IncludePath["NxImGui"],
 	}
 
 	links

@@ -116,18 +116,16 @@ namespace Nexus
 			CapsuleCollider() = default;
 			CapsuleCollider(const CapsuleCollider&) = default;
 
+			float Radius = 0.5f;
 			float HalfHeight = 0.5f;
-			float TopRadius = 0.5f;
-			float BottomRadius = 0.5f;
 		};
 
-		struct NEXUS_SCENE_API CylinderCollider
+		struct NEXUS_SCENE_API PlaneCollider
 		{
-			CylinderCollider() = default;
-			CylinderCollider(const CylinderCollider&) = default;
-
-			float HalfHeight = 0.5f;
-			float Radius = 0.5f;
+			PlaneCollider() = default;
+			PlaneCollider(const PlaneCollider&) = default;
+			
+			float nul;
 		};
 
 		struct NEXUS_SCENE_API Environment

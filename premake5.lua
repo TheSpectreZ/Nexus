@@ -12,9 +12,8 @@ workspace "Nexus-Engine"
 
     group "Dependencies"
         include "Scripts/Dependencies/imgui.lua"
-        include "Scripts/Dependencies/yamlcpp.lua"
-        include "Scripts/Dependencies/jolt.lua"
         include "Scripts/Dependencies/glfw.lua"
+        include "Scripts/Dependencies/utils.lua"
     group ""
 
     group "Nexus"
@@ -23,14 +22,15 @@ workspace "Nexus-Engine"
         include "Scripts/Engine/Scene.lua"
         include "Scripts/Engine/Graphics.lua"
         include "Scripts/Engine/RenderEngine.lua"
+        include "Scripts/Engine/PhysicsEngine.lua"
         include "Scripts/Engine/ScriptEngine.lua"
         include "Scripts/Engine/Asset.lua"
     group ""
-    
+        
     group "Script-Core"
         include "Scripts/NexusScriptCore.lua"
     group ""
-
+        
     group "Platform"
         include "Scripts/Engine/Vulkan.lua"
     group ""

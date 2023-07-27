@@ -1,10 +1,13 @@
 #include "ContentBrowser.h"
 #include "NxCore/Logger.h"
-#include "NxApplication/FileDialog.h"
-#include "NxAsset/Asset.h"
-#include "NxRenderEngine/EnvironmentBuilder.h"
-#include "NxGraphics/Meshing.h"
 
+#include "NxAsset/Asset.h"
+#include "NxAsset/Manager.h"
+
+#include "NxGraphics/Meshing.h"
+#include "NxRenderEngine/EnvironmentBuilder.h"
+
+#include "NxApplication/FileDialog.h"
 #include "NxImGui/Context.h"
 
 using namespace Nexus;
@@ -21,29 +24,8 @@ void NexusEd::ContentBrowser::Initialize()
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
 	
 	{
-		Meshing::Mesh mesh;
-		auto [res, Id] = Importer::LoadMesh("Resources/Meshes/Cube.NxMesh", mesh,nullptr);
-		ResourcePool::Get()->AllocateRenderableMesh(mesh, UUID((uint64_t)0));
-	}
-
-	{
-		//Importer::ImportImage("res/Textures/DefaultWhite.png", "Resources/Textures", "DefaultWhite");
-		Meshing::Image defaultImage;
-		auto [res, id] = Importer::LoadImage("Resources/Textures/DefaultWhite.NxTex", defaultImage);
-
-		TextureSpecification specs{};
-		specs.extent = { defaultImage.width,defaultImage.height };
-		specs.pixels = defaultImage.pixels.data();
-		specs.format = TextureFormat::RGBA8_SRGB;
-		specs.type = TextureType::TwoDim;
-		specs.usage = TextureUsage::ShaderSampled;
-
-		ResourcePool::Get()->AllocateTexture(specs, UUID((uint64_t)0));
-	}
-
-	{
 		Meshing::Image fileImage;
-		auto[res,id] = Importer::LoadImage("Resources/Icons/File.NxTex", fileImage);
+		auto[res,id] = Importer::Loadimage("Resources/Icons/File.NxTex", fileImage);
 
 		TextureSpecification specs{};
 		specs.extent = { fileImage.width,fileImage.height };
@@ -52,14 +34,13 @@ void NexusEd::ContentBrowser::Initialize()
 		specs.type = TextureType::TwoDim;
 		specs.usage = TextureUsage::ShaderSampled;
 
-
-		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(specs, id);
+		Ref<Texture> Texture = Module::AssetManager::Get()->Allocate<Nexus::Texture>(id, specs);
 		m_FileID = NxImGui::Context::CreateTextureID(Texture, m_Sampler);
 	}
 	
 	{		
 		Meshing::Image folderImage;
-		auto [res, id] = Importer::LoadImage("Resources/Icons/Folder.NxTex", folderImage);
+		auto [res, id] = Importer::Loadimage("Resources/Icons/Folder.NxTex", folderImage);
 		
 		TextureSpecification specs{};
 		specs.extent = { folderImage.width,folderImage.height };
@@ -68,8 +49,7 @@ void NexusEd::ContentBrowser::Initialize()
 		specs.type = TextureType::TwoDim;
 		specs.usage = TextureUsage::ShaderSampled;
 
-
-		Ref<Texture> Texture = ResourcePool::Get()->AllocateTexture(specs, id);
+		Ref<Texture> Texture = Module::AssetManager::Get()->Allocate<Nexus::Texture>(id, specs);
 		m_FolderID = NxImGui::Context::CreateTextureID(Texture, m_Sampler);
 	}
 }

@@ -16,7 +16,7 @@ project "NxVulkan"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
-		IncludePath["VMA"],
+		IncludePath["utils"],
 		IncludePath["NxCore"],
 		IncludePath["NxVulkan"],
 		IncludePath["NxGraphics"],

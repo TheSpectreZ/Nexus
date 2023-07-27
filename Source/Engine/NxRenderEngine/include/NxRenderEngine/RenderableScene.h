@@ -35,6 +35,9 @@ namespace Nexus
 		ResourceHeapHandle PerSceneHeap;
 		UniformBufferHandle PerSceneUniform0;
 		UniformBufferHandle PerSceneUniform1;
+		
+		ResourceHeapHandle DefaultMaterialHeap;
+		UniformBufferHandle DefaultMaterialUniform;
 
 		std::unordered_map<UUID, ResourceHeapHandle> PerEntityHeap;
 		std::unordered_map<UUID, UniformBufferHandle> PerEntityUniform;

@@ -15,14 +15,15 @@ project "NxApplication"
 
 	includedirs
 	{
-		"$(VULKAN_SDK)/Include",
-		IncludePath["entt"],
+		IncludePath["utils"],
 		IncludePath["glfw"],
+		
 		IncludePath["NxCore"],
 		IncludePath["NxAsset"],
 		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
+		IncludePath["NxPhysicsEngine"],
 		IncludePath["NxScriptEngine"],
 		IncludePath["NxApplication"]
 	}
@@ -34,6 +35,7 @@ project "NxApplication"
 		"NxScene",
 		"NxAsset",
 		"NxRenderEngine",
+		"NxPhysicsEngine",
 		"NxScriptEngine",
 	}
 
@@ -42,7 +44,7 @@ project "NxApplication"
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
-		disablewarnings { "4251" }
+		disablewarnings { "4251","4275" }
 
 	filter "configurations:Debug"
 		optimize "Off"

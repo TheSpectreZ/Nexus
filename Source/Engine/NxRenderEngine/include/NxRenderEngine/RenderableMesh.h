@@ -1,5 +1,6 @@
 #pragma once
 #include "NxCore/UUID.h"
+#include "NxCore/Object.h"
 #include "NxGraphics/Buffer.h"
 #include "NxGraphics/Meshing.h"
 
@@ -11,7 +12,7 @@
 
 namespace Nexus
 {
-	class NEXUS_RENDERER_API RenderableMesh
+	class NEXUS_RENDERER_API RenderableMesh : public BaseAsset
 	{
 	public:
 		RenderableMesh(const Meshing::Mesh& mesh);
@@ -21,6 +22,9 @@ namespace Nexus
 		Ref<Buffer> GetIndexBuffer() { return m_IB; }
 
 		std::vector<Meshing::Submesh>& GetSubmeshes() { return m_Submeshes; }
+
+		std::string GetAssetTypeString() override { return "MeshAsset"; }
+		uint8_t GetAssetTypeIndex() override { return 1; }
 	private:
 		Ref<Buffer> m_VB;
 		Ref<Buffer> m_IB;

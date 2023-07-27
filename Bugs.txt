@@ -1,6 +1,0 @@
-This File Contains list of all Problems/Bugs to be Fixed in Nexus.
-==================================================================
-
-- Entities get Rotated About an Axis while clicking Scene Play
-- Content Browser has some Issues with File Navigation (Check it Out)
-- Current Scene Gets deleted even if new scene loading fails
