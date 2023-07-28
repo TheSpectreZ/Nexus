@@ -42,6 +42,7 @@ namespace Nexus
 		virtual void BindVertexBuffer(Ref<Buffer> buffer) = 0;
 		virtual void BindIndexBuffer(Ref<Buffer> buffer) = 0;
 
+		virtual void DrawVertices(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) = 0;
 		virtual void DrawIndices(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance) = 0;
 		virtual void Dispatch(uint32_t xWorker, uint32_t yWorker, uint32_t zWorker) = 0;
 	};

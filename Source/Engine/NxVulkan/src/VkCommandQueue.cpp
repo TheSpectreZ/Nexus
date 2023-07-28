@@ -557,6 +557,11 @@ void Nexus::VulkanCommandQueue::BindIndexBuffer(Ref<Buffer> buffer)
 	vkCmdBindIndexBuffer(m_RenderCommandBuffer[m_FrameIndex], buf->Get(), 0, VK_INDEX_TYPE_UINT32);
 }
 
+void Nexus::VulkanCommandQueue::DrawVertices(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance)
+{
+	vkCmdDraw(m_RenderCommandBuffer[m_FrameIndex], vertexCount, instanceCount, firstVertex, firstInstance);
+}
+
 void Nexus::VulkanCommandQueue::DrawIndices(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance)
 {
 	vkCmdDrawIndexed(m_RenderCommandBuffer[m_FrameIndex], IndexCount, InstanceCount, FirstIndex, VertexOffset, FirstInstance);

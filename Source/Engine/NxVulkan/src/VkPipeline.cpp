@@ -67,6 +67,8 @@ namespace Nexus
         {
         case Nexus::TopologyType::TriangleList:
             return VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        case Nexus::TopologyType::LineList:
+            return VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
         default:
             return VK_PRIMITIVE_TOPOLOGY_MAX_ENUM;
         }
