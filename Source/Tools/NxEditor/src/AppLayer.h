@@ -33,7 +33,7 @@ private:
 	Nexus::Camera m_EditorCamera;
 	Nexus::CameraController m_EditorCameraController;
 	
-	bool m_IsScenePlaying = false, m_IsScenePaused;
+	bool m_IsScenePlaying = false, m_IsScenePaused = false, m_DrawColliders = false;;
 	Nexus::Ref<Nexus::Scene> m_EditorScene, m_RuntimeScene;
 
 	void LoadProject(const std::string& path);

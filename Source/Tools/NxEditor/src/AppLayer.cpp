@@ -1,6 +1,7 @@
 #include "AppLayer.h"
 #include "NxGraphics/TypeImpls.h"
 #include "NxRenderEngine/Renderer.h"
+#include "NxRenderEngine/BatchRenderer.h"	
 #include "NxRenderEngine/ResourcePool.h"
 #include "NxScene/Entity.h"
 #include "NxCore/ProjectSerializer.h"
@@ -94,6 +95,9 @@ void AppLayer::OnUpdate(float dt)
 	{
 		ScriptEngine::OnSceneUpdate(dt);
 		PhysicsEngine::OnSceneUpdate(dt);
+		
+		if (m_DrawColliders)
+			PhysicsEngine::DrawColliders();
 	}
 }
 
@@ -149,6 +153,8 @@ void AppLayer::RenderSettingPanel()
 
 	if (ImGui::DragFloat("Camera Speed", &speed, 5.f, 100.f))
 		m_EditorCameraController.SetSpeed(speed);
+
+	ImGui::Checkbox("Visualize Physics Collider", &m_DrawColliders);
 
 	ImGui::End();
 }

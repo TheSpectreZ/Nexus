@@ -181,7 +181,12 @@ static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component,bo
 {
 	Meshing::Mesh mesh;
 	std::unordered_map<uint32_t, std::string> paths;
-	auto [res, id] = Importer::LoadMesh(filepath, mesh, (loadMat) ? &paths : nullptr);
+
+	auto p = &paths;
+	if (!loadMat)
+		p = nullptr;
+
+	auto [res, id] = Importer::LoadMesh(filepath, mesh, p);
 
 	if (res)
 	{
@@ -381,8 +386,10 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 			if (ImGui::BeginPopup("Set Mesh"))
 			{
 				if (ImGui::MenuItem("Cube"))
-					LoadMesh("Resources/Meshes/Cube.NxMesh", component, false);
-				
+				{
+					component.handle = DEFAULT_MESH_RESOURCE;
+				}
+
 				if (ImGui::MenuItem("Sphere"))
 					LoadMesh("Resources/Meshes/Sphere.NxMesh", component, false);
 				

@@ -10,6 +10,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include "NxRenderEngine/BatchRenderer.h"
+
 #define PVD_HOST "127.0.0.1"
 
 template<typename A,typename B> 
@@ -85,7 +87,9 @@ void Nexus::PhysicsEngine::OnSceneStart(Ref<Scene> scene)
 	desc.filterShader = physx::PxDefaultSimulationFilterShader;
 
 	s_Data->m_scene = s_Data->m_physics->createScene(desc);
-	s_Data->m_currentScenePtr = scene.get();
+	s_Data->m_scene->setVisualizationParameter(physx::PxVisualizationParameter::eSCALE, 1.f);
+	s_Data->m_scene->setVisualizationParameter(physx::PxVisualizationParameter::eCOLLISION_SHAPES, 2.f);
+//s_Data->m_currentScenePtr = scene.get();
 
 	Entity entity;
 	auto view = scene->GetAllEntitiesWith<Component::RigidBody>();
@@ -132,6 +136,32 @@ void Nexus::PhysicsEngine::OnSceneStop()
 	s_Data->m_scene->release();
 	s_Data->m_currentScenePtr = nullptr;
 	s_Data->m_actors.clear();
+}
+
+void Nexus::PhysicsEngine::DrawColliders()
+{
+	auto& rb = s_Data->m_scene->getRenderBuffer();
+
+	for (uint32_t i = 0; i < rb.getNbLines(); i++)
+	{
+		auto& line = rb.getLines()[i];
+
+		BatchRenderer::Get()->DrawLine(
+			ConvertVec3<glm::vec3>(line.pos0),
+			ConvertVec3<glm::vec3>(line.pos1)
+		);
+	}
+
+	//for (uint32_t i = 0; i < rb.getNbTriangles(); i++)
+	//{
+	//	auto& tri = rb.getTriangles()[i];
+	//	
+	//	BatchRenderer::Get()->DrawTriangle(
+	//		ConvertVec3<glm::vec3>(tri.pos0),
+	//		ConvertVec3<glm::vec3>(tri.pos1),
+	//		ConvertVec3<glm::vec3>(tri.pos2)
+	//	);
+	//}
 }
 
 void Nexus::PhysicsEngine::CreateRigidbody(Entity e)
