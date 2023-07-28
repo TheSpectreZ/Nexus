@@ -163,10 +163,10 @@ void Nexus::RenderableScene::Initialize()
 		auto buff = ResourcePool::Get()->AllocateUniformBuffer(m_pbrShader, DefaultMaterialUniform);
 		m_pbrShader->BindUniformWithResourceHeap(DefaultMaterialHeap, DefaultMaterialUniform.binding, buff);
 
-		Ref<RenderableMaterial> material = ResourcePool::Get()->GetAsset<RenderableMaterial>(DEFAULT_MATERIAL_RESOURCE);
-		auto factors = material->GetParams()._factors;
-		buff->Update(&factors);
-	}
+			Ref<RenderableMaterial> material = ResourcePool::Get()->GetAsset<RenderableMaterial>(DEFAULT_MATERIAL_RESOURCE);
+			auto factors = material->GetParams()._factors;
+			buff->Update(&factors);
+		}
 
 	// Skybox
 	{
@@ -181,6 +181,11 @@ void Nexus::RenderableScene::Initialize()
 
 void Nexus::RenderableScene::Destroy()
 {
+	m_skyBoxShader->DeallocateShaderResourceHeap(SkyBoxHeap);
+
+	m_pbrShader->DeallocateShaderResourceHeap(DefaultMaterialHeap);
+	ResourcePool::Get()->DeallocateUniformBuffer(DefaultMaterialUniform.hashId);
+
 	m_pbrShader->DeallocateShaderResourceHeap(PerSceneHeap);
 	ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform0.hashId);
 	ResourcePool::Get()->DeallocateUniformBuffer(PerSceneUniform1.hashId);
