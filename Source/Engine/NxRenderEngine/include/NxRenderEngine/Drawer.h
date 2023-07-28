@@ -25,7 +25,7 @@ namespace Nexus
 	{
 	public:
 		ForwardDrawer(bool renderToTexture = false);
-		~ForwardDrawer() override = default;
+		~ForwardDrawer() override;
 
 		void Draw(Ref<Scene> scene);
 		void OnWindowResize(Extent extent) override;
@@ -41,7 +41,7 @@ namespace Nexus
 		Ref<Renderpass> m_pass;
 		Ref<Framebuffer> m_fb;
 
-		Ref<Shader> m_PbrShader,m_SkyboxShader;
+		Ref<Shader> m_PbrShader, m_SkyboxShader;
 		Ref<Pipeline> m_PBR_FillPipeline, m_PBR_LinePipeline, m_SkyboxPipeline;
 
 		std::unordered_map<UUID, Ref<RenderableScene>> m_RenderableScenes;
