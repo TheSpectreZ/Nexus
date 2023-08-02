@@ -1,6 +1,7 @@
 #include "NxCore/Logger.h"
 #include "NxCore/Assertion.h"
 #include "NxCore/Input.h"
+#include "NxRenderEngine/Meshing.h"
 #include "NxRenderEngine/BatchRenderer.h"
 #include "NxRenderEngine/Drawer.h"
 #include "NxRenderEngine/Renderer.h"
@@ -104,7 +105,7 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 	{
 		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/pbr.glsl");
 		m_PbrShader = GraphicsInterface::CreateShader(shaderSpecs);
-
+		
 		shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/skybox.glsl");
 		m_SkyboxShader = GraphicsInterface::CreateShader(shaderSpecs);
 

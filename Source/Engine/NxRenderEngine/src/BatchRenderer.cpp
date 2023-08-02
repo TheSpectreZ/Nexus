@@ -1,6 +1,7 @@
 #include "NxRenderEngine/BatchRenderer.h"
 #include "NxCore/Logger.h"
 #include "NxCore/UUID.h"
+
 #include "NxRenderEngine/ResourcePool.h"
 
 Nexus::BatchRenderer* Nexus::BatchRenderer::s_Instance = nullptr;
@@ -127,7 +128,7 @@ void Nexus::BatchRenderer::InitImpl(Ref<Renderpass> renderpass)
 		s_Instance->bspecs.type = BufferType::Vertex;
 		s_Instance->bspecs.data = nullptr;
 		s_Instance->bspecs.cpuMemory = true;
-		s_Instance->bspecs.size = (uint32_t) sizeof(glm::vec3) * s_Instance->m_VertexData.size(); // Triangle Count x 3 Vertices
+		s_Instance->bspecs.size = (uint32_t) (sizeof(glm::vec3) * s_Instance->m_VertexData.size()); // Triangle Count x 3 Vertices
 
 		s_Instance->m_VertexBuffer.emplace_back(GraphicsInterface::CreateBuffer(s_Instance->bspecs));
 	}

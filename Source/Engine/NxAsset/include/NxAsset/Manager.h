@@ -1,10 +1,9 @@
 #pragma once
 #include "NxCore/Base.h"
 #include "NxCore/UUID.h"
-#include "NxCore/Object.h"
-
-#include "NxRenderEngine/ResourcePool.h"
-#include <unordered_map>
+#include "NxCore/Asset.h"
+#include "NxCore/Registry.h"
+#include "NxRenderEngine/RenderableAsset.h"
 
 #ifdef NEXUS_ASSET_SHARED_BUILD
 #define NEXUS_ASSET_API __declspec(dllexport)
@@ -12,18 +11,10 @@
 #define NEXUS_ASSET_API __declspec(dllimport)
 #endif
 
-namespace Nexus::Module
+namespace Nexus
 {
 	class NEXUS_ASSET_API AssetManager
 	{
-		enum : uint8_t
-		{
-			assetType_None = 0,
-			assetType_Mesh = 1,
-			assetType_Material = 2,
-			assetType_Texture = 3,
-		};
-
 		static AssetManager* s_Instance;
 	public:
 		static AssetManager* Get() { return s_Instance; }
@@ -31,23 +22,26 @@ namespace Nexus::Module
 		static void Shutdown();
 
 		template<typename T,typename... Args>
-		inline Ref<T> Allocate(UUID Id,Args&&... args)
+		inline Ref<T> Load(UUID Id,Args&&... args)
 		{
-			return m_RenderEnginePool->AllocateAsset<T>(Id, std::forward<Args>(args)...);
+			if (!T::ContainsInPool(Id))
+				T::AddToPool(Id, std::forward<Args>(args)...);
+				
+			return T::GetFromPool(Id);
 		}
 
 		template<typename T>
 		inline Ref<T> Get(UUID Id)
 		{
-			return m_RenderEnginePool->AllocateAsset<T>(Id);
+			return T::GetFromPool(Id);
 		}
 
-		inline void Free(UUID Id)
+		template<typename T>
+		inline void Delete(UUID Id)
 		{
-			m_RenderEnginePool->DeallocateAsset(Id);
+			T::EraseFromPool(Id);
 		}
-
 	private:
-		Ref<ResourcePool> m_RenderEnginePool;
+		AssetRegistry m_registry;
 	};
 }

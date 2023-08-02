@@ -108,8 +108,8 @@ void Nexus::Application::Init()
 		Module::Renderer::Initialize(rCreateInfo);	
 
 		if (m_AppSpecs.EnableAssetManager)
-			Module::AssetManager::Initialize();
-
+			AssetManager::Initialize();
+		
 		if (m_AppSpecs.EnablePhysicsEngine)
 			PhysicsEngine::Initialize();
 
@@ -167,7 +167,7 @@ void Nexus::Application::Run()
 
 void Nexus::Application::Shut()
 {
-	// Modules
+	// Modules [ To-Do ] Clean up this If-Statements
 	{
 		if (m_AppSpecs.EnableScriptEngine)
 			ScriptEngine::Shutdown();
@@ -176,8 +176,8 @@ void Nexus::Application::Shut()
 			PhysicsEngine::Shutdown();
 
 		if (m_AppSpecs.EnableAssetManager)
-			Module::AssetManager::Shutdown();
-
+			AssetManager::Shutdown();
+		
 		Module::Renderer::Shutdown();
 		Module::Input::Shutdown();
 	}

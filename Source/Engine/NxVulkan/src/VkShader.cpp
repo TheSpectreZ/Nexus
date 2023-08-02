@@ -131,8 +131,6 @@ Nexus::VulkanShader::VulkanShader(const ShaderSpecification& specs)
 		}
 	}
 
-	NEXUS_LOG("Vulkan","Shader Created : %s", specs.filepath.c_str());
-
 	// Heap Layouts and Pool
 	{
 		NEXUS_LOG("Vulkan", "=================");
