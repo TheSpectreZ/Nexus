@@ -1,6 +1,8 @@
 #include "NxCore/Logger.h"
 #include "NxCore/Assertion.h"
 #include "NxCore/Input.h"
+#include "NxRenderEngine/Meshing.h"
+#include "NxRenderEngine/BatchRenderer.h"
 #include "NxRenderEngine/Drawer.h"
 #include "NxRenderEngine/Renderer.h"
 
@@ -103,7 +105,7 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 	{
 		ShaderSpecification shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/pbr.glsl");
 		m_PbrShader = GraphicsInterface::CreateShader(shaderSpecs);
-
+		
 		shaderSpecs = ShaderCompiler::CompileFromFile("Resources/Shaders/skybox.glsl");
 		m_SkyboxShader = GraphicsInterface::CreateShader(shaderSpecs);
 
@@ -184,6 +186,13 @@ Nexus::ForwardDrawer::ForwardDrawer(bool RenderToTexture)
 		m_Scissor.Extent = extent;
 		m_Scissor.Offset = { 0,0 };
 	}
+
+	BatchRenderer::Initialize(m_pass);
+}
+
+Nexus::ForwardDrawer::~ForwardDrawer()
+{
+	BatchRenderer::Shutdown();
 }
 
 // temporary
@@ -212,10 +221,9 @@ void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 		m_RenderableScenes[Id]->DrawSkybox(commandQueue);
 	
 	commandQueue->BindPipeline(mode == 1 ? m_PBR_FillPipeline : m_PBR_LinePipeline);
-	commandQueue->SetViewport(m_Viewport);
-	commandQueue->SetScissor(m_Scissor);
-
 	m_RenderableScenes[Id]->DrawScene(commandQueue,scene);
+
+	BatchRenderer::Get()->Flush(commandQueue, scene->GetCamera());
 
 	commandQueue->EndRenderPass();
 }

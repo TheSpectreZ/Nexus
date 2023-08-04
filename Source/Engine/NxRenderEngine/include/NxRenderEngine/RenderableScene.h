@@ -2,7 +2,6 @@
 #include "NxGraphics/CommandQueue.h"
 #include "NxScene/Scene.h"
 #include "NxScene/Entity.h"
-#include "RenderableMesh.h"
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
@@ -25,7 +24,7 @@ namespace Nexus
 		void Initialize();
 		void Destroy();
 
-		void CreateEntityResource(UUID Id);
+		void CreateEntityResource(UUID Id, uint64_t count);
 		void CreateMaterialResource(UUID Id);
 		
 		Ref<Shader> m_pbrShader, m_skyBoxShader;

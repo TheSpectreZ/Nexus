@@ -20,6 +20,8 @@ namespace Nexus
 		static void OnSceneStart(Ref<Scene> scene);
 		static void OnSceneUpdate(float dt);
 		static void OnSceneStop();
+
+		static void DrawColliders();
 	private:
 		void CreateRigidbody(Entity e);
 	};

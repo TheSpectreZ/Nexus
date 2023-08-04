@@ -61,11 +61,12 @@ namespace Nexus
 
 		struct NEXUS_SCENE_API Mesh
 		{
-			Mesh() :handle(true) {}
+			Mesh() :handle(true),skeleton(true) {}
 			Mesh(const Mesh&) = default;
 			Mesh(UUID UUID);
 
 			UUID handle;
+			UUID skeleton;
 			std::unordered_map<uint32_t, UUID> materialTable;
 		};
 

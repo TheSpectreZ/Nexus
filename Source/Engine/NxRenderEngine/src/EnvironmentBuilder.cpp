@@ -68,7 +68,7 @@ Nexus::Ref<Nexus::Environment> Nexus::EnvironmentBuilder::Build(const std::strin
 		return nullptr;
 	}
 
-	Ref<Environment> env = ResourcePool::Get()->AllocateEnvironment(Id);
+	Ref<Environment> env = ResourcePool::Get()->GetEnvironment(Id);
 
 	Ref<Texture> equEnvMap;
 	{

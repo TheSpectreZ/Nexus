@@ -24,7 +24,7 @@ namespace Nexus
 
 	enum class TopologyType
 	{
-		TriangleList
+		TriangleList, LineList
 	};
 
 	struct RasterizerInfo

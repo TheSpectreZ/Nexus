@@ -57,6 +57,8 @@ namespace Nexus
 
 		void BindVertexBuffer(Ref<Buffer> buffer) override;
 		void BindIndexBuffer(Ref<Buffer> buffer) override;
+
+		void DrawVertices(uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) override;
 		void DrawIndices(uint32_t IndexCount, uint32_t InstanceCount, uint32_t FirstIndex, uint32_t VertexOffset, uint32_t FirstInstance) override;
 
 		void Dispatch(uint32_t xWorkers, uint32_t yWorkers, uint32_t zWorkers);

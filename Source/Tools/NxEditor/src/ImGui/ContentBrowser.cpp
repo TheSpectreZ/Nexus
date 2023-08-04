@@ -1,11 +1,11 @@
 #include "ContentBrowser.h"
 #include "NxCore/Logger.h"
 
-#include "NxAsset/Asset.h"
 #include "NxAsset/Manager.h"
+#include "NxAsset/Importer.h"
 
-#include "NxGraphics/Meshing.h"
-#include "NxRenderEngine/EnvironmentBuilder.h"
+#include "NxRenderEngine/Meshing.h"
+#include "NxRenderEngine/ResourcePool.h"
 
 #include "NxApplication/FileDialog.h"
 #include "NxImGui/Context.h"
@@ -15,42 +15,34 @@ using namespace Nexus;
 void NexusEd::ContentBrowser::Initialize()
 {
 	Nexus::SamplerSpecification samplerSpecs{};
-	samplerSpecs.sampler.Far = Nexus::SamplerFilter::Linear;
-	samplerSpecs.sampler.Near = Nexus::SamplerFilter::Linear;
-	samplerSpecs.sampler.U = Nexus::SamplerWrapMode::Repeat;
-	samplerSpecs.sampler.V = Nexus::SamplerWrapMode::Repeat;
-	samplerSpecs.sampler.W = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.Far = Nexus::SamplerFilter::Linear;
+	samplerSpecs.Near = Nexus::SamplerFilter::Linear;
+	samplerSpecs.U = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.V = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.W = Nexus::SamplerWrapMode::Repeat;
 
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
 	
 	{
-		Meshing::Image fileImage;
-		auto[res,id] = Importer::Loadimage("Resources/Icons/File.NxTex", fileImage);
+		RenderableTextureSpecification specs{};
+		specs.path = "Resources/Icons/File.NxTex";
+		specs.texture.Deserialize(specs.path);
 
-		TextureSpecification specs{};
-		specs.extent = { fileImage.width,fileImage.height };
-		specs.pixels = fileImage.pixels.data();
-		specs.format = TextureFormat::RGBA8_SRGB;
-		specs.type = TextureType::TwoDim;
-		specs.usage = TextureUsage::ShaderSampled;
+		auto Id = AssetRegistry::Get()->LookUp(specs.path);
 
-		Ref<Texture> Texture = Module::AssetManager::Get()->Allocate<Nexus::Texture>(id, specs);
-		m_FileID = NxImGui::Context::CreateTextureID(Texture, m_Sampler);
+		auto TextureRef = AssetManager::Get()->Load<RenderableTexture>(Id, specs);
+		m_FileID = NxImGui::Context::CreateTextureID(TextureRef->GetTexture	(), m_Sampler);
 	}
 	
-	{		
-		Meshing::Image folderImage;
-		auto [res, id] = Importer::Loadimage("Resources/Icons/Folder.NxTex", folderImage);
-		
-		TextureSpecification specs{};
-		specs.extent = { folderImage.width,folderImage.height };
-		specs.pixels = folderImage.pixels.data();
-		specs.format = TextureFormat::RGBA8_SRGB;
-		specs.type = TextureType::TwoDim;
-		specs.usage = TextureUsage::ShaderSampled;
+	{
+		RenderableTextureSpecification specs{};
+		specs.path = "Resources/Icons/Folder.NxTex";
+		specs.texture.Deserialize(specs.path);
 
-		Ref<Texture> Texture = Module::AssetManager::Get()->Allocate<Nexus::Texture>(id, specs);
-		m_FolderID = NxImGui::Context::CreateTextureID(Texture, m_Sampler);
+		auto Id = AssetRegistry::Get()->LookUp(specs.path);
+
+		auto TextureRef = AssetManager::Get()->Load<RenderableTexture>(Id, specs);
+		m_FolderID = NxImGui::Context::CreateTextureID(TextureRef->GetTexture	(), m_Sampler);
 	}
 }
 
@@ -147,11 +139,27 @@ void NexusEd::ContentBrowser::Render()
 				FilePath = path;
 		}
 
+		static bool loadAnim = false, loadSkel = false, loadMat = false;
+		ImGui::Checkbox("Load Animation", &loadAnim);
+		ImGui::Checkbox("Load Skeleton", &loadSkel);
+		ImGui::Checkbox("Load Material", &loadMat);
+
 		if (ImGui::Button("Import", ImVec2(85.f, 25.f)))
 		{
 			if (!FilePath.empty())
 			{
-				Importer::ImportGLTF(FilePath, m_CurrentDirectory, FileName);
+				glTFImportSettings settings;
+				settings.Name = FileName;
+				settings.path = m_CurrentDirectory;
+				settings.loadAnimations = loadAnim;
+				settings.loadMaterials = loadMat;
+				settings.loadSkeleton = loadSkel;
+
+				Importer::ImportglTF(FilePath, settings);
+
+				loadAnim = false;
+				loadSkel = false;
+				loadMat = false;
 
 				FilePath.clear();
 				memset(FileName, 0, sizeof(FileName));

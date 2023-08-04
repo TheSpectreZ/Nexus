@@ -10,11 +10,11 @@
 void NexusEd::Viewport::Initialize()
 {
 	Nexus::SamplerSpecification samplerSpecs{};
-	samplerSpecs.sampler.Far = Nexus::SamplerFilter::Linear;
-	samplerSpecs.sampler.Near = Nexus::SamplerFilter::Linear;
-	samplerSpecs.sampler.U = Nexus::SamplerWrapMode::Repeat;
-	samplerSpecs.sampler.V = Nexus::SamplerWrapMode::Repeat;
-	samplerSpecs.sampler.W = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.Far = Nexus::SamplerFilter::Linear;
+	samplerSpecs.Near = Nexus::SamplerFilter::Linear;
+	samplerSpecs.U = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.V = Nexus::SamplerWrapMode::Repeat;
+	samplerSpecs.W = Nexus::SamplerWrapMode::Repeat;
 
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
 

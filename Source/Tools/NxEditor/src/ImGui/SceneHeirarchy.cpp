@@ -1,14 +1,14 @@
 #include "SceneHeirarchy.h"
 #include "NxApplication/FileDialog.h"
 #include "NxScene/Component.h"
-#include "NxAsset/Asset.h"
+
 #include "NxAsset/Manager.h"	
-#include "NxRenderEngine/RenderableMaterial.h"
-#include "NxRenderEngine/RenderableMesh.h"
+#include "NxAsset/Importer.h"
 #include "NxRenderEngine/ResourcePool.h"
+
 #include "NxImGui/Context.h"
-#include "imgui.h"
 #include "imgui_internal.h"
+
 #include "NxCore/Logger.h"
 #include "NxScriptEngine/ScriptEngine.h"
 
@@ -164,35 +164,50 @@ static void DrawComponent(const std::string& name, Nexus::Entity e, UIFuntion ui
 	}
 }
 
-static UUID LoadMaterial(const AssetFilePath& filepath)
-{
-	std::unordered_map<uint8_t, Meshing::Texture> textures;
-	Meshing::Material material;
-	auto [res, id] = Importer::LoadMaterial(filepath, material, textures);
-
-	if (!res)
-		return UUID(true);
-
-	Module::AssetManager::Get()->Allocate<RenderableMaterial>(id, material, textures);
-	return id;
-}
-
 static void LoadMesh(const AssetFilePath& filepath,Component::Mesh& component,bool loadMat = true)
 {
-	Meshing::Mesh mesh;
-	std::unordered_map<uint32_t, std::string> paths;
-	auto [res, id] = Importer::LoadMesh(filepath, mesh, (loadMat) ? &paths : nullptr);
+	if (filepath.extension().string() != ".NxMeshAsset")
+		return;
 
-	if (res)
+	Nexus::MeshAssetSpecification specs{};
+	Loader::LoadMeshAsset(filepath, &specs);
+
+	AssetRegistry* reg = AssetRegistry::Get();
 	{
-		auto Mesh = Module::AssetManager::Get()->Allocate<RenderableMesh>(id, mesh);
-		component.handle = id;
+		auto path = reg->LookUp(specs.mesh);
+		Meshing::MeshSource mSrc;
+		mSrc.Deserialize(path);
 
-		if(loadMat)
+		RenderableMeshSpecification mSpecs{};
+		mSpecs.source = mSrc;
+		mSpecs.path = path;
+
+		if (specs.skeleton)
 		{
-			for (auto& [k, v] : paths)
-				component.materialTable[k] = LoadMaterial(v);
+			path = reg->LookUp(specs.skeleton);
+			mSpecs.skeleton.Deserialize(path);
+
+			component.skeleton = specs.skeleton;
 		}
+
+		AssetManager::Get()->Load<RenderableMesh>(specs.mesh, mSpecs);
+
+		component.handle = specs.mesh;
+	}
+
+	for (auto& [k, v] : specs.materials)
+	{
+		auto path = reg->LookUp(v);
+		Meshing::Material mat;
+		mat.Deserialize(path);
+
+		RenderableMaterialSpecification mSpecs{};
+		mSpecs.material = mat;
+		mSpecs.path = path;
+
+		AssetManager::Get()->Load<RenderableMaterial>(v, mSpecs);
+
+		component.materialTable[k] = v;
 	}
 }
 
@@ -378,25 +393,25 @@ void NexusEd::SceneHeirarchy::DrawComponents(entt::entity e)
 				ImGui::EndDragDropTarget();
 			}
 
-			if (ImGui::BeginPopup("Set Mesh"))
-			{
-				if (ImGui::MenuItem("Cube"))
-					LoadMesh("Resources/Meshes/Cube.NxMesh", component, false);
-				
-				if (ImGui::MenuItem("Sphere"))
-					LoadMesh("Resources/Meshes/Sphere.NxMesh", component, false);
-				
-				if (ImGui::MenuItem("IcoSphere"))
-					LoadMesh("Resources/Meshes/Icophere.NxMesh", component, false);
-				
-				if (ImGui::MenuItem("Torus"))
-					LoadMesh("Resources/Meshes/Torus.NxMesh", component, false);
-				
-				if (ImGui::MenuItem("Cylinder"))
-					LoadMesh("Resources/Meshes/Cylinder.NxMesh", component, false);
-
-				ImGui::EndPopup();
-			}
+			//if (ImGui::BeginPopup("Set Mesh"))
+			//{
+			//	if (ImGui::MenuItem("Cube"))
+			//		LoadMesh("Resources/Meshes/Cube.NxMesh", component, false);
+			//
+			//	if (ImGui::MenuItem("Sphere"))
+			//		LoadMesh("Resources/Meshes/Sphere.NxMesh", component, false);
+			//	
+			//	if (ImGui::MenuItem("IcoSphere"))
+			//		LoadMesh("Resources/Meshes/Icophere.NxMesh", component, false);
+			//	
+			//	if (ImGui::MenuItem("Torus"))
+			//		LoadMesh("Resources/Meshes/Torus.NxMesh", component, false);
+			//	
+			//	if (ImGui::MenuItem("Cylinder"))
+			//		LoadMesh("Resources/Meshes/Cylinder.NxMesh", component, false);
+			//
+			//	ImGui::EndPopup();
+			//}
 
 		});
 

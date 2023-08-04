@@ -34,7 +34,7 @@ namespace Nexus
 	public:
 		VulkanDevice(Ref<VulkanPhysicalDevice> device, const std::vector<const char*>& requiredExtensions, const std::vector<const char*>& requiredLayers);
 		~VulkanDevice();
-
+			
 		void Wait();
 
 		VkDevice Get() { return m_logicalDevice; }

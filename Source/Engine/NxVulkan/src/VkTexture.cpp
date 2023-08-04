@@ -249,11 +249,11 @@ Nexus::VulkanSampler::VulkanSampler(const SamplerSpecification& specs)
 {
 	VkSamplerCreateInfo info{};
 	info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	info.magFilter = GetVulkanSamplerFilter(specs.sampler.Near);
-	info.minFilter = GetVulkanSamplerFilter(specs.sampler.Far);
-	info.addressModeU = GetVulkanSamplerWrapMode(specs.sampler.U);
-	info.addressModeV = GetVulkanSamplerWrapMode(specs.sampler.V);
-	info.addressModeW = GetVulkanSamplerWrapMode(specs.sampler.W);
+	info.magFilter = GetVulkanSamplerFilter(specs.Near);
+	info.minFilter = GetVulkanSamplerFilter(specs.Far);
+	info.addressModeU = GetVulkanSamplerWrapMode(specs.U);
+	info.addressModeV = GetVulkanSamplerWrapMode(specs.V);
+	info.addressModeW = GetVulkanSamplerWrapMode(specs.W);
 	info.anisotropyEnable = VK_TRUE;
 
 	VkPhysicalDeviceProperties Props;

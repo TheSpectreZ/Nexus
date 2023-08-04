@@ -1,15 +1,28 @@
 #include "AppLayer.h"
+
 #include "NxGraphics/TypeImpls.h"
+
 #include "NxRenderEngine/Renderer.h"
+#include "NxRenderEngine/BatchRenderer.h"	
 #include "NxRenderEngine/ResourcePool.h"
+
 #include "NxScene/Entity.h"
+
 #include "NxCore/ProjectSerializer.h"
+#include "NxCore/Registry.h"
 #include "NxCore/Input.h"
 #include "NxCore/Logger.h"
+
 #include "NxApplication/FileDialog.h"
 #include "NxApplication/Application.h"
+
 #include "NxScriptEngine/ScriptEngine.h"	
+
 #include "NxPhysicsEngine/PhysicsEngine.h"
+
+#include "NxAsset/Importer.h"
+#include "NxAsset/Manager.h"
+
 #include "NxImGui/Context.h"
 #include "imgui.h"
 
@@ -30,6 +43,86 @@ AppLayer::AppLayer(std::string& projectPath)
 
 void AppLayer::OnAttach()
 {
+	AssetRegistry::Get()->SetProjectContext(AssetFilePath(m_ProjectPath).parent_path());
+
+	// Load and Allocate default Assets
+
+	{
+		AssetFilePath path = "Resources/Meshes/Cube.NxMeshAsset";
+		MeshAssetSpecification specs{};
+		
+		if (Loader::LoadMeshAsset(path, &specs))
+		{
+			auto fpath = AssetRegistry::Get()->LookUp(specs.mesh);
+
+			RenderableMeshSpecification mSpecs{};
+			mSpecs.path = fpath;
+			mSpecs.source.Deserialize(fpath);
+
+			RenderableMesh::AddToPool(specs.mesh, mSpecs);
+		}
+
+		{
+			path = "Resources/Textures/white.NxTex";
+			RenderableTextureSpecification tSpecs{};
+			tSpecs.path = path;
+			tSpecs.texture.Deserialize(path);
+
+			auto tId = AssetRegistry::Get()->LookUp(path);
+
+			RenderableTexture::AddToPool(tId, tSpecs);
+		}
+
+		{
+			path = "Resources/Material/Default.NxMat";
+			RenderableMaterialSpecification mSpecs{};
+			mSpecs.path = path;
+			mSpecs.material.Deserialize(path);
+
+			auto mId = AssetRegistry::Get()->LookUp(path);
+
+			RenderableMaterial::AddToPool(mId, mSpecs);
+		}
+	}
+
+	// Test
+	{
+		//AssetFilePath path = "Sandbox/Assets/miss_hertz/scene.gltf";
+		//
+		//glTFImportSettings settings;
+		//settings.Name = "Hertz";
+		//settings.path = "Sandbox/Assets/Hertz";
+		//settings.loadMaterials = true;
+		//settings.loadAnimations = true;
+		//settings.loadSkeleton = true;
+		//
+		//if (!Importer::ImportglTF(path, settings))
+		//{
+		//	NEXUS_LOG("FAILURE", "Asset Import Failed");
+		//}
+		
+
+		//AssetFilePath path = "res/Textures/white.png";
+		//Importer::ImportImage(path, "Resources/Textures", 11122);
+		//
+		//path = "res/Meshes/cube.gltf";
+		//
+		//glTFImportSettings settings{};
+		//settings.Name = "Cube";
+		//settings.path = "Resources/Meshes";
+		//
+		//Importer::ImportglTF(path, settings);
+		
+		//AssetRegistry::Get()->~AssetRegistry();
+
+		//Importer::ImportImage("res/Icons/File.png", "Resources/Icons", 11122);
+		//Importer::ImportImage("res/Icons/Folder.png", "Resources/Icons", 11122);
+		//
+		//Importer::Mat();
+
+		//AssetRegistry::Get()->~AssetRegistry();
+	}
+
 	m_ForwardDrawer = CreateRef<ForwardDrawer>(true);
 
 	Extent extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
@@ -57,8 +150,7 @@ void AppLayer::OnAttach()
 		EnvironmentBuilder::Build("Resources/Textures/pink_sunrise_2k.hdr", root.environment.handle);
 
 		auto entity = m_EditorScene->CreateEntity("Mesh");
-		entity.AddComponent<Nexus::Component::Mesh>();
-		entity.AddComponent<Nexus::Component::Script>("Sandbox.TestPlayer");
+		auto& mComponent = entity.AddComponent<Nexus::Component::Mesh>();
 	}
 
 	// Editor
@@ -94,6 +186,9 @@ void AppLayer::OnUpdate(float dt)
 	{
 		ScriptEngine::OnSceneUpdate(dt);
 		PhysicsEngine::OnSceneUpdate(dt);
+		
+		if (m_DrawColliders)
+			PhysicsEngine::DrawColliders();
 	}
 }
 
@@ -147,8 +242,10 @@ void AppLayer::RenderSettingPanel()
 
 	static float speed = 5.f;
 
-	if (ImGui::DragFloat("Camera Speed", &speed, 5.f, 100.f))
+	if (ImGui::DragFloat("Camera Speed", &speed, 1.f, 1.f, 100.f))
 		m_EditorCameraController.SetSpeed(speed);
+
+	ImGui::Checkbox("Visualize Physics Collider", &m_DrawColliders);
 
 	ImGui::End();
 }
