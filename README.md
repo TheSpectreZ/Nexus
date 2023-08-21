@@ -1,5 +1,6 @@
 # Welcome to Nexus 
 Nexus Engine is an exciting project that serves as a Game Engine and Rendering Framework primarily developed for Windows. Please keep in mind that it is currently in the development phase, with continuous improvements being made. You can find the Roadmap [Here](https://trello.com/b/U7P1rx0g/nexus-engine).
+This project is inspired from TheCherno's [Game Engine Series](https://hazelengine.com/).
 
 ## Getting Started
 
