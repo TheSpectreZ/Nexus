@@ -20,7 +20,7 @@ if (premakeInstalled):
     if platform.system() == "Windows":
         print("\nRunning premake...")
         subprocess.call([os.path.abspath("./Build/GenerateProjects.bat"), "nopause"])
-        os.chdir('./Source/NexusEditor/Sandbox')
+        os.chdir('./Source/Tools/NxEditor/Sandbox')
         print("\n")
         subprocess.call([os.path.abspath("./GenerateProject.bat"), "nopause"])
         print("\n")

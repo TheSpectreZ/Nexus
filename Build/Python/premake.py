@@ -9,7 +9,7 @@ class ConfigPremake:
     premakeZipUrls = f"https://github.com/premake/premake-core/releases/download/v{premakeVersion}/premake-{premakeVersion}-windows.zip"
     premakeLicenseUrl = "https://raw.githubusercontent.com/premake/premake-core/master/LICENSE.txt"
     premakeDirectory = "./Build/premake"
-    premakeSandboxDirectory = "./Source/NexusEditor/Sandbox/Binaries/premake"
+    premakeSandboxDirectory = "./Source/Tools/NxEditor/Sandbox/Binaries/premake"
 
     @classmethod
     def Validate(cls):
@@ -74,7 +74,7 @@ class ConfigPremake:
             permissionGranted = (reply == 'y')
 
         premakePath = os.path.curdir + "\\Build\\premake\\premake5.exe"
-        dstPath =  os.path.curdir + "\\Source\\NexusEditor\\Sandbox\\Binaries\\premake\\premake5.exe"
+        dstPath =  os.path.curdir + "\\Source\\Tools\\NxEditor\\Sandbox\\Binaries\\premake\\premake5.exe"
         os.makedirs(os.path.dirname(dstPath))
         shutil.copyfile(premakePath,dstPath)
 
