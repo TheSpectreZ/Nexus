@@ -12,17 +12,10 @@
 *.csproj.user
 *.sln
 
-/Source/NexusEditor/Resources/Scripts
-/Source/NexusEditor/SandboxProject/.vs/SandboxProject
-/Source/NexusEditor/Sandbox/.vs/Sandbox
-/Source/NexusEditor/Sandbox/Scripts/Bin/Debug
-/Source/NexusEditor/Sandbox/Scripts/Bin-Int/Debug
-/Source/NexusEditor/Sandbox/Scripts/Bin
-/Source/NexusEditor/Sandbox/Scripts/Bin-Int
-/Source/**/Logs
-
 /.vs/Nexus-Engine
 /Source/Tools/NxEditor/Sandbox/.vs/Sandbox
 
+/Source/**/Logs
 /Source/Tools/NxEditor/Resources/Scripts
-/Source/Tools/NxEditor/Sandbox/Scripts/
+/Source/Tools/NxEditor/Sandbox/Scripts/Bin
+/Source/Tools/NxEditor/Sandbox/Scripts/Bin-Int
