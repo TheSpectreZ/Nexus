@@ -1,0 +1,48 @@
+{
+    "EmissiveColor": {
+        "b": 0.0,
+        "g": 0.0,
+        "r": 0.0
+    },
+    "EmissiveTexture": 18446744073709551615,
+    "MetallicRoughness": {
+        "albedoColor": {
+            "a": 1.0,
+            "b": 1.0,
+            "g": 1.0,
+            "r": 1.0
+        },
+        "albedoTexture": 12291209868388543805,
+        "metallic": 0.0,
+        "metallicRoughness": 14303513357877692484,
+        "roughness": 0.49828723073005676
+    },
+    "Name": "Material.001",
+    "NormalTexture": 10887365747883855525,
+    "OcculsionTexture": 14303513357877692484,
+    "SpecularGlossiness": {
+        "albedoColor": {
+            "a": 1.0,
+            "b": 1.0,
+            "g": 1.0,
+            "r": 1.0
+        },
+        "albedoTexture": 18446744073709551615,
+        "glossiness": 0.0,
+        "specular": {
+            "b": 0.0,
+            "g": 0.0,
+            "r": 0.0
+        },
+        "specularGlossinessTexture": 18446744073709551615,
+        "support": false
+    },
+    "TexCoords": {
+        "baseColor": 0,
+        "emissive": 0,
+        "metallicRoughness": 0,
+        "normal": 0,
+        "occulsion": 0,
+        "specularGlossiness": 0
+    }
+}

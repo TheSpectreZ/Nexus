@@ -1,0 +1,48 @@
+{
+    "EmissiveColor": {
+        "b": 0.0,
+        "g": 0.0,
+        "r": 0.0
+    },
+    "EmissiveTexture": 18446744073709551615,
+    "MetallicRoughness": {
+        "albedoColor": {
+            "a": 1.0,
+            "b": 1.0,
+            "g": 1.0,
+            "r": 1.0
+        },
+        "albedoTexture": 8580792686476836914,
+        "metallic": 1.0,
+        "metallicRoughness": 9740639390297013828,
+        "roughness": 1.0
+    },
+    "Name": "01_Maison_03_Fleur",
+    "NormalTexture": 2028040387781913999,
+    "OcculsionTexture": 9740639390297013828,
+    "SpecularGlossiness": {
+        "albedoColor": {
+            "a": 1.0,
+            "b": 1.0,
+            "g": 1.0,
+            "r": 1.0
+        },
+        "albedoTexture": 18446744073709551615,
+        "glossiness": 0.0,
+        "specular": {
+            "b": 0.0,
+            "g": 0.0,
+            "r": 0.0
+        },
+        "specularGlossinessTexture": 18446744073709551615,
+        "support": false
+    },
+    "TexCoords": {
+        "baseColor": 0,
+        "emissive": 0,
+        "metallicRoughness": 0,
+        "normal": 0,
+        "occulsion": 0,
+        "specularGlossiness": 0
+    }
+}

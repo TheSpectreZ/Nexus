@@ -28,6 +28,54 @@
 
 using namespace Nexus;
 
+// This func is copied from SceneHeirarchy.cpp for Test Purposes
+static void LoadMesh(const AssetFilePath& filepath, Component::Mesh& component, bool loadMat = true)
+{
+	if (filepath.extension().string() != ".NxMeshAsset")
+		return;
+
+	Nexus::MeshAssetSpecification specs{};
+	Loader::LoadMeshAsset(filepath, &specs);
+
+	AssetRegistry* reg = AssetRegistry::Get();
+	{
+		auto path = reg->LookUp(specs.mesh);
+		Meshing::MeshSource mSrc;
+		mSrc.Deserialize(path);
+
+		RenderableMeshSpecification mSpecs{};
+		mSpecs.source = mSrc;
+		mSpecs.path = path;
+
+		if (specs.skeleton)
+		{
+			path = reg->LookUp(specs.skeleton);
+			mSpecs.skeleton.Deserialize(path);
+
+			component.skeleton = specs.skeleton;
+		}
+
+		AssetManager::Get()->Load<RenderableMesh>(specs.mesh, mSpecs);
+
+		component.handle = specs.mesh;
+	}
+
+	for (auto& [k, v] : specs.materials)
+	{
+		auto path = reg->LookUp(v);
+		Meshing::Material mat;
+		mat.Deserialize(path);
+
+		RenderableMaterialSpecification mSpecs{};
+		mSpecs.material = mat;
+		mSpecs.path = path;
+
+		AssetManager::Get()->Load<RenderableMaterial>(v, mSpecs);
+
+		component.materialTable[k] = v;
+	}
+}
+
 AppLayer::AppLayer(std::string& projectPath)
 {
 	m_ViewportSize = { 0.f,0.f };
@@ -43,10 +91,11 @@ AppLayer::AppLayer(std::string& projectPath)
 
 void AppLayer::OnAttach()
 {
+	m_ForwardDrawer = CreateRef<ForwardDrawer>(true);
+
 	AssetRegistry::Get()->SetProjectContext(AssetFilePath(m_ProjectPath).parent_path());
 
-	// Load and Allocate default Assets
-
+	// Load and Allocate default Assets [ TODO: Do this in Render Engine ? ]
 	{
 		AssetFilePath path = "Resources/Meshes/Cube.NxMeshAsset";
 		MeshAssetSpecification specs{};
@@ -84,50 +133,11 @@ void AppLayer::OnAttach()
 			RenderableMaterial::AddToPool(mId, mSpecs);
 		}
 	}
-
-	// Test
-	{
-		//AssetFilePath path = "Sandbox/Assets/miss_hertz/scene.gltf";
-		//
-		//glTFImportSettings settings;
-		//settings.Name = "Hertz";
-		//settings.path = "Sandbox/Assets/Hertz";
-		//settings.loadMaterials = true;
-		//settings.loadAnimations = true;
-		//settings.loadSkeleton = true;
-		//
-		//if (!Importer::ImportglTF(path, settings))
-		//{
-		//	NEXUS_LOG("FAILURE", "Asset Import Failed");
-		//}
-		
-
-		//AssetFilePath path = "res/Textures/white.png";
-		//Importer::ImportImage(path, "Resources/Textures", 11122);
-		//
-		//path = "res/Meshes/cube.gltf";
-		//
-		//glTFImportSettings settings{};
-		//settings.Name = "Cube";
-		//settings.path = "Resources/Meshes";
-		//
-		//Importer::ImportglTF(path, settings);
-		
-		//AssetRegistry::Get()->~AssetRegistry();
-
-		//Importer::ImportImage("res/Icons/File.png", "Resources/Icons", 11122);
-		//Importer::ImportImage("res/Icons/Folder.png", "Resources/Icons", 11122);
-		//
-		//Importer::Mat();
-
-		//AssetRegistry::Get()->~AssetRegistry();
-	}
-
-	m_ForwardDrawer = CreateRef<ForwardDrawer>(true);
-
-	Extent extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
+	
 	// Camera
 	{
+		Extent extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
+		
 		m_EditorCameraController.AttachCamera(&m_EditorCamera);
 		m_EditorCameraController.SetKeyBinding(CameraBinding::FRONT, Key::W);
 		m_EditorCameraController.SetKeyBinding(CameraBinding::BACK, Key::S);
@@ -149,8 +159,28 @@ void AppLayer::OnAttach()
 		root.environment.handle = UUID();
 		EnvironmentBuilder::Build("Resources/Textures/pink_sunrise_2k.hdr", root.environment.handle);
 
-		auto entity = m_EditorScene->CreateEntity("Mesh");
-		auto& mComponent = entity.AddComponent<Nexus::Component::Mesh>();
+		// Default Test Scene...
+
+		m_EditorCamera.position = glm::vec3(2.f, 3.f, 8.f);
+
+		{
+			auto Entity = m_EditorScene->CreateEntity("Strom-Trooper");
+			auto& mComponent = Entity.AddComponent<Nexus::Component::Mesh>();
+			LoadMesh("Sandbox/Assets/Meshes/StormTrooper/Stormtrooper.NxMeshAsset", mComponent);
+
+			auto& tComponent = Entity.GetComponent<Nexus::Component::Transform>();
+			tComponent.Scale = glm::vec3(0.5f, 0.5f, 0.5f);
+		}
+		
+		{
+			auto Entity = m_EditorScene->CreateEntity("House");
+			auto& mComponent = Entity.AddComponent<Nexus::Component::Mesh>();
+			LoadMesh("Sandbox/Assets/Meshes/House/House.NxMeshAsset", mComponent);
+
+			auto& tComponent = Entity.GetComponent<Nexus::Component::Transform>();
+			tComponent.Translation = glm::vec3(5.f, 2.5f, 0.f);
+			tComponent.Scale = glm::vec3(2.5f);
+		}
 	}
 
 	// Editor
