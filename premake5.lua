@@ -8,7 +8,7 @@ workspace "Nexus-Engine"
         "Debug","Release","Dist"
     }
 
-    startproject "NexusEd"
+    startproject "NxEditor"
 
     group "Dependencies"
         include "Scripts/Dependencies/imgui.lua"
