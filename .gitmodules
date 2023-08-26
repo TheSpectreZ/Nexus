@@ -1,3 +1,6 @@
 [submodule "Source/Dependencies/glfw"]
 	path = Source/Dependencies/glfw
 	url = https://github.com/glfw/glfw.git
+[submodule "Source/Dependencies/imgui"]
+	path = Source/Dependencies/imgui
+	url = https://github.com/TheSpectreZ/imgui.git
