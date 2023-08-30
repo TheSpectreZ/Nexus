@@ -5,6 +5,7 @@ namespace Nexus
 	enum class RendererAPI
 	{
 		NONE,
-		VULKAN
+		VULKAN,
+		DIRECTX
 	};
 }

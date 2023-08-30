@@ -5,8 +5,10 @@ namespace Nexus
 {
 	struct BufferSpecification
 	{
+		std::string debugName;
 		BufferType type;
 		uint32_t size;
+		uint32_t stride;
 		bool cpuMemory;
 		void* data;
 	};
