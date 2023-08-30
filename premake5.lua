@@ -33,6 +33,7 @@ workspace "Nexus-Engine"
         
     group "Platform"
         include "Scripts/Engine/Vulkan.lua"
+        include "Scripts/Engine/DirectX.lua"
     group ""
 
     group "Tools"

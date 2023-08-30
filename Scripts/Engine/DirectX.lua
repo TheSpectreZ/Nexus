@@ -1,4 +1,4 @@
-project "NxRenderEngine"
+project "NxDirect3D"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -16,51 +16,71 @@ project "NxRenderEngine"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
+
 		IncludePath["utils"],
-
 		IncludePath["NxCore"],
-		
-		IncludePath["NxVulkan"],
-		IncludePath["NxDirect3D"],
-
 		IncludePath["NxGraphics"],
-		IncludePath["NxScene"],
-		
-		IncludePath["NxRenderEngine"],
+
+		IncludePath["NxDirect3D"]
 	}
 
 	links
 	{
 		"NxCore",
 		"NxGraphics",
+	}
 
-		"NxVulkan",
-		"NxDirect3D",
-
-		"NxScene",
+	libdirs
+	{
+		"$(VULKAN_SDK)/Lib"
 	}
 
 	defines 
 	{
-		"NEXUS_RENDERER_SHARED_BUILD"
+		"NEXUS_DIRECTX_SHARED_BUILD"
+	}
+
+	linkoptions 
+	{
+		"-IGNORE:4098",
+		"-IGNORE:4099", 
+		"-IGNORE:4006", 
 	}
 
 	filter "system:windows"
 		systemversion "latest"
-		defines "NEXUS_SYSTEM_WINDOWS"
+		defines 
+		{
+			"NEXUS_SYSTEM_WINDOWS"
+		}
 		disablewarnings { "4251","4275" }
 
 	filter "configurations:Debug"
 		optimize "Off"
 		symbols "Full"
 		defines "NEXUS_DEBUG"
+		links
+        {
+            "spirv-cross-hlsld.lib",
+            "spirv-cross-cored.lib",
+        }
 
 	filter "configurations:Release"
 		optimize "Speed"
 		symbols "FastLink"
 		defines "NEXUS_RELEASE"
+		links
+        {
+            "spirv-cross-hlsl.lib",
+            "spirv-cross-core.lib",
+        }
 
 	filter "configurations:Dist"
 		optimize "Full"
 		symbols "Off"
 		defines "NEXUS_DIST"
+		links
+        {
+            "spirv-cross-hlsl.lib",
+            "spirv-cross-core.lib",
+        }
