@@ -2,7 +2,7 @@
 #include <memory>
 #include <functional>
 #include <type_traits>
-
+#include <string>
 
 #define ENUM_FLAG_OPERATORS(T)                                                                                                                                            \
     inline T operator~ (T a) { return static_cast<T>( ~static_cast<std::underlying_type<T>::type>(a) ); }                                                                       \
@@ -27,24 +27,26 @@ namespace Nexus
 	template<typename T>
 	using Scope = std::unique_ptr<T>;
 
-	template<typename T,typename... Args>
+	template<typename T, typename... Args>
 	Ref<T> CreateRef(Args&&... args)
 	{
 		return std::make_shared<T>(std::forward<Args>(args)...);
 	}
 
-	template<typename T,typename... Args>
+	template<typename T, typename... Args>
 	Scope<T> CreateScope(Args&&... args)
 	{
 		return std::make_unique<T>(std::forward<Args>(args)...);
 	}
 
-	template<typename T1,typename T2>
+	template<typename T1, typename T2>
 	Ref<T1> DynamicPointerCast(Ref<T2> other)
 	{
 		return std::dynamic_pointer_cast<T1>(other);
 	}
 
+	std::wstring ToWString(const std::string& str);
+	std::string FromWString(const std::wstring& wStr);
 }
 
 #define NEXUS_BIND_FN(fn,ref) [&](auto&&... args) -> decltype(auto) { return ref->fn(std::forward<decltype(args)>(args)...); }
