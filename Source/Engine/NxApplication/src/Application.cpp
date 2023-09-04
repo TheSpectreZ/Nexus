@@ -18,6 +18,7 @@
 #include "NxRenderEngine/Renderer.h"
 #include "NxScriptEngine/ScriptEngine.h"
 #include "NxPhysicsEngine/PhysicsEngine.h"
+#include "NxNetworkEngine/NetworkEngine.h"
 
 namespace Nexus
 {
@@ -50,7 +51,7 @@ Nexus::Application::~Application()
 	delete s_Data;
 }
 
-void Nexus::Application::Init()
+void Nexus::Application::Init(const std::unordered_map<std::string, std::string>& ccMap)
 {
 	LogManager::Initialize();
 	
@@ -120,6 +121,8 @@ void Nexus::Application::Init()
 
 			ScriptEngine::Initialize(sCreateInfo);
 		}
+
+		NetworkEngine::Initialize();
 	}
 }
 
@@ -169,6 +172,8 @@ void Nexus::Application::Shut()
 {
 	// Modules [ To-Do ] Clean up this If-Statements
 	{
+		NetworkEngine::Shutdown();
+
 		if (m_AppSpecs.EnableScriptEngine)
 			ScriptEngine::Shutdown();
 

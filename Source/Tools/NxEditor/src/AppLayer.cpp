@@ -76,14 +76,14 @@ static void LoadMesh(const AssetFilePath& filepath, Component::Mesh& component, 
 	}
 }
 
-AppLayer::AppLayer(std::string& projectPath)
+AppLayer::AppLayer(const std::unordered_map<std::string, std::string>& ccMap)
 {
 	m_ViewportSize = { 0.f,0.f };
 
-	if (projectPath.empty())
+	if (!ccMap.contains("ProjectPath"))
 		m_ProjectPath = "Sandbox/Sandbox.NxProj";
 	else
-		m_ProjectPath = projectPath;
+		m_ProjectPath = ccMap.at("ProjectPath");
 
 	m_IsScenePlaying = false;
 	m_IsScenePaused = false;

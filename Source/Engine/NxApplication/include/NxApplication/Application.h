@@ -26,7 +26,7 @@ namespace Nexus
 		Application();
 		~Application();
 
-		void Init();
+		void Init(const std::unordered_map<std::string, std::string>& ccMap);
 		void Run();
 		void Shut();
 

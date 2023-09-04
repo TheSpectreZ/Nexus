@@ -12,7 +12,7 @@
 class AppLayer : public Nexus::Layer
 {
 public:
-	AppLayer(std::string& projectPath);
+	AppLayer(const std::unordered_map<std::string, std::string>& ccMap);
 	void OnAttach() override;
 	void OnUpdate(float dt) override;
 	void OnRender() override;

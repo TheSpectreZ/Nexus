@@ -7,7 +7,7 @@
 class NexusEditor : public Nexus::Application
 {
 public:
-	NexusEditor(std::string& commandLine)
+	NexusEditor(const std::unordered_map<std::string, std::string>& ccMap)
 	{
 		m_AppSpecs.Window_Title = "Nexus Editor";
 		m_AppSpecs.Window_Width = 1600;
@@ -19,11 +19,11 @@ public:
 		m_AppSpecs.EnableAssetManager = true;
 		m_AppSpecs.EnablePhysicsEngine = true;
 
-		PushLayer(new AppLayer(commandLine));
+		PushLayer(new AppLayer(ccMap));
 	}
 };
 
-Nexus::Application* CreateApplication(std::string commandLine)
+Nexus::Application* CreateApplication(const std::unordered_map<std::string, std::string>& ccMap)
 {
-	return new NexusEditor(commandLine);
+	return new NexusEditor(ccMap);
 }
