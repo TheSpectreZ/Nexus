@@ -3,17 +3,15 @@
 #include <codecvt>
 #include <Windows.h>
 
+#include "NxCore/Base.h"
 #include "Application.h"
 
 extern Nexus::Application* CreateApplication(std::string cmdLineArg);
 
-int APIENTRY wWinMain(HINSTANCE h1, HINSTANCE h2, LPWSTR l, int n)
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
-	int wideStrLength = static_cast<int>(wcslen(l));
-	int bufferSize = WideCharToMultiByte(CP_UTF8, 0, l, wideStrLength, nullptr, 0, nullptr, nullptr);
-
-	std::string args(bufferSize, '\0');
-	WideCharToMultiByte(CP_UTF8, 0, l, wideStrLength, &args[0], bufferSize, nullptr, nullptr);
+	auto args = Nexus::BuildString(lpCmdLine);
+	auto CCmap = Nexus::BuildCCMap(args);
 
 	Nexus::Application* app = CreateApplication(args);
 
