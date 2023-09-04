@@ -4,6 +4,8 @@
 #include "NxCore/Logger.h"
 #include <Windows.h>
 #include <iostream>
+#include <mutex>
+#include <thread>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
@@ -17,6 +19,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	NEXUS_LOG("Test Server", "Initialized");
 
 	{
+		std::mutex socketMutex;
 		ServerNetworkSocket_TCP socket;
 		NEXUS_LOG("Test Server", "Waiting for Client...");
 
@@ -24,15 +27,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		NEXUS_LOG("Test Server", "Connection Successfull");
 
 		char buffer[1024]{};
-		
-		if (int res = socket.Receive(buffer, sizeof(char) * 1024); res > 0)
+
+		while (true)
 		{
-			NEXUS_LOG("Test Server", "Message From Client: %s", buffer);
+			if (socket.Receive(buffer, sizeof(char) * 1024) > 0)
+			{
+				if (!strcmp(buffer, "-exit"))
+					break;
 
-			std::string msg = "Heyy Client\n";
-
-			socket.Send(msg.c_str(), msg.size());
-			NEXUS_LOG("Test Server", "Message To Client: %s", msg.c_str());
+				NEXUS_LOG("[ CLIENT ]", "%s", buffer);
+			}
 		}
 
 		NEXUS_LOG("Test Server", "Closing Connection");
