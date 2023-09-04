@@ -11,7 +11,7 @@ namespace Nexus
 {
 	// Currently Server Socket connnects to only one Client Socket
 
-	class NetworkSocket
+	class NEXUS_NETWORK_ENGINE_API NetworkSocket
 	{
 	public:
 		virtual ~NetworkSocket();
@@ -22,7 +22,7 @@ namespace Nexus
 		INTERNAL* p_State = nullptr;
 	};
 
-	class ClientNetworkSocket_TCP : public NetworkSocket
+	class NEXUS_NETWORK_ENGINE_API ClientNetworkSocket_TCP : public NetworkSocket
 	{
 	public:
 		ClientNetworkSocket_TCP();
@@ -30,11 +30,11 @@ namespace Nexus
 
 		bool Connect();
 
-		int Receive(char* buffer, size_t size);
-		int Send(const char* buffer, size_t size);
+		int Receive(char* buffer, int size);
+		int Send(const char* buffer, int size);
 	};
 	
-	class ServerNetworkSocket_TCP : public NetworkSocket
+	class NEXUS_NETWORK_ENGINE_API ServerNetworkSocket_TCP : public NetworkSocket
 	{
 	public:
 		ServerNetworkSocket_TCP();
@@ -42,27 +42,27 @@ namespace Nexus
 
 		void Accept();
 
-		int Receive(char* buffer, size_t size);
-		int Send(const char* buffer, size_t size);
+		int Receive(char* buffer, int size);
+		int Send(const char* buffer, int size);
 	};
 	
-	class ClientNetworkSocket_UDP : public NetworkSocket
+	class NEXUS_NETWORK_ENGINE_API ClientNetworkSocket_UDP : public NetworkSocket
 	{
 	public:
 		ClientNetworkSocket_UDP();
 		~ClientNetworkSocket_UDP() override = default;
 
-		int Receive(char* buffer, size_t size);
-		int Send(const char* buffer, size_t size);
+		int Receive(char* buffer, int size);
+		int Send(const char* buffer, int size);
 	};
 	
-	class ServerNetworkSocket_UDP : public NetworkSocket
+	class NEXUS_NETWORK_ENGINE_API ServerNetworkSocket_UDP : public NetworkSocket
 	{
 	public:
 		ServerNetworkSocket_UDP();
 		~ServerNetworkSocket_UDP() override = default;
 
-		int Receive(char* buffer, size_t size);
-		int Send(const char* buffer, size_t size);
+		int Receive(char* buffer, int size);
+		int Send(const char* buffer, int size);
 	};
 }

@@ -1,6 +1,8 @@
 #include "NxNetworkEngine/NetworkSocket.h"
 #include "NxCore/Assertion.h"
+
 #include <WinSock2.h>
+#include <WS2tcpip.h>
 
 #define NEXUS_NETWORK_PORT 54321
 #define NEXUS_HOST_NAME ""
@@ -44,12 +46,12 @@ bool Nexus::ClientNetworkSocket_TCP::Connect()
 	return !(result == SOCKET_ERROR);
 }
 
-int Nexus::ClientNetworkSocket_TCP::Receive(char* buffer, size_t size)
+int Nexus::ClientNetworkSocket_TCP::Receive(char* buffer, int size)
 {
 	return recv(p_State->socket, buffer, size, 0);
 }
 
-int Nexus::ClientNetworkSocket_TCP::Send(const char* buffer, size_t size)
+int Nexus::ClientNetworkSocket_TCP::Send(const char* buffer, int size)
 {
 	return send(p_State->socket, buffer, size, 0);
 }
@@ -76,12 +78,12 @@ void Nexus::ServerNetworkSocket_TCP::Accept()
 	p_State->socket = sock;
 }
 
-int Nexus::ServerNetworkSocket_TCP::Receive(char* buffer, size_t size)
+int Nexus::ServerNetworkSocket_TCP::Receive(char* buffer, int size)
 {
 	return recv(p_State->socket, buffer, size, 0);
 }
 
-int Nexus::ServerNetworkSocket_TCP::Send(const char* buffer, size_t size)
+int Nexus::ServerNetworkSocket_TCP::Send(const char* buffer, int size)
 {
 	return send(p_State->socket, buffer, size, 0);
 }
@@ -91,11 +93,11 @@ Nexus::ClientNetworkSocket_UDP::ClientNetworkSocket_UDP()
 {
 	auto host = gethostbyname(NEXUS_HOST_NAME);
 	auto IP = inet_ntoa(*(in_addr*)*host->h_addr_list);
-
+	
 	p_State->sockAddr.sin_addr.s_addr = inet_addr(IP);
 }
 
-int Nexus::ClientNetworkSocket_UDP::Receive(char* buffer, size_t size)
+int Nexus::ClientNetworkSocket_UDP::Receive(char* buffer, int size)
 {
 	sockaddr_in addr{};
 	int addrSize = sizeof(addr);
@@ -103,7 +105,7 @@ int Nexus::ClientNetworkSocket_UDP::Receive(char* buffer, size_t size)
 	return recvfrom(p_State->socket, buffer, size, 0, (sockaddr*)&addr, &addrSize);
 }
 
-int Nexus::ClientNetworkSocket_UDP::Send(const char* buffer, size_t size)
+int Nexus::ClientNetworkSocket_UDP::Send(const char* buffer, int size)
 {
 	return sendto(p_State->socket, buffer, size, 0, (sockaddr*)&p_State->sockAddr, sizeof(p_State->sockAddr));
 }
@@ -115,7 +117,7 @@ Nexus::ServerNetworkSocket_UDP::ServerNetworkSocket_UDP()
 	bind(p_State->socket, (sockaddr*)&p_State->sockAddr, sizeof(p_State->sockAddr));
 }
 
-int Nexus::ServerNetworkSocket_UDP::Receive(char* buffer, size_t size)
+int Nexus::ServerNetworkSocket_UDP::Receive(char* buffer, int size)
 {
 	sockaddr addr{};
 	int addrSize = sizeof(addr);
@@ -123,7 +125,7 @@ int Nexus::ServerNetworkSocket_UDP::Receive(char* buffer, size_t size)
 	return recvfrom(p_State->socket, buffer, size, 0, (sockaddr*)&addr, &addrSize);
 }
 
-int Nexus::ServerNetworkSocket_UDP::Send(const char* buffer, size_t size)
+int Nexus::ServerNetworkSocket_UDP::Send(const char* buffer, int size)
 {
 	sockaddr_in addr{};
 	return sendto(p_State->socket, buffer, size, 0, (sockaddr*)&addr, sizeof(addr));
