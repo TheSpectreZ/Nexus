@@ -41,3 +41,7 @@ workspace "Nexus-Engine"
         include "Scripts/Tools/NxEditor.lua"
         include "Scripts/Tools/NxLauncher.lua"
     group ""
+
+    group "Test"
+        include "Scripts/Tools/NxTestServer.lua"
+        include "Scripts/Tools/NxTestClient.lua"
