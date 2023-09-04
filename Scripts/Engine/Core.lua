@@ -25,7 +25,11 @@ project "NxCore"
 		"glfw"
 	}
 
-	defines "NEXUS_CORE_SHARED_BUILD"
+	defines
+	{
+		"NEXUS_CORE_SHARED_BUILD",
+		"_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS"
+	}
 
 	filter "system:windows"
 		systemversion "latest"

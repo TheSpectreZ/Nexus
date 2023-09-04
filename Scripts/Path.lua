@@ -24,6 +24,7 @@ IncludePath["NxGraphics"] = (SrcDir.."Engine/NxGraphics/include")
 IncludePath["NxRenderEngine"] = (SrcDir.."Engine/NxRenderEngine/include")
 IncludePath["NxPhysicsEngine"] = (SrcDir.."Engine/NxPhysicsEngine/include")
 IncludePath["NxScriptEngine"] = (SrcDir.."Engine/NxScriptEngine/include")
+IncludePath["NxNetworkEngine"] = (SrcDir.."Engine/NxNetworkEngine/include")
 IncludePath["NxApplication"] = (SrcDir.."Engine/NxApplication/include")
 
 IncludePath["NxImGui"] = (SrcDir.."Tools/NxImGui/include")

@@ -26,6 +26,7 @@ project "NxEditor"
 		"NxPhysicsEngine",
 		"NxApplication",
 		"NxScriptEngine",
+		"NxNetworkEngine",
 
 		"NxImGui"
 	}
@@ -44,6 +45,7 @@ project "NxEditor"
 		IncludePath["NxRenderEngine"],
 		IncludePath["NxPhysicsEngine"],
 		IncludePath["NxScriptEngine"],
+		IncludePath["NxNetworkEngine"],
 		IncludePath["NxApplication"],
 
 		IncludePath["NxImGui"]

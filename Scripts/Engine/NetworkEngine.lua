@@ -1,4 +1,4 @@
-project "NxApplication"
+project "NxNetworkEngine"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -16,48 +16,53 @@ project "NxApplication"
 	includedirs
 	{
 		IncludePath["utils"],
-		IncludePath["glfw"],
-		
-		IncludePath["NxCore"],
-		IncludePath["NxAsset"],
-		IncludePath["NxScene"],
-		IncludePath["NxGraphics"],
-		IncludePath["NxRenderEngine"],
-		IncludePath["NxPhysicsEngine"],
-		IncludePath["NxScriptEngine"],
-		IncludePath["NxNetworkEngine"],
-		IncludePath["NxApplication"]
+	
+		IncludePath["NxCore"],		
+		IncludePath["NxNetworkEngine"],		
 	}
 
 	links
 	{
-		"glfw",
 		"NxCore",
-		"NxScene",
-		"NxAsset",
-		"NxRenderEngine",
-		"NxPhysicsEngine",
-		"NxScriptEngine",
-		"NxNetworkEngine"
 	}
 
-	defines "NEXUS_ENGINE_SHARED_BUILD"
+	defines 
+	{
+		"NEXUS_NETWORK_ENGINE_SHARED_BUILD",
+		"_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS"
+	}
 
+	linkoptions 
+	{
+		"-IGNORE:4098",
+		"-IGNORE:4099", 
+		"-IGNORE:4006", 
+	}
+
+	libdirs 
+	{
+		
+	}
+	
 	filter "system:windows"
 		systemversion "latest"
-		defines "NEXUS_SYSTEM_WINDOWS"
+		staticruntime "On"
+		defines 
+		{
+			"NEXUS_SYSTEM_WINDOWS"
+		}
 		disablewarnings { "4251","4275" }
 
 	filter "configurations:Debug"
 		optimize "Off"
 		symbols "Full"
 		defines "NEXUS_DEBUG"
-
+		
 	filter "configurations:Release"
 		optimize "Speed"
 		symbols "FastLink"
 		defines "NEXUS_RELEASE"
-
+		
 	filter "configurations:Dist"
 		optimize "Full"
 		symbols "Off"
