@@ -7,24 +7,35 @@
 #include <mutex>
 #include <thread>
 
+#define UDP 0
+#define TCP 1
+
+#define CONNECTION UDP
+
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
 	using namespace Nexus;
 
 	LogManager::Initialize();
 	LogManager::Get()->Make(LoggerType::Console);
-
+	
 	NetworkEngine::Initialize();
 
 	NEXUS_LOG("Test Server", "Initialized");
 
 	{
-		std::mutex socketMutex;
+#if CONNECTION 
 		ServerNetworkSocket_TCP socket;
-		NEXUS_LOG("Test Server", "Waiting for Client...");
+#else
+		ServerNetworkSocket_UDP socket;
+#endif // CONNECTION 
 
+		NEXUS_LOG("Test Server", "Connecting to Client...");
+
+#if CONNECTION
 		socket.Accept();
 		NEXUS_LOG("Test Server", "Connection Successfull");
+#endif // CONNECTION
 
 		char buffer[1024]{};
 
@@ -32,9 +43,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		{
 			if (socket.Receive(buffer, sizeof(char) * 1024) > 0)
 			{
-				if (!strcmp(buffer, "-exit"))
-					break;
-
 				NEXUS_LOG("[ CLIENT ]", "%s", buffer);
 			}
 		}
