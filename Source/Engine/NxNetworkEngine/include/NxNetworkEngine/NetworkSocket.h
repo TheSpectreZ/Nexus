@@ -9,60 +9,51 @@
 
 namespace Nexus
 {
-	// Currently Server Socket connnects to only one Client Socket
-
 	class NEXUS_NETWORK_ENGINE_API NetworkSocket
 	{
 	public:
 		virtual ~NetworkSocket();
 	protected:
-		NetworkSocket(int type, int protocol);
+		NetworkSocket();
 	protected:
 		struct INTERNAL;
 		INTERNAL* p_State = nullptr;
 	};
+	
+	class NEXUS_NETWORK_ENGINE_API ClientAddress
+	{
+		friend class ServerNetworkSocket;
+	public:
+		ClientAddress();
+		~ClientAddress();
 
-	class NEXUS_NETWORK_ENGINE_API ClientNetworkSocket_TCP : public NetworkSocket
+		ClientAddress(const ClientAddress& addr);
+
+		void Clear();
+	private:
+		struct INTERNAL;
+		INTERNAL* m_State = nullptr;
+	};
+
+	class NEXUS_NETWORK_ENGINE_API ClientNetworkSocket : public NetworkSocket
 	{
 	public:
-		ClientNetworkSocket_TCP();
-		~ClientNetworkSocket_TCP() override = default;
+		ClientNetworkSocket() = default;
+		~ClientNetworkSocket() override = default;
 
-		bool Connect();
+		void Connect(const char* IPv4Address);
 
 		int Receive(char* buffer, int size);
 		int Send(const char* buffer, int size);
 	};
 	
-	class NEXUS_NETWORK_ENGINE_API ServerNetworkSocket_TCP : public NetworkSocket
+	class NEXUS_NETWORK_ENGINE_API ServerNetworkSocket : public NetworkSocket
 	{
 	public:
-		ServerNetworkSocket_TCP();
-		~ServerNetworkSocket_TCP() override = default;
+		ServerNetworkSocket();
+		~ServerNetworkSocket() override = default;
 
-		void Accept();
-
-		int Receive(char* buffer, int size);
-		int Send(const char* buffer, int size);
-	};
-	
-	class NEXUS_NETWORK_ENGINE_API ClientNetworkSocket_UDP : public NetworkSocket
-	{
-	public:
-		ClientNetworkSocket_UDP();
-		~ClientNetworkSocket_UDP() override = default;
-
-		int Receive(char* buffer, int size);
-		int Send(const char* buffer, int size);
-	};
-	
-	class NEXUS_NETWORK_ENGINE_API ServerNetworkSocket_UDP : public NetworkSocket
-	{
-	public:
-		ServerNetworkSocket_UDP();
-		~ServerNetworkSocket_UDP() override = default;
-
-		int Receive(char* buffer, int size);
-		int Send(const char* buffer, int size);
+		int Receive(ClientAddress* address, char* buffer, int size);
+		int Send(ClientAddress* address, const char* buffer, int size);
 	};
 }

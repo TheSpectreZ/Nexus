@@ -15,20 +15,32 @@ project "NxTestClient"
 
 	links
 	{
+		"imgui",
+
 		"NxCore",
+		"NxScene",
+		"NxGraphics",
+		"NxRenderEngine",
 		"NxNetworkEngine",
+		"NxApplication",
+		
+		"NxImGui"
 	}
 
 	includedirs
 	{
 		IncludePath["utils"],
 		
+		IncludePath["imgui"],
+		
 		IncludePath["NxCore"],
+		IncludePath["NxScene"],
+		IncludePath["NxGraphics"],
+		IncludePath["NxRenderEngine"],
 		IncludePath["NxNetworkEngine"],
-	}
+		IncludePath["NxApplication"],
 
-	libdirs
-	{
+		IncludePath["NxImGui"]
 	}
 
 	filter "system:windows"
