@@ -13,6 +13,9 @@ premakeInstalled = ConfigPremake.Validate()
 from Vulkan import ConfigVulkan as ConfigVulkan
 ConfigVulkan.Validate()
 
+from SharedLib import SharedLib as SharedLib
+SharedLib.SetupPhysX()
+
 print("\nUpdating submodules...")
 subprocess.call(["git", "submodule", "update", "--init", "--recursive"])
 
