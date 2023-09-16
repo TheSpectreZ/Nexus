@@ -2,8 +2,6 @@
 Nexus Engine is an exciting project that serves as a Game Engine and Rendering Framework primarily developed for Windows. Please keep in mind that it is currently in the development phase, with continuous improvements being made. You can find the Roadmap [Here](https://trello.com/b/U7P1rx0g/nexus-engine).
 This project is inspired from TheCherno's [Game Engine Series](https://hazelengine.com/).
 
-##### Dev-Note: Only Debug build successfully works - There are some PhysX link issues with other Configs [ Work in Progress ]
-
 ## Getting Started
 
 To begin working with Nexus, It is recommended to use **Visual Studio 2022** as the development environment, as it is the officially supported platform for this project (Make Sure to have **Visual Studio Build** Tools Installed as well). Follow the steps below to get started:

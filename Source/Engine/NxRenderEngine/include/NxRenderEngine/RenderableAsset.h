@@ -95,11 +95,11 @@ namespace Nexus
 			glm::vec3 emissive; float n0;
 			glm::vec3 specular; int pbrType;
 
-			int useBaseColorMap;
-			int useSurfaceMap;
-			int useEmissiveMap;
-			int useNormalMap;
-			int useOcculsionMap;
+			int useBaseColorMap = -1;
+			int useSurfaceMap = -1;
+			int useEmissiveMap = -1;
+			int useNormalMap = -1;
+			int useOcculsionMap = -1;
 
 			float metalness, roughness, glossiness;
 		};
