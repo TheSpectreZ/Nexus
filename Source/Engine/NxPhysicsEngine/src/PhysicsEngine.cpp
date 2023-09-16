@@ -4,7 +4,7 @@
 
 #include "NxScene/Entity.h"
 
-#include "PhysX/PxConfig.h"	
+#include "PhysX/PxConfig.h"
 #include "PhysX/PxPhysicsAPI.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -89,7 +89,7 @@ void Nexus::PhysicsEngine::OnSceneStart(Ref<Scene> scene)
 	s_Data->m_scene = s_Data->m_physics->createScene(desc);
 	s_Data->m_scene->setVisualizationParameter(physx::PxVisualizationParameter::eSCALE, 1.f);
 	s_Data->m_scene->setVisualizationParameter(physx::PxVisualizationParameter::eCOLLISION_SHAPES, 2.f);
-//s_Data->m_currentScenePtr = scene.get();
+	s_Data->m_currentScenePtr = scene.get();
 
 	Entity entity;
 	auto view = scene->GetAllEntitiesWith<Component::RigidBody>();

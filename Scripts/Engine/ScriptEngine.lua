@@ -30,11 +30,6 @@ project "NxScriptEngine"
 		"libmono-static-sgen.lib"
 	}
 
-	libdirs
-	{
-		(VenDir.."Mono/lib/%{cfg.buildcfg}")
-	}
-
 	defines "NEXUS_SCRIPT_ENGINE_SHARED_BUILD"
 
 	filter "system:windows"
@@ -49,18 +44,20 @@ project "NxScriptEngine"
             "Bcrypt.lib",
         }
 
-
 	filter "configurations:Debug"
 		optimize "Off"
 		symbols "Full"
 		defines "NEXUS_DEBUG"
-
+		libdirs (VenDir.."Mono/lib/Debug")
+	
 	filter "configurations:Release"
 		optimize "Speed"
 		symbols "FastLink"
 		defines "NEXUS_RELEASE"
+		libdirs (VenDir.."Mono/lib/Release")
 
 	filter "configurations:Dist"
 		optimize "Full"
 		symbols "Off"
 		defines "NEXUS_DIST"
+		libdirs (VenDir.."Mono/lib/Release")
