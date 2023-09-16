@@ -41,11 +41,6 @@ project "NxPhysicsEngine"
 		"PhysXPvdSDK_static_64.lib",
 	}
 
-	libdirs
-	{
-		BinDir
-	}
-
 	defines 
 	{
 		"NEXUS_PHYSICS_ENGINE_SHARED_BUILD",
@@ -72,19 +67,16 @@ project "NxPhysicsEngine"
 		optimize "Off"
 		symbols "Full"
 		defines "NEXUS_DEBUG"
+		libdirs (VenDir.."PhysX/lib/debug")
 		
 	filter "configurations:Release"
 		optimize "Speed"
 		symbols "FastLink"
-		defines
-		{
-			"NEXUS_RELEASE","NDEBUG"
-		}
+		defines {	"NEXUS_RELEASE","NDEBUG" }
+		libdirs (VenDir.."PhysX/lib/release")
 		
 	filter "configurations:Dist"
 		optimize "Full"
 		symbols "Off"
-		defines
-		{
-			"NEXUS_DIST","NDEBUG"
-		}
+		defines {	"NEXUS_DIST","NDEBUG"	}
+		libdirs (VenDir.."PhysX/lib/release")

@@ -26,8 +26,13 @@ class SharedLib:
 			files = os.listdir(phxD)
 
 			for file in files:
-				src = os.path.abspath(phxD + "/" + file)
-				shutil.copy(src,binD)
+				fp = os.path.splitext(file)	
+
+				if fp[1] == ".dll" :
+					src = os.path.abspath(phxD + "/" + file)
+					shutil.copy(src,binD)
+
+				
 		
 		print("Nvidia PhysX Setup Complete")
 
