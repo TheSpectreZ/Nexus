@@ -1,52 +1,52 @@
-project "NxApplication"
-	kind "SharedLib"
+project "NxTestClient"
+	kind "WindowedApp"
 	language "C++"
 	cppdialect "C++20"
-	location (SrcDir.."Engine/%{prj.name}")
+	location (SrcDir.."Tools/%{prj.name}")
 
 	targetdir (BinDir)
 	objdir (IntDir)
 
 	files
 	{
-		(SrcDir.."Engine/%{prj.name}/include/**.h"),
-		(SrcDir.."Engine/%{prj.name}/src/**.cpp")
+		(SrcDir.."Tools/%{prj.name}/src/**.h"),
+		(SrcDir.."Tools/%{prj.name}/src/**.cpp")
+	}
+
+	links
+	{
+		"imgui",
+
+		"NxCore",
+		"NxScene",
+		"NxGraphics",
+		"NxRenderEngine",
+		"NxNetworkEngine",
+		"NxApplication",
+		
+		"NxImGui"
 	}
 
 	includedirs
 	{
 		IncludePath["utils"],
-		IncludePath["glfw"],
+		
+		IncludePath["imgui"],
 		
 		IncludePath["NxCore"],
-		IncludePath["NxAsset"],
 		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
-		IncludePath["NxPhysicsEngine"],
-		IncludePath["NxScriptEngine"],
 		IncludePath["NxNetworkEngine"],
-		IncludePath["NxApplication"]
-	}
+		IncludePath["NxApplication"],
 
-	links
-	{
-		"glfw",
-		"NxCore",
-		"NxScene",
-		"NxAsset",
-		"NxRenderEngine",
-		"NxPhysicsEngine",
-		"NxScriptEngine",
-		"NxNetworkEngine"
+		IncludePath["NxImGui"]
 	}
-
-	defines "NEXUS_ENGINE_SHARED_BUILD"
 
 	filter "system:windows"
 		systemversion "latest"
 		defines "NEXUS_SYSTEM_WINDOWS"
-		disablewarnings { "4251","4275" }
+		disablewarnings { "4251","4996","4275" }
 
 	filter "configurations:Debug"
 		optimize "Off"

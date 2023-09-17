@@ -65,8 +65,8 @@ void NxImGui::Context::Initialize(const Nexus::Window& window, Nexus::RendererAP
 	io.ConfigViewportsNoAutoMerge = false;
 	io.ConfigViewportsNoTaskBarIcon = true;
 
-	io.Fonts->AddFontFromFileTTF("Resources/Fonts/OpenSans/OpenSans-Bold.ttf", 18.f);
-	io.FontDefault = io.Fonts->AddFontFromFileTTF("Resources/Fonts/OpenSans/OpenSans-Regular.ttf", 18.f);
+	io.Fonts->AddFontFromFileTTF("Resources/Fonts/OpenSans/OpenSans-Bold.ttf", 22.f);
+	io.FontDefault = io.Fonts->AddFontFromFileTTF("Resources/Fonts/OpenSans/OpenSans-Regular.ttf", 20.f);
 
 	// Style
 	{

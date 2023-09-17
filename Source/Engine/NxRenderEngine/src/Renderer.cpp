@@ -17,10 +17,11 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 	s_Instance->m_CommandQueue = GraphicsInterface::CreateCommandQueue(Info.resizeCallback);
 	s_Instance->m_CommandQueue->Initialize();
 
+	ResourcePool::Initialize();
+	
 	if(Info.initSubmodules)
 	{
 		EnvironmentBuilder::Initialize();
-		ResourcePool::Initialize();
 	}
 }
 

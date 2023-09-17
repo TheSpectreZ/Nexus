@@ -6,16 +6,16 @@
 #include "NxCore/Base.h"
 #include "Application.h"
 
-extern Nexus::Application* CreateApplication(std::string cmdLineArg);
+extern Nexus::Application* CreateApplication(const std::unordered_map<std::string, std::string>& ccMap);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
 	auto args = Nexus::BuildString(lpCmdLine);
 	auto CCmap = Nexus::BuildCCMap(args);
 
-	Nexus::Application* app = CreateApplication(args);
+	auto app = CreateApplication(CCmap);
 
-	app->Init();
+	app->Init(CCmap);
 	app->Run();
 	app->Shut();
 
