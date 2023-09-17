@@ -4,10 +4,10 @@
 
 #include "AppLayer.h"
 
-class NexusEditor : public Nexus::Application
+class NexusLauncher : public Nexus::Application
 {
 public:
-	NexusEditor()
+	NexusLauncher()
 	{
 		m_AppSpecs.Window_Title = "NxLauncher";
 		m_AppSpecs.Window_Width = 1600;
@@ -19,7 +19,7 @@ public:
 	}
 };
 
-Nexus::Application* CreateApplication(std::string commandLine)
+Nexus::Application* CreateApplication(const std::unordered_map<std::string, std::string>& ccMap)
 {
-	return new NexusEditor;
+	return new NexusLauncher;
 }
