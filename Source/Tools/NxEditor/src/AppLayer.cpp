@@ -91,6 +91,8 @@ AppLayer::AppLayer(const std::unordered_map<std::string, std::string>& ccMap)
 
 void AppLayer::OnAttach()
 {
+	SetupRenderGraph();
+
 	m_ForwardDrawer = CreateRef<ForwardDrawer>(true);
 
 	AssetRegistry::Get()->SetProjectContext(AssetFilePath(m_ProjectPath).parent_path());
@@ -136,7 +138,7 @@ void AppLayer::OnAttach()
 	
 	// Camera
 	{
-		Extent extent = Module::Renderer::Get()->GetSwapchain()->GetExtent();
+		Extent extent = Renderer::GetSwapchain()->GetExtent();
 		
 		m_EditorCameraController.AttachCamera(&m_EditorCamera);
 		m_EditorCameraController.SetKeyBinding(CameraBinding::FRONT, Key::W);
@@ -155,9 +157,9 @@ void AppLayer::OnAttach()
 		m_EditorScene = CreateRef<Scene>();
 		m_EditorScene->SetCamera(&m_EditorCamera);
 
-		auto& root = m_EditorScene->GetRootEntity();
-		root.environment.handle = UUID();
-		EnvironmentBuilder::Build("Resources/Textures/pink_sunrise_2k.hdr", root.environment.handle);
+		//auto& root = m_EditorScene->GetRootEntity();
+		//root.environment.handle = UUID();
+		//EnvironmentBuilder::Build("Resources/Textures/pink_sunrise_2k.hdr", root.environment.handle);
 
 		// Default Test Scene...
 
@@ -280,6 +282,7 @@ void AppLayer::RenderSettingPanel()
 	ImGui::End();
 }
 
+
 void AppLayer::LoadProject(const std::string& path)
 {
 	if (Nexus::ProjectSerializer::DeSerialize(path, m_ProjectSpecs))
@@ -359,4 +362,41 @@ void AppLayer::RenderTopMenuBarPanel()
 
 		ImGui::EndMainMenuBar();
 	}
+}
+
+void AppLayer::SetupRenderGraph()
+{
+	Ref<RenderGraph> rGraph = GraphicsInterface::CreateRenderGraph();
+
+	// Geometry pass
+	{
+		auto& pass = rGraph->AddRenderGraphPass("GeometryPass");
+
+		pass.setOutput("Position")
+			.set(TextureFormat::RGBA16_SFLOAT)
+			.set(RenderTargetUsage::ColorAttachment);
+
+		pass.setOutput("Normal")
+			.set(TextureFormat::RGBA16_SFLOAT)
+			.set(RenderTargetUsage::ColorAttachment);
+		
+		pass.setOutput("Albedo")
+			.set(TextureFormat::SWAPCHAIN_COLOR)
+			.set(RenderTargetUsage::ColorAttachment);
+
+		pass.setOutput("Depth")
+			.set(TextureFormat::SWAPCHAIN_DEPTH)
+			.set(RenderTargetUsage::DepthAttachment);
+	}
+	
+	// Lighting pass
+	{
+		auto& pass = rGraph->AddRenderGraphPass("LightingPass");
+
+		pass.setOutput("Deferred")
+			.set(TextureFormat::SWAPCHAIN_COLOR)
+			.set(RenderTargetUsage::ColorAttachment);
+	}
+
+	rGraph->Bake();
 }

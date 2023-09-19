@@ -11,6 +11,7 @@
 #include "NxGraphics/Pipeline.h"
 #include "NxGraphics/Buffer.h"
 #include "NxGraphics/Texture.h"
+#include "NxGraphics/RenderGraph.h"
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
@@ -34,4 +35,6 @@ namespace Nexus::GraphicsInterface
 	Ref<Buffer> NEXUS_RENDERER_API CreateBuffer(const BufferSpecification& specs);
 	Ref<Texture> NEXUS_RENDERER_API CreateTexture(const TextureSpecification& specs);
 	Ref<Sampler> NEXUS_RENDERER_API CreateSampler(const SamplerSpecification& specs);
+
+	Ref<RenderGraph> NEXUS_RENDERER_API CreateRenderGraph();
 }

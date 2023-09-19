@@ -40,4 +40,6 @@ private:
 
 	void RenderTopMenuBarPanel();
 	void RenderSettingPanel();
+
+	void SetupRenderGraph();
 };

@@ -49,11 +49,19 @@ namespace Nexus
 
 	enum class NEXUS_GRAPHICS_API TextureUsage
 	{
-		ShaderSampled, StorageWrite, StorageRead
+		ColorAttachment,
+		DepthStencilAttachment,
+
+		ShaderSampled,
+		StorageWrite,
+		StorageRead
 	};
 
 	enum class NEXUS_GRAPHICS_API TextureFormat
 	{
+		SWAPCHAIN_COLOR,
+		SWAPCHAIN_DEPTH,
+
 		RGBA8_SRGB,
 		
 		RG16_SFLOAT,

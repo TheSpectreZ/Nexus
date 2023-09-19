@@ -8,6 +8,7 @@
 #include "NxVulkan/VkFramebuffer.h"
 #include "NxVulkan/VkPipeline.h"
 #include "NxVulkan/VkShader.h"
+#include "NxVulkan/VkRenderGraph.h"
 
 namespace Nexus::GraphicsInterface
 {
@@ -80,4 +81,9 @@ Nexus::Ref<Nexus::Texture>NEXUS_RENDERER_API Nexus::GraphicsInterface::CreateTex
 Nexus::Ref<Nexus::Sampler>NEXUS_RENDERER_API Nexus::GraphicsInterface::CreateSampler(const SamplerSpecification& specs)
 {
 	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanSampler>(specs));
+}
+
+Nexus::Ref<Nexus::RenderGraph>NEXUS_RENDERER_API Nexus::GraphicsInterface::CreateRenderGraph()
+{
+	NEXUS_INTERFACE_SWITCH(CreateRef<VulkanRenderGraph>());
 }
