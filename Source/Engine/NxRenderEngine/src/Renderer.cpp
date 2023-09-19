@@ -2,9 +2,9 @@
 #include "NxRenderEngine/ResourcePool.h"
 #include "NxRenderEngine/EnvironmentBuilder.h"	
 
-Nexus::Module::Renderer* Nexus::Module::Renderer::s_Instance = nullptr;
+Nexus::Renderer* Nexus::Renderer::s_Instance = nullptr;
 
-void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
+void Nexus::Renderer::Initialize(const RendererCreateInfo& Info)
 {
 	s_Instance = new Renderer;
 	
@@ -17,19 +17,23 @@ void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
 	s_Instance->m_CommandQueue = GraphicsInterface::CreateCommandQueue(Info.resizeCallback);
 	s_Instance->m_CommandQueue->Initialize();
 
+	s_Instance->m_ShaderBank = CreateRef<ShaderBank>();
+
 	ResourcePool::Initialize();
-	
-	if(Info.initSubmodules)
+
+	// Shaders
 	{
-		EnvironmentBuilder::Initialize();
+		s_Instance->m_ShaderBank->Load("Resources/Shaders/skybox.glsl");
+		s_Instance->m_ShaderBank->Load("Resources/Shaders/pbr.glsl");
 	}
 }
 
-void Nexus::Module::Renderer::Shutdown()
+void Nexus::Renderer::Shutdown()
 {	
-	EnvironmentBuilder::Shutdown();
 	ResourcePool::Shutdown();
 	
+	s_Instance->m_ShaderBank.reset();
+
 	s_Instance->m_CommandQueue->Shutdown();
 	s_Instance->m_CommandQueue.reset();
 
@@ -42,27 +46,27 @@ void Nexus::Module::Renderer::Shutdown()
 	delete s_Instance;
 }
 
-void Nexus::Module::Renderer::Begin()
+void Nexus::Renderer::Begin()
 {
-	m_CommandQueue->BeginRenderQueue();
+	s_Instance->m_CommandQueue->BeginRenderQueue();
 }
 
-void Nexus::Module::Renderer::End()
+void Nexus::Renderer::End()
 {
-	m_CommandQueue->EndRenderQueue();
+	s_Instance->m_CommandQueue->EndRenderQueue();
 }
 
-void Nexus::Module::Renderer::WaitForRenderer()
+void Nexus::Renderer::WaitForRenderer()
 {
-	m_Context->WaitForDevice();
+	s_Instance->m_Context->WaitForDevice();
 }
 
-void Nexus::Module::Renderer::FlushRender()
+void Nexus::Renderer::FlushRender()
 {
-	m_CommandQueue->FlushRenderQueue();
+	s_Instance->m_CommandQueue->FlushRenderQueue();
 }
 
-void Nexus::Module::Renderer::FlushTransfer()
+void Nexus::Renderer::FlushTransfer()
 {
-	m_CommandQueue->FlushTransferQueue();
+	s_Instance->m_CommandQueue->FlushTransferQueue();
 }

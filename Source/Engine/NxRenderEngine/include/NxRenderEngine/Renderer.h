@@ -4,6 +4,7 @@
 #include <unordered_map>
 
 #include "GraphicsInterface.h"
+#include "ShaderBank.h"
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
@@ -11,7 +12,7 @@
 #define NEXUS_RENDERER_API __declspec(dllimport)
 #endif
 
-namespace Nexus::Module
+namespace Nexus
 {
 	struct NEXUS_RENDERER_API RendererCreateInfo
 	{
@@ -27,28 +28,27 @@ namespace Nexus::Module
 	{
 		static Renderer* s_Instance;
 	public:
-		static Renderer* Get() { return s_Instance; }
-		
 		static void Initialize(const RendererCreateInfo& Info);
 		static void Shutdown();
 
-		void Begin();
-		void End();
+		static void Begin();
+		static void End();
 
-		void FlushTransfer();
-		void FlushRender();
+		static void FlushTransfer();
+		static void FlushRender();
 
-		void WaitForRenderer();
+		static void WaitForRenderer();
+
+		static Ref<Context> GetContext() { return s_Instance->m_Context; }
+		static Ref<Swapchain> GetSwapchain() { return s_Instance->m_Swapchain; }
+		static Ref<CommandQueue> GetCommandQueue() { return s_Instance->m_CommandQueue; }
 
 		Renderer() = default;
 		~Renderer() = default;
-
-		Ref<Context> GetContext() { return m_Context; }
-		Ref<Swapchain> GetSwapchain() { return m_Swapchain; }
-		Ref<CommandQueue> GetCommandQueue() { return m_CommandQueue; }
 	private:
 		Ref<Context> m_Context;
 		Ref<Swapchain> m_Swapchain;
 		Ref<CommandQueue> m_CommandQueue;
+		Ref<ShaderBank> m_ShaderBank;
 	};
 }

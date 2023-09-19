@@ -150,7 +150,7 @@ void NxImGui::Context::Initialize(const Nexus::Window& window, Nexus::RendererAP
 
 	// Framebuffer
 	{
-		auto extent = Nexus::Module::Renderer::Get()->GetSwapchain()->GetExtent();
+		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
 
 		auto& a1 = s_Data->fbspecs.attachments.emplace_back();
 		a1.Type = Nexus::FramebufferAttachmentType::PresentSrc;
@@ -167,10 +167,10 @@ void NxImGui::Context::Initialize(const Nexus::Window& window, Nexus::RendererAP
 	{
 		ImGui_ImplGlfw_InitForVulkan(s_Data->handle, true);
 
-		Nexus::Ref<Nexus::VulkanContext> context = DynamicPointerCast<Nexus::VulkanContext>(Nexus::Module::Renderer::Get()->GetContext());
-		Nexus::Ref<Nexus::Swapchain> swapchain = Nexus::Module::Renderer::Get()->GetSwapchain();
+		Nexus::Ref<Nexus::VulkanContext> context = DynamicPointerCast<Nexus::VulkanContext>(Nexus::Renderer::GetContext());
+		Nexus::Ref<Nexus::Swapchain> swapchain = Nexus::Renderer::GetSwapchain();
 
-		s_Data->vkqueue = DynamicPointerCast<Nexus::VulkanCommandQueue>(Nexus::Module::Renderer::Get()->GetCommandQueue());
+		s_Data->vkqueue = DynamicPointerCast<Nexus::VulkanCommandQueue>(Nexus::Renderer::GetCommandQueue());
 
 		// Descriptor Pool
 		{
@@ -218,7 +218,7 @@ void NxImGui::Context::Initialize(const Nexus::Window& window, Nexus::RendererAP
 
 	// Fonts
 	{
-		Nexus::Ref<Nexus::VulkanContext> context = DynamicPointerCast<Nexus::VulkanContext>(Nexus::Module::Renderer::Get()->GetContext());
+		Nexus::Ref<Nexus::VulkanContext> context = DynamicPointerCast<Nexus::VulkanContext>(Nexus::Renderer::GetContext());
 
 		VkCommandPoolCreateInfo p{};
 		p.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -264,10 +264,9 @@ void NxImGui::Context::Initialize(const Nexus::Window& window, Nexus::RendererAP
 
 	// Screen
 	{
-		auto Renderer = Nexus::Module::Renderer::Get();
-		auto extent = Renderer->GetSwapchain()->GetExtent();
+		auto extent = Nexus::Renderer::GetSwapchain()->GetExtent();
 
-		s_Data->queue = Renderer->GetCommandQueue();
+		s_Data->queue = Nexus::Renderer::GetCommandQueue();
 
 		s_Data->Viewport.x = 0.f;
 		s_Data->Viewport.y = 0.f;
@@ -283,7 +282,7 @@ void NxImGui::Context::Initialize(const Nexus::Window& window, Nexus::RendererAP
 
 void NxImGui::Context::Shutdown()
 {
-	Nexus::Ref<Nexus::VulkanContext> context = Nexus::DynamicPointerCast<Nexus::VulkanContext>(Nexus::Module::Renderer::Get()->GetContext());
+	Nexus::Ref<Nexus::VulkanContext> context = Nexus::DynamicPointerCast<Nexus::VulkanContext>(Nexus::Renderer::GetContext());
 
 	vkDestroyDescriptorPool(context->GetDeviceRef()->Get(), s_Data->pool, nullptr);
 	

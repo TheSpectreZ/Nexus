@@ -18,13 +18,13 @@ void NexusEd::Viewport::Initialize()
 
 	m_Sampler = Nexus::ResourcePool::Get()->GetSampler(samplerSpecs);
 
-	m_TextureIDs.resize(Nexus::Module::Renderer::Get()->GetSwapchain()->GetImageCount());
+	m_TextureIDs.resize(Nexus::Renderer::GetSwapchain()->GetImageCount());
 }
 
 void NexusEd::Viewport::SetContext(Nexus::Ref<Nexus::Framebuffer> framebuffer, uint32_t attachmentIndex)
 {
 	m_Framebuffer = framebuffer;
-	m_Extent = Nexus::Module::Renderer::Get()->GetSwapchain()->GetExtent();
+	m_Extent = Nexus::Renderer::GetSwapchain()->GetExtent();
 
 	for (uint32_t i = 0; i < m_TextureIDs.size(); i++)
 	{

@@ -11,7 +11,7 @@ Nexus::EnvironmentBuilder* Nexus::EnvironmentBuilder::s_Instance = nullptr;
 void Nexus::EnvironmentBuilder::Initialize()
 {
 	s_Instance = new EnvironmentBuilder;
-	s_Instance->m_queue = Module::Renderer::Get()->GetCommandQueue();
+	s_Instance->m_queue = Renderer::GetCommandQueue();
 
 	s_Instance->m_brdfLut.Build("Resources/Shaders/compute/GenBRDFLut.glsl");
 	s_Instance->m_Irradiance.Build("Resources/Shaders/compute/GenIrradiance.glsl");

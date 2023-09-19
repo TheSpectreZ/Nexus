@@ -99,14 +99,14 @@ void Nexus::Application::Init(const std::unordered_map<std::string, std::string>
 	{
 		Module::Input::Initialize(m_Window);
 		
-		Module::RendererCreateInfo rCreateInfo{};
+		RendererCreateInfo rCreateInfo{};
 		rCreateInfo.apiType = m_AppSpecs.rApi;
 		rCreateInfo.window = &m_Window;
 		rCreateInfo.HInstance = s_Data->hInst;
 		rCreateInfo.resizeCallback = NEXUS_BIND_FN(Application::ResizeCallback, this);
 		rCreateInfo.initSubmodules = m_AppSpecs.EnableRendererSubmodules;
 		
-		Module::Renderer::Initialize(rCreateInfo);	
+		Renderer::Initialize(rCreateInfo);	
 
 		if (m_AppSpecs.EnableAssetManager)
 			AssetManager::Initialize();
@@ -149,17 +149,17 @@ void Nexus::Application::Run()
 		
 		for (auto& l : s_Data->layerStack)
 			l->OnUpdate(deltaTime);
-		Module::Renderer::Get()->FlushTransfer();
+		Renderer::FlushTransfer();
 
-		Module::Renderer::Get()->Begin();
+		Renderer::Begin();
 		for (auto& l : s_Data->layerStack)
 			l->OnRender();
-		Module::Renderer::Get()->End();
+		Renderer::End();
 
-		Module::Renderer::Get()->FlushRender();
+		Renderer::FlushRender();
 	}
 
-	Module::Renderer::Get()->WaitForRenderer();
+	Renderer::WaitForRenderer();
 
 	for (auto& l : s_Data->layerStack)
 	{
@@ -183,7 +183,7 @@ void Nexus::Application::Shut()
 		if (m_AppSpecs.EnableAssetManager)
 			AssetManager::Shutdown();
 		
-		Module::Renderer::Shutdown();
+		Renderer::Shutdown();
 		Module::Input::Shutdown();
 	}
 

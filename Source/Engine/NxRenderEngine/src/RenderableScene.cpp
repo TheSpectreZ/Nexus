@@ -199,15 +199,15 @@ void Nexus::RenderableScene::Initialize()
 		m_pbrShader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform0.binding, cbuff);
 		m_pbrShader->BindUniformWithResourceHeap(PerSceneHeap, PerSceneUniform1.binding, sbuff);
 
-		// Environment
-		ImageHandle handle{};
-		handle.set = 0;
-		handle.binding = 2;
-		handle.texture = EnvironmentBuilder::GetBRDFLut();
-		handle.sampler = ResourcePool::Get()->GetSampler(11122);
-		handle.Type = ShaderResourceType::SampledImage;
-
-		m_pbrShader->BindTextureWithResourceHeap(PerSceneHeap, handle);
+		//// Environment
+		//ImageHandle handle{};
+		//handle.set = 0;
+		//handle.binding = 2;
+		//handle.texture = EnvironmentBuilder::GetBRDFLut();
+		//handle.sampler = ResourcePool::Get()->GetSampler(11122);
+		//handle.Type = ShaderResourceType::SampledImage;
+		//
+		//m_pbrShader->BindTextureWithResourceHeap(PerSceneHeap, handle);
 
 		// Default Material
 		DefaultMaterialHeap.hashId = UUID();
@@ -230,12 +230,12 @@ void Nexus::RenderableScene::Initialize()
 
 	// Skybox
 	{
-		SkyBoxHeap.hashId = UUID();
-		SkyBoxHeap.set = 0;
-		m_skyBoxShader->AllocateShaderResourceHeap(SkyBoxHeap);
-
-		auto buffer = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform0.hashId);
-		m_skyBoxShader->BindUniformWithResourceHeap(SkyBoxHeap, 0, buffer);
+		//SkyBoxHeap.hashId = UUID();
+		//SkyBoxHeap.set = 0;
+		//m_skyBoxShader->AllocateShaderResourceHeap(SkyBoxHeap);
+		//
+		//auto buffer = ResourcePool::Get()->GetUniformBuffer(PerSceneUniform0.hashId);
+		//m_skyBoxShader->BindUniformWithResourceHeap(SkyBoxHeap, 0, buffer);
 	}
 }
 
