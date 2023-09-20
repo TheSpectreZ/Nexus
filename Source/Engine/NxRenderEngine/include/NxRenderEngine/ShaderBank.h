@@ -3,7 +3,7 @@
 
 namespace Nexus
 {
-	class ShaderBank
+	class NEXUS_RENDERER_API ShaderBank
 	{
 	public:
 		ShaderBank() = default;

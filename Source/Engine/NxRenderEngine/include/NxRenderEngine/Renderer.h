@@ -42,6 +42,7 @@ namespace Nexus
 		static Ref<Context> GetContext() { return s_Instance->m_Context; }
 		static Ref<Swapchain> GetSwapchain() { return s_Instance->m_Swapchain; }
 		static Ref<CommandQueue> GetCommandQueue() { return s_Instance->m_CommandQueue; }
+		static Ref<ShaderBank> GetShaderBank() { return s_Instance->m_ShaderBank; }
 
 		Renderer() = default;
 		~Renderer() = default;
