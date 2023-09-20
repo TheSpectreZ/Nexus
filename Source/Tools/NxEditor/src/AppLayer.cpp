@@ -282,7 +282,6 @@ void AppLayer::RenderSettingPanel()
 	ImGui::End();
 }
 
-
 void AppLayer::LoadProject(const std::string& path)
 {
 	if (Nexus::ProjectSerializer::DeSerialize(path, m_ProjectSpecs))
@@ -372,28 +371,78 @@ void AppLayer::SetupRenderGraph()
 	{
 		auto& pass = rGraph->AddRenderGraphPass("GeometryPass");
 
-		pass.setOutput("Position")
+		pass.addOutput("Position")
 			.set(TextureFormat::RGBA16_SFLOAT)
 			.set(RenderTargetUsage::ColorAttachment);
 
-		pass.setOutput("Normal")
+		pass.addOutput("Normal")
 			.set(TextureFormat::RGBA16_SFLOAT)
 			.set(RenderTargetUsage::ColorAttachment);
 		
-		pass.setOutput("Albedo")
+		pass.addOutput("Albedo")
 			.set(TextureFormat::SWAPCHAIN_COLOR)
 			.set(RenderTargetUsage::ColorAttachment);
 
-		pass.setOutput("Depth")
+		pass.addOutput("Depth")
 			.set(TextureFormat::SWAPCHAIN_DEPTH)
 			.set(RenderTargetUsage::DepthAttachment);
+
+		{
+			auto& pipeline = pass.addGraphicsPipeline("PBR")
+				.set(Renderer::GetShaderBank()->Get("Resources/Shaders/pbr.glsl"))
+				.set(RenderPipelineCullMode::None)
+				.set(RenderPipelinePolygonMode::Fill)
+				.set(RenderPipelineTopology::TriangleList)
+				.set(RenderPiplineFrontFaceType::AntiClockwise);
+
+			std::vector<VertexBindInfo> pipelineVertexBindInfo(1);
+			{
+				pipelineVertexBindInfo[0].binding = 0;
+				pipelineVertexBindInfo[0].inputRate = VertexBindInfo::INPUT_RATE_VERTEX;
+
+				// Depends on Vertex
+				pipelineVertexBindInfo[0].stride = sizeof(Meshing::Vertex);
+			}
+
+			std::vector<VertexAttribInfo> pipelineVertexAttribInfo(5);
+			{
+				pipelineVertexAttribInfo[0].binding = 0;
+				pipelineVertexAttribInfo[0].location = 0;
+				pipelineVertexAttribInfo[0].offset = 0;
+				pipelineVertexAttribInfo[0].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
+
+				pipelineVertexAttribInfo[1].binding = 0;
+				pipelineVertexAttribInfo[1].location = 1;
+				pipelineVertexAttribInfo[1].offset = sizeof(float) * 3;
+				pipelineVertexAttribInfo[1].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
+
+				pipelineVertexAttribInfo[2].binding = 0;
+				pipelineVertexAttribInfo[2].location = 2;
+				pipelineVertexAttribInfo[2].offset = sizeof(float) * 6;
+				pipelineVertexAttribInfo[2].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
+
+				pipelineVertexAttribInfo[3].binding = 0;
+				pipelineVertexAttribInfo[3].location = 3;
+				pipelineVertexAttribInfo[3].offset = sizeof(float) * 9;
+				pipelineVertexAttribInfo[3].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
+
+				pipelineVertexAttribInfo[4].binding = 0;
+				pipelineVertexAttribInfo[4].location = 4;
+				pipelineVertexAttribInfo[4].offset = sizeof(float) * 12;
+				pipelineVertexAttribInfo[4].format = VertexAttribInfo::ATTRIB_FORMAT_VEC2;
+			}
+
+			pipeline.bindInfo = pipelineVertexBindInfo;
+			pipeline.attribInfo = pipelineVertexAttribInfo;
+		}
+
 	}
 	
 	// Lighting pass
 	{
 		auto& pass = rGraph->AddRenderGraphPass("LightingPass");
 
-		pass.setOutput("Deferred")
+		pass.addOutput("Deferred")
 			.set(TextureFormat::SWAPCHAIN_COLOR)
 			.set(RenderTargetUsage::ColorAttachment);
 	}
