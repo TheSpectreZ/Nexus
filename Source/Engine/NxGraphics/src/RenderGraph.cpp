@@ -48,6 +48,19 @@ Nexus::GraphicsRenderPipelineSpecification& Nexus::GraphicsRenderPipelineSpecifi
 	return *this;
 }
 
+Nexus::GraphicsRenderPipelineSpecification& Nexus::GraphicsRenderPipelineSpecification::set(RenderPipelineVertexInputRate rate,uint32_t stride)
+{
+	this->vertexInputRate = rate;
+	this->vertexStride = stride;
+	return *this;
+}
+
+Nexus::GraphicsRenderPipelineSpecification& Nexus::GraphicsRenderPipelineSpecification::addVertexAttrib(RenderPipelineVertexAttribFormat format, uint32_t location, uint32_t offset)
+{
+	attribInfo.push_back( std::make_tuple(format, location, offset) );
+	return *this;
+}
+
 Nexus::GraphicsRenderPipelineSpecification& Nexus::GraphicsRenderPipelineSpecification::set(Ref<Shader> shader)
 {
 	this->shader = shader;
@@ -58,16 +71,6 @@ Nexus::GraphicsRenderPipelineSpecification& Nexus::GraphicsRenderPipelineSpecifi
 {
 	this->multiSampled = multiSampled;
 	return *this;
-}
-
-VertexBindInfo& Nexus::GraphicsRenderPipelineSpecification::addVertexBinding()
-{
-	return bindInfo.emplace_back();
-}
-
-VertexAttribInfo& Nexus::GraphicsRenderPipelineSpecification::addVertexAttribute()
-{
-	return attribInfo.emplace_back();
 }
 
 Nexus::RenderTargetSpecification& Nexus::RenderGraphPassSpecification::addOutput(const std::string& name)
@@ -88,9 +91,25 @@ Nexus::RenderGraphPassSpecification& Nexus::RenderGraphPassSpecification::setRen
 	return *this;
 }
 
-Nexus::RenderGraphPassSpecification& Nexus::RenderGraph::AddRenderGraphPass(const std::string& name)
+Nexus::RenderGraphPassSpecification& Nexus::RenderGraphPassSpecification::addGraphDependency(const std::string& name)
 {
-	m_GPUpasses[name] = RenderGraphPassSpecification(this);
-	return m_GPUpasses[name];
+	if(m_Parent->m_GPUpasses.contains(name))
+	{
+		m_PassDependency.push_back(name);
+		m_Parent->m_GPUpasses[name].m_PassParent = m_Name;
+	}
+
+	return *this;
 }
 
+Nexus::RenderGraphPassSpecification& Nexus::RenderGraphPassSpecification::promoteToBackBuffer()
+{
+	m_Parent->m_backBuffer = m_Name;
+	return *this;
+}
+
+Nexus::RenderGraphPassSpecification& Nexus::RenderGraph::AddRenderGraphPass(const std::string& name)
+{
+	m_GPUpasses[name] = RenderGraphPassSpecification(this, name);
+	return m_GPUpasses[name];
+}

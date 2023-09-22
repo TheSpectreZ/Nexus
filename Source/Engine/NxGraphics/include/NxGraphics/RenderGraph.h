@@ -52,29 +52,42 @@ namespace Nexus
 		Clockwise, AntiClockwise
 	};
 
+	enum class RenderPipelineVertexInputRate
+	{
+		PerVertex, PerInstance
+	};
+
+	enum class RenderPipelineVertexAttribFormat
+	{
+		Vec2, Vec3, Vec4
+	};
+
 	struct NEXUS_GRAPHICS_API GraphicsRenderPipelineSpecification
 	{
+		GraphicsRenderPipelineSpecification& set(Ref<Shader> shader);
 		GraphicsRenderPipelineSpecification& set(RenderPipelineTopology topology);
 		GraphicsRenderPipelineSpecification& set(RenderPipelinePolygonMode polygon);
 		GraphicsRenderPipelineSpecification& set(RenderPipelineCullMode cullMode);
 		GraphicsRenderPipelineSpecification& set(RenderPiplineFrontFaceType face);
-		GraphicsRenderPipelineSpecification& set(Ref<Shader> shader);
+		GraphicsRenderPipelineSpecification& set(RenderPipelineVertexInputRate rate, uint32_t stride);
+		
+		GraphicsRenderPipelineSpecification& addVertexAttrib(RenderPipelineVertexAttribFormat format, uint32_t location , uint32_t offset);
 		
 		GraphicsRenderPipelineSpecification& enableMSAA(bool multiSampled);
-
-		VertexBindInfo& addVertexBinding();
-		VertexAttribInfo& addVertexAttribute();
 
 		RenderPipelineTopology topology;
 		RenderPipelinePolygonMode polygon;
 		RenderPipelineCullMode cull;
 		RenderPiplineFrontFaceType frontface;
 
-		std::vector<VertexBindInfo> bindInfo;
-		std::vector<VertexAttribInfo> attribInfo;
+		uint32_t vertexStride = 0;
+		RenderPipelineVertexInputRate vertexInputRate;
+
+		std::vector< std::tuple<RenderPipelineVertexAttribFormat, uint32_t, uint32_t> > attribInfo;
 
 		Ref<Shader> shader;
 		bool multiSampled = false;
+		
 	};
 
 	class NEXUS_GRAPHICS_API RenderGraphPassSpecification
@@ -84,24 +97,29 @@ namespace Nexus
 		RenderGraphPassSpecification() = default;
 		~RenderGraphPassSpecification() = default;
 
-		RenderGraphPassSpecification(class RenderGraph* pParent)
-			:m_Parent(pParent) {}
+		RenderGraphPassSpecification(class RenderGraph* pParent,const std::string& name)
+			:m_Parent(pParent),m_Name(name) {}
 
 		RenderTargetSpecification& addOutput(const std::string& name);
+		const auto& getOutputs() const { return m_Outputs; }
 		
 		GraphicsRenderPipelineSpecification& addGraphicsPipeline(const std::string& name);
-		
-		RenderGraphPassSpecification& setRenderTargetExtent(Extent extent);
-
-		const auto& getOutputs() const { return m_Outputs; }
 		const auto& getGraphicsPipelines() const { return m_GraphicsPipelines; }
 
+		RenderGraphPassSpecification& setRenderTargetExtent(Extent extent);
 		Extent getRenderTargetExtent() const { return m_Extent; }
+
+		RenderGraphPassSpecification& addGraphDependency(const std::string& name);
+		RenderGraphPassSpecification& promoteToBackBuffer();
 	protected:
 		class RenderGraph* m_Parent = nullptr;
-		
+		std::string m_Name;
+
 		std::vector<std::string> m_Outputs;
 		std::vector<std::string> m_GraphicsPipelines;
+
+		std::string m_PassParent;
+		std::vector<std::string> m_PassDependency;
 
 		Extent m_Extent = { 0,0 };
 	};
@@ -114,12 +132,14 @@ namespace Nexus
 		virtual ~RenderGraph() = default;
 
 		virtual void Bake() = 0;
-	
+
 		RenderGraphPassSpecification& AddRenderGraphPass(const std::string& name);
 	protected:
 		std::unordered_map<std::string, RenderGraphPassSpecification> m_GPUpasses;
 		std::unordered_map<std::string, RenderTargetSpecification> m_RenderTargets;
 		
 		std::unordered_map<std::string, GraphicsRenderPipelineSpecification> m_GraphicsRenderPipelines;
+
+		std::string m_backBuffer;
 	};
 }

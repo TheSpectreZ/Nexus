@@ -80,9 +80,9 @@ namespace Nexus
 	public:
 		VulkanRenderGraph();
 		~VulkanRenderGraph() override;
-
-		void Bake() override;
 	private:
+		void Bake() override;
+		
 		Ref<VulkanDevice> m_Device;
 		Ref<VulkanPhysicalDevice> m_pDevice;
 		

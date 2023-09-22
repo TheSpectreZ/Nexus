@@ -20,12 +20,6 @@ void Nexus::Renderer::Initialize(const RendererCreateInfo& Info)
 	s_Instance->m_ShaderBank = CreateRef<ShaderBank>();
 
 	ResourcePool::Initialize();
-
-	// Shaders
-	{
-		s_Instance->m_ShaderBank->Load("Resources/Shaders/skybox.glsl");
-		s_Instance->m_ShaderBank->Load("Resources/Shaders/pbr.glsl");
-	}
 }
 
 void Nexus::Renderer::Shutdown()

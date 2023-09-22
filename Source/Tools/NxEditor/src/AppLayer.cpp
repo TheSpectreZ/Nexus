@@ -157,9 +157,10 @@ void AppLayer::OnAttach()
 		m_EditorScene = CreateRef<Scene>();
 		m_EditorScene->SetCamera(&m_EditorCamera);
 
-		//auto& root = m_EditorScene->GetRootEntity();
-		//root.environment.handle = UUID();
-		//EnvironmentBuilder::Build("Resources/Textures/pink_sunrise_2k.hdr", root.environment.handle);
+		auto& root = m_EditorScene->GetRootEntity();
+		root.environment.handle = UUID();
+		EnvironmentBuilder::Initialize();
+		EnvironmentBuilder::Build("Resources/Textures/pink_sunrise_2k.hdr", root.environment.handle);
 
 		// Default Test Scene...
 
@@ -246,6 +247,8 @@ void AppLayer::OnRender()
 
 void AppLayer::OnDetach()
 {
+	EnvironmentBuilder::Shutdown();
+
 	m_EditorScene.reset();
 	m_RuntimeScene.reset();
 	m_ForwardDrawer.reset();
@@ -388,63 +391,59 @@ void AppLayer::SetupRenderGraph()
 			.set(RenderTargetUsage::DepthAttachment);
 
 		{
-			auto& pipeline = pass.addGraphicsPipeline("PBR")
-				.set(Renderer::GetShaderBank()->Get("Resources/Shaders/pbr.glsl"))
+			pass.addGraphicsPipeline("DeferredGeometryPipeline")
+				.set(Renderer::GetShaderBank()->Load("Resources/Shaders/Deferred_Geometry.glsl"))
 				.set(RenderPipelineCullMode::None)
 				.set(RenderPipelinePolygonMode::Fill)
 				.set(RenderPipelineTopology::TriangleList)
-				.set(RenderPiplineFrontFaceType::AntiClockwise);
-
-			std::vector<VertexBindInfo> pipelineVertexBindInfo(1);
-			{
-				pipelineVertexBindInfo[0].binding = 0;
-				pipelineVertexBindInfo[0].inputRate = VertexBindInfo::INPUT_RATE_VERTEX;
-
-				// Depends on Vertex
-				pipelineVertexBindInfo[0].stride = sizeof(Meshing::Vertex);
-			}
-
-			std::vector<VertexAttribInfo> pipelineVertexAttribInfo(5);
-			{
-				pipelineVertexAttribInfo[0].binding = 0;
-				pipelineVertexAttribInfo[0].location = 0;
-				pipelineVertexAttribInfo[0].offset = 0;
-				pipelineVertexAttribInfo[0].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
-
-				pipelineVertexAttribInfo[1].binding = 0;
-				pipelineVertexAttribInfo[1].location = 1;
-				pipelineVertexAttribInfo[1].offset = sizeof(float) * 3;
-				pipelineVertexAttribInfo[1].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
-
-				pipelineVertexAttribInfo[2].binding = 0;
-				pipelineVertexAttribInfo[2].location = 2;
-				pipelineVertexAttribInfo[2].offset = sizeof(float) * 6;
-				pipelineVertexAttribInfo[2].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
-
-				pipelineVertexAttribInfo[3].binding = 0;
-				pipelineVertexAttribInfo[3].location = 3;
-				pipelineVertexAttribInfo[3].offset = sizeof(float) * 9;
-				pipelineVertexAttribInfo[3].format = VertexAttribInfo::ATTRIB_FORMAT_VEC3;
-
-				pipelineVertexAttribInfo[4].binding = 0;
-				pipelineVertexAttribInfo[4].location = 4;
-				pipelineVertexAttribInfo[4].offset = sizeof(float) * 12;
-				pipelineVertexAttribInfo[4].format = VertexAttribInfo::ATTRIB_FORMAT_VEC2;
-			}
-
-			pipeline.bindInfo = pipelineVertexBindInfo;
-			pipeline.attribInfo = pipelineVertexAttribInfo;
+				.set(RenderPiplineFrontFaceType::AntiClockwise)
+				.set(RenderPipelineVertexInputRate::PerVertex, sizeof(Meshing::Vertex))
+				.addVertexAttrib(RenderPipelineVertexAttribFormat::Vec3, 0, offsetof(Meshing::Vertex, Meshing::Vertex::position))
+				.addVertexAttrib(RenderPipelineVertexAttribFormat::Vec3, 1, offsetof(Meshing::Vertex, Meshing::Vertex::normal))
+				.addVertexAttrib(RenderPipelineVertexAttribFormat::Vec3, 2, offsetof(Meshing::Vertex, Meshing::Vertex::tangent))
+				.addVertexAttrib(RenderPipelineVertexAttribFormat::Vec3, 3, offsetof(Meshing::Vertex, Meshing::Vertex::bitangent))
+				.addVertexAttrib(RenderPipelineVertexAttribFormat::Vec3, 4, offsetof(Meshing::Vertex, Meshing::Vertex::texCoord0));
 		}
 
 	}
 	
 	// Lighting pass
 	{
-		auto& pass = rGraph->AddRenderGraphPass("LightingPass");
+		auto& pass = rGraph->AddRenderGraphPass("LightingPass")
+			.addGraphDependency("GeometryPass");
 
 		pass.addOutput("Deferred")
 			.set(TextureFormat::SWAPCHAIN_COLOR)
 			.set(RenderTargetUsage::ColorAttachment);
+
+		{
+			pass.addGraphicsPipeline("DeferredLightingPipeline")
+				.set(Renderer::GetShaderBank()->Load("Resources/Shaders/Deferred_Lighting.glsl"))
+				.set(RenderPipelineCullMode::None)
+				.set(RenderPipelinePolygonMode::Fill)
+				.set(RenderPipelineTopology::TriangleList)
+				.set(RenderPiplineFrontFaceType::AntiClockwise);
+		}
+
+	}
+
+	// Fullscreen pass
+	{
+		auto& pass = rGraph->AddRenderGraphPass("FullScreenPass")
+			.addGraphDependency("LightingPass")
+			.promoteToBackBuffer();
+
+		pass.addOutput(RENDER_TARGET_BACKBUFFER_NAME);
+
+		{
+			pass.addGraphicsPipeline("FullScreenPipeline")
+				.set(Renderer::GetShaderBank()->Load("Resources/Shaders/FullScreen.glsl"))
+				.set(RenderPipelineCullMode::None)
+				.set(RenderPipelinePolygonMode::Fill)
+				.set(RenderPipelineTopology::TriangleList)
+				.set(RenderPiplineFrontFaceType::AntiClockwise);
+		}
+
 	}
 
 	rGraph->Bake();

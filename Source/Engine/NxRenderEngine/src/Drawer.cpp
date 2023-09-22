@@ -213,12 +213,12 @@ void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 
 	commandQueue->BeginRenderPass(m_pass, m_fb);
 
-	//commandQueue->BindPipeline(m_SkyboxPipeline);
+	commandQueue->BindPipeline(m_SkyboxPipeline);
 	commandQueue->SetViewport(m_Viewport);
 	commandQueue->SetScissor(m_Scissor);
 
-	//if (scene->GetRootEntity().environment.handle)
-	//	m_RenderableScenes[Id]->DrawSkybox(commandQueue);
+	if (scene->GetRootEntity().environment.handle)
+		m_RenderableScenes[Id]->DrawSkybox(commandQueue);
 	
 	commandQueue->BindPipeline(mode == 1 ? m_PBR_FillPipeline : m_PBR_LinePipeline);
 	m_RenderableScenes[Id]->DrawScene(commandQueue,scene);

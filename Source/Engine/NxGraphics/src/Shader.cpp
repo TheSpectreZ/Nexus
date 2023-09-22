@@ -11,10 +11,10 @@ namespace Nexus
 	{
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
-
+		
 		options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_0);
-		options.SetOptimizationLevel(shaderc_optimization_level_performance);
-
+		options.SetOptimizationLevel(shaderc_optimization_level_zero);
+	
 		shaderc::SpvCompilationResult result = compiler.CompileGlslToSpv(src, kind, file, options);
 		
 		NEXUS_BREAK_ASSERT((result.GetCompilationStatus() != shaderc_compilation_status_success),

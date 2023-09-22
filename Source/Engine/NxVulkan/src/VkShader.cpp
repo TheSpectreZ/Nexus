@@ -33,6 +33,7 @@ static void GenerateReflections(const Nexus::SpirV* spirV, Nexus::ReflectionData
 
 	spirv_cross::ShaderResources resources = reflector.get_shader_resources();
 
+	// Push Constant
 	for (const auto& resource : resources.push_constant_buffers)
 	{
 		auto& bufferType = reflector.get_type(resource.base_type_id);
@@ -157,7 +158,7 @@ Nexus::VulkanShader::VulkanShader(const ShaderSpecification& specs)
 		}
 
 		NEXUS_LOG("Vulkan", "");
-		NEXUS_LOG("Vulkan", "=================\n");
+		NEXUS_LOG("Vulkan", "=================");
 	}
 
 	/////////////////////////////////
@@ -188,7 +189,6 @@ Nexus::VulkanShader::VulkanShader(const ShaderSpecification& specs)
 
 		_VKR = vkCreatePipelineLayout(VulkanContext::Get()->GetDeviceRef()->Get(), &pipelineLayoutInfo, nullptr, &m_Layout);
 		CHECK_HANDLE(m_Layout, VkPipelineLayout);
-		NEXUS_LOG("Vulkan", "Shader Pipeline Created: Sets-%i", layouts.size());
 	}
 
 }

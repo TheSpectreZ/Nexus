@@ -11,6 +11,8 @@ static VkFormat GetVulkanTextureFormat(Nexus::TextureFormat format)
 		return Nexus::VulkanContext::Get()->GetPhysicalDeviceRef()->GetDepthFormat();
 	case Nexus::TextureFormat::RGBA8_SRGB:
 		return VK_FORMAT_R8G8B8A8_SRGB;
+	case Nexus::TextureFormat::RGBA8_UNORM:
+		return VK_FORMAT_R8G8B8A8_UNORM;
 	case Nexus::TextureFormat::RG16_SFLOAT:
 		return VK_FORMAT_R16G16_SFLOAT;
 	case Nexus::TextureFormat::RG32_SFLOAT:
@@ -123,6 +125,34 @@ static VkFrontFace GetVulkanPipelineFrontFaceType(Nexus::RenderPiplineFrontFaceT
 	}
 }
 
+static VkVertexInputRate GetVulkanVertexInputRate(Nexus::RenderPipelineVertexInputRate rate)
+{
+	switch (rate)
+	{
+	case Nexus::RenderPipelineVertexInputRate::PerVertex:
+		return VK_VERTEX_INPUT_RATE_VERTEX;
+	case Nexus::RenderPipelineVertexInputRate::PerInstance:
+		return VK_VERTEX_INPUT_RATE_INSTANCE;
+	default:
+		return VK_VERTEX_INPUT_RATE_MAX_ENUM;
+	}
+}
+
+static VkFormat GetVulkanVertexAttribFormat(Nexus::RenderPipelineVertexAttribFormat format)
+{
+	switch (format)
+	{
+	case Nexus::RenderPipelineVertexAttribFormat::Vec2:
+		return VK_FORMAT_R32G32_SFLOAT;
+	case Nexus::RenderPipelineVertexAttribFormat::Vec3:
+		return VK_FORMAT_R32G32B32_SFLOAT;
+	case Nexus::RenderPipelineVertexAttribFormat::Vec4:
+		return VK_FORMAT_R32G32B32A32_SFLOAT;
+	default:
+		return VK_FORMAT_MAX_ENUM;
+	}
+}
+
 Nexus::VulkanRenderGraph::VulkanRenderGraph()
 {
 	auto context = VulkanContext::Get();
@@ -144,12 +174,19 @@ void Nexus::VulkanRenderGraph::Bake()
 	for (auto& [name, specs] : m_GPUpasses)
 	{
 		for (auto& output : specs.getOutputs())
+		{
 			m_Attachments[output].Create(m_RenderTargets[output], specs.getRenderTargetExtent());
+			NEXUS_LOG("Vulkan: RenderGraph", "Attachment Created:- %s", output);
+		}
 
 		m_Passes[name].Create(specs, this);
+		NEXUS_LOG("Vulkan: RenderGraph", "Renderpass Created:- %s", name);
 
 		for (auto& pipeline : specs.getGraphicsPipelines())
+		{
 			m_GraphicsPipelines[pipeline].Create(m_GraphicsRenderPipelines[pipeline], m_Passes[name]);
+			NEXUS_LOG("Vulkan: RenderGraph", "Pipeline Creaed:- %s", pipeline);
+		}
 	}
 
 	NEXUS_LOG("Vulkan", "RenderGraph Bake Complete");
@@ -391,40 +428,26 @@ void Nexus::VulkanGraphicsRenderPipeline::Create(const GraphicsRenderPipelineSpe
 	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 	vertexInputInfo.pNext = nullptr;
 
-	std::vector<VkVertexInputBindingDescription> bindings(specs.bindInfo.size());
-
-	for (uint32_t k = 0; k < bindings.size(); k++)
-	{
-		bindings[k].binding = specs.bindInfo[k].binding;
-		bindings[k].stride = specs.bindInfo[k].stride;
-
-		if (specs.bindInfo[k].inputRate == VertexBindInfo::INPUT_RATE_VERTEX)
-			bindings[k].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-		if (specs.bindInfo[k].inputRate == VertexBindInfo::INPUT_RATE_INSTANCE)
-			bindings[k].inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
-	}
-
-
+	VkVertexInputBindingDescription vertexInputBinding{};
+	vertexInputBinding.stride = specs.vertexStride;
+	vertexInputBinding.inputRate = GetVulkanVertexInputRate(specs.vertexInputRate);
+	
 	std::vector<VkVertexInputAttributeDescription> attributes(specs.attribInfo.size());
 
 	for (uint32_t k = 0; k < attributes.size(); k++)
 	{
-		attributes[k].binding = specs.attribInfo[k].binding;
-		attributes[k].location = specs.attribInfo[k].location;
-		attributes[k].offset = specs.attribInfo[k].offset;
+		auto& [format, location, offset] = specs.attribInfo[k];
 
-		if (specs.attribInfo[k].format == VertexAttribInfo::ATTRIB_FORMAT_VEC2)
-			attributes[k].format = VK_FORMAT_R32G32_SFLOAT;
-		if (specs.attribInfo[k].format == VertexAttribInfo::ATTRIB_FORMAT_VEC3)
-			attributes[k].format = VK_FORMAT_R32G32B32_SFLOAT;
-		if (specs.attribInfo[k].format == VertexAttribInfo::ATTRIB_FORMAT_VEC4)
-			attributes[k].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+		attributes[k].binding = 0;
+		attributes[k].location = location;
+		attributes[k].offset = offset;
+		attributes[k].format = GetVulkanVertexAttribFormat(format);
 	}
 
-	vertexInputInfo.vertexBindingDescriptionCount = (uint32_t)bindings.size();
-	vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)attributes.size();
+	vertexInputInfo.vertexBindingDescriptionCount = 1;
+	vertexInputInfo.pVertexBindingDescriptions = &vertexInputBinding;
 
-	vertexInputInfo.pVertexBindingDescriptions = bindings.data();
+	vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)attributes.size();
 	vertexInputInfo.pVertexAttributeDescriptions = attributes.data();
 
 	/////////////////////////////////////////////////
@@ -545,7 +568,7 @@ void Nexus::VulkanGraphicsRenderPipeline::Create(const GraphicsRenderPipelineSpe
 	Info.pRasterizationState = &rasterizer;
 	Info.pViewportState = &viewportState;
 	Info.pInputAssemblyState = &inputAssembly;
-	Info.pVertexInputState = &vertexInputInfo;
+	Info.pVertexInputState = specs.vertexStride > 0 ? &vertexInputInfo : nullptr;
 
 	_VKR = vkCreateGraphicsPipelines(device->Get(), nullptr, 1, &Info, nullptr, &m_Handle);
 	CHECK_LOG_VKR;
