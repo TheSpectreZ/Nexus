@@ -39,7 +39,7 @@ Nexus::RenderableTexture::RenderableTexture(const RenderableTextureSpecification
 
 	TextureSpecification tSpecs{};
 	tSpecs.extent = Extent(Image.width, Image.height);
-	tSpecs.format = TextureFormat::RGBA8_SRGB;
+	tSpecs.format = specs.format;
 	tSpecs.type = TextureType::TwoDim;
 	tSpecs.usage = TextureUsage::ShaderSampled;
 	tSpecs.pixels = (void*)Image.pixels.data();
@@ -49,7 +49,7 @@ Nexus::RenderableTexture::RenderableTexture(const RenderableTextureSpecification
 
 std::unordered_map<Nexus::UUID, Nexus::Ref<Nexus::RenderableMaterial> > Nexus::RenderableMaterial::s_Pool;
 
-#define LOAD_NON_EXISTING_TEX(id) if (!RenderableTexture::ContainsInPool(id))\
+#define LOAD_NON_EXISTING_TEX(id, Format) if (!RenderableTexture::ContainsInPool(id))\
 {\
 	AssetFilePath path = AssetRegistry::Get()->LookUp(id);\
 	if (!path.empty())\
@@ -60,14 +60,15 @@ std::unordered_map<Nexus::UUID, Nexus::Ref<Nexus::RenderableMaterial> > Nexus::R
 			RenderableTextureSpecification specs{};\
 			specs.texture = tex;\
 			specs.path = path;\
+			specs.format = Format;\
 			RenderableTexture::AddToPool(id, specs);\
 		}\
 	}\
 }
 
-#define LOAD_TEX_IN_MAT(id,tex,flag) if (id != UINT64_MAX)\
+#define LOAD_TEX_IN_MAT(id,tex,flag,format) if (id != UINT64_MAX)\
 {\
-	LOAD_NON_EXISTING_TEX(id)\
+	LOAD_NON_EXISTING_TEX(id,format)\
 	tex = RenderableTexture::GetFromPool(id);\
 	flag = 1;\
 }\
@@ -93,12 +94,12 @@ Nexus::RenderableMaterial::RenderableMaterial(const RenderableMaterialSpecificat
 		auto& mat = specs.material;
 		
 		uint64_t baseMap = mat.specularGlossiness.support ? mat.specularGlossiness.albedoTexture : mat.metalicRoughness.albedoTexture;
-		LOAD_TEX_IN_MAT(baseMap,m_Maps.base,m_Buffer.useBaseColorMap)
+		LOAD_TEX_IN_MAT(baseMap, m_Maps.base, m_Buffer.useBaseColorMap, TextureFormat::RGBA8_SRGB)
 
 		uint64_t surfaceMap = mat.specularGlossiness.support ? mat.specularGlossiness.specularGlossinessTexture : mat.metalicRoughness.metallicRoughnessTexture;
-		LOAD_TEX_IN_MAT(surfaceMap, m_Maps.surface, m_Buffer.useSurfaceMap)
+		LOAD_TEX_IN_MAT(surfaceMap, m_Maps.surface, m_Buffer.useSurfaceMap, TextureFormat::RGBA8_SRGB)
 
-		LOAD_TEX_IN_MAT(mat.normalTexture, m_Maps.normal, m_Buffer.useNormalMap)
-		LOAD_TEX_IN_MAT(mat.occulsionTexture, m_Maps.occulsion, m_Buffer.useOcculsionMap)
+		LOAD_TEX_IN_MAT(mat.normalTexture, m_Maps.normal, m_Buffer.useNormalMap, TextureFormat::RGBA8_UNORM)
+		LOAD_TEX_IN_MAT(mat.occulsionTexture, m_Maps.occulsion, m_Buffer.useOcculsionMap, TextureFormat::RGBA8_SRGB)
 	}
 }

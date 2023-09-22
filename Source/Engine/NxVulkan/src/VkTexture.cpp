@@ -55,6 +55,9 @@ Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 		case TextureFormat::RGBA8_SRGB:
 			Info.format = VK_FORMAT_R8G8B8A8_SRGB;
 			break;
+		case TextureFormat::RGBA8_UNORM:
+			Info.format = VK_FORMAT_R8G8B8A8_UNORM;
+			break;
 		case TextureFormat::RG16_SFLOAT:
 			Info.format = VK_FORMAT_R16G16_SFLOAT;
 			break;
@@ -130,6 +133,9 @@ Nexus::VulkanTexture::VulkanTexture(const TextureSpecification& info)
 		{
 		case TextureFormat::RGBA8_SRGB:
 			Info.format = VK_FORMAT_R8G8B8A8_SRGB;
+			break;
+		case TextureFormat::RGBA8_UNORM:
+			Info.format = VK_FORMAT_R8G8B8A8_UNORM;
 			break;
 		case TextureFormat::RG16_SFLOAT:
 			Info.format = VK_FORMAT_R16G16_SFLOAT;

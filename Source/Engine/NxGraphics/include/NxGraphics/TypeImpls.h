@@ -63,6 +63,7 @@ namespace Nexus
 		SWAPCHAIN_DEPTH,
 
 		RGBA8_SRGB,
+		RGBA8_UNORM,
 		
 		RG16_SFLOAT,
 		RG32_SFLOAT,

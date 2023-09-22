@@ -48,6 +48,7 @@ namespace Nexus
 	{
 		Meshing::Texture texture;
 		AssetFilePath path;
+		TextureFormat format = TextureFormat::RGBA8_SRGB;
 	};
 
 	class NEXUS_RENDER_ENGINE_API RenderableTexture : public Asset

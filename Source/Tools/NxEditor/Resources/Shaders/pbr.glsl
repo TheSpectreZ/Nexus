@@ -125,7 +125,7 @@ float convertMetallic(vec3 diffuse, vec3 specular, float maxSpecular) {
 
 vec3 GetNormal()
 {
-	if (m_MaterialBuffer.useNormalMap > 1)
+	if (m_MaterialBuffer.useNormalMap > -1)
 	{
 		vec3 normal = texture(normalMap, FragTexC).rgb;
 		normal = normal * 2.0 - 1.0;
