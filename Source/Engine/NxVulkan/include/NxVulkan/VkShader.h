@@ -48,6 +48,8 @@ namespace Nexus
 		
 		VkShaderModule GetModule(VkShaderStageFlagBits flag);
 		VkPipelineLayout GetPipelineLayout() { return m_Layout; }
+
+		ReflectionData& GetReflection() { return m_ReflectionData; }
 	private:
 		std::unordered_map<ShaderStage,VkShaderModule> m_Modules;	
 		std::unordered_map<uint32_t, SetResource> m_SetResource;

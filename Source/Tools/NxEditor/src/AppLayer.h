@@ -3,7 +3,9 @@
 #include "NxApplication/Layer.h"
 #include "NxScene/Scene.h"
 #include "NxScene/Camera.h"
+
 #include "NxRenderEngine/Drawer.h"
+#include "NxGraphics/RenderGraph.h"
 
 #include "ImGui/Viewport.h"	
 #include "ImGui/ContentBrowser.h"
@@ -35,6 +37,8 @@ private:
 	
 	bool m_IsScenePlaying = false, m_IsScenePaused = false, m_DrawColliders = false;;
 	Nexus::Ref<Nexus::Scene> m_EditorScene, m_RuntimeScene;
+
+	Nexus::Ref<Nexus::RenderGraph> rGraph;
 
 	void LoadProject(const std::string& path);
 

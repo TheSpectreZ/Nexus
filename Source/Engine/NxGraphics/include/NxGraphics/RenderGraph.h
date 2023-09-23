@@ -72,7 +72,8 @@ namespace Nexus
 		GraphicsRenderPipelineSpecification& set(RenderPipelineVertexInputRate rate, uint32_t stride);
 		
 		GraphicsRenderPipelineSpecification& addVertexAttrib(RenderPipelineVertexAttribFormat format, uint32_t location , uint32_t offset);
-		
+		GraphicsRenderPipelineSpecification& addRTInput(const std::string& name, uint32_t bindPoint);
+
 		GraphicsRenderPipelineSpecification& enableMSAA(bool multiSampled);
 
 		RenderPipelineTopology topology;
@@ -84,6 +85,7 @@ namespace Nexus
 		RenderPipelineVertexInputRate vertexInputRate;
 
 		std::vector< std::tuple<RenderPipelineVertexAttribFormat, uint32_t, uint32_t> > attribInfo;
+		std::vector< std::tuple<std::string, uint32_t> > InputInfo;
 
 		Ref<Shader> shader;
 		bool multiSampled = false;

@@ -57,7 +57,13 @@ Nexus::GraphicsRenderPipelineSpecification& Nexus::GraphicsRenderPipelineSpecifi
 
 Nexus::GraphicsRenderPipelineSpecification& Nexus::GraphicsRenderPipelineSpecification::addVertexAttrib(RenderPipelineVertexAttribFormat format, uint32_t location, uint32_t offset)
 {
-	attribInfo.push_back( std::make_tuple(format, location, offset) );
+	attribInfo.push_back(std::make_tuple(format, location, offset));
+	return *this;
+}
+
+Nexus::GraphicsRenderPipelineSpecification& Nexus::GraphicsRenderPipelineSpecification::addRTInput(const std::string& name, uint32_t bindPoint)
+{
+	InputInfo.push_back(std::make_tuple(name, bindPoint));
 	return *this;
 }
 

@@ -368,7 +368,7 @@ void AppLayer::RenderTopMenuBarPanel()
 
 void AppLayer::SetupRenderGraph()
 {
-	Ref<RenderGraph> rGraph = GraphicsInterface::CreateRenderGraph();
+	rGraph = GraphicsInterface::CreateRenderGraph();
 
 	// Geometry pass
 	{
@@ -422,7 +422,10 @@ void AppLayer::SetupRenderGraph()
 				.set(RenderPipelineCullMode::None)
 				.set(RenderPipelinePolygonMode::Fill)
 				.set(RenderPipelineTopology::TriangleList)
-				.set(RenderPiplineFrontFaceType::AntiClockwise);
+				.set(RenderPiplineFrontFaceType::AntiClockwise)
+				.addRTInput("Position", 0)
+				.addRTInput("Normal", 1)
+				.addRTInput("Albedo", 2);
 		}
 
 	}
@@ -441,7 +444,8 @@ void AppLayer::SetupRenderGraph()
 				.set(RenderPipelineCullMode::None)
 				.set(RenderPipelinePolygonMode::Fill)
 				.set(RenderPipelineTopology::TriangleList)
-				.set(RenderPiplineFrontFaceType::AntiClockwise);
+				.set(RenderPiplineFrontFaceType::AntiClockwise)
+				.addRTInput("Albedo", 0);
 		}
 
 	}

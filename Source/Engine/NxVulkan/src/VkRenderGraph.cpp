@@ -1,5 +1,7 @@
 #include "NxVulkan/VkRenderGraph.h"
-#include "NxVulkan/VkShader.h"
+#include "NxVulkan/VkTexture.h"
+
+#include "NxCore/UUID.h"
 
 static VkFormat GetVulkanTextureFormat(Nexus::TextureFormat format)
 {
@@ -153,46 +155,93 @@ static VkFormat GetVulkanVertexAttribFormat(Nexus::RenderPipelineVertexAttribFor
 	}
 }
 
+static VkDescriptorType GetVulkanShaderResourceType(Nexus::ShaderResourceType Type)
+{
+	switch (Type)
+	{
+	case Nexus::ShaderResourceType::Uniform:
+		return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+	case Nexus::ShaderResourceType::SampledImage:
+		return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+	case Nexus::ShaderResourceType::StorageImage:
+		return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+	default:
+		return VK_DESCRIPTOR_TYPE_MAX_ENUM;
+	}
+}
+
+static VkShaderStageFlags GetVulkanShaderStageFlag(Nexus::ShaderStage Stage)
+{
+	switch (Stage)
+	{
+	case Nexus::ShaderStage::Vertex:
+		return VK_SHADER_STAGE_VERTEX_BIT;
+	case Nexus::ShaderStage::Fragment:
+		return VK_SHADER_STAGE_FRAGMENT_BIT;
+	case Nexus::ShaderStage::Compute:
+		return VK_SHADER_STAGE_COMPUTE_BIT;
+	default:
+		return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
+	}
+}
+
 Nexus::VulkanRenderGraph::VulkanRenderGraph()
 {
 	auto context = VulkanContext::Get();
 	m_Device = context->GetDeviceRef();
 	m_pDevice = context->GetPhysicalDeviceRef();
+
+	SamplerSpecification specs{};
+	specs.ResolveHash(11122);
+
+	m_Sampler = CreateRef<VulkanSampler>(specs);
 }
 
 Nexus::VulkanRenderGraph::~VulkanRenderGraph()
 {
-	for (auto& [k, v] : m_Passes)
+	for (auto& [k, v] : m_GraphicsPipelines)
+	{
 		v.Destroy(m_Device->Get());
-	
+		NEXUS_LOG("Vulkan", "Graphics Pipeline Destroyed: %s", k.c_str());
+	}
+
+	for (auto& [k, v] : m_Passes)
+	{
+		v.Destroy(m_Device->Get());
+		NEXUS_LOG("Vulkan", "RenderPass Destroyed: %s", k.c_str());
+	}
+
 	for (auto& [k, v] : m_Attachments)
+	{
 		v.Destroy(m_Device->Get(), m_Device->GetAllocator());
+		NEXUS_LOG("Vulkan", "RenderTarget Destroyed: %s", k.c_str());
+	}
 }
 
 void Nexus::VulkanRenderGraph::Bake()
 {
+	for (auto& [name, RT] : m_RenderTargets)
+	{
+		m_Attachments[name].Create(RT);
+		NEXUS_LOG("Vulkan", "RenderTarget Created: %s", name.c_str());
+	}
+
 	for (auto& [name, specs] : m_GPUpasses)
 	{
-		for (auto& output : specs.getOutputs())
-		{
-			m_Attachments[output].Create(m_RenderTargets[output], specs.getRenderTargetExtent());
-			NEXUS_LOG("Vulkan: RenderGraph", "Attachment Created:- %s", output);
-		}
-
 		m_Passes[name].Create(specs, this);
-		NEXUS_LOG("Vulkan: RenderGraph", "Renderpass Created:- %s", name);
+		NEXUS_LOG("Vulkan", "RenderPass Created: %s", name.c_str());
 
-		for (auto& pipeline : specs.getGraphicsPipelines())
+		for (auto& pName : specs.getGraphicsPipelines())
 		{
-			m_GraphicsPipelines[pipeline].Create(m_GraphicsRenderPipelines[pipeline], m_Passes[name]);
-			NEXUS_LOG("Vulkan: RenderGraph", "Pipeline Creaed:- %s", pipeline);
+			m_GraphicsPipelines[pName].Create(m_GraphicsRenderPipelines[pName], m_Passes[name], this);
+			NEXUS_LOG("Vulkan", "Graphics Pipeline Created: %s", pName.c_str());
 		}
 	}
 
 	NEXUS_LOG("Vulkan", "RenderGraph Bake Complete");
 }
 
-void Nexus::VulkanRenderTarget::Create(const RenderTargetSpecification& specs,Extent rtExtent)
+void Nexus::VulkanRenderTarget::Create(const RenderTargetSpecification& specs)
 {
 	uint32_t count = VulkanSwapchain::Get()->GetImageCount();
 	
@@ -212,14 +261,10 @@ void Nexus::VulkanRenderTarget::Create(const RenderTargetSpecification& specs,Ex
 		{
 			auto sExtent = VulkanSwapchain::Get()->GetExtent();
 
-			VkExtent3D extent{ 0,0,1 };
-			extent.width = rtExtent.width > 0 ? rtExtent.width : sExtent.width;
-			extent.height = rtExtent.height > 0 ? rtExtent.height : sExtent.height;
-
 			VkImageCreateInfo Info{};
 			Info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 			Info.pNext = nullptr;
-			Info.extent = extent;
+			Info.extent = { sExtent.width,sExtent.height,1 };
 			Info.arrayLayers = 1;
 			Info.mipLevels = 1;
 			Info.flags = 0;
@@ -273,6 +318,47 @@ void Nexus::VulkanRenderTarget::Destroy(VkDevice device, VmaAllocator allocator)
 		vkDestroyImageView(device, handle.view, nullptr);
 		vmaDestroyImage(allocator, handle.image, handle.alloc);
 	}
+}
+
+void Nexus::VulkanRenderGraphFrameBuffer::Create(const RenderGraphPassSpecification& specs, VkRenderPass& pass, VulkanRenderGraph* graph)
+{
+	auto extent = VulkanSwapchain::Get()->GetExtent();
+
+	uint32_t count = VulkanSwapchain::Get()->GetImageCount();
+	m_Handles.resize(count);
+	
+	for (uint32_t i = 0; i < count; i++)
+	{
+		auto& outputs = specs.getOutputs();
+
+		std::vector<VkImageView> views;
+
+		for (auto& name : outputs)
+		{
+			auto& renderTarget = graph->m_Attachments[name];
+			views.push_back(renderTarget.Get(i));
+		}
+
+		VkFramebufferCreateInfo Info{};
+		Info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		Info.pNext = nullptr;
+		Info.flags = 0;
+		Info.layers = 1;
+		Info.renderPass = pass;
+		Info.pAttachments = views.data();
+		Info.attachmentCount = (uint32_t)views.size();
+		Info.width = extent.width;
+		Info.height = extent.height;
+
+		_VKR = vkCreateFramebuffer(graph->m_Device->Get(), &Info, nullptr, &m_Handles[i]);
+		CHECK_LOG_VKR;
+	}
+}
+
+void Nexus::VulkanRenderGraphFrameBuffer::Destroy(VkDevice device)
+{
+	for (auto& fb : m_Handles)
+		vkDestroyFramebuffer(device, fb, nullptr);
 }
 
 void Nexus::VulkanRenderGraphPass::Create(const RenderGraphPassSpecification& specs, VulkanRenderGraph* graph)
@@ -351,230 +437,362 @@ void Nexus::VulkanRenderGraphPass::Destroy(VkDevice device)
 	vkDestroyRenderPass(device, m_Handle, nullptr);
 }
 
-void Nexus::VulkanRenderGraphFrameBuffer::Create(const RenderGraphPassSpecification& specs, VkRenderPass& pass, VulkanRenderGraph* graph)
-{
-	auto extent = VulkanSwapchain::Get()->GetExtent();
-
-	uint32_t count = VulkanSwapchain::Get()->GetImageCount();
-	m_Handles.resize(count);
-	
-	for (uint32_t i = 0; i < count; i++)
-	{
-		auto& outputs = specs.getOutputs();
-
-		std::vector<VkImageView> views;
-
-		for (auto& name : outputs)
-		{
-			auto& renderTarget = graph->m_Attachments[name];
-			views.push_back(renderTarget.Get(i));
-		}
-
-		VkFramebufferCreateInfo Info{};
-		Info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		Info.pNext = nullptr;
-		Info.flags = 0;
-		Info.layers = 1;
-		Info.renderPass = pass;
-		Info.pAttachments = views.data();
-		Info.attachmentCount = (uint32_t)views.size();
-		Info.width = extent.width;
-		Info.height = extent.height;
-
-		_VKR = vkCreateFramebuffer(graph->m_Device->Get(), &Info, nullptr, &m_Handles[i]);
-		CHECK_LOG_VKR;
-	}
-}
-
-void Nexus::VulkanRenderGraphFrameBuffer::Destroy(VkDevice device)
-{
-	for (auto& fb : m_Handles)
-		vkDestroyFramebuffer(device, fb, nullptr);
-}
-
-void Nexus::VulkanGraphicsRenderPipeline::Create(const GraphicsRenderPipelineSpecification& specs, VulkanRenderGraphPass& renderPass)
-{
+void Nexus::VulkanGraphicsRenderPipeline::Create(const GraphicsRenderPipelineSpecification& specs, VulkanRenderGraphPass& renderPass, VulkanRenderGraph* graph)
+{	
 	auto device = VulkanContext::Get()->GetDeviceRef();
 	auto gpu = VulkanContext::Get()->GetPhysicalDeviceRef();
 
-	/////////////////////////////////
-	// Shader
-	/////////////////////////////////
-
 	Ref<VulkanShader> shader = DynamicPointerCast<VulkanShader>(specs.shader);
-
-	VkShaderModule vertShaderModule = shader->GetModule(VK_SHADER_STAGE_VERTEX_BIT);
-	VkShaderModule fragShaderModule = shader->GetModule(VK_SHADER_STAGE_FRAGMENT_BIT);
-
-	std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+	m_DescriptorManager.Create(shader->GetReflection());
 	
-	auto& vertShaderStageInfo = shaderStages.emplace_back();
-	vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-	vertShaderStageInfo.module = vertShaderModule;
-	vertShaderStageInfo.pName = "main";
-
-	auto& fragShaderStageInfo = shaderStages.emplace_back();
-	fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-	fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-	fragShaderStageInfo.module = fragShaderModule;
-	fragShaderStageInfo.pName = "main";
-
-	/////////////////////////////////
-	// Vertex Input
-	/////////////////////////////////
-
-	VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-	vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-	vertexInputInfo.pNext = nullptr;
-
-	VkVertexInputBindingDescription vertexInputBinding{};
-	vertexInputBinding.stride = specs.vertexStride;
-	vertexInputBinding.inputRate = GetVulkanVertexInputRate(specs.vertexInputRate);
-	
-	std::vector<VkVertexInputAttributeDescription> attributes(specs.attribInfo.size());
-
-	for (uint32_t k = 0; k < attributes.size(); k++)
+	// Pipeline 
 	{
-		auto& [format, location, offset] = specs.attribInfo[k];
+	
+		VkShaderModule vertShaderModule = shader->GetModule(VK_SHADER_STAGE_VERTEX_BIT);
+		VkShaderModule fragShaderModule = shader->GetModule(VK_SHADER_STAGE_FRAGMENT_BIT);
 
-		attributes[k].binding = 0;
-		attributes[k].location = location;
-		attributes[k].offset = offset;
-		attributes[k].format = GetVulkanVertexAttribFormat(format);
+		std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+
+		auto& vertShaderStageInfo = shaderStages.emplace_back();
+		vertShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+		vertShaderStageInfo.module = vertShaderModule;
+		vertShaderStageInfo.pName = "main";
+
+		auto& fragShaderStageInfo = shaderStages.emplace_back();
+		fragShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+		fragShaderStageInfo.module = fragShaderModule;
+		fragShaderStageInfo.pName = "main";
+
+		/////////////////////////////////
+		// Vertex Input
+		/////////////////////////////////
+
+		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		vertexInputInfo.pNext = nullptr;
+
+		std::vector<VkVertexInputBindingDescription> bindings;
+		if (specs.vertexStride)
+		{
+			auto& v = bindings.emplace_back();
+			v.stride = specs.vertexStride;
+			v.inputRate = GetVulkanVertexInputRate(specs.vertexInputRate);
+		}
+
+		std::vector<VkVertexInputAttributeDescription> attributes(specs.attribInfo.size());
+
+		for (uint32_t k = 0; k < attributes.size(); k++)
+		{
+			auto& [format, location, offset] = specs.attribInfo[k];
+
+			attributes[k].binding = 0;
+			attributes[k].location = location;
+			attributes[k].offset = offset;
+			attributes[k].format = GetVulkanVertexAttribFormat(format);
+		}
+
+		vertexInputInfo.vertexBindingDescriptionCount = (uint32_t)bindings.size();
+		vertexInputInfo.pVertexBindingDescriptions = bindings.data();
+
+		vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)attributes.size();
+		vertexInputInfo.pVertexAttributeDescriptions = attributes.data();
+
+		/////////////////////////////////////////////////
+		// Viewport (To-Do : Make This Data Dynamic)
+		/////////////////////////////////////////////////
+
+		VkPipelineViewportStateCreateInfo viewportState{};
+		viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		viewportState.viewportCount = 1;
+		viewportState.scissorCount = 1;
+
+		/////////////////////////////////
+		// Input Assembly
+		/////////////////////////////////
+
+		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		inputAssembly.pNext = nullptr;
+		inputAssembly.topology = GetVulkanPipelineTopology(specs.topology);
+		inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+		/////////////////////////////////
+		// Rasterizer
+		/////////////////////////////////
+
+		VkPipelineRasterizationStateCreateInfo rasterizer{};
+		rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		rasterizer.lineWidth = 1.f;
+		rasterizer.depthClampEnable = VK_FALSE;
+		rasterizer.rasterizerDiscardEnable = VK_FALSE;
+		rasterizer.depthBiasClamp = VK_FALSE;
+		rasterizer.polygonMode = GetVulkanPipelinePolygonMode(specs.polygon);
+		rasterizer.cullMode = GetVulkanPipelineCullMode(specs.cull);
+		rasterizer.frontFace = GetVulkanPipelineFrontFaceType(specs.frontface);
+
+		/////////////////////////////////
+		// MultiSampling
+		/////////////////////////////////
+
+		VkPipelineMultisampleStateCreateInfo multisampling{};
+		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		multisampling.sampleShadingEnable = VK_FALSE;
+		multisampling.rasterizationSamples = specs.multiSampled ? gpu->GetMaxSampleCount() : VK_SAMPLE_COUNT_1_BIT;
+
+		/////////////////////////////////
+		// Blending
+		/////////////////////////////////
+
+		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments(renderPass.m_colorAttachmentCount);
+
+		for (auto& at : colorBlendAttachments)
+		{
+			at.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+			at.blendEnable = VK_FALSE;
+		}
+
+		VkPipelineColorBlendStateCreateInfo colorBlending{};
+		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		colorBlending.logicOpEnable = VK_FALSE;
+		colorBlending.logicOp = VK_LOGIC_OP_COPY;
+		colorBlending.attachmentCount = (uint32_t)colorBlendAttachments.size();
+		colorBlending.pAttachments = colorBlendAttachments.data();
+		colorBlending.blendConstants[0] = 0.0f;
+		colorBlending.blendConstants[1] = 0.0f;
+		colorBlending.blendConstants[2] = 0.0f;
+		colorBlending.blendConstants[3] = 0.0f;
+
+		/////////////////////////////////
+		// Depth Stencil
+		/////////////////////////////////
+
+		VkPipelineDepthStencilStateCreateInfo depthStencilState{};
+
+		depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		depthStencilState.depthTestEnable = VK_TRUE;
+		depthStencilState.depthWriteEnable = VK_TRUE;
+		depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		depthStencilState.depthBoundsTestEnable = VK_FALSE;
+		depthStencilState.minDepthBounds = 0.0f;
+		depthStencilState.maxDepthBounds = 1.0f;
+		depthStencilState.stencilTestEnable = VK_FALSE;
+		depthStencilState.front = {};
+		depthStencilState.back = {};
+
+		/////////////////////////////////
+		// Dynamic States
+		/////////////////////////////////
+
+		std::vector<VkDynamicState> dynamicStates = {
+			VK_DYNAMIC_STATE_VIEWPORT,
+			VK_DYNAMIC_STATE_SCISSOR
+		};
+
+		VkPipelineDynamicStateCreateInfo dynamicState{};
+		dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+		dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+		dynamicState.pDynamicStates = dynamicStates.data();
+
+		/////////////////////////////////
+		// Graphics Pipeline
+		/////////////////////////////////
+
+		VkGraphicsPipelineCreateInfo Info{};
+		Info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		Info.pNext = nullptr;
+		Info.basePipelineHandle = VK_NULL_HANDLE;
+		Info.subpass = 0;
+		Info.renderPass = renderPass.Get();
+
+		Info.pStages = shaderStages.data();
+		Info.stageCount = (uint32_t)shaderStages.size();
+		Info.layout = m_DescriptorManager.GetPipelineLayout();
+
+		Info.pDynamicState = &dynamicState;
+		Info.pDepthStencilState = &depthStencilState;
+		Info.pColorBlendState = &colorBlending;
+		Info.pMultisampleState = &multisampling;
+		Info.pRasterizationState = &rasterizer;
+		Info.pViewportState = &viewportState;
+		Info.pInputAssemblyState = &inputAssembly;
+		Info.pVertexInputState = &vertexInputInfo;
+	
+		_VKR = vkCreateGraphicsPipelines(device->Get(), nullptr, 1, &Info, nullptr, &m_Handle);
+		CHECK_LOG_VKR;
 	}
 
-	vertexInputInfo.vertexBindingDescriptionCount = 1;
-	vertexInputInfo.pVertexBindingDescriptions = &vertexInputBinding;
-
-	vertexInputInfo.vertexAttributeDescriptionCount = (uint32_t)attributes.size();
-	vertexInputInfo.pVertexAttributeDescriptions = attributes.data();
-
-	/////////////////////////////////////////////////
-	// Viewport (To-Do : Make This Data Dynamic)
-	/////////////////////////////////////////////////
-
-	VkPipelineViewportStateCreateInfo viewportState{};
-	viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-	viewportState.viewportCount = 1;
-	viewportState.scissorCount = 1;
-
-	/////////////////////////////////
-    // Input Assembly
-    /////////////////////////////////
-
-	VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-	inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-	inputAssembly.pNext = nullptr;
-	inputAssembly.topology = GetVulkanPipelineTopology(specs.topology);
-	inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-	/////////////////////////////////
-	// Rasterizer
-	/////////////////////////////////
-
-	VkPipelineRasterizationStateCreateInfo rasterizer{};
-	rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-	rasterizer.lineWidth = 1.f;
-	rasterizer.depthClampEnable = VK_FALSE;
-	rasterizer.rasterizerDiscardEnable = VK_FALSE;
-	rasterizer.depthBiasClamp = VK_FALSE;
-	rasterizer.polygonMode = GetVulkanPipelinePolygonMode(specs.polygon);
-	rasterizer.cullMode = GetVulkanPipelineCullMode(specs.cull);
-	rasterizer.frontFace = GetVulkanPipelineFrontFaceType(specs.frontface);
-
-	/////////////////////////////////
-	// MultiSampling
-	/////////////////////////////////
-
-	VkPipelineMultisampleStateCreateInfo multisampling{};
-	multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-	multisampling.sampleShadingEnable = VK_FALSE;
-	multisampling.rasterizationSamples = specs.multiSampled ? gpu->GetMaxSampleCount() : VK_SAMPLE_COUNT_1_BIT;
-
-	/////////////////////////////////
-    // Blending
-    /////////////////////////////////
-
-	std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments(renderPass.m_colorAttachmentCount);
-
-	for (auto& at : colorBlendAttachments)
+	// Descriptor Bindings
 	{
-		at.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		at.blendEnable = VK_FALSE;
+		uint32_t frame = VulkanSwapchain::Get()->GetImageCount();
+
+		std::vector<VkDescriptorImageInfo> imageinfos(frame);
+		std::vector<VkWriteDescriptorSet> writes(frame);
+
+		for (auto& [input, binding] : specs.InputInfo)
+		{
+			auto& RT = graph->m_Attachments[input];
+
+			uint64_t hashID = Nexus::UUID();
+			m_DescriptorManager.AllocateSet(device->Get(), 0, hashID);
+
+			for (uint32_t i = 0; i < frame; i++)
+			{
+				imageinfos[i].imageView = RT.Get(i);
+				imageinfos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+				imageinfos[i].sampler = graph->m_Sampler->Get();
+
+				writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				writes[i].pNext = nullptr;
+				writes[i].descriptorCount = 1;
+				writes[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				writes[i].dstArrayElement = 0;
+				writes[i].dstBinding = binding;
+				writes[i].pImageInfo = &imageinfos[i];
+				writes[i].dstSet = m_DescriptorManager.GetSet(0, hashID, i);
+			}
+
+			vkUpdateDescriptorSets(device->Get(), (uint32_t) writes.size(), writes.data(), 0, nullptr);
+		}
 	}
-
-	VkPipelineColorBlendStateCreateInfo colorBlending{};
-	colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-	colorBlending.logicOpEnable = VK_FALSE;
-	colorBlending.logicOp = VK_LOGIC_OP_COPY;
-	colorBlending.attachmentCount = (uint32_t)colorBlendAttachments.size();
-	colorBlending.pAttachments = colorBlendAttachments.data();
-	colorBlending.blendConstants[0] = 0.0f;
-	colorBlending.blendConstants[1] = 0.0f;
-	colorBlending.blendConstants[2] = 0.0f;
-	colorBlending.blendConstants[3] = 0.0f;
-
-	/////////////////////////////////
-	// Depth Stencil
-	/////////////////////////////////
-
-	VkPipelineDepthStencilStateCreateInfo depthStencilState{};
-
-	depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-	depthStencilState.depthTestEnable = VK_TRUE;
-	depthStencilState.depthWriteEnable = VK_TRUE;
-	depthStencilState.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-	depthStencilState.depthBoundsTestEnable = VK_FALSE;
-	depthStencilState.minDepthBounds = 0.0f;
-	depthStencilState.maxDepthBounds = 1.0f;
-	depthStencilState.stencilTestEnable = VK_FALSE;
-	depthStencilState.front = {};
-	depthStencilState.back = {};
-
-	/////////////////////////////////
-    // Dynamic States
-    /////////////////////////////////
-
-	std::vector<VkDynamicState> dynamicStates = {
-		VK_DYNAMIC_STATE_VIEWPORT,
-		VK_DYNAMIC_STATE_SCISSOR
-	};
-	
-	VkPipelineDynamicStateCreateInfo dynamicState{};
-	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
-	dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
-	dynamicState.pDynamicStates = dynamicStates.data();
-
-	/////////////////////////////////
-	// Graphics Pipeline
-	/////////////////////////////////
-
-	VkGraphicsPipelineCreateInfo Info{};
-	Info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-	Info.pNext = nullptr;
-	Info.basePipelineHandle = VK_NULL_HANDLE;
-	Info.subpass = 0;
-	Info.renderPass = renderPass.Get();
-
-	Info.pStages = shaderStages.data();
-	Info.stageCount = (uint32_t)shaderStages.size();
-	Info.layout = shader->GetPipelineLayout();
-
-	Info.pDynamicState = &dynamicState;
-	Info.pDepthStencilState = &depthStencilState;
-	Info.pColorBlendState = &colorBlending;
-	Info.pMultisampleState = &multisampling;
-	Info.pRasterizationState = &rasterizer;
-	Info.pViewportState = &viewportState;
-	Info.pInputAssemblyState = &inputAssembly;
-	Info.pVertexInputState = specs.vertexStride > 0 ? &vertexInputInfo : nullptr;
-
-	_VKR = vkCreateGraphicsPipelines(device->Get(), nullptr, 1, &Info, nullptr, &m_Handle);
-	CHECK_LOG_VKR;
 }
 
 void Nexus::VulkanGraphicsRenderPipeline::Destroy(VkDevice device)
 {
+	m_DescriptorManager.Destroy(device);
 	vkDestroyPipeline(device, m_Handle, nullptr);
+}
+
+void Nexus::VulkanPipelineDescriptorManager::Create(ReflectionData& shaderRefection)
+{
+	auto device = VulkanContext::Get()->GetDeviceRef();
+	m_FrameCount = VulkanSwapchain::Get()->GetImageCount();
+	m_Reflection = shaderRefection;
+
+	for (auto& [set, bindings] : m_Reflection.bindings)
+	{
+		// Descriptor Set Layout
+		{
+			std::vector<VkDescriptorSetLayoutBinding> vkBinds(bindings.size());
+
+			for (uint32_t i = 0; i < bindings.size(); i++)
+			{
+				vkBinds[i].binding = bindings[i].bindPoint;
+				vkBinds[i].descriptorCount = bindings[i].arrayCount;
+				vkBinds[i].pImmutableSamplers = nullptr;
+				vkBinds[i].stageFlags = GetVulkanShaderStageFlag(bindings[i].stage);
+				vkBinds[i].descriptorType = GetVulkanShaderResourceType(bindings[i].type);
+			}
+
+			VkDescriptorSetLayoutCreateInfo cInfo{};
+			cInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+			cInfo.pNext = nullptr;
+			cInfo.flags = 0;
+			cInfo.bindingCount = (uint32_t)vkBinds.size();
+			cInfo.pBindings = vkBinds.data();
+
+			_VKR = vkCreateDescriptorSetLayout(device->Get(), &cInfo, nullptr, &m_Layouts[set]);
+			CHECK_LOG_VKR;
+		}
+
+		MakeDescriptorPool(device->Get(), set);
+		AllocateSet(device->Get(), set, 12345);
+	}
+
+	// Pipeline layout
+	{
+		std::vector<VkPushConstantRange> ranges;
+		for (auto& [k, v] : m_Reflection.ranges)
+			ranges.push_back(v);
+		
+		std::vector<VkDescriptorSetLayout> layouts;
+		for (auto& [k, v] : m_Layouts)
+			layouts.push_back(v);
+
+		VkPipelineLayoutCreateInfo Info{};
+		Info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		Info.pNext = nullptr;
+		Info.flags = 0;
+		Info.pushConstantRangeCount = (uint32_t)ranges.size();
+		Info.pPushConstantRanges = ranges.data();
+		Info.setLayoutCount = (uint32_t)layouts.size();
+		Info.pSetLayouts = layouts.data();
+		
+		_VKR = vkCreatePipelineLayout(device->Get(), &Info, nullptr, &m_PipelineLayout);
+		CHECK_LOG_VKR;
+	}
+}
+
+void Nexus::VulkanPipelineDescriptorManager::Destroy(VkDevice device)
+{
+	vkDestroyPipelineLayout(device, m_PipelineLayout, nullptr);
+
+	for (auto& [k, v] : m_Layouts)
+		vkDestroyDescriptorSetLayout(device, v, nullptr);
+}
+
+void Nexus::VulkanPipelineDescriptorManager::MakeDescriptorPool(VkDevice device, uint32_t set)
+{
+	auto& pool = m_Pools[set].pools.emplace_back();
+	m_Pools[set].currentID++;
+
+	std::vector<VkDescriptorPoolSize> poolDesc;
+	
+	for (auto& [k, binding] : m_Reflection.bindings[set])
+	{
+		auto& desc = poolDesc.emplace_back();
+		desc.descriptorCount = s_MaxDescriptorSetPerPoolCount;
+		desc.type = GetVulkanShaderResourceType(binding.type);
+	}
+
+	VkDescriptorPoolCreateInfo Info{};
+	Info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+	Info.pNext = nullptr;
+	Info.flags = 0;
+	Info.maxSets = s_MaxDescriptorSetPerPoolCount;
+	Info.poolSizeCount = (uint32_t)poolDesc.size();
+	Info.pPoolSizes = poolDesc.data();
+
+	_VKR = vkCreateDescriptorPool(device, &Info, nullptr, &pool);
+		
+}
+
+void Nexus::VulkanPipelineDescriptorManager::AllocateSet(VkDevice device, uint32_t set, uint64_t hashId)
+{
+	auto& pool = m_Pools[set];
+
+	std::vector<VkDescriptorSetLayout> layouts(m_FrameCount);
+	for (auto& l : layouts)
+		l = m_Layouts[set];
+
+	VkDescriptorSetAllocateInfo	Info{};
+	Info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+	Info.pNext = nullptr;
+	Info.pSetLayouts = layouts.data();
+	Info.descriptorSetCount = m_FrameCount;
+	pool.sets[hashId].sets.resize(m_FrameCount);
+
+	bool allocSuccess = false;
+
+	do
+	{
+		Info.descriptorPool = pool.Get();
+		_VKR = vkAllocateDescriptorSets(device, &Info, pool.sets[hashId].sets.data());
+
+		if (_VKR == VK_SUCCESS)
+			allocSuccess = true;
+		else if(_VKR == VK_ERROR_OUT_OF_POOL_MEMORY)
+			MakeDescriptorPool(device, set);
+		else
+		{
+			NEXUS_BREAK_ASSERT(1, "Vulkan Descriptor Heap Allocation Error");
+		}
+
+	} while (!allocSuccess);
+}
+
+VkDescriptorSet& Nexus::VulkanPipelineDescriptorManager::GetSet(uint32_t set, uint64_t hashId, uint32_t frameIndex)
+{
+	return m_Pools[set].sets[hashId].Get(frameIndex);
 }
