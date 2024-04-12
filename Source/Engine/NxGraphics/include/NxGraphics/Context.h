@@ -19,4 +19,12 @@ namespace Nexus
 		virtual void Shutdown() = 0;
 		virtual void WaitForDevice() = 0;
 	};
+
+	class GraphicsDevice
+	{
+	public:
+		virtual void Initialize() = 0;
+		virtual void Shutdown() = 0;
+		virtual void WaitForDevice() = 0;
+	};
 }

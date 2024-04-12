@@ -136,3 +136,15 @@ void Nexus::VulkanContext::WaitForDevice()
 {
 	m_LogicalDevice->Wait();
 }
+
+void Nexus::VulkanGraphicsDevice::Initialize()
+{
+}
+
+void Nexus::VulkanGraphicsDevice::Shutdown()
+{
+}
+
+void Nexus::VulkanGraphicsDevice::WaitForDevice()
+{
+}

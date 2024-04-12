@@ -1,6 +1,6 @@
 #pragma once
 #include "NxCore/ProjectSpecification.h"
-#include "NxApplication/Layer.h"
+#include "NxGameEngine/Layer.h"
 #include "NxScene/Scene.h"
 #include "NxScene/Camera.h"
 #include "NxRenderEngine/Drawer.h"
@@ -9,15 +9,15 @@
 #include "ImGui/ContentBrowser.h"
 #include "ImGui/SceneHeirarchy.h"
 
-class AppLayer : public Nexus::Layer
+class AppLayer : public Nexus::ILayer
 {
 public:
 	AppLayer(const std::unordered_map<std::string, std::string>& ccMap);
-	void OnAttach() override;
-	void OnUpdate(float dt) override;
-	void OnRender() override;
-	void OnDetach() override;
-	void OnWindowResize(int width, int height) override;
+	void Create() override;
+	void Update(float dt) override;
+	//void OnRender() override;
+	void Destroy() override;
+	bool OnWindowResize(int width, int height) override;
 	~AppLayer() override = default;
 private:
 	std::string m_ProjectPath;

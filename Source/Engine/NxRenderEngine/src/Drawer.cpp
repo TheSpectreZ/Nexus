@@ -1,6 +1,6 @@
 #include "NxCore/Logger.h"
 #include "NxCore/Assertion.h"
-#include "NxCore/Input.h"
+
 #include "NxRenderEngine/Meshing.h"
 #include "NxRenderEngine/BatchRenderer.h"
 #include "NxRenderEngine/Drawer.h"
@@ -200,8 +200,8 @@ static uint32_t mode = 1;
 
 void Nexus::ForwardDrawer::Draw(Ref<Scene> scene)
 {
-	if (Module::Input::Get()->IsKeyPressed(Key::Backspace, false))
-		mode *= -1;
+	//if (Module::Input::Get()->IsKeyPressed(Key::Backspace, false))
+	//	mode *= -1;
 
 	UUID Id = scene->GetId();
 	if (!m_RenderableScenes.contains(Id))

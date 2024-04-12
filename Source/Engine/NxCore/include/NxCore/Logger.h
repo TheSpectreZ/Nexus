@@ -47,8 +47,8 @@ namespace Nexus
 		static LogManager* s_Instance;
 	public:
 		static LogManager* Get() { return s_Instance; }
-		static void Initialize();
-		static void Shutdown();
+		static void Init();
+		static void Shut();
 
 		template<typename... Args>
 		void Make(LoggerType Type, Args... args)

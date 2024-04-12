@@ -2,6 +2,8 @@
 #include "NxGraphics/Context.h"
 #include "NxVulkan/VkDevice.h"
 
+#include "NxCore/Base.h"
+
 #ifdef NEXUS_VULKAN_SHARED_BUILD
 #define NEXUS_VULKAN_API __declspec(dllexport)
 #else
@@ -40,4 +42,5 @@ namespace Nexus
 		Ref<VulkanPhysicalDevice> m_PhysicalDevice;
 		Ref<VulkanDevice> m_LogicalDevice;
 	};
+
 }

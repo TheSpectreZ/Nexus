@@ -7,7 +7,7 @@
 #include "NxRenderEngine/Meshing.h"
 #include "NxRenderEngine/ResourcePool.h"
 
-#include "NxApplication/FileDialog.h"
+#include "NxCore/FileDialog.h"
 #include "NxImGui/Context.h"
 
 using namespace Nexus;

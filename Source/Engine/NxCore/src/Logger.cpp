@@ -15,6 +15,9 @@ Nexus::ConsoleLogger::ConsoleLogger()
 
 Nexus::ConsoleLogger::~ConsoleLogger()
 {
+	printf("Press any key to exit...");
+	std::cin.get();
+
 	FreeConsole();
 }
 
@@ -80,12 +83,12 @@ void Nexus::FileLogger::Log(const char* Entry, int line, const char* file, const
 
 Nexus::LogManager* Nexus::LogManager::s_Instance = nullptr;
 
-void Nexus::LogManager::Initialize()
+void Nexus::LogManager::Init()
 {
 	s_Instance = new LogManager;
 }
 
-void Nexus::LogManager::Shutdown()
+void Nexus::LogManager::Shut()
 {
 	s_Instance->m_Loggers.clear();
 	delete s_Instance;

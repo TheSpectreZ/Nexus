@@ -8,7 +8,6 @@
 #include "NxScene/Entity.h"
 #include "NxScene/Component.h"
 
-#include "NxCore/Input.h"
 #include "NxCore/Assertion.h"
 
 #include <format>
@@ -45,12 +44,12 @@ namespace Nexus::InternalCalls
 
 	bool Input_IsKeyPressed(uint16_t key)
 	{
-		return Module::Input::Get()->IsKeyPressed(key);
+		return false; // Module::Input::Get()->IsKeyPressed(key);
 	}
 
 	bool Input_IsMouseButtonPressed(uint16_t button)
 	{
-		return Module::Input::Get()->IsMouseButtonPressed(button);
+		return false; // Module::Input::Get()->IsMouseButtonPressed(button);
 	}
 
 #pragma endregion

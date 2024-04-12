@@ -21,8 +21,8 @@
 
 namespace Nexus
 {
-	template<typename T>
-	bool IsFlagSet(T flag, T value)
+	template<typename T1, typename T2>
+	bool IsFlagSet(T1 flag, T2 value)
 	{
 		return (flag & value) == value;
 	}
@@ -50,10 +50,6 @@ namespace Nexus
 	{
 		return std::dynamic_pointer_cast<T1>(other);
 	}
-
-	std::string NEXUS_CORE_API BuildString(const std::wstring& wStr);
-
-	std::unordered_map<std::string, std::string> NEXUS_CORE_API BuildCCMap(const std::string& args);
 }
 
 #define NEXUS_BIND_FN(fn,ref) [&](auto&&... args) -> decltype(auto) { return ref->fn(std::forward<decltype(args)>(args)...); }

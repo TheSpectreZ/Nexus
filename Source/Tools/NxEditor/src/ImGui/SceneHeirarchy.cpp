@@ -1,5 +1,5 @@
 #include "SceneHeirarchy.h"
-#include "NxApplication/FileDialog.h"
+#include "NxCore/FileDialog.h"
 #include "NxScene/Component.h"
 
 #include "NxAsset/Manager.h"	

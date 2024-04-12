@@ -1,68 +1,78 @@
 #include "NxRenderEngine/Renderer.h"
-#include "NxRenderEngine/ResourcePool.h"
-#include "NxRenderEngine/EnvironmentBuilder.h"	
+#include "NxCore/Platform.h"
+#include "NxCore/Logger.h"
 
-Nexus::Module::Renderer* Nexus::Module::Renderer::s_Instance = nullptr;
-
-void Nexus::Module::Renderer::Initialize(const RendererCreateInfo& Info)
+static std::string GetRenderBackendPath(Nexus::RenderEngineAPI api)
 {
-	s_Instance = new Renderer;
-	
-	s_Instance->m_Context = GraphicsInterface::CreateContext(Info.apiType, { Info.window->nativeHandle,Info.HInstance });
-	s_Instance->m_Context->Initialize();
-
-	s_Instance->m_Swapchain = GraphicsInterface::CreateSwapchain(Info.window);
-	s_Instance->m_Swapchain->Initialize();
-
-	s_Instance->m_CommandQueue = GraphicsInterface::CreateCommandQueue(Info.resizeCallback);
-	s_Instance->m_CommandQueue->Initialize();
-
-	ResourcePool::Initialize();
-	
-	if(Info.initSubmodules)
+	switch (api)
 	{
-		EnvironmentBuilder::Initialize();
+	case Nexus::RenderEngineAPI::Vulkan:
+		return "NxVulkan.dll";
+	default:
+		return "";
 	}
 }
 
-void Nexus::Module::Renderer::Shutdown()
-{	
-	EnvironmentBuilder::Shutdown();
-	ResourcePool::Shutdown();
+struct Nexus::RenderEngine::INTERNAL
+{
+	Platform::LibraryHANDLE* apiLibrary;
+	RenderEngineAPI eAPI;
+};
+
+bool Nexus::RenderEngine::Intialize(const RenderEngineSpecifications& specs)
+{
+	mInternal = new INTERNAL;
+	mInternal->eAPI = specs.eAPI;
+
+	mInternal->apiLibrary = Platform::LoadSharedLibrary(GetRenderBackendPath(specs.eAPI));
+	if (!mInternal->apiLibrary)
+		return false;
+
+	typedef GraphicsDevice* (*Fn_CreateGraphicsDeviceFunc)();
+
+	auto createGraphicsDevice = Platform::LoadFunc<Fn_CreateGraphicsDeviceFunc>(mInternal->apiLibrary, "CreateGraphicsDevice");
+	if (!createGraphicsDevice)
+		return false;
+
+	mGraphicsDevice = createGraphicsDevice();
+	mGraphicsDevice->Initialize(GraphicsDeviceSpecifications
+		{
+			.pWindow = specs.pWindow,
+			.hInstance = specs.hInstance
+		});
+
+	NEXUS_LOG("Nexus", "RenderEngine Intialized");
+	return true;
+}
+
+void Nexus::RenderEngine::Terminate()
+{
+	if (mGraphicsDevice)
+	{
+		mGraphicsDevice->Shutdown();
+		delete mGraphicsDevice;
+	}
+
+	Platform::UnloadSharedLibrary(mInternal->apiLibrary, GetRenderBackendPath(mInternal->eAPI));
+	delete mInternal;
+
+	NEXUS_LOG("Nexus", "RenderEngine Termianted");
+}
+
+void Nexus::RenderEngine::Flush()
+{
+	mGraphicsDevice->BeginFrame();
 	
-	s_Instance->m_CommandQueue->Shutdown();
-	s_Instance->m_CommandQueue.reset();
-
-	s_Instance->m_Swapchain->Shutdown();
-	s_Instance->m_Swapchain.reset();
-
-	s_Instance->m_Context->Shutdown();
-	s_Instance->m_Context.reset();
-
-	delete s_Instance;
+	mGraphicsDevice->EndFrame();
+	mGraphicsDevice->Flush();
 }
 
-void Nexus::Module::Renderer::Begin()
+void Nexus::RenderEngine::WaitForGPU()
 {
-	m_CommandQueue->BeginRenderQueue();
+	mGraphicsDevice->WaitForGPU();
 }
 
-void Nexus::Module::Renderer::End()
+void Nexus::RenderEngine::OnScreenResize(int width, int height)
 {
-	m_CommandQueue->EndRenderQueue();
-}
-
-void Nexus::Module::Renderer::WaitForRenderer()
-{
-	m_Context->WaitForDevice();
-}
-
-void Nexus::Module::Renderer::FlushRender()
-{
-	m_CommandQueue->FlushRenderQueue();
-}
-
-void Nexus::Module::Renderer::FlushTransfer()
-{
-	m_CommandQueue->FlushTransferQueue();
+	mGraphicsDevice->OnScreenResize(width, height);
 }

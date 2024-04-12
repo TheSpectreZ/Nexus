@@ -10,11 +10,12 @@
 
 #include "NxCore/ProjectSerializer.h"
 #include "NxCore/Registry.h"
-#include "NxCore/Input.h"
-#include "NxCore/Logger.h"
 
-#include "NxApplication/FileDialog.h"
-#include "NxApplication/Application.h"
+#include "NxCore/Logger.h"
+#include "NxCore/KeyCode.h"
+#include "NxCore/FileDialog.h"
+
+#include "NxGameEngine/Engine.h"
 
 #include "NxScriptEngine/ScriptEngine.h"	
 
@@ -89,7 +90,7 @@ AppLayer::AppLayer(const std::unordered_map<std::string, std::string>& ccMap)
 	m_IsScenePaused = false;
 }
 
-void AppLayer::OnAttach()
+void AppLayer::Create()
 {
 	m_ForwardDrawer = CreateRef<ForwardDrawer>(true);
 
@@ -185,10 +186,10 @@ void AppLayer::OnAttach()
 
 	// Editor
 	{
-		auto& window = Application::Get()->GetWindow();
-		auto rAPI = Application::Get()->GetAppSpecs().rApi;
-
-		NxImGui::Context::Initialize(window, rAPI);
+		//auto& window = Application::Get()->GetWindow();
+		//auto rAPI = Application::Get()->GetAppSpecs().rApi;
+		//
+		//NxImGui::Context::Initialize(window, rAPI);
 
 		m_Viewport.Initialize();
 		m_Viewport.SetContext(m_ForwardDrawer->GetFramebuffer(), m_ForwardDrawer->GetResolveIndex());
@@ -200,7 +201,7 @@ void AppLayer::OnAttach()
 	LoadProject(m_ProjectPath);
 }
 
-void AppLayer::OnUpdate(float dt)
+void AppLayer::Update(float dt)
 {
 	glm::vec2 size = m_Viewport.GetViewportSize();
 	if (size != m_ViewportSize)
@@ -222,27 +223,27 @@ void AppLayer::OnUpdate(float dt)
 	}
 }
 
-void AppLayer::OnRender()
-{
-	m_ForwardDrawer->Draw(m_IsScenePlaying ? m_RuntimeScene : m_EditorScene);
+//void AppLayer::OnRender()
+//{
+//	m_ForwardDrawer->Draw(m_IsScenePlaying ? m_RuntimeScene : m_EditorScene);
+//
+//	// Editor
+//	{
+//		NxImGui::Context::StartFrame();
+//
+//		m_ContentBrowser.Render();
+//		m_SceneHeirarchy.Render();
+//
+//		m_Viewport.Render();
+//
+//		RenderSettingPanel();
+//		RenderTopMenuBarPanel();
+//
+//		NxImGui::Context::EndFrame();
+//	}
+//}
 
-	// Editor
-	{
-		NxImGui::Context::StartFrame();
-
-		m_ContentBrowser.Render();
-		m_SceneHeirarchy.Render();
-
-		m_Viewport.Render();
-
-		RenderSettingPanel();
-		RenderTopMenuBarPanel();
-
-		NxImGui::Context::EndFrame();
-	}
-}
-
-void AppLayer::OnDetach()
+void AppLayer::Destroy()
 {
 	m_EditorScene.reset();
 	m_RuntimeScene.reset();
@@ -254,7 +255,7 @@ void AppLayer::OnDetach()
 	}
 }
 
-void AppLayer::OnWindowResize(int width, int height)
+bool AppLayer::OnWindowResize(int width, int height)
 {
 	m_EditorCameraController.SetPerspectiveProjection(45.f, (float)width, (float)height, 0.1f, 1000.f);
 
@@ -264,6 +265,7 @@ void AppLayer::OnWindowResize(int width, int height)
 
 	m_ForwardDrawer->OnWindowResize(extent);
 	m_Viewport.SetContext(m_ForwardDrawer->GetFramebuffer(), m_ForwardDrawer->GetResolveIndex());
+	return false;
 }
 
 void AppLayer::RenderSettingPanel()

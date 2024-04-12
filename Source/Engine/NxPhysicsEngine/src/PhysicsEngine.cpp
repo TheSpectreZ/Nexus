@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#include "NxRenderEngine/BatchRenderer.h"
+//#include "NxRenderEngine/BatchRenderer.h"
 
 #define PVD_HOST "127.0.0.1"
 
@@ -140,17 +140,17 @@ void Nexus::PhysicsEngine::OnSceneStop()
 
 void Nexus::PhysicsEngine::DrawColliders()
 {
-	auto& rb = s_Data->m_scene->getRenderBuffer();
-
-	for (uint32_t i = 0; i < rb.getNbLines(); i++)
-	{
-		auto& line = rb.getLines()[i];
-
-		BatchRenderer::Get()->DrawLine(
-			ConvertVec3<glm::vec3>(line.pos0),
-			ConvertVec3<glm::vec3>(line.pos1)
-		);
-	}
+	//auto& rb = s_Data->m_scene->getRenderBuffer();
+	//
+	//for (uint32_t i = 0; i < rb.getNbLines(); i++)
+	//{
+	//	auto& line = rb.getLines()[i];
+	//
+	//	BatchRenderer::Get()->DrawLine(
+	//		ConvertVec3<glm::vec3>(line.pos0),
+	//		ConvertVec3<glm::vec3>(line.pos1)
+	//	);
+	//}
 
 	//for (uint32_t i = 0; i < rb.getNbTriangles(); i++)
 	//{

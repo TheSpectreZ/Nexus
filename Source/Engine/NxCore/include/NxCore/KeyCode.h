@@ -1,5 +1,5 @@
 #pragma once
-#include <cstdint>
+#include "NxCore/Base.h"
 
 #ifdef NEXUS_CORE_SHARED_BUILD
 #define NEXUS_CORE_API __declspec(dllexport)
@@ -7,11 +7,9 @@
 #define NEXUS_CORE_API __declspec(dllimport)
 #endif // NEXUS_CORE_SHARED_BUILD
 
-using Code = uint16_t;
-
 namespace Key
 {
-	enum NEXUS_CORE_API : Code
+	enum NEXUS_CORE_API Code : short
 	{
 		Space = 32,
 		Apostrophe = 39, /* ' */
@@ -148,10 +146,31 @@ namespace Key
 
 namespace Mouse
 {
-	enum NEXUS_CORE_API : Code
+	enum NEXUS_CORE_API Code : short
 	{
 		Left = 0,
 		Right = 1,
 		Middle = 2
 	};
+}
+
+namespace Nexus
+{
+	enum class InputAction
+	{
+		Press, Release, Repeat
+	};
+
+	enum class InputModifier
+	{
+		Shift		= 1,
+		Control		= 2,
+		Alt			= 4,
+		Super		= 8,
+		CapsLock	= 16,
+		NumLock		= 32,
+		Invalid		= 64
+	};
+
+	ENUM_FLAG_OPERATORS(InputModifier)
 }

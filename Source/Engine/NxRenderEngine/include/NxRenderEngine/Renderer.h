@@ -1,9 +1,6 @@
 #pragma once
-#include <type_traits>
-#include <functional>
-#include <unordered_map>
-
-#include "GraphicsInterface.h"
+#include "NxCore/Window.h"
+#include "NxGraphics/GraphicsDevice.h"
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
@@ -11,44 +8,34 @@
 #define NEXUS_RENDERER_API __declspec(dllimport)
 #endif
 
-namespace Nexus::Module
+namespace Nexus
 {
-	struct NEXUS_RENDERER_API RendererCreateInfo
+	enum class RenderEngineAPI
 	{
-		RendererAPI apiType;
-		Window* window;
-		void* HInstance;
-		std::function<void()> resizeCallback;
-
-		bool initSubmodules = false;
+		Vulkan
 	};
 
-	class NEXUS_RENDERER_API Renderer
+	struct RenderEngineSpecifications
 	{
-		static Renderer* s_Instance;
+		RenderEngineAPI	eAPI;
+		Window* pWindow;
+		void* hInstance;
+	};
+
+	class NEXUS_RENDERER_API RenderEngine
+	{
 	public:
-		static Renderer* Get() { return s_Instance; }
-		
-		static void Initialize(const RendererCreateInfo& Info);
-		static void Shutdown();
+		bool Intialize(const RenderEngineSpecifications& specs);
+		void Terminate();
 
-		void Begin();
-		void End();
+		void Flush();
+		void WaitForGPU();
 
-		void FlushTransfer();
-		void FlushRender();
-
-		void WaitForRenderer();
-
-		Renderer() = default;
-		~Renderer() = default;
-
-		Ref<Context> GetContext() { return m_Context; }
-		Ref<Swapchain> GetSwapchain() { return m_Swapchain; }
-		Ref<CommandQueue> GetCommandQueue() { return m_CommandQueue; }
+		void OnScreenResize(int width, int height);
 	private:
-		Ref<Context> m_Context;
-		Ref<Swapchain> m_Swapchain;
-		Ref<CommandQueue> m_CommandQueue;
+		struct INTERNAL;
+		INTERNAL* mInternal;
+
+		GraphicsDevice* mGraphicsDevice;
 	};
 }
