@@ -10,25 +10,8 @@ project "NxEditor"
 	files
 	{
 		(SrcDir.."Tools/%{prj.name}/src/**.h"),
-		(SrcDir.."Tools/%{prj.name}/src/**.cpp")
-	}
-
-	links
-	{
-		"vulkan-1.lib",
-		"imgui",
-		"NxCore",
-		"NxScene",
-		"NxAsset",
-		"NxGraphics",
-		"NxVulkan",
-		"NxRenderEngine",
-		"NxPhysicsEngine",
-		"NxApplication",
-		"NxScriptEngine",
-		"NxNetworkEngine",
-
-		"NxImGui"
+		(SrcDir.."Tools/%{prj.name}/src/Main.cpp"),
+		(SrcDir.."Tools/%{prj.name}/src/EditorLayer.cpp")
 	}
 
 	includedirs
@@ -39,21 +22,28 @@ project "NxEditor"
 		
 		IncludePath["NxCore"],
 		IncludePath["NxScene"],
-		IncludePath["NxAsset"],
 		IncludePath["NxGraphics"],
-		IncludePath["NxVulkan"],
-		IncludePath["NxRenderEngine"],
+		
+        IncludePath["NxRenderEngine"],
 		IncludePath["NxPhysicsEngine"],
 		IncludePath["NxScriptEngine"],
 		IncludePath["NxNetworkEngine"],
-		IncludePath["NxApplication"],
-
-		IncludePath["NxImGui"]
+		IncludePath["NxGameEngine"],
 	}
 
-	libdirs
+	links
 	{
-		"$(VULKAN_SDK)/Lib"
+		"imgui",
+		
+		"NxCore",
+        "NxScene",
+		"NxGraphics",
+		
+		"NxRenderEngine",
+		"NxPhysicsEngine",
+		"NxGameEngine",
+		"NxScriptEngine",
+		"NxNetworkEngine"
 	}
 
 	filter "system:windows"

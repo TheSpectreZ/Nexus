@@ -10,7 +10,7 @@ project "NxVulkan"
 	files
 	{
 		(SrcDir.."Engine/%{prj.name}/include/**.h"),
-		(SrcDir.."Engine/%{prj.name}/src/**.cpp")
+		(SrcDir.."Engine/%{prj.name}/src/VkGraphicsDevice.cpp")
 	}
 
 	includedirs
@@ -25,7 +25,6 @@ project "NxVulkan"
 	links
 	{
 		"NxCore",
-		"NxGraphics",
 		"vulkan-1.lib"
 	}
 

@@ -10,29 +10,31 @@ project "NxRenderEngine"
 	files
 	{
 		(SrcDir.."Engine/%{prj.name}/include/**.h"),
-		(SrcDir.."Engine/%{prj.name}/src/**.cpp")
+		(SrcDir.."Engine/%{prj.name}/src/Renderer.cpp")
 	}
 
 	includedirs
 	{
-		"$(VULKAN_SDK)/Include",
 		IncludePath["utils"],
 
+        IncludePath["NxGraphics"],
+        
 		IncludePath["NxCore"],
-		IncludePath["NxVulkan"],
-		IncludePath["NxGraphics"],
 		IncludePath["NxScene"],
-		
 		IncludePath["NxRenderEngine"],
 	}
 
 	links
 	{
 		"NxCore",
-		"NxGraphics",
-		"NxVulkan",
+        "NxScene",
 		"NxScene",
 	}
+
+    dependson
+    {
+        "NxVulkan"
+    }
 
 	defines 
 	{

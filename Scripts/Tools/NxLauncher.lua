@@ -19,7 +19,7 @@ project "NxLauncher"
 	
 		"NxCore",
 		"NxRenderEngine",
-		"NxApplication",
+		"NxGameEngine",
 
 		"NxImGui"
 	}
@@ -32,7 +32,7 @@ project "NxLauncher"
 		IncludePath["NxCore"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
-		IncludePath["NxApplication"],
+		IncludePath["NxGameEngine"],
 
 		IncludePath["NxImGui"]
 	}

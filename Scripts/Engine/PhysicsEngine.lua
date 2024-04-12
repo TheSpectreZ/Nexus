@@ -22,7 +22,7 @@ project "NxPhysicsEngine"
 		IncludePath["NxScene"],
 
 		IncludePath["NxGraphics"],
-		IncludePath["NxRenderEngine"],
+		--IncludePath["NxRenderEngine"],
 
 		IncludePath["NxPhysicsEngine"],
 	}
@@ -31,7 +31,7 @@ project "NxPhysicsEngine"
 	{
 		"NxCore",
 		"NxScene",
-		"NxRenderEngine",
+		--"NxRenderEngine",
 
 		"PhysX_64.lib",
 		"PhysXCommon_64.lib",

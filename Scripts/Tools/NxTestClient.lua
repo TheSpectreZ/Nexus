@@ -22,7 +22,7 @@ project "NxTestClient"
 		"NxGraphics",
 		"NxRenderEngine",
 		"NxNetworkEngine",
-		"NxApplication",
+		"NxGameEngine",
 		
 		"NxImGui"
 	}
@@ -38,7 +38,7 @@ project "NxTestClient"
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
 		IncludePath["NxNetworkEngine"],
-		IncludePath["NxApplication"],
+		IncludePath["NxGameEngine"],
 
 		IncludePath["NxImGui"]
 	}

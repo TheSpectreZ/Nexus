@@ -1,4 +1,4 @@
-project "NxApplication"
+project "NxGameEngine"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -19,14 +19,14 @@ project "NxApplication"
 		IncludePath["glfw"],
 		
 		IncludePath["NxCore"],
-		IncludePath["NxAsset"],
+		--IncludePath["NxAsset"],
 		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
 		IncludePath["NxPhysicsEngine"],
 		IncludePath["NxScriptEngine"],
 		IncludePath["NxNetworkEngine"],
-		IncludePath["NxApplication"]
+		IncludePath["NxGameEngine"]
 	}
 
 	links
@@ -34,7 +34,7 @@ project "NxApplication"
 		"glfw",
 		"NxCore",
 		"NxScene",
-		"NxAsset",
+		--"NxAsset",
 		"NxRenderEngine",
 		"NxPhysicsEngine",
 		"NxScriptEngine",
