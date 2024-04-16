@@ -46,8 +46,8 @@ namespace Nexus
 		vk::CommandPool mGraphicsCommandPool;
 		std::vector<vk::CommandBuffer> mGraphicsCommandBuffer;
 
-		vk::RenderPass mSwapchainRenderpass;
-		std::vector<vk::Framebuffer> mSwapchainFramebuffer;
+		vk::RenderingAttachmentInfo mColorAttachmentInfo;
+		vk::RenderingInfo mRenderingInfo;
 	private:
 		Window* mWindow;
 

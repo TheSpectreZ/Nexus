@@ -69,7 +69,7 @@ bool Nexus::VulkanGraphicsDevice::Initialize(const GraphicsDeviceSpecifications&
 {
 	mWindow = specs.pWindow;
 
-	std::vector<const char*> RequiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+	std::vector<const char*> RequiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
 	std::vector<const char*> RequiredLayers =
 	{
 		#ifdef NEXUS_DEBUG
@@ -242,7 +242,11 @@ bool Nexus::VulkanGraphicsDevice::Initialize(const GraphicsDeviceSpecifications&
 		features.sampleRateShading = vk::True;
 		features.fillModeNonSolid = vk::True;
 
+		vk::PhysicalDeviceDynamicRenderingFeatures dynamicRendering{};
+		dynamicRendering.dynamicRendering = vk::True;
+		
 		vk::DeviceCreateInfo info{};
+		info.setPNext(&dynamicRendering);
 		info.setPEnabledFeatures(&features);
 		info.setQueueCreateInfos(queueCreateInfo);
 		info.setPEnabledExtensionNames(RequiredExtensions);
@@ -276,39 +280,9 @@ bool Nexus::VulkanGraphicsDevice::Initialize(const GraphicsDeviceSpecifications&
 		mSurface = mInstance.createWin32SurfaceKHR(info);
 	}
 
-	// Swapchain Details
-	{
-		mSwapchainDetails = QuerySwapchainDetails();
-	}
-
-	// Renderpass
-	{
-		vk::AttachmentDescription attachmentDescription{};
-		attachmentDescription.format = mSwapchainDetails.surfaceFormat.format;
-		attachmentDescription.samples = vk::SampleCountFlagBits::e1;
-		attachmentDescription.loadOp = vk::AttachmentLoadOp::eClear;
-		attachmentDescription.storeOp = vk::AttachmentStoreOp::eStore;
-		attachmentDescription.stencilLoadOp = vk::AttachmentLoadOp::eDontCare;
-		attachmentDescription.stencilStoreOp = vk::AttachmentStoreOp::eDontCare;
-		attachmentDescription.initialLayout = vk::ImageLayout::eUndefined;
-		attachmentDescription.finalLayout = vk::ImageLayout::ePresentSrcKHR;
-
-		vk::AttachmentReference attachmentReference{};
-		attachmentReference.attachment = 0;
-		attachmentReference.layout = vk::ImageLayout::eColorAttachmentOptimal;
-
-		vk::SubpassDescription subpass{};
-		subpass.setColorAttachments(attachmentReference);
-
-		vk::RenderPassCreateInfo info{};
-		info.setAttachments(attachmentDescription);
-		info.setSubpasses(subpass);
-
-		mSwapchainRenderpass = mDevice.createRenderPass(info);
-	}
-
 	// Screen Resources
 	{
+		mSwapchainDetails = QuerySwapchainDetails();
 		CreateScreenResources(specs.pWindow->width, specs.pWindow->height);
 	}
 
@@ -362,8 +336,6 @@ void Nexus::VulkanGraphicsDevice::Shutdown()
 
 	mDevice.destroyCommandPool(mGraphicsCommandPool);
 	
-	mDevice.destroyRenderPass(mSwapchainRenderpass);
-
 	vmaDestroyAllocator(mAllocator);
 		
 	mDevice.destroy();
@@ -409,18 +381,52 @@ void Nexus::VulkanGraphicsDevice::EndFrame()
 {
 	auto& cmd = mGraphicsCommandBuffer[mFrameIndex];
 
-	vk::ClearValue clearValue;
-	clearValue.color = { 1.f, 0.8f, 0.6f, 1.f };
+	mColorAttachmentInfo.imageView = mImages[mImageIndex].view;
 
-	vk::RenderPassBeginInfo rInfo{};
-	rInfo.renderPass = mSwapchainRenderpass;
-	rInfo.framebuffer = mSwapchainFramebuffer[mFrameIndex];
-	rInfo.renderArea.offset = vk::Offset2D{};
-	rInfo.renderArea.extent = mSwapchainDetails.extent;
-	rInfo.setClearValues(clearValue);
+	// [layout change] present src ---> color attachment
+	{
+		vk::ImageMemoryBarrier imageBarrier;
+		imageBarrier.oldLayout = vk::ImageLayout::eUndefined;
+		imageBarrier.newLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		imageBarrier.image = mImages[mImageIndex].image;
+		imageBarrier.srcAccessMask = vk::AccessFlagBits::eNone;
+		imageBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+		imageBarrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		imageBarrier.subresourceRange.baseArrayLayer = 0;
+		imageBarrier.subresourceRange.layerCount = 1;
+		imageBarrier.subresourceRange.baseMipLevel = 0;
+		imageBarrier.subresourceRange.levelCount = 1;
 
-	cmd.beginRenderPass(rInfo, vk::SubpassContents::eInline);
-	cmd.endRenderPass();
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::DependencyFlags{}, 
+			{}, {}, imageBarrier);
+	}
+
+	cmd.beginRendering(&mRenderingInfo);
+
+	// Write to Swapchain Image
+	{
+
+	}
+
+	cmd.endRendering();
+
+	// [layout change] color attachment ---> presentSrc
+	{
+		vk::ImageMemoryBarrier imageBarrier;
+		imageBarrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		imageBarrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
+		imageBarrier.image = mImages[mImageIndex].image;
+		imageBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+		imageBarrier.dstAccessMask = vk::AccessFlagBits::eNone;
+		imageBarrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+		imageBarrier.subresourceRange.baseArrayLayer = 0;
+		imageBarrier.subresourceRange.layerCount = 1;
+		imageBarrier.subresourceRange.baseMipLevel = 0;
+		imageBarrier.subresourceRange.levelCount = 1;
+
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eBottomOfPipe, vk::DependencyFlags{},
+			{}, {}, imageBarrier);
+	}
 
 	cmd.end();
 }
@@ -571,7 +577,7 @@ void Nexus::VulkanGraphicsDevice::CreateScreenResources(int width, int height)
 		mSwapchainDetails.extent.width = std::clamp(mSwapchainDetails.extent.width, cap.currentExtent.width, cap.maxImageExtent.width);
 		mSwapchainDetails.extent.height = std::clamp(mSwapchainDetails.extent.height, cap.currentExtent.height, cap.maxImageExtent.height);
 	}
-
+	
 	vk::SwapchainCreateInfoKHR info{};
 	info.surface = mSurface;
 	info.minImageCount = mSwapchainDetails.minImageCount;
@@ -594,7 +600,6 @@ void Nexus::VulkanGraphicsDevice::CreateScreenResources(int width, int height)
 	mSwapchain = mDevice.createSwapchainKHR(info);
 	
 	auto images = mDevice.getSwapchainImagesKHR(mSwapchain);
-
 	for (auto& image : images)
 	{
 		vk::ImageViewCreateInfo vInfo{};
@@ -618,17 +623,20 @@ void Nexus::VulkanGraphicsDevice::CreateScreenResources(int width, int height)
 			.view = mDevice.createImageView(vInfo)
 		};
 		mImages.push_back(Image);
+	}
 
-		vk::FramebufferCreateInfo fInfo{};
-		fInfo.setAttachments(Image.view);
-		fInfo.width = mSwapchainDetails.extent.width;
-		fInfo.height = mSwapchainDetails.extent.height;
-		fInfo.layers = 1;
-		fInfo.renderPass = mSwapchainRenderpass;
-		
-		auto framebuffer = mDevice.createFramebuffer(fInfo);
+	// Rendering Info
+	{
+		mColorAttachmentInfo.imageLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		mColorAttachmentInfo.loadOp = vk::AttachmentLoadOp::eClear;
+		mColorAttachmentInfo.storeOp = vk::AttachmentStoreOp::eStore;
+		mColorAttachmentInfo.clearValue.color = vk::ClearColorValue{ 0.08f, 0.08f, 0.08f, 1.0f };
 
-		mSwapchainFramebuffer.push_back( framebuffer );
+		mRenderingInfo.setColorAttachments(mColorAttachmentInfo);
+		mRenderingInfo.pDepthAttachment = nullptr;
+		mRenderingInfo.viewMask = 0;
+		mRenderingInfo.layerCount = 1;
+		mRenderingInfo.renderArea.extent = mSwapchainDetails.extent;
 	}
 
 	NEXUS_LOG("Vulkan", "Created Screen Resources (Image Count - %i)", (uint32_t)mImages.size());
@@ -640,12 +648,10 @@ void Nexus::VulkanGraphicsDevice::DestroyScreenResources()
 
 	for (uint32_t i = 0; i < mSwapchainDetails.minImageCount; i++)
 	{
-		mDevice.destroyFramebuffer(mSwapchainFramebuffer[i]);
 		mDevice.destroyImageView(mImages[i].view);
 	}
 	mImages.clear();
-	mSwapchainFramebuffer.clear();
-
+	
 	mDevice.destroySwapchainKHR(mSwapchain);
 	mSwapchain = nullptr;
 
