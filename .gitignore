@@ -1,4 +1,4 @@
-﻿/.vs
+﻿**/.vs
 /Binaries
 /Intermediates
 
@@ -15,7 +15,11 @@
 /.vs/Nexus-Engine
 /Source/Tools/NxEditor/Sandbox/.vs/Sandbox
 
-/Source/**/Logs
 /Source/Tools/NxEditor/Resources/Scripts
 /Source/Tools/NxEditor/Sandbox/Scripts/Bin
 /Source/Tools/NxEditor/Sandbox/Scripts/Bin-Int
+
+/Logs
+
+*.spirv
+*.hint
