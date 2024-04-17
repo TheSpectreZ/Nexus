@@ -15,9 +15,6 @@
 // Application
 #include "NxGameEngine/Engine.h"
 
-// Modules
-#include "NxRenderEngine/Renderer.h"
-
 namespace Nexus::Utils
 {
 	static const std::string WHITESPACE = " \n\r\t\f\v";

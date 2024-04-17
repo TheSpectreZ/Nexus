@@ -161,3 +161,8 @@ void* Nexus::Platform::LoadFuncFromSharedLibrary(LibraryHANDLE* pHandle, const c
 
 	return func;
 }
+
+void Nexus::Platform::LaunchProcess(const std::string& process)
+{
+	std::system(process.c_str());
+}

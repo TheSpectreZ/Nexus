@@ -6,6 +6,7 @@ project "NxEditor"
 
 	targetdir (BinDir)
 	objdir (IntDir)
+    debugdir (DebDir)
 
 	files
 	{

@@ -1,43 +1,62 @@
 #pragma once
 #include "NxGraphics/Framebuffer.h"
-#include "VkAssert.h"
 
-#ifdef NEXUS_VULKAN_SHARED_BUILD
-#define NEXUS_VULKAN_API __declspec(dllexport)
-#else
-#define NEXUS_VULKAN_API __declspec(dllimport)
-#endif
+#include "vulkan/vulkan.hpp"
+#include "vma/vk_mem_alloc.h"
 
 namespace Nexus
 {
-	class NEXUS_VULKAN_API VulkanFramebuffer : public Framebuffer
+	class VulkanFramebuffer : public Framebuffer
 	{
 	public:
-		VulkanFramebuffer(const FramebufferSpecification& specs);
+		VulkanFramebuffer(const FramebufferSpecification& specs, class VulkanGraphicsDevice* pDevice);
 		~VulkanFramebuffer() override;
 
-		VkFramebuffer& Get(uint32_t frameIndex) { return m_Framebuffer[frameIndex]; }
-		VkImageView& GetAttachmentView(uint32_t frameIndex, uint32_t attachmentIndex) { return m_Attachments[frameIndex][attachmentIndex].view; }
+		void Begin() override;
+		void End() override;
 
-		std::vector<VkClearValue>& GetClearValues() { return m_ClearValues; }
-		VkExtent2D& GetExtent() { return m_Extent; }
-	private:
-		std::vector<VkFramebuffer> m_Framebuffer;
-		
 		struct Attachment
 		{
-			VkImage image;
-			VkImageView view;
-			VmaAllocation mem;
+			vk::Image image;
+			vk::ImageView view;
+			VmaAllocation alloc;
 
-			void Create(const FramebufferAttachmentDescription& desc, Extent extent);
-			void Destroy(VkDevice device,VmaAllocator allocator);
+			vk::ImageLayout layout;
+			
+			vk::ImageSubresourceRange subresource;
 		};
-		std::vector<std::vector<Attachment>> m_Attachments;
+		
+		inline Attachment getAttachment(uint32_t frameIndex, uint32_t attachmentIndex) 
+		{ 
+			return mColorAttachments.at(frameIndex).at(attachmentIndex);
+		}
 
-		std::vector<VkClearValue> m_ClearValues;
-		VkExtent2D m_Extent;
+		inline vk::Extent3D getExtent()
+		{
+			return mExtent;
+		}
+	private:
+		class VulkanGraphicsDevice* mDevice;
+
+		vk::Extent3D mExtent;
+		vk::RenderingInfo mInfo;
+
+		std::vector< std::vector<Attachment> > mColorAttachments;
+		std::vector< vk::RenderingAttachmentInfo > mColorInfo;
+		
+		Attachment mDepthAttachment;
+		vk::RenderingAttachmentInfo mDepthInfo;
+	private:
+		struct AttachmentCreateInfo
+		{
+			FramebufferAttachment specs;
+			vk::Extent3D extent;
+			
+			vk::ImageUsageFlagBits usage;
+			vk::ImageAspectFlagBits aspect;
+			vk::ImageLayout layout;
+		};
+
+		void CreateAttachment(const AttachmentCreateInfo& info, Attachment* pOutAttachment, vk::RenderingAttachmentInfo* pOutInfo);
 	};
 }
-
-

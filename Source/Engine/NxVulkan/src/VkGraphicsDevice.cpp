@@ -7,6 +7,8 @@
 #include "NxCore/Logger.h"
 #include "NxCore/Assertion.h"
 
+#include "NxVulkan/VkSpecification.h"
+
 static bool CheckLayersAvailability(std::vector<const char*> Layers)
 {
 	auto AvailableLayers = vk::enumerateInstanceLayerProperties();
@@ -377,46 +379,73 @@ void Nexus::VulkanGraphicsDevice::BeginFrame()
 	mGraphicsCommandBuffer[mFrameIndex].begin(vk::CommandBufferBeginInfo{});
 }
 
-void Nexus::VulkanGraphicsDevice::EndFrame()
+void Nexus::VulkanGraphicsDevice::EndFrame(Ref<Framebuffer> framebuffer, uint32_t attachmentIndex)
 {
 	auto& cmd = mGraphicsCommandBuffer[mFrameIndex];
 
 	mColorAttachmentInfo.imageView = mImages[mImageIndex].view;
 
-	// [layout change] present src ---> color attachment
+	// [layout change] undefined ---> TransferDst
 	{
 		vk::ImageMemoryBarrier imageBarrier;
 		imageBarrier.oldLayout = vk::ImageLayout::eUndefined;
-		imageBarrier.newLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		imageBarrier.newLayout = vk::ImageLayout::eTransferDstOptimal;
 		imageBarrier.image = mImages[mImageIndex].image;
 		imageBarrier.srcAccessMask = vk::AccessFlagBits::eNone;
-		imageBarrier.dstAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+		imageBarrier.dstAccessMask = vk::AccessFlagBits::eTransferWrite;
 		imageBarrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		imageBarrier.subresourceRange.baseArrayLayer = 0;
 		imageBarrier.subresourceRange.layerCount = 1;
 		imageBarrier.subresourceRange.baseMipLevel = 0;
 		imageBarrier.subresourceRange.levelCount = 1;
 
-		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::DependencyFlags{}, 
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags{}, 
 			{}, {}, imageBarrier);
 	}
-
-	cmd.beginRendering(&mRenderingInfo);
-
+	
 	// Write to Swapchain Image
 	{
+		Ref<VulkanFramebuffer> fb = DynamicPointerCast<VulkanFramebuffer>(framebuffer);
+		
+		auto srcExtent = fb->getExtent();
+		auto srcAttachment = fb->getAttachment(mFrameIndex, attachmentIndex);
 
+		vk::ImageMemoryBarrier imageBarrier;
+		imageBarrier.image = srcAttachment.image;
+		imageBarrier.subresourceRange = srcAttachment.subresource;;
+		imageBarrier.oldLayout = srcAttachment.layout;
+		imageBarrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
+		imageBarrier.srcAccessMask = GetAccessFlagFromLayout(srcAttachment.layout);
+		imageBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
+		
+		auto stageFlag = GetPipelineStageFromLayout(srcAttachment.layout);
+		cmd.pipelineBarrier(stageFlag, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags{}, {}, {}, imageBarrier);
+		
+		vk::ImageBlit blit;
+		blit.srcOffsets[0] = vk::Offset3D(0, 0, 0);
+		blit.srcOffsets[1] = vk::Offset3D(srcExtent.width, srcExtent.height, 1);
+		blit.dstOffsets[0] = vk::Offset3D(0, 0, 0);
+		blit.dstOffsets[1] = vk::Offset3D(mSwapchainDetails.extent.width, mSwapchainDetails.extent.height, 1);
+		blit.srcSubresource.aspectMask = srcAttachment.subresource.aspectMask;
+		blit.srcSubresource.mipLevel = srcAttachment.subresource.baseMipLevel;
+		blit.srcSubresource.layerCount = srcAttachment.subresource.layerCount;
+		blit.srcSubresource.baseArrayLayer = srcAttachment.subresource.baseArrayLayer;
+		blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
+		blit.dstSubresource.mipLevel = 0;
+		blit.dstSubresource.layerCount = 1;
+		blit.dstSubresource.baseArrayLayer = 0;
+
+		auto& dstImage = mImages.at(mFrameIndex);
+		cmd.blitImage(srcAttachment.image, vk::ImageLayout::eTransferSrcOptimal, dstImage.image, vk::ImageLayout::eTransferDstOptimal, blit, vk::Filter::eLinear);
 	}
 
-	cmd.endRendering();
-
-	// [layout change] color attachment ---> presentSrc
+	// [layout change] TransferDst ---> presentSrc
 	{
 		vk::ImageMemoryBarrier imageBarrier;
-		imageBarrier.oldLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		imageBarrier.oldLayout = vk::ImageLayout::eTransferDstOptimal;
 		imageBarrier.newLayout = vk::ImageLayout::ePresentSrcKHR;
 		imageBarrier.image = mImages[mImageIndex].image;
-		imageBarrier.srcAccessMask = vk::AccessFlagBits::eColorAttachmentWrite;
+		imageBarrier.srcAccessMask = vk::AccessFlagBits::eTransferWrite;
 		imageBarrier.dstAccessMask = vk::AccessFlagBits::eNone;
 		imageBarrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 		imageBarrier.subresourceRange.baseArrayLayer = 0;
@@ -424,7 +453,7 @@ void Nexus::VulkanGraphicsDevice::EndFrame()
 		imageBarrier.subresourceRange.baseMipLevel = 0;
 		imageBarrier.subresourceRange.levelCount = 1;
 
-		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::PipelineStageFlagBits::eBottomOfPipe, vk::DependencyFlags{},
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTransfer, vk::PipelineStageFlagBits::eBottomOfPipe, vk::DependencyFlags{},
 			{}, {}, imageBarrier);
 	}
 
@@ -620,7 +649,8 @@ void Nexus::VulkanGraphicsDevice::CreateScreenResources(int width, int height)
 
 		SwapchainImage Image{
 			.image = image,
-			.view = mDevice.createImageView(vInfo)
+			.view = mDevice.createImageView(vInfo),
+			.subresource = vInfo.subresourceRange,
 		};
 		mImages.push_back(Image);
 	}

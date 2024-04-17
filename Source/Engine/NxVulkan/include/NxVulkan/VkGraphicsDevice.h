@@ -4,6 +4,8 @@
 #include "vulkan/vulkan.hpp"
 #include "vma/vk_mem_alloc.h"
 
+#include "NxVulkan/VkFramebuffer.h"
+
 namespace Nexus
 {
 	class VulkanGraphicsDevice : public GraphicsDevice
@@ -14,10 +16,32 @@ namespace Nexus
 		void WaitForGPU() override;
 
 		void BeginFrame() override;
-		void EndFrame() override;
+		void EndFrame(Ref<Framebuffer> framebuffer, uint32_t attachmentIndex) override;
+		
 		void Flush() override;
 
 		void OnScreenResize(int width, int height) override;
+	public:
+		Extent getDeviceExtent() override 
+		{
+			return { mSwapchainDetails.extent.width, mSwapchainDetails.extent.height }; 
+		} 
+	public:
+		vk::Device getDevice() { return mDevice; }
+		VmaAllocator getAllocator() { return mAllocator; }
+
+		vk::CommandBuffer getCommandBuffer() { return mGraphicsCommandBuffer[mFrameIndex]; }
+
+		uint32_t getImageCount() { return mSwapchainDetails.minImageCount; }
+		uint32_t getFrameIndex() { return mFrameIndex; }
+
+		vk::Extent2D getExtent() { return mSwapchainDetails.extent; }
+		vk::SampleCountFlagBits getMSAAbits() { return mMaxSampleCount; }
+	public:
+		inline Ref< Framebuffer > CreateFramebuffer(const FramebufferSpecification& specs) override 
+		{
+			return CreateRef<VulkanFramebuffer>(specs, this); 
+		}
 	private:
 		vk::Instance mInstance;
 		vk::DebugUtilsMessengerEXT mDebugMessenger;
@@ -26,7 +50,7 @@ namespace Nexus
 		vk::PhysicalDeviceProperties mPhysicalDeviceProps;
 
 		vk::Format mDepthFormat;
-		vk::SampleCountFlags mMaxSampleCount;
+		vk::SampleCountFlagBits mMaxSampleCount;
 
 		vk::Device mDevice;
 
@@ -75,6 +99,7 @@ namespace Nexus
 		{
 			vk::Image image;
 			vk::ImageView view;
+			vk::ImageSubresourceRange subresource;
 		};
 		std::vector< SwapchainImage > mImages;
 

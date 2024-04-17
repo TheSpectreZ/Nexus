@@ -2,6 +2,8 @@
 #include "NxCore/Window.h"
 #include "NxGraphics/GraphicsDevice.h"
 
+#include "SceneDrawer.h"
+
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
 #else
@@ -37,5 +39,7 @@ namespace Nexus
 		INTERNAL* mInternal;
 
 		GraphicsDevice* mGraphicsDevice;
+
+		SceneDrawer mSceneDrawer;
 	};
 }

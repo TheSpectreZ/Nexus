@@ -6,6 +6,8 @@ project "NxVulkan"
 
 	targetdir (BinDir)
 	objdir (IntDir)
+    debugdir (DebDir)
+
 
 	files
 	{
@@ -16,6 +18,7 @@ project "NxVulkan"
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
+
 		IncludePath["utils"],
 		IncludePath["NxCore"],
 		IncludePath["NxVulkan"],

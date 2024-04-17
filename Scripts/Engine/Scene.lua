@@ -6,6 +6,7 @@ project "NxScene"
 
 	targetdir (BinDir)
 	objdir (IntDir)
+    debugdir (DebDir)
 
 	files
 	{

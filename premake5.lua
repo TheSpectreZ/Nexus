@@ -9,7 +9,7 @@ workspace "Nexus-Engine"
     }
 
     startproject "NxEditor"
-
+    
     group "Dependencies"
         include "Scripts/Dependencies/imgui.lua"
         include "Scripts/Dependencies/glfw.lua"
@@ -26,6 +26,9 @@ workspace "Nexus-Engine"
         include "Scripts/Engine/NetworkEngine.lua"
         --include "Scripts/Engine/Asset.lua"
         
+    group "Utils"
+        include "Scripts/Engine/ShaderCompiler.lua"
+
     group "Script-Core"
         include "Scripts/NexusScriptCore.lua"
         

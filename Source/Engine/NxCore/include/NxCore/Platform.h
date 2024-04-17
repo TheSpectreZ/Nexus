@@ -26,4 +26,6 @@ namespace Nexus::Platform
 		void* func = LoadFuncFromSharedLibrary(pHandle, funcName);
 		return reinterpret_cast<T>(func);
 	}
+
+	NEXUS_CORE_API void LaunchProcess(const std::string& process);
 }

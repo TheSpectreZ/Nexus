@@ -1,5 +1,8 @@
 #pragma once
 #include <cstdint>
+#include <vector>
+#include <variant>
+#include <array>
 
 namespace Nexus
 {
@@ -26,59 +29,49 @@ namespace Nexus
 		Extent Extent;
 	};
 
-	enum class ShaderType
+	enum class ImageFormat
 	{
-		None,
-		Vertex,
-		Fragment,
-		Compute
+		eUndefined,
+		eRGBA8_srgb,
+		eD32_sfloat
 	};
 
-	enum class BufferType
+	enum class ImageLoadOp
 	{
-		Vertex,
-		Index,
-		Uniform,
-		Storage
+		eClear,
+		eLoad,
+		eDontCare
 	};
 
-	enum class TextureType
+	enum class ImageStoreOp
 	{
-		TwoD, ThreeD, Cube
+		eStore,
+		eDontCare
 	};
 
-	enum class TextureFormat
+	enum class ImageLayout
 	{
-		RGBA8_SRGB,
+		eColorAttachment,
+		eDepthStencilAttachment,
+		eTransferSrc,
+		eTransferDst,
+	};
+	
+	struct ImageClearColorValue
+	{
+		ImageClearColorValue(float r, float g, float b, float a) { rgba = { r,g,b,a }; }
 
-		RG16_SFLOAT,
-		RG32_SFLOAT,
-
-		RGBA16_SFLOAT,
-		RGBA32_SFLOAT
+		std::array<float, 4> rgba = { 0.f, 0.f, 0.f, 1.f };
 	};
 
-	enum class ShaderResourceType
+	struct ImageClearDepthStencilValue
 	{
-		None,
-		Uniform,
-		SampledImage,
-		StorageImage,
-		SeperateImage
+		ImageClearDepthStencilValue(float d, uint32_t s) { depth = d; stencil = s; }
+
+		float depth = 0.f; uint32_t stencil = 0;
 	};
 
-	struct BufferSpecifications
-	{
-		BufferType type;
-		uint32_t size;
-		bool bCpuMemory;
-		void* data;
-	};
-
-	struct ImageSpecifications
-	{
-
-	};
+	typedef std::variant<ImageClearColorValue, ImageClearDepthStencilValue> ImageClearValue;
 }
 
 #define ENUM_TO_STRING(EnumValue) #EnumValue

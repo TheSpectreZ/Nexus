@@ -1,4 +1,4 @@
-project "NxAsset"
+project "NxShaderCompiler"
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -6,6 +6,7 @@ project "NxAsset"
 
 	targetdir (BinDir)
 	objdir (IntDir)
+    debugdir (DebDir)
 
 	files
 	{
@@ -15,26 +16,19 @@ project "NxAsset"
 
 	includedirs
 	{
-		IncludePath["utils"],
-        
+		IncludePath["utils"],        
 		IncludePath["NxCore"],
-		IncludePath["NxScene"],
-		IncludePath["NxGraphics"],
-		IncludePath["NxRenderEngine"],
-
-		IncludePath["NxAsset"]
+        IncludePath["NxShaderCompiler"],
 	}
 
 	links
 	{
-        "NxCore",
-        "NxScene",
-		"NxRenderEngine"
+		"NxCore",
 	}
 
 	defines 
 	{
-		"NEXUS_ASSET_SHARED_BUILD"
+		"NEXUS_SHADER_COMPILER_SHARED_BUILD"
 	}
 
 	filter "system:windows"

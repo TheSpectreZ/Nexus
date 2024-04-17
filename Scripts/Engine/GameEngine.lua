@@ -6,6 +6,7 @@ project "NxGameEngine"
 
 	targetdir (BinDir)
 	objdir (IntDir)
+    debugdir (DebDir)
 
 	files
 	{

@@ -9,7 +9,7 @@
 #include "Layer.h"
 #include "NxCore/Window.h"
 
-#include "NxRenderEngine/Renderer.h"
+#include "NxRenderEngine/RenderEngine.h"
 
 namespace Nexus
 {

@@ -1,32 +1,33 @@
 #pragma once
-#include "TypeImpls.h"
-#include "Renderpass.h"
+#include "Specification.h"
 
 namespace Nexus
 {
-	enum FramebufferAttachmentType
+	struct FramebufferAttachment
 	{
-		Color, DepthStencil, PresentSrc, ShaderReadOnly_Color
-	};
+		ImageFormat format = ImageFormat::eUndefined;
+		ImageLoadOp loadOp = ImageLoadOp::eLoad;
+		ImageStoreOp storeOp = ImageStoreOp::eStore;
 
-	struct FramebufferAttachmentDescription
-	{
-		FramebufferAttachmentType Type;
-		bool multisampled;
-		bool hdr;
+		ImageClearValue clearValue = ImageClearColorValue(0.f, 0.f, 0.f, 1.f);
+
+		bool bMultiSampled = false;
+		bool bResolve = false;
 	};
 
 	struct FramebufferSpecification
 	{
-		Ref<Renderpass> renderpass;
+		std::vector< FramebufferAttachment > colorAttachments;
+		FramebufferAttachment depthStencilAttachment;
 		Extent extent;
-		std::vector<FramebufferAttachmentDescription> attachments;
 	};
 
 	class Framebuffer
 	{
 	public:
-		Framebuffer() = default;
-		virtual ~Framebuffer() = default;
+		virtual ~Framebuffer() {};
+
+		virtual void Begin() = 0;
+		virtual void End() = 0;
 	};
 }

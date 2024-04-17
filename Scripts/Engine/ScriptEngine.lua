@@ -6,6 +6,7 @@ project "NxScriptEngine"
 
 	targetdir (BinDir)
 	objdir (IntDir)
+    debugdir (DebDir)
 
 	files
 	{

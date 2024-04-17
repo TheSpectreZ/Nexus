@@ -7,6 +7,8 @@ BinDir = "%{wks.location}/Binaries/%{cfg.buildcfg}"
 IntDir = "%{wks.location}/Intermediates/%{prj.name}/%{cfg.buildcfg}/"
 vcxDir = "%{wks.location}/Intermediates/%{prj.name}"
 
+DebDir = "%{wks.location}"
+
 IncludePath = {}
 
 IncludePath["imgui"] = (DepDir.."imgui")
@@ -21,6 +23,7 @@ IncludePath["NxScene"] = (SrcDir.."Engine/NxScene/include")
 IncludePath["NxAsset"] = (SrcDir.."Engine/NxAsset/include")
 IncludePath["NxVulkan"] = (SrcDir.."Engine/NxVulkan/include")
 IncludePath["NxGraphics"] = (SrcDir.."Engine/NxGraphics/include")
+IncludePath["NxShaderCompiler"] = (SrcDir.."Engine/NxShaderCompiler/include")
 IncludePath["NxRenderEngine"] = (SrcDir.."Engine/NxRenderEngine/include")
 IncludePath["NxPhysicsEngine"] = (SrcDir.."Engine/NxPhysicsEngine/include")
 IncludePath["NxScriptEngine"] = (SrcDir.."Engine/NxScriptEngine/include")

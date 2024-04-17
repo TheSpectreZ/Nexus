@@ -6,6 +6,7 @@ project "NxCore"
 
 	targetdir (BinDir)
 	objdir (IntDir)
+    debugdir (DebDir)
 
 	files
 	{

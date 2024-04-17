@@ -1,186 +1,204 @@
 #include "NxVulkan/VkFramebuffer.h"
-#include "NxVulkan/VkContext.h"
-#include "NxVulkan/VkSwapchain.h"
-#include "NxVulkan/VkRenderPass.h"
+#include "NxVulkan/VkGraphicsDevice.h"
+#include "NxVulkan/VkSpecification.h"
 
-Nexus::VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& specs)
+#include "NxCore/Logger.h"
+#include "NxCore/Assertion.h"
+
+Nexus::VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& specs, VulkanGraphicsDevice* pDevice)
+	:mDevice(pDevice)
 {
-	VkDevice device = VulkanContext::Get()->GetDeviceRef()->Get();
-	VulkanSwapchain* swapchain = VulkanSwapchain::Get(); 
+	mExtent.width = specs.extent.width;
+	mExtent.height = specs.extent.height;
+	mExtent.depth = 1;
+	
+	if (mExtent.width == 0 || mExtent.height == 0)
+		mExtent = vk::Extent3D(pDevice->getExtent(), 1);
 
-	uint32_t ImageCount = swapchain->GetImageCount();
+	//
+	// color attachments
+	//
 
-	m_Extent = swapchain->GetImageExtent();
-
-	// Attachments
-	m_Attachments.resize(ImageCount);
-	for (uint32_t i = 0; i < ImageCount; i++)
+	mColorInfo.resize(specs.colorAttachments.size());
+	
+	auto imageCount = pDevice->getImageCount();
+	for (uint32_t i = 0; i < imageCount; i++)
 	{
-		for (auto& a : specs.attachments)
+		auto& attachments = mColorAttachments.emplace_back();
+	
+		for (uint64_t j = 0; j < specs.colorAttachments.size(); j++)
 		{
-			auto& k = m_Attachments[i].emplace_back();
+			auto& attachment = attachments.emplace_back();
+			auto& info = mColorInfo[j];
+			auto& specification = specs.colorAttachments[j];
 
-			if (a.Type != FramebufferAttachmentType::PresentSrc)
-				k.Create(a,specs.extent);
-			else
-			{
-				k.image = nullptr;
-				k.mem = nullptr;
-				k.view = swapchain->GetImageView(i);
-			}
-
-			if (i == 0)
-			{
-				auto& c = m_ClearValues.emplace_back();
-				if (a.Type == FramebufferAttachmentType::DepthStencil)
-					c = { {1.f,0.f} };
-				else
-					c = { {0.57f,0.43f,0.87f,1.f} };
-			}
+			CreateAttachment(AttachmentCreateInfo{
+				.specs = specification,
+				.extent = mExtent,
+				.usage = vk::ImageUsageFlagBits::eColorAttachment,
+				.aspect = vk::ImageAspectFlagBits::eColor,
+				.layout = vk::ImageLayout::eColorAttachmentOptimal
+			}, &attachment, i == 0 ? &info : nullptr);
 		}
 	}
+	mInfo.setColorAttachments(mColorInfo);
 
-	// Framebuffer
-	m_Framebuffer.resize(ImageCount);
-	for (uint32_t i = 0; i < ImageCount; i++)
+	//
+	// depth attachments
+	//
+
+	if (specs.depthStencilAttachment.format != Nexus::ImageFormat::eUndefined)
 	{
-		Ref<VulkanRenderpass> pass = DynamicPointerCast<VulkanRenderpass>(specs.renderpass);
-
-		size_t count = m_Attachments[i].size();
-		std::vector<VkImageView> views(count);
-		for (size_t j = 0; j < count; j++)
-		{
-			views[j] = m_Attachments[i][j].view;
-		}
-
-		VkFramebufferCreateInfo Info{};
-		Info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-		Info.pNext = nullptr;
-		Info.flags = 0;
-		Info.width = specs.extent.width;
-		Info.height = specs.extent.height;
-		Info.layers = 1;
-		Info.renderPass = pass->Get();
-		Info.attachmentCount = (uint32_t)count;
-		Info.pAttachments = views.data();
-
-		_VKR = vkCreateFramebuffer(device, &Info, nullptr, &m_Framebuffer[i]);
-		CHECK_LOG_VKR;
+		CreateAttachment(AttachmentCreateInfo{
+				.specs = specs.depthStencilAttachment,
+				.extent = mExtent,
+				.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment,
+				.aspect = vk::ImageAspectFlagBits::eDepth,
+				.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal
+			}, &mDepthAttachment, &mDepthInfo);
+		
+		mInfo.pDepthAttachment = &mDepthInfo;
 	}
-	NEXUS_LOG("Vulkan", "Framebuffer Created : AttachmentCount - %i", m_Attachments[0].size());
+
+	// rendering info
+
+	mInfo.viewMask = 0;
+	mInfo.layerCount = 1;
+	mInfo.renderArea.extent = vk::Extent2D(mExtent.width, mExtent.height);
 }
 
 Nexus::VulkanFramebuffer::~VulkanFramebuffer()
 {
-	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
+	auto vkDevice = mDevice->getDevice();
+	auto vkAllocator = mDevice->getAllocator();
 
-	for (uint32_t i = 0; i < m_Framebuffer.size(); i++)
+	for (auto& atc : mColorAttachments)
 	{
-		for (auto& k : m_Attachments[i])
+		for (auto& a : atc)
 		{
-			if (k.image != nullptr)
-				k.Destroy(device->Get(), device->GetAllocator());
+			vmaDestroyImage(vkAllocator, a.image, a.alloc);
+			vkDevice.destroyImageView(a.view);
 		}
-
-		vkDestroyFramebuffer(device->Get(), m_Framebuffer[i], nullptr);
 	}
-	NEXUS_LOG("Vulkan", "Framebuffer Destroyed");
+	
+	if (mDepthAttachment.image)
+	{
+		vmaDestroyImage(vkAllocator, mDepthAttachment.image, mDepthAttachment.alloc);
+		vkDevice.destroyImageView(mDepthAttachment.view);
+	}
 }
 
-void Nexus::VulkanFramebuffer::Attachment::Create(const FramebufferAttachmentDescription& desc,Extent extent)
+void Nexus::VulkanFramebuffer::Begin()
 {
-	Ref<VulkanDevice> device = VulkanContext::Get()->GetDeviceRef();
-	Ref<VulkanPhysicalDevice> gpu = VulkanContext::Get()->GetPhysicalDeviceRef();
-	VulkanSwapchain* swapchain = VulkanSwapchain::Get();
+	auto cmd = mDevice->getCommandBuffer();
+	auto frameIndex = mDevice->getFrameIndex();
 
-	// Image
+	for (uint64_t i = 0; i < mColorAttachments[frameIndex].size(); i++)
 	{
-		VkImageCreateInfo Info{};
-		Info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		Info.pNext = nullptr;
-		Info.extent = { extent.width,extent.height,1 };
-		Info.arrayLayers = 1;
-		Info.flags = 0;
-		Info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		Info.mipLevels = 1;
-		Info.pQueueFamilyIndices = nullptr;
-		Info.queueFamilyIndexCount = 0;
-		Info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		Info.tiling = VK_IMAGE_TILING_OPTIMAL;
-		Info.imageType = VK_IMAGE_TYPE_2D;
-		Info.samples = desc.multisampled ? gpu->GetMaxSampleCount() : VK_SAMPLE_COUNT_1_BIT;
+		auto& atc = mColorAttachments[frameIndex][i];
+		mColorInfo[i].imageView = atc.view;
+
+		vk::ImageMemoryBarrier imageBarrier;
+
+		imageBarrier.oldLayout = vk::ImageLayout::eUndefined;
+		imageBarrier.newLayout = atc.layout;
+		imageBarrier.image = atc.image;
+		imageBarrier.srcAccessMask = vk::AccessFlagBits::eNone;
+		imageBarrier.dstAccessMask = GetAccessFlagFromLayout(atc.layout);
+		imageBarrier.subresourceRange = atc.subresource;
+
+		auto stageFlag = GetPipelineStageFromLayout(atc.layout);
+
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, stageFlag, vk::DependencyFlags{}, {}, {}, imageBarrier);
+	}
+
+	if (mDepthAttachment.image)
+	{
+		vk::ImageMemoryBarrier imageBarrier;
+		imageBarrier.oldLayout = vk::ImageLayout::eUndefined;
+		imageBarrier.newLayout = mDepthAttachment.layout;
+		imageBarrier.image = mDepthAttachment.image;
+		imageBarrier.srcAccessMask = vk::AccessFlagBits::eNone;
+		imageBarrier.dstAccessMask = GetAccessFlagFromLayout(mDepthAttachment.layout);
+		imageBarrier.subresourceRange = mDepthAttachment.subresource;
 		
-		// NOTE: Usage is Kind of hardcoded to engine's use case, if in future something breaks considering checking it out
-
-		switch (desc.Type)
-		{
-			case FramebufferAttachmentType::Color: 
-				Info.format = desc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : swapchain->GetImageFormat();
-				Info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT;
-				break;
-			case FramebufferAttachmentType::DepthStencil: 
-				Info.format = gpu->GetDepthFormat(); 
-				Info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT; 
-				break;
-			case FramebufferAttachmentType::ShaderReadOnly_Color:
-				Info.format = desc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : swapchain->GetImageFormat();
-				Info.usage = VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-				break;
-			default:
-				Info.format = VK_FORMAT_UNDEFINED; 
-				Info.usage = VK_IMAGE_USAGE_FLAG_BITS_MAX_ENUM; 
-				break;
-		}
-
-		VmaAllocationCreateInfo aInfo{};
-		aInfo.usage = VMA_MEMORY_USAGE_AUTO;
-
-		vmaCreateImage(device->GetAllocator(), &Info, &aInfo, &image, &mem, nullptr);
+		auto stageFlag = GetPipelineStageFromLayout(mDepthAttachment.layout);
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, stageFlag, vk::DependencyFlags{}, {}, {}, imageBarrier);
 	}
 
-	// View
-	{
-		VkImageViewCreateInfo Info{};
-		Info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		Info.pNext = nullptr;
-		Info.flags = 0;
-		Info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-		Info.image = image;
-		Info.components.r = VK_COMPONENT_SWIZZLE_R;
-		Info.components.g = VK_COMPONENT_SWIZZLE_G;
-		Info.components.b = VK_COMPONENT_SWIZZLE_B;
-		Info.components.a = VK_COMPONENT_SWIZZLE_A;
-		Info.subresourceRange.layerCount = 1;
-		Info.subresourceRange.levelCount = 1;
-		Info.subresourceRange.baseArrayLayer = 0;
-		Info.subresourceRange.baseMipLevel = 0;
-
-		switch (desc.Type)
-		{
-		case FramebufferAttachmentType::Color:
-			Info.format = desc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : swapchain->GetImageFormat();
-			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			break;
-		case FramebufferAttachmentType::DepthStencil:
-			Info.format = gpu->GetDepthFormat();
-			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-			break;
-		case FramebufferAttachmentType::ShaderReadOnly_Color:
-			Info.format = desc.hdr ? VK_FORMAT_R32G32B32A32_SFLOAT : swapchain->GetImageFormat();
-			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-			break;
-		default:
-			Info.format = VK_FORMAT_UNDEFINED;
-			Info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_NONE;
-			break;
-		}
-
-		vkCreateImageView(device->Get(), &Info, nullptr, &view);
-	}
+	cmd.beginRendering(mInfo);
 }
 
-void Nexus::VulkanFramebuffer::Attachment::Destroy(VkDevice device, VmaAllocator allocator)
+void Nexus::VulkanFramebuffer::End()
 {
-	vmaDestroyImage(allocator, image, mem);
-	vkDestroyImageView(device, view, nullptr);
+	auto cmd = mDevice->getCommandBuffer();
+	cmd.endRendering();
+}
+
+void Nexus::VulkanFramebuffer::CreateAttachment(const AttachmentCreateInfo& info, Attachment* pOutAttachment, vk::RenderingAttachmentInfo* pOutInfo)
+{
+	auto vkDevice = mDevice->getDevice();
+	auto vkAllocator = mDevice->getAllocator();
+	auto msaaFlagBit = mDevice->getMSAAbits();
+
+	uint32_t arrayLayers = 1;
+	uint32_t mipLevels = 1;
+
+	vk::ImageCreateInfo imageInfo{};
+	imageInfo.extent = info.extent;
+	imageInfo.imageType = vk::ImageType::e2D;
+	imageInfo.initialLayout = vk::ImageLayout::eUndefined;
+	imageInfo.sharingMode = vk::SharingMode::eExclusive;
+	imageInfo.queueFamilyIndexCount = 0;
+	imageInfo.pQueueFamilyIndices = nullptr;
+	imageInfo.arrayLayers = arrayLayers;
+	imageInfo.mipLevels = mipLevels;
+	imageInfo.tiling = vk::ImageTiling::eOptimal;
+	imageInfo.usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | info.usage;
+
+	imageInfo.format = GetVulkanFormat(info.specs.format);
+	imageInfo.samples = info.specs.bMultiSampled ? msaaFlagBit : vk::SampleCountFlagBits::e1;
+
+	vk::ImageViewCreateInfo viewInfo{};
+	viewInfo.format = imageInfo.format;
+	viewInfo.viewType = vk::ImageViewType::e2D;
+	viewInfo.components = { vk::ComponentSwizzle::eR, vk::ComponentSwizzle::eG, vk::ComponentSwizzle::eB, vk::ComponentSwizzle::eA };
+	viewInfo.subresourceRange.aspectMask = info.aspect;
+	viewInfo.subresourceRange.layerCount = arrayLayers;
+	viewInfo.subresourceRange.levelCount = mipLevels;
+	viewInfo.subresourceRange.baseArrayLayer = 0;
+	viewInfo.subresourceRange.baseMipLevel = 0;
+
+	VmaAllocationCreateInfo allocInfo{};
+	allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+
+	VkImage image{};
+	VmaAllocation allocation{};
+
+	try
+	{
+		VkImageCreateInfo imageCreateInfo = imageInfo;
+		vk::resultCheck((vk::Result)vmaCreateImage(vkAllocator, &imageCreateInfo, &allocInfo, &image, &allocation, nullptr), "Failed to create vma Image");
+	}
+	catch (vk::SystemError& er)
+	{
+		NEXUS_ASSERT(true, "VMA Error: %s", er.what());
+	}
+
+	viewInfo.image = image;
+
+	pOutAttachment->image = image;
+	pOutAttachment->alloc = allocation;
+	pOutAttachment->view = vkDevice.createImageView(viewInfo);
+	pOutAttachment->layout = info.layout;
+	pOutAttachment->subresource = viewInfo.subresourceRange;
+	
+	if (pOutInfo)
+	{
+		pOutInfo->imageView = pOutAttachment->view;
+		pOutInfo->imageLayout = info.layout;
+		pOutInfo->loadOp = GetVulkanLoadOp(info.specs.loadOp);
+		pOutInfo->storeOp = GetVulkanStoreOp(info.specs.storeOp);
+		pOutInfo->clearValue = GetVulkanClearValue(info.specs.clearValue);
+	}
 }

@@ -6,6 +6,7 @@ project "NxRenderEngine"
 
 	targetdir (BinDir)
 	objdir (IntDir)
+    debugdir (DebDir)
 
 	files
 	{
@@ -21,6 +22,7 @@ project "NxRenderEngine"
         
 		IncludePath["NxCore"],
 		IncludePath["NxScene"],
+        IncludePath["NxShaderCompiler"],
 		IncludePath["NxRenderEngine"],
 	}
 
@@ -28,12 +30,12 @@ project "NxRenderEngine"
 	{
 		"NxCore",
         "NxScene",
-		"NxScene",
+		"NxShaderCompiler"
 	}
 
     dependson
     {
-        "NxVulkan"
+        "NxVulkan",
     }
 
 	defines 

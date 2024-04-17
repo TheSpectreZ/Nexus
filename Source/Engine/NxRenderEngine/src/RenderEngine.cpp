@@ -1,6 +1,8 @@
-#include "NxRenderEngine/Renderer.h"
+#include "NxRenderEngine/RenderEngine.h"
 #include "NxCore/Platform.h"
 #include "NxCore/Logger.h"
+
+#include "NxShaderCompiler/Compiler.h"
 
 static std::string GetRenderBackendPath(Nexus::RenderEngineAPI api)
 {
@@ -15,7 +17,7 @@ static std::string GetRenderBackendPath(Nexus::RenderEngineAPI api)
 
 struct Nexus::RenderEngine::INTERNAL
 {
-	Platform::LibraryHANDLE* apiLibrary;
+	Platform::LibraryHANDLE* apiBackend;
 	RenderEngineAPI eAPI;
 };
 
@@ -24,13 +26,13 @@ bool Nexus::RenderEngine::Intialize(const RenderEngineSpecifications& specs)
 	mInternal = new INTERNAL;
 	mInternal->eAPI = specs.eAPI;
 
-	mInternal->apiLibrary = Platform::LoadSharedLibrary(GetRenderBackendPath(specs.eAPI));
-	if (!mInternal->apiLibrary)
+	mInternal->apiBackend = Platform::LoadSharedLibrary(GetRenderBackendPath(specs.eAPI));
+	if (!mInternal->apiBackend)
 		return false;
 
 	typedef GraphicsDevice* (*Fn_CreateGraphicsDeviceFunc)();
 
-	auto createGraphicsDevice = Platform::LoadFunc<Fn_CreateGraphicsDeviceFunc>(mInternal->apiLibrary, "CreateGraphicsDevice");
+	auto createGraphicsDevice = Platform::LoadFunc<Fn_CreateGraphicsDeviceFunc>(mInternal->apiBackend, "CreateGraphicsDevice");
 	if (!createGraphicsDevice)
 		return false;
 
@@ -41,6 +43,8 @@ bool Nexus::RenderEngine::Intialize(const RenderEngineSpecifications& specs)
 			.hInstance = specs.hInstance
 		});
 
+	mSceneDrawer.Create(mGraphicsDevice, nullptr);
+
 	NEXUS_LOG("Nexus", "RenderEngine Intialized");
 	return true;
 }
@@ -49,11 +53,13 @@ void Nexus::RenderEngine::Terminate()
 {
 	if (mGraphicsDevice)
 	{
+		mSceneDrawer.Destroy();
+		
 		mGraphicsDevice->Shutdown();
 		delete mGraphicsDevice;
 	}
 
-	Platform::UnloadSharedLibrary(mInternal->apiLibrary, GetRenderBackendPath(mInternal->eAPI));
+	Platform::UnloadSharedLibrary(mInternal->apiBackend, GetRenderBackendPath(mInternal->eAPI));
 	delete mInternal;
 
 	NEXUS_LOG("Nexus", "RenderEngine Termianted");
@@ -63,7 +69,9 @@ void Nexus::RenderEngine::Flush()
 {
 	mGraphicsDevice->BeginFrame();
 	
-	mGraphicsDevice->EndFrame();
+	mSceneDrawer.Draw();
+
+	mGraphicsDevice->EndFrame( mSceneDrawer.GetPresentableFramebuffer(), 0);
 	mGraphicsDevice->Flush();
 }
 
