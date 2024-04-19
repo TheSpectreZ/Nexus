@@ -28,9 +28,9 @@ void Nexus::Scene::Clear()
 
 #define COPY_ENTITY_COMPONENT(en,newEn,Name) if(en.HasComponent<Name>()) newEn.AddComponent<Name>(en.GetComponent<Name>())
 
-Nexus::Ref<Nexus::Scene> Nexus::Scene::Duplicate()
+std::shared_ptr<Nexus::Scene> Nexus::Scene::Duplicate()
 {
-	Ref<Scene> newScene = CreateRef<Scene>();
+	std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
 	
 	newScene->m_Id = m_Id;
 	newScene->m_Camera = m_Camera;

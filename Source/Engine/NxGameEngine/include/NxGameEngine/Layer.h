@@ -13,17 +13,23 @@ namespace Nexus
 	{
 	public:
 		virtual ~ILayerEvents() {}
-		virtual bool OnWindowResize(int width, int height) { return false; }
-		virtual bool OnKeyPress(Key::Code key, InputAction action, InputModifier mods) { return false; }
-		virtual bool OnMousePress(Mouse::Code key, InputAction action, InputModifier mods) { return false; }
+		virtual void OnWindowResize(int width, int height) {}
+		virtual void OnKeyPress(Key::Code key, InputAction action, InputModifier mods) {}
+		virtual void OnMousePress(Mouse::Code key, InputAction action, InputModifier mods) {}
 	};
 
-	class ILayer : public ILayerEvents
+	class NEXUS_ENGINE_API ILayer : public ILayerEvents
 	{
 	public:
 		virtual ~ILayer() {}
 		virtual void Create() {}
 		virtual void Update(float dt) {}
+		virtual void Render() {}
 		virtual void Destroy() {}
+	protected:
+		class GraphicsDevice* getGraphicsDevice();
+	private:
+		friend class GameEngine;
+		class GameEngine* mEngine = nullptr;
 	};
 }

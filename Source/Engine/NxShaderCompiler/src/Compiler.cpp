@@ -13,11 +13,11 @@ namespace Nexus::ShaderCompiler::Utils
     {
         switch (inType)
         {
-        case ShaderType::Fragment:
+        case ShaderType::eFragment:
             return "frag";
-        case ShaderType::Vertex:
+        case ShaderType::eVertex:
             return "vert";
-        case ShaderType::Compute:
+        case ShaderType::eCompute:
             return "comp";
         default:
             return "none";
@@ -25,7 +25,7 @@ namespace Nexus::ShaderCompiler::Utils
     }
 }
 
-bool Nexus::ShaderCompiler::CompileFromFile(const std::string& filepath, ShaderType type, ShaderBlob* pInBlob)
+bool Nexus::ShaderCompiler::CompileFromFile(const char* filepath, ShaderType type, ShaderSpecification* pOutSpecs)
 {
     std::filesystem::path path = filepath;
     auto name = path.filename().stem().generic_string() + ".spirv";
@@ -69,10 +69,9 @@ bool Nexus::ShaderCompiler::CompileFromFile(const std::string& filepath, ShaderT
     std::stringstream ss;
     ss << file.rdbuf();
 
-    
-    auto Binpath = (std::filesystem::current_path() / "Assets/Tools/glslangValidator.exe").generic_string();
+    auto Binpath = (std::filesystem::current_path() / "Assets/Tools/glslang.exe").generic_string();
     auto CommandString = format_string("\"%s\" -V --target-env vulkan1.3 -g -S %s -e %s -o \"%s\"",
-        filepath.c_str(),
+        filepath,
         Utils::ReturnTargetString(type),
         "main",    
         cachedPathString.c_str()
@@ -89,11 +88,11 @@ bool Nexus::ShaderCompiler::CompileFromFile(const std::string& filepath, ShaderT
     }
 
     auto fileSize = file.tellg();
-    pInBlob->spirv.resize(fileSize);
+    pOutSpecs->spirv.resize(fileSize);
 
     file.seekg(0, std::ios::beg);
-    file.read((char*)pInBlob->spirv.data(), fileSize);
+    file.read((char*)pOutSpecs->spirv.data(), fileSize);
     
-    pInBlob->type = type;
+    pOutSpecs->type = type;
     return true;
 }

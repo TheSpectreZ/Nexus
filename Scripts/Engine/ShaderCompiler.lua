@@ -18,6 +18,7 @@ project "NxShaderCompiler"
 	{
 		IncludePath["utils"],        
 		IncludePath["NxCore"],
+		IncludePath["NxGraphics"],
         IncludePath["NxShaderCompiler"],
 	}
 

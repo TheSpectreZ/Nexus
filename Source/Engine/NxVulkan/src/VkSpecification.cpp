@@ -4,9 +4,9 @@ vk::Format Nexus::GetVulkanFormat(ImageFormat format)
 {
 	switch (format)
 	{
-	case Nexus::ImageFormat::eRGBA8_srgb:
+	case Nexus::ImageFormat::eRGBA8_SFLOAT:
 		return vk::Format::eR8G8B8A8Srgb;
-	case Nexus::ImageFormat::eD32_sfloat:
+	case Nexus::ImageFormat::eD32_SFLOAT:
 		return vk::Format::eD32Sfloat;
 	default: 
 		return vk::Format::eUndefined;

@@ -78,8 +78,8 @@ namespace Nexus::Utils
 Nexus::GameEngine::GameEngine()
 {
 	LogManager::Init();
-	LogManager::Get()->Make(LoggerType::Console);
-	LogManager::Get()->Make(LoggerType::File);
+	LogManager::Get()->Make<ConsoleLogger>();
+	LogManager::Get()->Make<FileLogger>();
 
 	Windowing::Init();
 	
@@ -105,7 +105,7 @@ bool Nexus::GameEngine::Init(const GameEngineSpecifications& specs)
 	bool bSuccess = true;
 	
 	bSuccess &= Windowing::Create(&mWindow);
-	bSuccess &= mRenderEngine.Intialize(RenderEngineSpecifications
+	bSuccess &= mRenderEngine.Initialize(RenderEngineSpecifications
 		{
 			.eAPI = specs.eAPI,
 			.pWindow = &mWindow,
@@ -118,10 +118,7 @@ bool Nexus::GameEngine::Init(const GameEngineSpecifications& specs)
 
 void Nexus::GameEngine::Run()
 {
-	for (auto& layer : mLayerStack)
-	{
-		layer->Create();
-	}
+	mApplicationLayer->Create();
 
 	Windowing::Show(&mWindow);
 	while (Windowing::IsOpen(&mWindow))
@@ -129,23 +126,20 @@ void Nexus::GameEngine::Run()
 		Windowing::PollEvents();
 
 		auto dt = (float)Windowing::GetDeltaTime();
-		for (auto& layer : mLayerStack)
-		{
-			layer->Update(dt);
-		}
-
+		
+		mApplicationLayer->Update(dt);
+		mApplicationLayer->Render();
+			
 		mRenderEngine.Flush();
 	}
 	mRenderEngine.WaitForGPU();
+	
+	mApplicationLayer->Destroy();
 }
 
 void Nexus::GameEngine::Shut()
 {
-	for (auto& layer : mLayerStack)
-	{
-		layer->Destroy();
-		delete layer;
-	}
+	mApplicationLayer.reset();
 
 	mRenderEngine.Terminate();
 	Windowing::Destroy(&mWindow);
@@ -154,28 +148,15 @@ void Nexus::GameEngine::Shut()
 void Nexus::GameEngine::OnScreenResize(int width, int height)
 {
 	mRenderEngine.OnScreenResize(width, height);
-
-	for (auto& layer : mLayerStack)
-	{
-		if (layer->OnWindowResize(width, height))
-			break;
-	}
+	mApplicationLayer->OnWindowResize(width, height);
 }
 
 void Nexus::GameEngine::OnKeyPress(Key::Code key, InputAction action, InputModifier mods)
 {
-	for (auto& layer : mLayerStack)
-	{
-		if (layer->OnKeyPress(key, action, mods))
-			break;
-	}
+	mApplicationLayer->OnKeyPress(key, action, mods);
 }
 
 void Nexus::GameEngine::OnMousePress(Mouse::Code button, InputAction action, InputModifier mods)
 {
-	for (auto& layer : mLayerStack)
-	{
-		if (layer->OnMousePress(button, action, mods))
-			break;
-	}
+	mApplicationLayer->OnMousePress(button, action, mods);
 }

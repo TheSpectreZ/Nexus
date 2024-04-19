@@ -14,7 +14,8 @@ workspace "Nexus-Engine"
         include "Scripts/Dependencies/imgui.lua"
         include "Scripts/Dependencies/glfw.lua"
         include "Scripts/Dependencies/utils.lua"
-    
+    group ""
+
     group "Nexus"
         include "Scripts/Engine/Core.lua"
         include "Scripts/Engine/GameEngine.lua"
@@ -24,22 +25,13 @@ workspace "Nexus-Engine"
         include "Scripts/Engine/PhysicsEngine.lua"
         include "Scripts/Engine/ScriptEngine.lua"
         include "Scripts/Engine/NetworkEngine.lua"
-        --include "Scripts/Engine/Asset.lua"
-        
-    group "Utils"
         include "Scripts/Engine/ShaderCompiler.lua"
+        include "Scripts/Engine/UserInterface.lua"
+    group ""
 
-    group "Script-Core"
-        include "Scripts/NexusScriptCore.lua"
-        
-    group "Platform"
+    group "Plugins"
         include "Scripts/Engine/Vulkan.lua"
-    
-    group "Tools"
-        --include "Scripts/Tools/NxImGui.lua"
-        include "Scripts/Tools/NxEditor.lua"
-        include "Scripts/Tools/NxLauncher.lua"
-    
-    group "Test"
-        include "Scripts/Tools/NxTestServer.lua"
-        include "Scripts/Tools/NxTestClient.lua"
+    group ""
+
+    include "Scripts/Tools/NxEditor.lua"
+    include "Scripts/Misc.lua"

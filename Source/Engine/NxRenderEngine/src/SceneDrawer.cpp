@@ -1,15 +1,17 @@
 #include "NxRenderEngine/SceneDrawer.h"
 
-void Nexus::SceneDrawer::Create(GraphicsDevice* pDevice, const Scene* pScene)
+#include "NxShaderCompiler/Compiler.h"
+
+Nexus::SceneDrawer::SceneDrawer(GraphicsDevice* pDevice)
 {
 	FramebufferAttachment colorAttachment{
-		.format = ImageFormat::eRGBA8_srgb,
+		.format = ImageFormat::eRGBA8_SFLOAT,
 		.loadOp = ImageLoadOp::eClear,
 		.clearValue = ImageClearColorValue{ 0.9f, 0.5f, 0.8f, 1.f }
 	};
 	
 	FramebufferAttachment depthAttachment{
-		.format = ImageFormat::eD32_sfloat,
+		.format = ImageFormat::eD32_SFLOAT,
 		.loadOp = ImageLoadOp::eClear,
 		.clearValue = ImageClearDepthStencilValue{ 1.f, 0 }
 	};
@@ -20,6 +22,11 @@ void Nexus::SceneDrawer::Create(GraphicsDevice* pDevice, const Scene* pScene)
 	specs.depthStencilAttachment = depthAttachment;
 
 	mTestFramebuffer = pDevice->CreateFramebuffer(specs);
+
+	ShaderSpecification shaderSpecs;
+	ShaderCompiler::CompileFromFile("Assets/Shaders/FullscreenVS.glsl", ShaderType::eVertex, &shaderSpecs);
+
+	mTestShaderObject = pDevice->CreateShaderObject(shaderSpecs);
 }
 
 void Nexus::SceneDrawer::Draw()
@@ -28,7 +35,13 @@ void Nexus::SceneDrawer::Draw()
 	mTestFramebuffer->End();
 }
 
-void Nexus::SceneDrawer::Destroy()
+void Nexus::SceneDrawer::OnWindowResize(int width, int height)
 {
+
+}
+
+Nexus::SceneDrawer::~SceneDrawer()
+{
+	mTestShaderObject.reset();
 	mTestFramebuffer.reset();
 }

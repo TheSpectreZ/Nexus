@@ -154,27 +154,6 @@ bool Nexus::VulkanGraphicsDevice::Initialize(const GraphicsDeviceSpecifications&
 		mPhysicalDeviceProps = mPhysicalDevice.getProperties();
 		NEXUS_LOG("Vulkan", "Physical Device Acquired: %s", mPhysicalDeviceProps.deviceName);
 
-		// Depth Format
-		{
-			std::vector<vk::Format> candidates = {
-				vk::Format::eD32SfloatS8Uint,
-				vk::Format::eD32Sfloat,
-				vk::Format::eD24UnormS8Uint,
-				vk::Format::eD16UnormS8Uint,
-				vk::Format::eD16Unorm
-			};
-
-			mDepthFormat = vk::Format::eUndefined;
-			for (auto& format : candidates)
-			{
-				auto props = mPhysicalDevice.getFormatProperties(format);
-				if (props.optimalTilingFeatures & vk::FormatFeatureFlagBits::eDepthStencilAttachment)
-					mDepthFormat = format;
-			}
-
-			NEXUS_ASSERT(mDepthFormat == vk::Format::eUndefined, "No Suitable Depth Format Available");
-		}
-
 		// Max Sample Count
 		{
 			auto counts = mPhysicalDeviceProps.limits.framebufferColorSampleCounts & mPhysicalDeviceProps.limits.framebufferDepthSampleCounts;
@@ -370,7 +349,7 @@ void Nexus::VulkanGraphicsDevice::BeginFrame()
 	mDevice.waitForFences(mFence[mFrameIndex], vk::True, num_max);
 
 	auto vkr = mDevice.acquireNextImageKHR(mSwapchain, num_max, mImageAvailSemaphore[mFrameIndex], nullptr, &mImageIndex);
-	if (vkr == vk::Result::eErrorOutOfDateKHR)
+	if (vkr == vk::Result::eErrorOutOfDateKHR || vkr == vk::Result::eSuboptimalKHR)
 	{
 		OnScreenResize(mWindow->width, mWindow->height);
 	}
@@ -379,7 +358,7 @@ void Nexus::VulkanGraphicsDevice::BeginFrame()
 	mGraphicsCommandBuffer[mFrameIndex].begin(vk::CommandBufferBeginInfo{});
 }
 
-void Nexus::VulkanGraphicsDevice::EndFrame(Ref<Framebuffer> framebuffer, uint32_t attachmentIndex)
+void Nexus::VulkanGraphicsDevice::EndFrame(Framebuffer* framebuffer, uint32_t attachmentIndex)
 {
 	auto& cmd = mGraphicsCommandBuffer[mFrameIndex];
 
@@ -405,31 +384,24 @@ void Nexus::VulkanGraphicsDevice::EndFrame(Ref<Framebuffer> framebuffer, uint32_
 	
 	// Write to Swapchain Image
 	{
-		Ref<VulkanFramebuffer> fb = DynamicPointerCast<VulkanFramebuffer>(framebuffer);
+		VulkanFramebuffer* fb = dynamic_cast<VulkanFramebuffer*>(framebuffer);
+		
+		fb->ChangeColorAttachmentLayout(cmd, vk::ImageLayout::eTransferSrcOptimal, mFrameIndex, attachmentIndex);
 		
 		auto srcExtent = fb->getExtent();
 		auto srcAttachment = fb->getAttachment(mFrameIndex, attachmentIndex);
-
-		vk::ImageMemoryBarrier imageBarrier;
-		imageBarrier.image = srcAttachment.image;
-		imageBarrier.subresourceRange = srcAttachment.subresource;;
-		imageBarrier.oldLayout = srcAttachment.layout;
-		imageBarrier.newLayout = vk::ImageLayout::eTransferSrcOptimal;
-		imageBarrier.srcAccessMask = GetAccessFlagFromLayout(srcAttachment.layout);
-		imageBarrier.dstAccessMask = vk::AccessFlagBits::eTransferRead;
-		
-		auto stageFlag = GetPipelineStageFromLayout(srcAttachment.layout);
-		cmd.pipelineBarrier(stageFlag, vk::PipelineStageFlagBits::eTransfer, vk::DependencyFlags{}, {}, {}, imageBarrier);
-		
+	
 		vk::ImageBlit blit;
 		blit.srcOffsets[0] = vk::Offset3D(0, 0, 0);
 		blit.srcOffsets[1] = vk::Offset3D(srcExtent.width, srcExtent.height, 1);
 		blit.dstOffsets[0] = vk::Offset3D(0, 0, 0);
 		blit.dstOffsets[1] = vk::Offset3D(mSwapchainDetails.extent.width, mSwapchainDetails.extent.height, 1);
+		
 		blit.srcSubresource.aspectMask = srcAttachment.subresource.aspectMask;
 		blit.srcSubresource.mipLevel = srcAttachment.subresource.baseMipLevel;
 		blit.srcSubresource.layerCount = srcAttachment.subresource.layerCount;
 		blit.srcSubresource.baseArrayLayer = srcAttachment.subresource.baseArrayLayer;
+		
 		blit.dstSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
 		blit.dstSubresource.mipLevel = 0;
 		blit.dstSubresource.layerCount = 1;
@@ -491,6 +463,7 @@ void Nexus::VulkanGraphicsDevice::OnScreenResize(int width, int height)
 {
 	DestroyScreenResources();
 	CreateScreenResources(width, height);
+	mFrameIndex = 0;
 }
 
 Nexus::VulkanGraphicsDevice::QueueFamilyIndices Nexus::VulkanGraphicsDevice::QueryQueueFamilyIndices(vk::QueueFlags flags)

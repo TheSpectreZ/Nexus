@@ -64,7 +64,13 @@ bool Nexus::Windowing::Create(Window* pInWindow)
 	glfwSetWindowUserPointer(window, pInWindow);
 
 	glfwSetWindowSizeCallback(window, [](GLFWwindow* window, int width, int height)
-		{
+		{	
+			while (width == 0 && height == 0)
+			{
+				glfwGetFramebufferSize(window, &width, &height);
+				glfwWaitEvents();
+			}
+
 			auto data = (Window*)glfwGetWindowUserPointer(window);
 			data->width = width;
 			data->height = height;

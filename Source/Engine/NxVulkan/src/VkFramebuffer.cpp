@@ -93,37 +93,39 @@ void Nexus::VulkanFramebuffer::Begin()
 	auto cmd = mDevice->getCommandBuffer();
 	auto frameIndex = mDevice->getFrameIndex();
 
-	for (uint64_t i = 0; i < mColorAttachments[frameIndex].size(); i++)
+	for (uint32_t i = 0; i < (uint32_t) mColorAttachments[frameIndex].size(); i++)
 	{
 		auto& atc = mColorAttachments[frameIndex][i];
 		mColorInfo[i].imageView = atc.view;
 
-		vk::ImageMemoryBarrier imageBarrier;
+		vk::ImageMemoryBarrier barrier;
+		barrier.image = atc.image;
+		barrier.oldLayout = vk::ImageLayout::eUndefined;
+		barrier.newLayout = vk::ImageLayout::eColorAttachmentOptimal;
+		barrier.subresourceRange = atc.subresource;
+		barrier.srcAccessMask = vk::AccessFlagBits::eNone;
+		barrier.dstAccessMask = GetAccessFlagFromLayout(vk::ImageLayout::eColorAttachmentOptimal);
 
-		imageBarrier.oldLayout = vk::ImageLayout::eUndefined;
-		imageBarrier.newLayout = atc.layout;
-		imageBarrier.image = atc.image;
-		imageBarrier.srcAccessMask = vk::AccessFlagBits::eNone;
-		imageBarrier.dstAccessMask = GetAccessFlagFromLayout(atc.layout);
-		imageBarrier.subresourceRange = atc.subresource;
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eColorAttachmentOutput, vk::DependencyFlags{},
+			{}, {}, barrier);
 
-		auto stageFlag = GetPipelineStageFromLayout(atc.layout);
-
-		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, stageFlag, vk::DependencyFlags{}, {}, {}, imageBarrier);
+		atc.layout = barrier.newLayout;
 	}
 
 	if (mDepthAttachment.image)
 	{
-		vk::ImageMemoryBarrier imageBarrier;
-		imageBarrier.oldLayout = vk::ImageLayout::eUndefined;
-		imageBarrier.newLayout = mDepthAttachment.layout;
-		imageBarrier.image = mDepthAttachment.image;
-		imageBarrier.srcAccessMask = vk::AccessFlagBits::eNone;
-		imageBarrier.dstAccessMask = GetAccessFlagFromLayout(mDepthAttachment.layout);
-		imageBarrier.subresourceRange = mDepthAttachment.subresource;
-		
-		auto stageFlag = GetPipelineStageFromLayout(mDepthAttachment.layout);
-		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, stageFlag, vk::DependencyFlags{}, {}, {}, imageBarrier);
+		vk::ImageMemoryBarrier barrier;
+		barrier.image = mDepthAttachment.image;
+		barrier.oldLayout = vk::ImageLayout::eUndefined;
+		barrier.newLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal;
+		barrier.subresourceRange = mDepthAttachment.subresource;
+		barrier.srcAccessMask = vk::AccessFlagBits::eNone;
+		barrier.dstAccessMask = GetAccessFlagFromLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
+
+		cmd.pipelineBarrier(vk::PipelineStageFlagBits::eTopOfPipe, vk::PipelineStageFlagBits::eEarlyFragmentTests, vk::DependencyFlags{}, 
+			{}, {}, barrier);
+
+		mDepthAttachment.layout = barrier.newLayout;
 	}
 
 	cmd.beginRendering(mInfo);
@@ -133,6 +135,50 @@ void Nexus::VulkanFramebuffer::End()
 {
 	auto cmd = mDevice->getCommandBuffer();
 	cmd.endRendering();
+}
+
+void Nexus::VulkanFramebuffer::ChangeColorAttachmentLayout(vk::CommandBuffer cmdbuffer ,vk::ImageLayout newLayout, uint32_t frameIndex, uint32_t attachmentIndex, 
+	vk::PipelineStageFlags srcFlag, vk::PipelineStageFlags dstFlag)
+{
+	auto& atc = mColorAttachments.at(frameIndex).at(attachmentIndex);
+
+	if (atc.layout == newLayout)
+		return;
+
+	vk::ImageMemoryBarrier barrier;
+	barrier.image = atc.image;
+	barrier.oldLayout = atc.layout;
+	barrier.newLayout = newLayout;
+	barrier.subresourceRange = atc.subresource;
+	barrier.srcAccessMask = GetAccessFlagFromLayout(atc.layout);
+	barrier.dstAccessMask = GetAccessFlagFromLayout(newLayout);
+	
+	auto srcFlags = GetPipelineStageFromLayout(atc.layout);
+	auto dstFlags = GetPipelineStageFromLayout(newLayout);
+
+	cmdbuffer.pipelineBarrier(srcFlags, dstFlags, vk::DependencyFlags{}, {}, {}, barrier);
+	atc.layout = newLayout;
+}
+
+void Nexus::VulkanFramebuffer::ChangeDepthAttachmentLayout(vk::CommandBuffer cmdbuffer, vk::ImageLayout newLayout,
+	vk::PipelineStageFlags srcFlag, vk::PipelineStageFlags dstFlag)
+{
+	if (mDepthAttachment.layout == newLayout)
+		return;
+
+	vk::ImageMemoryBarrier barrier;
+	barrier.image = mDepthAttachment.image;
+	barrier.oldLayout = mDepthAttachment.layout;
+	barrier.newLayout = newLayout;
+	barrier.subresourceRange = mDepthAttachment.subresource;
+	barrier.srcAccessMask = GetAccessFlagFromLayout(mDepthAttachment.layout);
+	barrier.dstAccessMask = GetAccessFlagFromLayout(newLayout);
+
+	auto srcFlags = GetPipelineStageFromLayout(mDepthAttachment.layout);
+	auto dstFlags = GetPipelineStageFromLayout(newLayout);
+
+	cmdbuffer.pipelineBarrier(srcFlags, dstFlags, vk::DependencyFlags{}, {}, {}, barrier);
+	mDepthAttachment.layout = newLayout;
 }
 
 void Nexus::VulkanFramebuffer::CreateAttachment(const AttachmentCreateInfo& info, Attachment* pOutAttachment, vk::RenderingAttachmentInfo* pOutInfo)
@@ -156,7 +202,7 @@ void Nexus::VulkanFramebuffer::CreateAttachment(const AttachmentCreateInfo& info
 	imageInfo.tiling = vk::ImageTiling::eOptimal;
 	imageInfo.usage = vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst | info.usage;
 
-	imageInfo.format = GetVulkanFormat(info.specs.format);
+	imageInfo.format = info.specs.format == ImageFormat::eSwapchainColor ? mDevice->getColorFormat() : GetVulkanFormat(info.specs.format);
 	imageInfo.samples = info.specs.bMultiSampled ? msaaFlagBit : vk::SampleCountFlagBits::e1;
 
 	vk::ImageViewCreateInfo viewInfo{};
@@ -190,7 +236,7 @@ void Nexus::VulkanFramebuffer::CreateAttachment(const AttachmentCreateInfo& info
 	pOutAttachment->image = image;
 	pOutAttachment->alloc = allocation;
 	pOutAttachment->view = vkDevice.createImageView(viewInfo);
-	pOutAttachment->layout = info.layout;
+	pOutAttachment->layout = imageInfo.initialLayout;
 	pOutAttachment->subresource = viewInfo.subresourceRange;
 	
 	if (pOutInfo)

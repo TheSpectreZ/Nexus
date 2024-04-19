@@ -20,13 +20,11 @@ project "NxGameEngine"
 		IncludePath["glfw"],
 		
 		IncludePath["NxCore"],
-		--IncludePath["NxAsset"],
+	
 		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
-		IncludePath["NxPhysicsEngine"],
-		IncludePath["NxScriptEngine"],
-		IncludePath["NxNetworkEngine"],
+		
 		IncludePath["NxGameEngine"]
 	}
 
@@ -35,11 +33,8 @@ project "NxGameEngine"
 		"glfw",
 		"NxCore",
 		"NxScene",
-		--"NxAsset",
+		
 		"NxRenderEngine",
-		"NxPhysicsEngine",
-		"NxScriptEngine",
-		"NxNetworkEngine"
 	}
 
 	defines "NEXUS_ENGINE_SHARED_BUILD"

@@ -1,18 +1,24 @@
 #pragma once
-//#include "NxScene/Scene.h"
 #include "NxGraphics/GraphicsDevice.h"
+
+#ifdef NEXUS_RENDERER_SHARED_BUILD
+#define NEXUS_RENDERER_API __declspec(dllexport)
+#else
+#define NEXUS_RENDERER_API __declspec(dllimport)
+#endif
 
 namespace Nexus
 {
-	class SceneDrawer
+	class NEXUS_RENDERER_API SceneDrawer 
 	{
 	public:
-		void Create(GraphicsDevice* pDevice, const class Scene* pScene);
-		void Draw();
-		void Destroy();
+		SceneDrawer(GraphicsDevice* pDevice);
+		~SceneDrawer();
 
-		Ref<Framebuffer> GetPresentableFramebuffer() { return mTestFramebuffer; }
+		void Draw();
+		void OnWindowResize(int width, int height);
 	private:
-		Ref<Framebuffer> mTestFramebuffer;
+		std::shared_ptr<Framebuffer> mTestFramebuffer;
+		std::shared_ptr<ShaderObject> mTestShaderObject;
 	};
 }

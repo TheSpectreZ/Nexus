@@ -1,5 +1,6 @@
 #pragma once
 #include "NxGameEngine/Layer.h"
+#include "NxRenderEngine/SceneDrawer.h"
 
 namespace Nexus
 {
@@ -10,10 +11,18 @@ namespace Nexus
 
 		void Create() override;
 		void Update(float dt) override;
+		void Render() override;
 		void Destroy() override;
 		
-		bool OnWindowResize(int width, int height) override;
-		bool OnKeyPress(Key::Code key, InputAction action, InputModifier mods);
-		bool OnMousePress(Mouse::Code mouse, InputAction action, InputModifier mods);
+		void OnWindowResize(int width, int height) override;
+		void OnKeyPress(Key::Code key, InputAction action, InputModifier mods);
+		void OnMousePress(Mouse::Code mouse, InputAction action, InputModifier mods);
+	private:
+		std::shared_ptr<SceneDrawer> mSceneDrawer;
+		std::shared_ptr<UserInterface> mUserInterface;
+
+		std::shared_ptr<Framebuffer> mFramebuffer;
+	private:
+		void RenderImGui();
 	};
 }

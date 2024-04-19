@@ -2,13 +2,13 @@
 #include "NxCore/Platform.h"
 #include "NxCore/Logger.h"
 
-#include "NxShaderCompiler/Compiler.h"
+#include "NxRenderEngine/SceneDrawer.h"
 
-static std::string GetRenderBackendPath(Nexus::RenderEngineAPI api)
+static std::string GetRenderBackendPath(Nexus::GraphicsAPI api)
 {
 	switch (api)
 	{
-	case Nexus::RenderEngineAPI::Vulkan:
+	case Nexus::GraphicsAPI::eVulkan:
 		return "NxVulkan.dll";
 	default:
 		return "";
@@ -18,10 +18,10 @@ static std::string GetRenderBackendPath(Nexus::RenderEngineAPI api)
 struct Nexus::RenderEngine::INTERNAL
 {
 	Platform::LibraryHANDLE* apiBackend;
-	RenderEngineAPI eAPI;
+	GraphicsAPI eAPI;
 };
 
-bool Nexus::RenderEngine::Intialize(const RenderEngineSpecifications& specs)
+bool Nexus::RenderEngine::Initialize(const RenderEngineSpecifications& specs)
 {
 	mInternal = new INTERNAL;
 	mInternal->eAPI = specs.eAPI;
@@ -36,27 +36,23 @@ bool Nexus::RenderEngine::Intialize(const RenderEngineSpecifications& specs)
 	if (!createGraphicsDevice)
 		return false;
 
-	mGraphicsDevice = createGraphicsDevice();
-	mGraphicsDevice->Initialize(GraphicsDeviceSpecifications
+	mDevice = createGraphicsDevice();
+	mDevice->Initialize(GraphicsDeviceSpecifications
 		{
 			.pWindow = specs.pWindow,
 			.hInstance = specs.hInstance
 		});
-
-	mSceneDrawer.Create(mGraphicsDevice, nullptr);
-
+	
 	NEXUS_LOG("Nexus", "RenderEngine Intialized");
 	return true;
 }
 
 void Nexus::RenderEngine::Terminate()
 {
-	if (mGraphicsDevice)
+	if (mDevice)
 	{
-		mSceneDrawer.Destroy();
-		
-		mGraphicsDevice->Shutdown();
-		delete mGraphicsDevice;
+		mDevice->Shutdown();
+		delete mDevice;
 	}
 
 	Platform::UnloadSharedLibrary(mInternal->apiBackend, GetRenderBackendPath(mInternal->eAPI));
@@ -67,20 +63,15 @@ void Nexus::RenderEngine::Terminate()
 
 void Nexus::RenderEngine::Flush()
 {
-	mGraphicsDevice->BeginFrame();
-	
-	mSceneDrawer.Draw();
-
-	mGraphicsDevice->EndFrame( mSceneDrawer.GetPresentableFramebuffer(), 0);
-	mGraphicsDevice->Flush();
+	mDevice->Flush();
 }
 
 void Nexus::RenderEngine::WaitForGPU()
 {
-	mGraphicsDevice->WaitForGPU();
+	mDevice->WaitForGPU();
 }
 
 void Nexus::RenderEngine::OnScreenResize(int width, int height)
 {
-	mGraphicsDevice->OnScreenResize(width, height);
+	mDevice->OnScreenResize(width, height);
 }

@@ -19,7 +19,7 @@ namespace Nexus
 		
 		UUID GetId() { return m_Id; }
 
-		Ref<Scene> Duplicate();
+		std::shared_ptr<Scene> Duplicate();
 		
 		void SetCamera(Camera* cam) { m_Camera = cam; }
 		Camera* GetCamera() { return m_Camera; }

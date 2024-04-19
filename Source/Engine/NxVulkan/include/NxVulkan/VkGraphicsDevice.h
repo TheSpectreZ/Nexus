@@ -5,6 +5,8 @@
 #include "vma/vk_mem_alloc.h"
 
 #include "NxVulkan/VkFramebuffer.h"
+#include "NxVulkan/VkShader.h"
+#include "NxVulkan/VkUserInterface.h"
 
 namespace Nexus
 {
@@ -16,7 +18,7 @@ namespace Nexus
 		void WaitForGPU() override;
 
 		void BeginFrame() override;
-		void EndFrame(Ref<Framebuffer> framebuffer, uint32_t attachmentIndex) override;
+		void EndFrame(Framebuffer* framebuffer, uint32_t attachmentIndex) override;
 		
 		void Flush() override;
 
@@ -27,20 +29,39 @@ namespace Nexus
 			return { mSwapchainDetails.extent.width, mSwapchainDetails.extent.height }; 
 		} 
 	public:
+		vk::Instance getInstance() { return mInstance; }
+		vk::PhysicalDevice getPhysicalDevice() { return mPhysicalDevice; }
 		vk::Device getDevice() { return mDevice; }
+		vk::Queue getGraphicsQueue() { return mGraphicsQueue; }
+		
 		VmaAllocator getAllocator() { return mAllocator; }
 
 		vk::CommandBuffer getCommandBuffer() { return mGraphicsCommandBuffer[mFrameIndex]; }
 
 		uint32_t getImageCount() { return mSwapchainDetails.minImageCount; }
 		uint32_t getFrameIndex() { return mFrameIndex; }
+		uint32_t getGraphicsQueueFamily() { return mQueueFamIndices.Graphics; }
 
 		vk::Extent2D getExtent() { return mSwapchainDetails.extent; }
 		vk::SampleCountFlagBits getMSAAbits() { return mMaxSampleCount; }
+		
+		vk::Format getColorFormat() { return mSwapchainDetails.surfaceFormat.format; }
+		
+		Window* getWindow() { return mWindow; }
 	public:
-		inline Ref< Framebuffer > CreateFramebuffer(const FramebufferSpecification& specs) override 
+		inline std::shared_ptr< Framebuffer > CreateFramebuffer(const FramebufferSpecification& specs) override
 		{
-			return CreateRef<VulkanFramebuffer>(specs, this); 
+			return std::make_shared<VulkanFramebuffer>(specs, this); 
+		}
+
+		inline std::shared_ptr< ShaderObject > CreateShaderObject(const ShaderSpecification& specs) override
+		{
+			return std::make_shared<VulkanShaderObject>(specs, this);
+		}
+
+		inline std::shared_ptr<UserInterface> CreateUserInterface() override
+		{
+			return std::make_shared<VulkanUserInterface>(this);
 		}
 	private:
 		vk::Instance mInstance;
@@ -49,7 +70,6 @@ namespace Nexus
 		vk::PhysicalDevice mPhysicalDevice;
 		vk::PhysicalDeviceProperties mPhysicalDeviceProps;
 
-		vk::Format mDepthFormat;
 		vk::SampleCountFlagBits mMaxSampleCount;
 
 		vk::Device mDevice;

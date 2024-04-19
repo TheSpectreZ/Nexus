@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-#include <variant>
 #include <array>
+#include <variant>
 
 namespace Nexus
 {
@@ -32,8 +32,10 @@ namespace Nexus
 	enum class ImageFormat
 	{
 		eUndefined,
-		eRGBA8_srgb,
-		eD32_sfloat
+		eSwapchainColor,
+
+		eRGBA8_SFLOAT,
+		eD32_SFLOAT
 	};
 
 	enum class ImageLoadOp

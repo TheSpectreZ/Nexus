@@ -17,18 +17,13 @@ project "NxEditor"
 
 	includedirs
 	{
-		"$(VULKAN_SDK)/Include",
-		IncludePath["utils"],
 		IncludePath["imgui"],
 		
 		IncludePath["NxCore"],
-		IncludePath["NxScene"],
 		IncludePath["NxGraphics"],
 		
         IncludePath["NxRenderEngine"],
-		IncludePath["NxPhysicsEngine"],
-		IncludePath["NxScriptEngine"],
-		IncludePath["NxNetworkEngine"],
+		
 		IncludePath["NxGameEngine"],
 	}
 
@@ -37,14 +32,10 @@ project "NxEditor"
 		"imgui",
 		
 		"NxCore",
-        "NxScene",
-		"NxGraphics",
-		
+        
 		"NxRenderEngine",
-		"NxPhysicsEngine",
+		
 		"NxGameEngine",
-		"NxScriptEngine",
-		"NxNetworkEngine"
 	}
 
 	filter "system:windows"

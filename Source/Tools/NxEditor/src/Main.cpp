@@ -12,10 +12,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 	specs.window_width = 1280;
 	specs.window_height = 720;
 	specs.window_title = "Nexus-Editor";
-	specs.eAPI = Nexus::RenderEngineAPI::Vulkan;
+	specs.eAPI = Nexus::GraphicsAPI::eVulkan;
 
 	Nexus::GameEngine engine;
-	engine.AttachLayer<Nexus::EditorLayer>();
+	engine.SetApplicationLayer<Nexus::EditorLayer>();
 
 	bool bSuccess = false;
 	if (bSuccess = engine.Init(specs))

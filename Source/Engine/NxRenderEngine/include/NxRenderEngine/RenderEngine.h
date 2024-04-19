@@ -2,8 +2,6 @@
 #include "NxCore/Window.h"
 #include "NxGraphics/GraphicsDevice.h"
 
-#include "SceneDrawer.h"
-
 #ifdef NEXUS_RENDERER_SHARED_BUILD
 #define NEXUS_RENDERER_API __declspec(dllexport)
 #else
@@ -12,14 +10,9 @@
 
 namespace Nexus
 {
-	enum class RenderEngineAPI
-	{
-		Vulkan
-	};
-
 	struct RenderEngineSpecifications
 	{
-		RenderEngineAPI	eAPI;
+		GraphicsAPI	eAPI;
 		Window* pWindow;
 		void* hInstance;
 	};
@@ -27,19 +20,19 @@ namespace Nexus
 	class NEXUS_RENDERER_API RenderEngine
 	{
 	public:
-		bool Intialize(const RenderEngineSpecifications& specs);
+		bool Initialize(const RenderEngineSpecifications& specs);
 		void Terminate();
 
 		void Flush();
 		void WaitForGPU();
 
 		void OnScreenResize(int width, int height);
+	public:
+		GraphicsDevice* getGraphicsDevice() { return mDevice; }
 	private:
 		struct INTERNAL;
 		INTERNAL* mInternal;
 
-		GraphicsDevice* mGraphicsDevice;
-
-		SceneDrawer mSceneDrawer;
+		GraphicsDevice* mDevice;
 	};
 }

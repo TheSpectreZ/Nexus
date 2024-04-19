@@ -11,7 +11,7 @@ project "NxRenderEngine"
 	files
 	{
 		(SrcDir.."Engine/%{prj.name}/include/**.h"),
-		(SrcDir.."Engine/%{prj.name}/src/Renderer.cpp")
+		(SrcDir.."Engine/%{prj.name}/src/**.cpp")
 	}
 
 	includedirs

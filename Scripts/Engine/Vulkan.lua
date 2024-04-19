@@ -12,13 +12,14 @@ project "NxVulkan"
 	files
 	{
 		(SrcDir.."Engine/%{prj.name}/include/**.h"),
-		(SrcDir.."Engine/%{prj.name}/src/VkGraphicsDevice.cpp")
+		(SrcDir.."Engine/%{prj.name}/src/**.cpp")
 	}
 
 	includedirs
 	{
 		"$(VULKAN_SDK)/Include",
 
+		IncludePath["imgui"],
 		IncludePath["utils"],
 		IncludePath["NxCore"],
 		IncludePath["NxVulkan"],
@@ -27,6 +28,7 @@ project "NxVulkan"
 
 	links
 	{
+		"imgui",
 		"NxCore",
 		"vulkan-1.lib"
 	}

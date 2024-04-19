@@ -22,7 +22,7 @@ namespace Nexus
 		int window_width;
 		int window_height;
 
-		RenderEngineAPI eAPI;
+		GraphicsAPI eAPI;
 	};
 
 	class NEXUS_ENGINE_API GameEngine
@@ -36,11 +36,10 @@ namespace Nexus
 		void Shut();
 
 		template<typename T, typename... Args> requires std::derived_from<T, ILayer>
-		T* AttachLayer(Args&&... args)
+		void SetApplicationLayer(Args&&... args)
 		{
-			T* layer = new T(std::forward<Args>(args)...);
-			mLayerStack.push_back(layer);
-			return layer;
+			mApplicationLayer = std::make_unique<T>(std::forward<Args>(args)...);
+			mApplicationLayer->mEngine = this;
 		}
 	private:
 		void OnScreenResize(int width, int height);
@@ -49,7 +48,9 @@ namespace Nexus
 	private:
 		Window mWindow;
 		RenderEngine mRenderEngine;
-		std::vector< ILayer* > mLayerStack;
+		
+		friend class ILayer;
+		std::unique_ptr<ILayer> mApplicationLayer;
 	};
 }
 

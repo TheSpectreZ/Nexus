@@ -15,6 +15,14 @@ namespace Nexus
 		void Begin() override;
 		void End() override;
 
+		void ChangeColorAttachmentLayout(vk::CommandBuffer cmdbuffer, vk::ImageLayout newLayout, uint32_t frameIndex, uint32_t attachmentIndex, 
+			vk::PipelineStageFlags srcFlag = vk::PipelineStageFlagBits::eNone,
+			vk::PipelineStageFlags dstFlag = vk::PipelineStageFlagBits::eNone);
+
+		void ChangeDepthAttachmentLayout(vk::CommandBuffer cmdbuffer, vk::ImageLayout newLayout,
+			vk::PipelineStageFlags srcFlag = vk::PipelineStageFlagBits::eNone,
+			vk::PipelineStageFlags dstFlag = vk::PipelineStageFlagBits::eNone);
+		
 		struct Attachment
 		{
 			vk::Image image;

@@ -23,6 +23,9 @@ project "imgui"
 
 		(DepDir.."imgui/backends/imgui_impl_glfw.cpp"),
 		(DepDir.."imgui/backends/imgui_impl_glfw.h"),
+		
+		(DepDir.."imgui/backends/imgui_impl_vulkan.cpp"),
+		(DepDir.."imgui/backends/imgui_impl_vulkan.h"),
 	}
 
 	includedirs
