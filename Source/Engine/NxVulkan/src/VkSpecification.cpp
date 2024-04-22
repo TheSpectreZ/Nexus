@@ -89,6 +89,8 @@ vk::AccessFlagBits Nexus::GetAccessFlagFromLayout(vk::ImageLayout layout)
 		return vk::AccessFlagBits::eTransferRead;
 	case vk::ImageLayout::eTransferDstOptimal:
 		return vk::AccessFlagBits::eTransferWrite;
+	case vk::ImageLayout::eShaderReadOnlyOptimal:
+		return vk::AccessFlagBits::eShaderRead;
 	default:
 		return vk::AccessFlagBits::eNone;
 	}
@@ -106,6 +108,8 @@ vk::PipelineStageFlagBits Nexus::GetPipelineStageFromLayout(vk::ImageLayout layo
 		return vk::PipelineStageFlagBits::eTransfer;
 	case vk::ImageLayout::eTransferDstOptimal:
 		return vk::PipelineStageFlagBits::eTransfer;
+	case vk::ImageLayout::eShaderReadOnlyOptimal:
+		return vk::PipelineStageFlagBits::eFragmentShader;
 	default:
 		return vk::PipelineStageFlagBits::eNone;
 	}

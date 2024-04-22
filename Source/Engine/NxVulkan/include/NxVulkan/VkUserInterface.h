@@ -15,11 +15,19 @@ namespace Nexus
 
 		void OnWindowResize(int width, int height) override;
 
-		std::pair<Framebuffer*, uint32_t> getPresentable() override;
+		void AttachViewportPresentable(Presentable presentable) override;
+		void RenderViewport() override;
+
+		Presentable getPresentable() override;
 	private:
 		VulkanGraphicsDevice* mDevice;
+		std::shared_ptr<Framebuffer> mFramebuffer;
+
+		vk::Sampler mSampler;
 		vk::DescriptorPool mDescriptorPool;
-		
-		std::shared_ptr< Framebuffer> mFramebuffer;
+		std::vector<VkDescriptorSet> mDescriptorsets;
+
+		Presentable mPresentable;
+		void CreateDescriptorSets(Presentable presentable);
 	};
 }

@@ -1,0 +1,1 @@
+#include "NxAsset/Asset.h"

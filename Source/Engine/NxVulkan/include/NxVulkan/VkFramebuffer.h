@@ -12,6 +12,8 @@ namespace Nexus
 		VulkanFramebuffer(const FramebufferSpecification& specs, class VulkanGraphicsDevice* pDevice);
 		~VulkanFramebuffer() override;
 
+		void Resize(int width, int height) override;
+
 		void Begin() override;
 		void End() override;
 
@@ -43,8 +45,12 @@ namespace Nexus
 		{
 			return mExtent;
 		}
+
+		std::vector<vk::ImageView> getAttachmentViews(uint32_t attachmentIndex);
 	private:
 		class VulkanGraphicsDevice* mDevice;
+
+		FramebufferSpecification mSpecs;
 
 		vk::Extent3D mExtent;
 		vk::RenderingInfo mInfo;
@@ -65,6 +71,9 @@ namespace Nexus
 			vk::ImageLayout layout;
 		};
 
+		void CreateScreenResources(int width, int height);
+		void DestroyScreenResources();
+		
 		void CreateAttachment(const AttachmentCreateInfo& info, Attachment* pOutAttachment, vk::RenderingAttachmentInfo* pOutInfo);
 	};
 }

@@ -12,6 +12,9 @@ namespace Nexus
 
 		virtual void OnWindowResize(int width, int height) = 0;
 
+		virtual void AttachViewportPresentable(Presentable presentable) = 0;
+		virtual void RenderViewport() = 0;
+		
 		virtual std::pair<Framebuffer*, uint32_t> getPresentable() = 0;
 	};
 }

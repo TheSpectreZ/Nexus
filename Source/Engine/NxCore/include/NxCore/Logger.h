@@ -40,12 +40,9 @@ namespace Nexus
 
 	class NEXUS_CORE_API LogManager
 	{
-		static LogManager* s_Instance;
 	public:
-		static LogManager* Get() { return s_Instance; }
-		static void Init();
-		static void Shut();
-
+		static LogManager& Instance();
+		
 		template<typename T> requires std::derived_from<T, ILogger>
 		void Make()
 		{
@@ -62,6 +59,6 @@ namespace Nexus
 		std::vector< std::shared_ptr<ILogger> > m_Loggers;
 	};
 
-#define NEXUS_LOG(Entry,log,...) ::Nexus::LogManager::Get()->Log(Entry,__LINE__,__FILE__,log,##__VA_ARGS__)
+#define NEXUS_LOG(Entry,log,...) ::Nexus::LogManager::Instance().Log(Entry,__LINE__,__FILE__,log,##__VA_ARGS__)
 
 }

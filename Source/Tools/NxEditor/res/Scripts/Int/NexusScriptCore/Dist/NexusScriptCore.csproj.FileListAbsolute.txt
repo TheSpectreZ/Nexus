@@ -1,4 +1,0 @@
-E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\Int\NexusScriptCore\Dist\NexusScriptCore.csproj.AssemblyReference.cache
-E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\Int\NexusScriptCore\Dist\NexusScriptCore.csproj.CoreCompileInputs.cache
-E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\Int\NexusScriptCore\Dist\NexusScriptCore.dll
-E:\Dev\Repositories\Nexus\Source\NexusEditor\Resources\Scripts\NexusScriptCore.dll

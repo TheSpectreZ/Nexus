@@ -1,13 +1,9 @@
 #pragma once
-
-#include <cstdint>	
-#include <vector>
+#include "Layer.h"
 
 #include "NxCore/KeyCode.h"
-
-// Application
-#include "Layer.h"
 #include "NxCore/Window.h"
+#include "NxCore/Event.h"
 
 #include "NxRenderEngine/RenderEngine.h"
 
@@ -45,12 +41,16 @@ namespace Nexus
 		void OnScreenResize(int width, int height);
 		void OnKeyPress(Key::Code key, InputAction action, InputModifier mods);
 		void OnMousePress(Mouse::Code button, InputAction action, InputModifier mods);
+	public:
+		RenderEngine* getRenderEngine() { return &mRenderEngine; }
 	private:
 		Window mWindow;
 		RenderEngine mRenderEngine;
 		
 		friend class ILayer;
 		std::unique_ptr<ILayer> mApplicationLayer;
+
+		EventDispatcher mApplicationEventDispatcher;
 	};
 }
 

@@ -2,11 +2,14 @@
 #include "NxGameEngine/Layer.h"
 #include "NxRenderEngine/SceneDrawer.h"
 
+#include "Panels/ContentBrowser.h"
+
 namespace Nexus
 {
 	class EditorLayer : public ILayer
 	{
 	public:
+		EditorLayer();
 		~EditorLayer() override {};
 
 		void Create() override;
@@ -21,8 +24,11 @@ namespace Nexus
 		std::shared_ptr<SceneDrawer> mSceneDrawer;
 		std::shared_ptr<UserInterface> mUserInterface;
 
-		std::shared_ptr<Framebuffer> mFramebuffer;
+		EventDispatcher mUIeventDispatcher;
+
+		EditorPanel::ContentBrowser  mContentBrowser;
 	private:
-		void RenderImGui();
+		void RenderImGUI();
+		void UI_RenderSettings();
 	};
 }

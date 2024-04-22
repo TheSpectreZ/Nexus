@@ -19,14 +19,19 @@ IncludePath["mono"] = (VenDir.."Mono/include")
 IncludePath["physx"] = (VenDir.."PhysX/include")
 
 IncludePath["NxCore"] = (SrcDir.."Engine/NxCore/include")
+
 IncludePath["NxScene"] = (SrcDir.."Engine/NxScene/include")
 IncludePath["NxAsset"] = (SrcDir.."Engine/NxAsset/include")
+
 IncludePath["NxVulkan"] = (SrcDir.."Engine/NxVulkan/include")
 IncludePath["NxGraphics"] = (SrcDir.."Engine/NxGraphics/include")
+
 IncludePath["NxUserInterface"] = (SrcDir.."Engine/NxUserInterface/include")
 IncludePath["NxShaderCompiler"] = (SrcDir.."Engine/NxShaderCompiler/include")
+
 IncludePath["NxRenderEngine"] = (SrcDir.."Engine/NxRenderEngine/include")
 IncludePath["NxPhysicsEngine"] = (SrcDir.."Engine/NxPhysicsEngine/include")
 IncludePath["NxScriptEngine"] = (SrcDir.."Engine/NxScriptEngine/include")
 IncludePath["NxNetworkEngine"] = (SrcDir.."Engine/NxNetworkEngine/include")
+
 IncludePath["NxGameEngine"] = (SrcDir.."Engine/NxGameEngine/include")

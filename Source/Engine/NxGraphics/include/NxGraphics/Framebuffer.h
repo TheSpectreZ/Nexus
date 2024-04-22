@@ -29,5 +29,9 @@ namespace Nexus
 
 		virtual void Begin() = 0;
 		virtual void End() = 0;
+
+		virtual void Resize(int width, int height) = 0;
 	};
+
+	typedef std::pair<Framebuffer*, uint32_t> Presentable;
 }

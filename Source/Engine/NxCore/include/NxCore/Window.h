@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
-
 #include "NxCore/KeyCode.h"
+#include "NxCore/Event.h"
 
 #ifdef NEXUS_CORE_SHARED_BUILD
 #define NEXUS_CORE_API __declspec(dllexport)
@@ -11,11 +11,35 @@
 
 namespace Nexus
 {
-	struct EventHandler
+	struct WindowResizeEvent : public Event
 	{
-		std::function<void(int, int)> OnResize;
-		std::function<void(Key::Code, InputAction, InputModifier)> OnKeyPress;
-		std::function<void(Mouse::Code, InputAction, InputModifier)> OnMousePress;
+		WindowResizeEvent(int width, int height)
+			:width(width), height(height)
+		{}
+
+		int width = 0, height = 0;
+	};
+
+	struct KeyPressEvent : public Event
+	{
+		KeyPressEvent(Key::Code key, InputAction action, InputModifier mods)
+			:key(key), action(action), mods(mods)
+		{}
+
+		Key::Code key;
+		InputAction action;
+		InputModifier mods;
+	};
+
+	struct MousePressEvent : public Event
+	{
+		MousePressEvent(Mouse::Code mouse, InputAction action, InputModifier mods)
+			:mouse(mouse), action(action), mods(mods)
+		{}
+
+		Mouse::Code mouse;
+		InputAction action;
+		InputModifier mods;
 	};
 	
 	struct Window
@@ -25,7 +49,7 @@ namespace Nexus
 		void* glfwHandle = nullptr;
 		void* nativeHandle = nullptr;
 
-		EventHandler eventHandler;
+		EventDispatcher* eventDispatcher;
 	};
 
 	namespace Windowing

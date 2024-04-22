@@ -29,6 +29,14 @@ namespace Nexus
 		Extent Extent;
 	};
 
+	enum class GPUBufferType
+	{
+		eVertex, 
+		eIndex,
+		eUniform,
+		eStorage
+	};
+
 	enum class ImageFormat
 	{
 		eUndefined,

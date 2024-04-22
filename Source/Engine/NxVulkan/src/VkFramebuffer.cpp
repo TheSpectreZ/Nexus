@@ -6,86 +6,21 @@
 #include "NxCore/Assertion.h"
 
 Nexus::VulkanFramebuffer::VulkanFramebuffer(const FramebufferSpecification& specs, VulkanGraphicsDevice* pDevice)
-	:mDevice(pDevice)
+	:mDevice(pDevice), mSpecs(specs)
 {
-	mExtent.width = specs.extent.width;
-	mExtent.height = specs.extent.height;
-	mExtent.depth = 1;
-	
-	if (mExtent.width == 0 || mExtent.height == 0)
-		mExtent = vk::Extent3D(pDevice->getExtent(), 1);
-
-	//
-	// color attachments
-	//
-
-	mColorInfo.resize(specs.colorAttachments.size());
-	
-	auto imageCount = pDevice->getImageCount();
-	for (uint32_t i = 0; i < imageCount; i++)
-	{
-		auto& attachments = mColorAttachments.emplace_back();
-	
-		for (uint64_t j = 0; j < specs.colorAttachments.size(); j++)
-		{
-			auto& attachment = attachments.emplace_back();
-			auto& info = mColorInfo[j];
-			auto& specification = specs.colorAttachments[j];
-
-			CreateAttachment(AttachmentCreateInfo{
-				.specs = specification,
-				.extent = mExtent,
-				.usage = vk::ImageUsageFlagBits::eColorAttachment,
-				.aspect = vk::ImageAspectFlagBits::eColor,
-				.layout = vk::ImageLayout::eColorAttachmentOptimal
-			}, &attachment, i == 0 ? &info : nullptr);
-		}
-	}
-	mInfo.setColorAttachments(mColorInfo);
-
-	//
-	// depth attachments
-	//
-
-	if (specs.depthStencilAttachment.format != Nexus::ImageFormat::eUndefined)
-	{
-		CreateAttachment(AttachmentCreateInfo{
-				.specs = specs.depthStencilAttachment,
-				.extent = mExtent,
-				.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment,
-				.aspect = vk::ImageAspectFlagBits::eDepth,
-				.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal
-			}, &mDepthAttachment, &mDepthInfo);
-		
-		mInfo.pDepthAttachment = &mDepthInfo;
-	}
-
-	// rendering info
-
-	mInfo.viewMask = 0;
-	mInfo.layerCount = 1;
-	mInfo.renderArea.extent = vk::Extent2D(mExtent.width, mExtent.height);
+	CreateScreenResources(specs.extent.width, specs.extent.height);
 }
 
 Nexus::VulkanFramebuffer::~VulkanFramebuffer()
 {
-	auto vkDevice = mDevice->getDevice();
-	auto vkAllocator = mDevice->getAllocator();
+	DestroyScreenResources();
+}
 
-	for (auto& atc : mColorAttachments)
-	{
-		for (auto& a : atc)
-		{
-			vmaDestroyImage(vkAllocator, a.image, a.alloc);
-			vkDevice.destroyImageView(a.view);
-		}
-	}
-	
-	if (mDepthAttachment.image)
-	{
-		vmaDestroyImage(vkAllocator, mDepthAttachment.image, mDepthAttachment.alloc);
-		vkDevice.destroyImageView(mDepthAttachment.view);
-	}
+void Nexus::VulkanFramebuffer::Resize(int width, int height)
+{
+	mDevice->WaitForGPU();
+	DestroyScreenResources();
+	CreateScreenResources(width, height);
 }
 
 void Nexus::VulkanFramebuffer::Begin()
@@ -179,6 +114,103 @@ void Nexus::VulkanFramebuffer::ChangeDepthAttachmentLayout(vk::CommandBuffer cmd
 
 	cmdbuffer.pipelineBarrier(srcFlags, dstFlags, vk::DependencyFlags{}, {}, {}, barrier);
 	mDepthAttachment.layout = newLayout;
+}
+
+std::vector<vk::ImageView> Nexus::VulkanFramebuffer::getAttachmentViews(uint32_t attachmentIndex)
+{
+	std::vector<vk::ImageView> views;
+	views.reserve(mColorAttachments.size());
+
+	for (auto& atc : mColorAttachments)
+	{
+		views.push_back(atc.at(attachmentIndex).view);
+	}
+
+	return views;
+}
+
+void Nexus::VulkanFramebuffer::CreateScreenResources(int width, int height)
+{
+	mExtent.width = width;
+	mExtent.height = height;
+	mExtent.depth = 1;
+
+	if (mExtent.width == 0 || mExtent.height == 0)
+		mExtent = vk::Extent3D(mDevice->getExtent(), 1);
+
+	//
+	// color attachments
+	//
+
+	mColorInfo.resize(mSpecs.colorAttachments.size());
+
+	auto imageCount = mDevice->getImageCount();
+	for (uint32_t i = 0; i < imageCount; i++)
+	{
+		auto& attachments = mColorAttachments.emplace_back();
+
+		for (uint64_t j = 0; j < mSpecs.colorAttachments.size(); j++)
+		{
+			auto& attachment = attachments.emplace_back();
+			auto& info = mColorInfo[j];
+			auto& specification = mSpecs.colorAttachments[j];
+
+			CreateAttachment(AttachmentCreateInfo{
+				.specs = specification,
+				.extent = mExtent,
+				.usage = vk::ImageUsageFlagBits::eColorAttachment,
+				.aspect = vk::ImageAspectFlagBits::eColor,
+				.layout = vk::ImageLayout::eColorAttachmentOptimal
+				}, &attachment, i == 0 ? &info : nullptr);
+		}
+	}
+	mInfo.setColorAttachments(mColorInfo);
+
+	//
+	// depth attachments
+	//
+
+	if (mSpecs.depthStencilAttachment.format != Nexus::ImageFormat::eUndefined)
+	{
+		CreateAttachment(AttachmentCreateInfo{
+				.specs = mSpecs.depthStencilAttachment,
+				.extent = mExtent,
+				.usage = vk::ImageUsageFlagBits::eDepthStencilAttachment,
+				.aspect = vk::ImageAspectFlagBits::eDepth,
+				.layout = vk::ImageLayout::eDepthStencilAttachmentOptimal
+			}, &mDepthAttachment, &mDepthInfo);
+
+		mInfo.pDepthAttachment = &mDepthInfo;
+	}
+
+	// rendering info
+
+	mInfo.viewMask = 0;
+	mInfo.layerCount = 1;
+	mInfo.renderArea.extent = vk::Extent2D(mExtent.width, mExtent.height);
+}
+
+void Nexus::VulkanFramebuffer::DestroyScreenResources()
+{
+	auto vkDevice = mDevice->getDevice();
+	auto vkAllocator = mDevice->getAllocator();
+
+	for (auto& atc : mColorAttachments)
+	{
+		for (auto& a : atc)
+		{
+			vmaDestroyImage(vkAllocator, a.image, a.alloc);
+			vkDevice.destroyImageView(a.view);
+		}
+	}
+	mColorAttachments.clear();
+	mColorInfo.clear();
+
+	if (mDepthAttachment.image)
+	{
+		vmaDestroyImage(vkAllocator, mDepthAttachment.image, mDepthAttachment.alloc);
+		vkDevice.destroyImageView(mDepthAttachment.view);
+	}
 }
 
 void Nexus::VulkanFramebuffer::CreateAttachment(const AttachmentCreateInfo& info, Attachment* pOutAttachment, vk::RenderingAttachmentInfo* pOutInfo)

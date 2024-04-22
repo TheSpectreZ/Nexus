@@ -75,19 +75,19 @@ bool Nexus::Windowing::Create(Window* pInWindow)
 			data->width = width;
 			data->height = height;
 
-			data->eventHandler.OnResize(width, height);
+			data->eventDispatcher->Trigger<WindowResizeEvent>(width,height);
 		});
 
 	glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
 			auto data = (Window*)glfwGetWindowUserPointer(window);
-			data->eventHandler.OnKeyPress(Key::Code(key), GetInputAction(action), GetInputMods(mods));
+			data->eventDispatcher->Trigger<KeyPressEvent>(Key::Code(key), GetInputAction(action), GetInputMods(mods));
 		});
 	
 	glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int key, int action, int mods)
 		{
 			auto data = (Window*)glfwGetWindowUserPointer(window);
-			data->eventHandler.OnMousePress(Mouse::Code(key), GetInputAction(action), GetInputMods(mods));
+			data->eventDispatcher->Trigger<MousePressEvent>(Mouse::Code(key), GetInputAction(action), GetInputMods(mods));
 		});
 
 	return true;

@@ -11,8 +11,7 @@ project "NxEditor"
 	files
 	{
 		(SrcDir.."Tools/%{prj.name}/src/**.h"),
-		(SrcDir.."Tools/%{prj.name}/src/Main.cpp"),
-		(SrcDir.."Tools/%{prj.name}/src/EditorLayer.cpp")
+		(SrcDir.."Tools/%{prj.name}/src/**.cpp"),
 	}
 
 	includedirs
@@ -20,11 +19,15 @@ project "NxEditor"
 		IncludePath["imgui"],
 		
 		IncludePath["NxCore"],
-		IncludePath["NxGraphics"],
 		
-        IncludePath["NxRenderEngine"],
+		IncludePath["NxScene"],
+		IncludePath["NxAsset"],
+        
+		IncludePath["NxGraphics"],
+		IncludePath["NxRenderEngine"],
 		
 		IncludePath["NxGameEngine"],
+
 	}
 
 	links
@@ -33,9 +36,13 @@ project "NxEditor"
 		
 		"NxCore",
         
+		"NxScene",
+		"NxAsset",
+
 		"NxRenderEngine",
 		
 		"NxGameEngine",
+
 	}
 
 	filter "system:windows"

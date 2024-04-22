@@ -1,5 +1,6 @@
 #pragma once
 #include "NxCore/Window.h"
+
 #include "NxGraphics/GraphicsDevice.h"
 
 #ifdef NEXUS_RENDERER_SHARED_BUILD
@@ -30,9 +31,9 @@ namespace Nexus
 	public:
 		GraphicsDevice* getGraphicsDevice() { return mDevice; }
 	private:
+		GraphicsDevice* mDevice;
+
 		struct INTERNAL;
 		INTERNAL* mInternal;
-
-		GraphicsDevice* mDevice;
 	};
 }

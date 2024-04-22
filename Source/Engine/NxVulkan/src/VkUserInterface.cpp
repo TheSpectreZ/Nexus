@@ -4,18 +4,32 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_vulkan.h"
 
+#include "NxCore/Logger.h"
+
 Nexus::VulkanUserInterface::VulkanUserInterface(VulkanGraphicsDevice* pDevice)
 	:mDevice(pDevice)
 {
 	auto vkDevice = pDevice->getDevice();
 
-	std::vector<vk::DescriptorPoolSize> poolSizes =
-	{
-		{ vk::DescriptorType::eCombinedImageSampler, 1 },
+	
+	vk::DescriptorPoolSize poolSizes[] =
+	{ 
+		{ vk::DescriptorType::eSampler, 1000 },
+		{ vk::DescriptorType::eCombinedImageSampler, 1000 },
+		{ vk::DescriptorType::eSampledImage, 1000 },
+		{ vk::DescriptorType::eStorageImage, 1000 },
+		{ vk::DescriptorType::eUniformTexelBuffer, 1000 },
+		{ vk::DescriptorType::eStorageTexelBuffer, 1000 },
+		{ vk::DescriptorType::eUniformBuffer, 1000 },
+		{ vk::DescriptorType::eStorageBuffer, 1000 },
+		{ vk::DescriptorType::eStorageBufferDynamic, 1000 },
+		{ vk::DescriptorType::eUniformBufferDynamic, 1000 },
+		{ vk::DescriptorType::eInputAttachment, 1000 }
 	};
 
 	vk::DescriptorPoolCreateInfo poolInfo = {};
-	poolInfo.maxSets = 1;
+	poolInfo.maxSets = 1000;
+	poolInfo.flags = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet;
 	poolInfo.setPoolSizes(poolSizes);
 	
 	mDescriptorPool = vkDevice.createDescriptorPool(poolInfo);
@@ -77,6 +91,20 @@ Nexus::VulkanUserInterface::VulkanUserInterface(VulkanGraphicsDevice* pDevice)
 		vkDevice.destroyCommandPool(pool);
 	}
 
+	vk::SamplerCreateInfo samplerInfo{};
+	samplerInfo.borderColor = vk::BorderColor::eFloatOpaqueBlack;
+	samplerInfo.minFilter = vk::Filter::eLinear;
+	samplerInfo.magFilter = vk::Filter::eLinear;
+	samplerInfo.mipmapMode = vk::SamplerMipmapMode::eLinear;
+	samplerInfo.anisotropyEnable = vk::False;
+	samplerInfo.unnormalizedCoordinates = vk::False;
+	samplerInfo.compareEnable = vk::False;
+	samplerInfo.mipLodBias = 0.f;
+	samplerInfo.minLod = 0.f;
+	samplerInfo.maxLod = 1;
+
+	mSampler = vkDevice.createSampler(samplerInfo);
+
 	OnWindowResize(window->width, window->height);
 }
 
@@ -87,6 +115,7 @@ Nexus::VulkanUserInterface::~VulkanUserInterface()
 
 	auto vkDevice = mDevice->getDevice();
 	vkDevice.destroyDescriptorPool(mDescriptorPool);
+	vkDevice.destroySampler(mSampler);
 }
 
 void Nexus::VulkanUserInterface::Begin()
@@ -129,7 +158,54 @@ void Nexus::VulkanUserInterface::OnWindowResize(int width, int height)
 	mFramebuffer = mDevice->CreateFramebuffer(specs);
 }
 
-std::pair<Nexus::Framebuffer*, uint32_t> Nexus::VulkanUserInterface::getPresentable()
+void Nexus::VulkanUserInterface::AttachViewportPresentable(Presentable presentable)
+{
+	mPresentable = presentable;
+	CreateDescriptorSets(mPresentable);
+}
+
+void Nexus::VulkanUserInterface::RenderViewport()
+{
+	if (mPresentable.first == nullptr)
+	{
+		NEXUS_LOG("VulkanUserInterface", "Invalid viewport presentable: Make sure you attach valid presentable");
+		return;
+	}
+
+	auto cmd = mDevice->getCommandBuffer();
+	auto frameIndex = mDevice->getFrameIndex();
+
+	auto vkFb = dynamic_cast<VulkanFramebuffer*>(mPresentable.first);
+	vkFb->ChangeColorAttachmentLayout(cmd, vk::ImageLayout::eShaderReadOnlyOptimal, frameIndex, mPresentable.second);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(1, 1));
+	
+	ImGui::Begin("Viewport");
+	ImGui::Image(mDescriptorsets[frameIndex], ImGui::GetContentRegionAvail());
+	ImGui::End();
+	
+	ImGui::PopStyleVar();
+}
+
+Nexus::Presentable Nexus::VulkanUserInterface::getPresentable()
 {
 	return { mFramebuffer.get(), 0 };
+}
+
+void Nexus::VulkanUserInterface::CreateDescriptorSets(Presentable presentable)
+{
+	auto vkframebuffer = dynamic_cast<VulkanFramebuffer*>(presentable.first);
+	auto views = vkframebuffer->getAttachmentViews(presentable.second);
+	
+	for (auto& set : mDescriptorsets)
+	{
+		ImGui_ImplVulkan_RemoveTexture(set);
+	}
+	mDescriptorsets.clear();
+
+	for (auto& v : views)
+	{
+		auto set = ImGui_ImplVulkan_AddTexture(mSampler, v, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		mDescriptorsets.push_back(set);
+	}
 }

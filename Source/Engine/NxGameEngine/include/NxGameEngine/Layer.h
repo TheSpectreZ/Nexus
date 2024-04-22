@@ -27,8 +27,6 @@ namespace Nexus
 		virtual void Render() {}
 		virtual void Destroy() {}
 	protected:
-		class GraphicsDevice* getGraphicsDevice();
-	private:
 		friend class GameEngine;
 		class GameEngine* mEngine = nullptr;
 	};

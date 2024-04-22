@@ -5,8 +5,9 @@
 #include "vma/vk_mem_alloc.h"
 
 #include "NxVulkan/VkFramebuffer.h"
-#include "NxVulkan/VkShader.h"
 #include "NxVulkan/VkUserInterface.h"
+#include "NxVulkan/VkShader.h"
+#include "NxVulkan/VkBuffer.h"
 
 namespace Nexus
 {
@@ -18,7 +19,7 @@ namespace Nexus
 		void WaitForGPU() override;
 
 		void BeginFrame() override;
-		void EndFrame(Framebuffer* framebuffer, uint32_t attachmentIndex) override;
+		void EndFrame(Presentable presentable) override;
 		
 		void Flush() override;
 
@@ -62,6 +63,11 @@ namespace Nexus
 		inline std::shared_ptr<UserInterface> CreateUserInterface() override
 		{
 			return std::make_shared<VulkanUserInterface>(this);
+		}
+
+		inline std::shared_ptr<GPUBuffer> CreateGPUBuffer(const GPUBufferSpecification& specs) override
+		{
+			return std::make_shared<VulkanGPUBuffer>(specs, this);
 		}
 	private:
 		vk::Instance mInstance;

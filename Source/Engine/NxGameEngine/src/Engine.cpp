@@ -1,11 +1,5 @@
 // STL
-#include <vector>
-#include <chrono>
-
-// GLFW
-#include "GLFW/glfw3.h"
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include "GLFW/glfw3native.h"
+#include  <sstream>
 
 // Core
 #include "NxCore/Base.h"
@@ -72,26 +66,40 @@ namespace Nexus::Utils
 
 		return map;
 	}
-
 }
 
 Nexus::GameEngine::GameEngine()
 {
-	LogManager::Init();
-	LogManager::Get()->Make<ConsoleLogger>();
-	LogManager::Get()->Make<FileLogger>();
+	LogManager::Instance().Make<ConsoleLogger>();
+	LogManager::Instance().Make<FileLogger>();
 
 	Windowing::Init();
 	
-	mWindow.eventHandler.OnResize = NEXUS_BIND_FN(OnScreenResize, this);
-	mWindow.eventHandler.OnKeyPress = NEXUS_BIND_FN(OnKeyPress, this);
-	mWindow.eventHandler.OnMousePress = NEXUS_BIND_FN(OnMousePress, this);
+	mApplicationEventDispatcher.AddListener<WindowResizeEvent>(
+		[this](WindowResizeEvent event)
+		{
+			this->OnScreenResize(event.width, event.height);
+		}
+	);
+
+	mApplicationEventDispatcher.AddListener<KeyPressEvent>(
+		[this](KeyPressEvent event)
+		{
+			this->OnKeyPress(event.key, event.action, event.mods);
+		}
+	);
+
+	mApplicationEventDispatcher.AddListener<MousePressEvent>(
+		[this](MousePressEvent event)
+		{
+			this->OnMousePress(event.mouse, event.action, event.mods);
+		}
+	);
 }
 
 Nexus::GameEngine::~GameEngine()
 {
 	Windowing::Shut();
-	LogManager::Shut();
 }
 
 bool Nexus::GameEngine::Init(const GameEngineSpecifications& specs)
@@ -101,6 +109,7 @@ bool Nexus::GameEngine::Init(const GameEngineSpecifications& specs)
 	mWindow.width = specs.window_width;
 	mWindow.height = specs.window_height;
 	mWindow.title = specs.window_title;
+	mWindow.eventDispatcher = &mApplicationEventDispatcher;
 
 	bool bSuccess = true;
 	
@@ -124,12 +133,12 @@ void Nexus::GameEngine::Run()
 	while (Windowing::IsOpen(&mWindow))
 	{
 		Windowing::PollEvents();
+		mApplicationEventDispatcher.Dispatch();
 
 		auto dt = (float)Windowing::GetDeltaTime();
-		
 		mApplicationLayer->Update(dt);
-		mApplicationLayer->Render();
-			
+
+		mApplicationLayer->Render();	
 		mRenderEngine.Flush();
 	}
 	mRenderEngine.WaitForGPU();

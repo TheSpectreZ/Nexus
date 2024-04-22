@@ -17,11 +17,12 @@ project "NxGameEngine"
 	includedirs
 	{
 		IncludePath["utils"],
-		IncludePath["glfw"],
 		
 		IncludePath["NxCore"],
 	
 		IncludePath["NxScene"],
+		IncludePath["NxAsset"],
+
 		IncludePath["NxGraphics"],
 		IncludePath["NxRenderEngine"],
 		
@@ -30,10 +31,11 @@ project "NxGameEngine"
 
 	links
 	{
-		"glfw",
 		"NxCore",
+
 		"NxScene",
-		
+		"NxAsset",
+
 		"NxRenderEngine",
 	}
 

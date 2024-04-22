@@ -81,15 +81,8 @@ void Nexus::FileLogger::Log(const char* Entry, int line, const char* file, const
 	_stream << std::endl;
 }
 
-Nexus::LogManager* Nexus::LogManager::s_Instance = nullptr;
-
-void Nexus::LogManager::Init()
+Nexus::LogManager& Nexus::LogManager::Instance()
 {
-	s_Instance = new LogManager;
-}
-
-void Nexus::LogManager::Shut()
-{
-	s_Instance->m_Loggers.clear();
-	delete s_Instance;
+	static LogManager sInstance;
+	return sInstance;
 }

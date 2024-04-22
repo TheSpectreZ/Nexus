@@ -358,7 +358,7 @@ void Nexus::VulkanGraphicsDevice::BeginFrame()
 	mGraphicsCommandBuffer[mFrameIndex].begin(vk::CommandBufferBeginInfo{});
 }
 
-void Nexus::VulkanGraphicsDevice::EndFrame(Framebuffer* framebuffer, uint32_t attachmentIndex)
+void Nexus::VulkanGraphicsDevice::EndFrame(Presentable presentable)
 {
 	auto& cmd = mGraphicsCommandBuffer[mFrameIndex];
 
@@ -384,6 +384,8 @@ void Nexus::VulkanGraphicsDevice::EndFrame(Framebuffer* framebuffer, uint32_t at
 	
 	// Write to Swapchain Image
 	{
+		auto& [framebuffer, attachmentIndex] = presentable;
+
 		VulkanFramebuffer* fb = dynamic_cast<VulkanFramebuffer*>(framebuffer);
 		
 		fb->ChangeColorAttachmentLayout(cmd, vk::ImageLayout::eTransferSrcOptimal, mFrameIndex, attachmentIndex);
@@ -641,8 +643,6 @@ void Nexus::VulkanGraphicsDevice::CreateScreenResources(int width, int height)
 		mRenderingInfo.layerCount = 1;
 		mRenderingInfo.renderArea.extent = mSwapchainDetails.extent;
 	}
-
-	NEXUS_LOG("Vulkan", "Created Screen Resources (Image Count - %i)", (uint32_t)mImages.size());
 }
 
 void Nexus::VulkanGraphicsDevice::DestroyScreenResources()
@@ -657,8 +657,6 @@ void Nexus::VulkanGraphicsDevice::DestroyScreenResources()
 	
 	mDevice.destroySwapchainKHR(mSwapchain);
 	mSwapchain = nullptr;
-
-	NEXUS_LOG("Vulkan", "Destroyed Screen Resources");
 }
 
 extern "C"
